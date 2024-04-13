@@ -502,6 +502,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public void unlock() {
         sync.release(1);
+        System.jtsanUnlock(this);
     }
 
     /**
