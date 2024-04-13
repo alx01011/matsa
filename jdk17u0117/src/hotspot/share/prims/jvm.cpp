@@ -3850,3 +3850,52 @@ JVM_END
 JVM_ENTRY_NO_ENV(jint, JVM_FindSignal(const char *name))
   return os::get_signal_number(name);
 JVM_END
+
+
+// aantonak - jtsan
+JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env, jobject x))
+    if (thread && thread->is_Java_thread() && JTSAN) {
+      JavaThread *jt = (JavaThread *) thread;
+      frame fr = jt->last_frame();
+      // To get the actual sender frame, we need to skip Runtime and java.util.concurrent frames
+      RegisterMap map(jt,
+                  RegisterMap::UpdateMap::skip,
+                  RegisterMap::ProcessFrames::skip,
+                  RegisterMap::WalkContinuation::skip);
+      fr = fr.sender(&map);
+      fr = fr.sender(&map);
+
+      if (fr.is_interpreted_frame()) {
+        Method *m      = fr.interpreter_frame_method();
+        address bcp    = fr.interpreter_frame_bcp();
+        oop lock_obj   = JNIHandles::resolve(x);
+
+        lock_obj->set_cur_obj_lock_index();
+      
+        //InterpreterRuntime::jtsan_lock((void*)lock_obj, m, bcp);
+      }
+    }
+JVM_END
+
+// aantonak - jtsan
+JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env, jobject x))
+    if (thread && thread->is_Java_thread() && JTSAN) {
+        JavaThread *jt = (JavaThread *) thread;
+        frame fr = jt->last_frame();
+        // To get the actual sender frame, we need to skip Runtime and java.util.concurrent frames
+        RegisterMap map(jt,
+                    RegisterMap::UpdateMap::skip,
+                    RegisterMap::ProcessFrames::skip,
+                    RegisterMap::WalkContinuation::skip);
+        fr = fr.sender(&map);
+        fr = fr.sender(&map);
+        if (fr.is_interpreted_frame()) {
+            Method *m      = fr.interpreter_frame_method();
+            address bcp    = fr.interpreter_frame_bcp();
+            void *lock_obj = (void*)JNIHandles::resolve(x);
+ 
+
+            //InterpreterRuntime::jtsan_unlock(lock_obj, m, bcp);
+        }
+    }
+JVM_END

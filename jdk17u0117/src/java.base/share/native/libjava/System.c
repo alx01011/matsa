@@ -57,6 +57,20 @@ Java_java_lang_System_identityHashCode(JNIEnv *env, jobject this, jobject x)
     return JVM_IHashCode(env, x);
 }
 
+//aantonak - jtsan
+JNIEXPORT void JNICALL
+Java_java_lang_System_jtsanLock(JNIEnv *env, jobject this, jobject x)
+{
+    JVM_jtsanLock(env, x);
+}
+
+//aantonak - jtsan
+JNIEXPORT void JNICALL
+Java_java_lang_System_jtsanUnlock(JNIEnv *env, jobject this, jobject x)
+{
+    JVM_jtsanUnlock(env, x);
+}
+
 /* VENDOR, VENDOR_URL, VENDOR_URL_BUG are set in VersionProps.java.template. */
 
 /*

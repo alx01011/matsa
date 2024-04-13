@@ -665,6 +665,21 @@ public final class System {
     public static native int identityHashCode(Object x);
 
     /**
+     * aantonak
+     * Gets called on ReEntrantLock.lock()
+     * @param x the lock object
+     */
+    public static native void jtsanLock(Object x);
+
+    /**
+     * aantonak
+     * Gets called on ReEntrantLock.unlock()
+     * @param x the lock object
+     */
+
+    public static native void jtsanUnlock(Object x);
+
+    /**
      * System properties.
      *
      * See {@linkplain #getProperties getProperties} for details.

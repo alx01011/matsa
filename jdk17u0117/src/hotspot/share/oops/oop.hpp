@@ -57,6 +57,14 @@ class oopDesc {
     narrowKlass _compressed_klass;
   } _metadata;
 
+#ifdef INCLUDE_JTSAN
+  // JTSan: Java Thread Sanitizer
+  // Index of the java.util.concurrent.locks.ReentrantLock object
+  // Index of synchronized object
+  volatile uint32_t _obj_lock_index;
+  volatile uint32_t _sync_lock_index;
+#endif
+
  public:
   inline markWord  mark()          const;
   inline markWord  mark_acquire()  const;
@@ -110,6 +118,18 @@ class oopDesc {
   bool is_array_noinline()             const;
   bool is_objArray_noinline()          const;
   bool is_typeArray_noinline()         const;
+
+
+  // jtsan - lock index
+#ifdef INCLUDE_JTSAN
+  inline void    init_lock_index(void);
+
+  inline uint32_t obj_lock_index(void) const;
+  inline uint32_t sync_lock_index(void) const;
+
+  inline void set_cur_obj_lock_index(void);
+  inline void set_cur_sync_lock_index(void);
+#endif
 
  protected:
   inline oop        as_oop() const { return const_cast<oopDesc*>(this); }
