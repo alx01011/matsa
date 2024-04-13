@@ -105,6 +105,11 @@
 #include "jfr/jfr.hpp"
 #endif
 
+#if INCLUDE_JTSAN
+#include "interpreter/interpreterRuntime.hpp"
+#include "runtime/registerMap.hpp"
+#endif
+
 #include <errno.h>
 
 /*
