@@ -334,6 +334,21 @@
 #define COMPILER1_OR_COMPILER2_PRESENT(code)
 #endif
 
+// aantonak - jtsan
+#ifndef INCLUDE_JTSAN
+#define INCLUDE_JTSAN 1
+#endif
+
+#if INCLUDE_JTSAN
+#define JTSAN_ONLY(code) \
+    do { \
+      if (JTSAN) { \
+        code; \
+      } \
+    } while (0)
+#endif
+
+
 
 // PRODUCT variant
 #ifdef PRODUCT

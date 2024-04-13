@@ -2103,6 +2103,7 @@ const intx ObjectAlignmentInBytes = 8;
           "more eagerly at the cost of higher overhead. A value of 0 "      \
           "(default) disables native heap trimming.")                       \
           range(0, UINT_MAX)                                                \
+  product(bool, JTSAN, false, "Enable Java Thread Sanitizer.")              \
 
 // end of RUNTIME_FLAGS
 
