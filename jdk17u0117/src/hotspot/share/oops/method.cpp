@@ -220,13 +220,6 @@ const char* Method::external_name() const {
   return external_name(constants()->pool_holder(), name(), signature());
 }
 
-// aantonak - jtsan
-const char* Method::external_name(Klass* klass, Symbol* method_name, Symbol* signature) {
-  stringStream ss;
-  print_external_name(&ss, klass, method_name, signature);
-  return ss.as_string();
-}
-
 void Method::print_external_name(outputStream *os) const {
   print_external_name(os, constants()->pool_holder(), name(), signature());
 }
