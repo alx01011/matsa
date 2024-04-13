@@ -812,6 +812,20 @@ oop  JavaThread::threadObj() const    {
   return _threadObj.resolve();
 }
 
+int JavaThread::get_thread_obj_id(JavaThread *thread) {
+  if (thread == NULL || !thread->is_Java_thread()) {
+    return -1;
+  }
+  
+  oop threadObj = thread->threadObj();
+
+  if (threadObj == NULL) {
+    return -1;
+  }
+
+  return java_lang_Thread::thread_id(threadObj);
+}
+
 void JavaThread::set_threadObj(oop p) {
   assert(_thread_oop_storage != NULL, "not yet initialized");
   _threadObj = OopHandle(_thread_oop_storage, p);

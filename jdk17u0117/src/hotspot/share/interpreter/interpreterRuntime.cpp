@@ -714,6 +714,244 @@ void InterpreterRuntime::resolve_get_put(JavaThread* current, Bytecodes::Code by
   );
 }
 
+//------------------------------------------------------------------------------------------------------------------------
+// jtsan instrumentation
+
+void MemoryAccess(void *addr, Method *m, address &bcp, int size, bool is_store) {
+  int bci = m->bci_from(bcp);
+  int line_no = m->line_number_from_bci(bci);
+
+  JavaThread *thread = JavaThread::current();
+
+  ResourceMark rm;
+  const char *mname = m->external_name_as_fully_qualified();
+
+  int tid = JavaThread::get_thread_obj_id(thread);
+
+  fprintf(stderr, "Access %s at method %s , line %d : %p\n", is_store ? "store" : "load", mname, line_no, addr);
+
+}
+
+
+void InterpreterRuntime::jtsan_load1(void *addr, Method *m, address bcp) {
+  MemoryAccess(addr, m, bcp, 1, false);
+  //load_store_where((char*)"jtsan_load1:", m, addr, bcp);
+}
+
+void InterpreterRuntime::jtsan_load2(void *addr, Method *m, address bcp) {
+  MemoryAccess(addr, m, bcp, 2, false);
+  //load_store_where((char*)"jtsan_load2:", m, addr, bcp);
+}
+
+void InterpreterRuntime::jtsan_load4(void *addr, Method *m, address bcp) {
+  MemoryAccess(addr, m, bcp, 4, false);
+  //load_store_where((char*)"jtsan_load4:", m, addr, bcp);
+}
+
+void InterpreterRuntime::jtsan_load8(void *addr, Method *m, address bcp) {
+  MemoryAccess(addr, m, bcp, 8, false);
+ // load_store_where((char*)"jtsan_load8:", m, addr, bcp);
+}
+
+void jtsan_vtos(void *addr, Method *m, address bcp) {
+  assert(false, "jtsan vtos");
+}
+
+/*
+  Array of functions which are mapped according to the TosState enum.
+  For each type of load, there is the corresponding function.
+*/
+
+void (*InterpreterRuntime::jtsan_load[]) (void *addr, Method *m, address bcp) = {
+  InterpreterRuntime::jtsan_load1,  // btos
+  InterpreterRuntime::jtsan_load1,  // ztos
+  InterpreterRuntime::jtsan_load1,  // ctos
+  InterpreterRuntime::jtsan_load2,  // stos
+  InterpreterRuntime::jtsan_load4,  // itos
+  InterpreterRuntime::jtsan_load8, //  ltos
+  InterpreterRuntime::jtsan_load4, //  ftos
+  InterpreterRuntime::jtsan_load8, //  dtos
+  InterpreterRuntime::jtsan_load8, //  atos
+  jtsan_vtos // vtos
+};
+
+// Store instrumentation
+
+void InterpreterRuntime::jtsan_store1(void *addr, Method *m, address bcp) {
+  MemoryAccess(addr, m, bcp, 1, true);
+  //load_store_where((char*)"jtsan_store1:", m, addr, bcp);
+}
+
+void InterpreterRuntime::jtsan_store2(void *addr, Method *m, address bcp) {
+  MemoryAccess(addr, m, bcp, 2, true);
+  //load_store_where((char*)"jtsan_store2:", m, addr, bcp);
+}
+
+void InterpreterRuntime::jtsan_store4(void *addr, Method *m, address bcp) {
+  MemoryAccess(addr, m, bcp, 4, true);
+  //load_store_where((char*)"jtsan_store4:", m, addr, bcp);
+}
+
+void InterpreterRuntime::jtsan_store8(void *addr, Method *m, address bcp) {
+  MemoryAccess(addr, m, bcp, 8, true);
+  //load_store_where((char*)"jtsan_store8:", m, addr, bcp);
+}
+
+void (*InterpreterRuntime::jtsan_store[]) (void *addr, Method *m, address bcp) = {
+  InterpreterRuntime::jtsan_store1,  // btos
+  InterpreterRuntime::jtsan_store1,  // ztos
+  InterpreterRuntime::jtsan_store1,  // ctos
+  InterpreterRuntime::jtsan_store2,  // stos
+  InterpreterRuntime::jtsan_store4,  // itos
+  InterpreterRuntime::jtsan_store8, //  ltos
+  InterpreterRuntime::jtsan_store4, //  ftos
+  InterpreterRuntime::jtsan_store8, //  dtos
+  InterpreterRuntime::jtsan_store8, //  atos
+  jtsan_vtos // vtos
+};
+
+// for object locks
+void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp) {
+  JavaThread *thread = JavaThread::current();
+
+  if (thread == NULL || method == NULL || bcp == NULL) return; // ignore null threads
+  if (!thread->is_Java_thread()) return; // ignore non-Java threads
+
+  oop thread_oop = thread->threadObj();
+
+  if (thread_oop == NULL) return; // ignore null thread objects
+
+  int tid = JavaThread::get_thread_obj_id(thread);
+  // int bci = method->bci_from(bcp);
+  // int line_no = method->line_number_from_bci(bci);
+
+  // // this is how to get the source file name
+  // InstanceKlass *holder = method->method_holder();
+  // const char *fname = holder->source_file_name()->as_C_string();
+
+  // if (!strstr(fname, "Carv.java")) {
+  //   return;
+  // }
+
+  oop p = (oopDesc*)lock_obj;
+
+  /*
+    On lock acquisition we have to perform a max operation between the thread state of current thread and the lock state.
+    Store the result into the thread state.
+  */
+
+  // uint32_t *lock_state  = LockShadow::ObjectLockShadow()->indexToLockState(p->obj_lock_index())->epoch;
+
+  // for (int i = 0; i < MAX_THREADS; i++) {
+  //   uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
+  //   if (curr_tstate < lock_state[i]) {
+  //     JtsanThreadState::setEpoch(tid, i, lock_state[i]);
+  //   }
+  // }
+}
+
+void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bcp) {
+  JavaThread *thread = JavaThread::current();
+
+  if (thread == NULL || method == NULL || bcp == NULL) return; // ignore null threads
+  if (!thread->is_Java_thread()) return; // ignore non-Java threads
+
+  oop thread_oop = thread->threadObj();
+
+  if (thread_oop == NULL) return; // ignore null thread objects
+
+  int tid = JavaThread::get_thread_obj_id(thread);
+
+  oop p = (oopDesc*)lock_obj;
+
+  /*
+    On lock release we have to max the thread state with the lock state.
+    Store the result into lock state.
+  */
+
+  // uint32_t *lock_state  = LockShadow::ObjectLockShadow()->indexToLockState(p->obj_lock_index())->epoch;
+
+  // for (int i = 0; i < MAX_THREADS; i++) {
+  //   uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
+  //   if (lock_state[i] < curr_tstate) {
+  //     lock_state[i] = curr_tstate;
+  //   }
+  // }
+}
+
+void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, address bcp) {
+  JavaThread *thread = JavaThread::current();
+
+  if (thread == NULL || m == NULL || bcp == NULL) return; // ignore null threads
+
+  oop thread_oop = thread->threadObj();
+  
+  if (thread_oop == NULL) return; // ignore null thread objects
+
+  int tid        = JavaThread::get_thread_obj_id(thread);
+
+    /*
+    Unfortunately, synchronized methods and synchronized(this) blocks, are associated with a different lock.
+    That means, each time we enter a synchronized method/block the address of the lock differs.
+    This leaves no other choice, but to assume each object also has a lock.
+    This makes the virtual memory for locks a lot bigger. (MaxHeapSize / 8 * sizeof(SyncLockState)).
+    SyncLockState, now also has to contain a field for gc_epoch, in case an object has moved, we can discard previous info.
+
+    Overall these locks are expensive to track.
+  */
+
+  oop p = lock->obj();
+
+  if (p == NULL) return;
+
+  // might not be set yet
+  //p->set_cur_sync_lock_index();
+
+  /*
+    On lock acquisition we have to perform a max operation between the thread state of current thread and the lock state.
+    Store the result into the thread state.
+  */
+
+  // uint32_t *lock_state  = LockShadow::SyncLockShadow()->indexToLockState(p->sync_lock_index())->epoch;
+
+  // for (int i = 0; i < MAX_THREADS; i++) {
+  //   uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
+  //   if (curr_tstate < lock_state[i]) {
+  //     JtsanThreadState::setEpoch(tid, i, lock_state[i]);
+  //   }
+  // }
+}
+
+void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, address bcp) {
+  JavaThread *thread = JavaThread::current();
+
+  if (thread == NULL || m == NULL || bcp == NULL) return; // ignore null threads
+
+  oop thread_oop = thread->threadObj();
+  
+  if (thread_oop == NULL) return; // ignore null thread objects
+
+  int tid        = JavaThread::get_thread_obj_id(thread);
+
+  oop p = lock->obj();
+
+  if (p == NULL) return;
+
+  /*
+    On lock release we have to max the thread state with the lock state.
+    Store the result into lock state.
+  // */
+  // uint32_t *lock_state  = LockShadow::SyncLockShadow()->indexToLockState(p->sync_lock_index())->epoch;
+
+  // for (int i = 0; i < MAX_THREADS; i++) {
+  //   uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
+  //   if (lock_state[i] < curr_tstate) {
+  //     lock_state[i] = curr_tstate;
+  //   }
+  // }
+}
+
+
 
 //------------------------------------------------------------------------------------------------------------------------
 // Synchronization

@@ -800,6 +800,9 @@ class JavaThread: public Thread {
     Atomic::store(&_current_waiting_monitor, monitor);
   }
 
+  // aantonak - jtsan
+  static int get_thread_obj_id(JavaThread *thread);
+
  private:
   MonitorChunk* _monitor_chunks;              // Contains the off stack monitors
                                               // allocated during deoptimization
