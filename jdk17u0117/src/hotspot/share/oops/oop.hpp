@@ -326,8 +326,16 @@ class oopDesc {
   static int klass_offset_in_bytes()     { return offset_of(oopDesc, _metadata._klass); }
   static int klass_gap_offset_in_bytes() {
     assert(has_klass_gap(), "only applicable to compressed klass pointers");
+  #ifdef INCLUDE_JTSAN
+    return klass_offset_in_bytes() + sizeof(narrowKlass) + sizeof(uint32_t) + sizeof(uint32_t);
+  #endif
     return klass_offset_in_bytes() + sizeof(narrowKlass);
   }
+
+#ifdef INCLUDE_JTSAN
+  static int obj_lock_index_offset_in_bytes() { return (int)offset_of(oopDesc, _obj_lock_index); }
+  static int sync_lock_index_offset_in_bytes() { return (int)offset_of(oopDesc, _sync_lock_index); }
+#endif
 
   // for error reporting
   static void* load_klass_raw(oop obj);
