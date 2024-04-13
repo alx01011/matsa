@@ -32,3 +32,7 @@ JNI_GetCreatedJavaVMs
 JNI_GetDefaultJavaVMInitArgs
 JVM_FindClassFromBootLoader
 JVM_InitAgentProperties
+
+# aantonak - jtsan
+JVM_jtsanLock
+JVM_jtsanUnlock
