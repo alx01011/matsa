@@ -3863,10 +3863,7 @@ JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env, jobject x))
       JavaThread *jt = (JavaThread *) thread;
       frame fr = jt->last_frame();
       // To get the actual sender frame, we need to skip Runtime and java.util.concurrent frames
-      RegisterMap map(jt,
-                  RegisterMap::UpdateMap::skip,
-                  RegisterMap::ProcessFrames::skip,
-                  RegisterMap::WalkContinuation::skip);
+      RegisterMap map(thread);
       fr = fr.sender(&map);
       fr = fr.sender(&map);
 
@@ -3888,10 +3885,7 @@ JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env, jobject x))
         JavaThread *jt = (JavaThread *) thread;
         frame fr = jt->last_frame();
         // To get the actual sender frame, we need to skip Runtime and java.util.concurrent frames
-        RegisterMap map(jt,
-                    RegisterMap::UpdateMap::skip,
-                    RegisterMap::ProcessFrames::skip,
-                    RegisterMap::WalkContinuation::skip);
+        RegisterMap map(thread);
         fr = fr.sender(&map);
         fr = fr.sender(&map);
         if (fr.is_interpreted_frame()) {
