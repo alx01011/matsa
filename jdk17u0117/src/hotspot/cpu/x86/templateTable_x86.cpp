@@ -1104,12 +1104,12 @@ void TemplateTable::iastore() {
   index_check(rdx, rbx); // prefer index in rbx
 
   Address addr(rdx, rbx, Address::times_4,
-                             arrayOopDesc::base_offset_in_bytes(T_INT));
+                arrayOopDesc::base_offset_in_bytes(T_INT));
 
-  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, itos));                            
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, itos));
 
   __ access_store_at(T_INT, IN_HEAP | IS_ARRAY,
-                     addr, rax, noreg, noreg, noreg);
+                     addr, rax, noreg, noreg);
 }
 
 void TemplateTable::lastore() {
@@ -1122,9 +1122,9 @@ void TemplateTable::lastore() {
   // rbx,: index
 
   Address addr(rcx, rbx, Address::times_8,
-                arrayOopDesc::base_offset_in_bytes(T_LONG));
+                  arrayOopDesc::base_offset_in_bytes(T_LONG));
 
-  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, ltos));              
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, ltos));
 
   __ access_store_at(T_LONG, IN_HEAP | IS_ARRAY,
                      addr, noreg /* ltos */, noreg, noreg);
@@ -1140,12 +1140,10 @@ void TemplateTable::fastore() {
   index_check(rdx, rbx); // prefer index in rbx
 
   Address addr(rdx, rbx, Address::times_4,
-                  arrayOopDesc::base_offset_in_bytes(T_FLOAT))
-
-  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, ftos));
+             arrayOopDesc::base_offset_in_bytes(T_FLOAT));
 
   __ access_store_at(T_FLOAT, IN_HEAP | IS_ARRAY,
-                      addr, noreg /* ftos */, noreg, noreg, noreg);
+                     addr, noreg /* ftos */, noreg, noreg);
 }
 
 void TemplateTable::dastore() {
@@ -1157,12 +1155,12 @@ void TemplateTable::dastore() {
   index_check(rdx, rbx); // prefer index in rbx
 
   Address addr(rdx, rbx, Address::times_8,
-                             arrayOopDesc::base_offset_in_bytes(T_DOUBLE));
+                arrayOopDesc::base_offset_in_bytes(T_DOUBLE));
 
-  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, dtos));
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, dtos));                
 
   __ access_store_at(T_DOUBLE, IN_HEAP | IS_ARRAY,
-                      addr, noreg /* dtos */, noreg, noreg);
+                     addr, noreg /* dtos */, noreg, noreg);
 }
 
 void TemplateTable::aastore() {
@@ -1240,13 +1238,14 @@ void TemplateTable::bastore() {
   __ jccb(Assembler::zero, L_skip);
   __ andl(rax, 1);  // if it is a T_BOOLEAN array, mask the stored value to 0/1
   __ bind(L_skip);
+
   Address addr(rdx, rbx,Address::times_1,
-                             arrayOopDesc::base_offset_in_bytes(T_BYTE));
+                arrayOopDesc::base_offset_in_bytes(T_BYTE));
 
   JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, itos));
 
-  __ access_store_at(T_BYTE, IN_HEAP | IS_ARRAY, addr,
-                     rax, noreg, noreg, noreg);
+  __ access_store_at(T_BYTE, IN_HEAP | IS_ARRAY,
+                     addr, rax, noreg, noreg);
 }
 
 void TemplateTable::castore() {
@@ -1258,12 +1257,12 @@ void TemplateTable::castore() {
   index_check(rdx, rbx);  // prefer index in rbx
 
   Address addr(rdx, rbx, Address::times_2,
-                             arrayOopDesc::base_offset_in_bytes(T_CHAR));
+                  arrayOopDesc::base_offset_in_bytes(T_CHAR));
 
   JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, itos));
 
   __ access_store_at(T_CHAR, IN_HEAP | IS_ARRAY,
-                     addr, rax, noreg, noreg, noreg);
+                     addr, rax, noreg, noreg);
 }
 
 
