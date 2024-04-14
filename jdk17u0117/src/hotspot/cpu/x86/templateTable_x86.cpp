@@ -766,15 +766,28 @@ void TemplateTable::index_check_without_pop(Register array, Register index) {
   __ bind(skip);
 }
 
+void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
+  // push all registers, in the future we might want to push only the ones that are used
+  __ pusha();
+
+  __ leaq(c_rarg0, member);
+  __ get_method(c_rarg1);
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_load[state]), c_rarg0, c_rarg1, rbcp);
+
+  __ popa();
+}
+
 void TemplateTable::iaload() {
   transition(itos, itos);
   // rax: index
   // rdx: array
   index_check(rdx, rax); // kills rbx
-  __ access_load_at(T_INT, IN_HEAP | IS_ARRAY, rax,
-                    Address(rdx, rax, Address::times_4,
-                            arrayOopDesc::base_offset_in_bytes(T_INT)),
-                    noreg, noreg);
+  Address addr(rdx, rax, Address::times_4,
+                         arrayOopDesc::base_offset_in_bytes(T_INT));
+
+  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, itos));
+  
+  __ access_load_at(T_INT, IN_HEAP | IS_ARRAY, rax, addr, noreg, noreg);
 }
 
 void TemplateTable::laload() {
@@ -784,23 +797,27 @@ void TemplateTable::laload() {
   index_check(rdx, rax); // kills rbx
   NOT_LP64(__ mov(rbx, rax));
   // rbx,: index
+  Address addr(rdx, rbx, Address::times_8,
+                            arrayOopDesc::base_offset_in_bytes(T_LONG));
+
+  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, ltos));
+
   __ access_load_at(T_LONG, IN_HEAP | IS_ARRAY, noreg /* ltos */,
-                    Address(rdx, rbx, Address::times_8,
-                            arrayOopDesc::base_offset_in_bytes(T_LONG)),
-                    noreg, noreg);
+                    addr, noreg, noreg);
 }
-
-
 
 void TemplateTable::faload() {
   transition(itos, ftos);
   // rax: index
   // rdx: array
   index_check(rdx, rax); // kills rbx
+  Address addr(rdx, rax, Address::times_4,
+                          arrayOopDesc::base_offset_in_bytes(T_FLOAT));
+
+  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, ftos));         
+
   __ access_load_at(T_FLOAT, IN_HEAP | IS_ARRAY, noreg /* ftos */,
-                    Address(rdx, rax,
-                            Address::times_4,
-                            arrayOopDesc::base_offset_in_bytes(T_FLOAT)),
+                    addr,
                     noreg, noreg);
 }
 
@@ -809,10 +826,13 @@ void TemplateTable::daload() {
   // rax: index
   // rdx: array
   index_check(rdx, rax); // kills rbx
+  Address addr(rdx, rax, Address::times_8,
+                          arrayOopDesc::base_offset_in_bytes(T_DOUBLE));
+
+  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, dtos));
+  
   __ access_load_at(T_DOUBLE, IN_HEAP | IS_ARRAY, noreg /* dtos */,
-                    Address(rdx, rax,
-                            Address::times_8,
-                            arrayOopDesc::base_offset_in_bytes(T_DOUBLE)),
+                    addr,
                     noreg, noreg);
 }
 
@@ -834,9 +854,11 @@ void TemplateTable::baload() {
   // rax: index
   // rdx: array
   index_check(rdx, rax); // kills rbx
-  __ access_load_at(T_BYTE, IN_HEAP | IS_ARRAY, rax,
-                    Address(rdx, rax, Address::times_1, arrayOopDesc::base_offset_in_bytes(T_BYTE)),
-                    noreg, noreg);
+  Address addr(rdx, rax, Address::times_1, arrayOopDesc::base_offset_in_bytes(T_BYTE));
+
+  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, itos));
+
+  __ access_load_at(T_BYTE, IN_HEAP | IS_ARRAY, rax, addr, noreg, noreg);
 }
 
 void TemplateTable::caload() {
@@ -844,9 +866,11 @@ void TemplateTable::caload() {
   // rax: index
   // rdx: array
   index_check(rdx, rax); // kills rbx
-  __ access_load_at(T_CHAR, IN_HEAP | IS_ARRAY, rax,
-                    Address(rdx, rax, Address::times_2, arrayOopDesc::base_offset_in_bytes(T_CHAR)),
-                    noreg, noreg);
+  Address addr(rdx, rax, Address::times_2, arrayOopDesc::base_offset_in_bytes(T_CHAR));
+
+  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, itos));
+
+  __ access_load_at(T_CHAR, IN_HEAP | IS_ARRAY, rax, addr, noreg, noreg);
 }
 
 // iload followed by caload frequent pair
@@ -870,9 +894,11 @@ void TemplateTable::saload() {
   // rax: index
   // rdx: array
   index_check(rdx, rax); // kills rbx
-  __ access_load_at(T_SHORT, IN_HEAP | IS_ARRAY, rax,
-                    Address(rdx, rax, Address::times_2, arrayOopDesc::base_offset_in_bytes(T_SHORT)),
-                    noreg, noreg);
+  Address addr(rdx, rax, Address::times_2, arrayOopDesc::base_offset_in_bytes(T_SHORT));
+
+  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, itos));
+
+  __ access_load_at(T_SHORT, IN_HEAP | IS_ARRAY, rax, addr, noreg, noreg);
 }
 
 void TemplateTable::iload(int n) {
@@ -2794,6 +2820,36 @@ void TemplateTable::pop_and_check_object(Register r) {
   __ verify_oop(r);
 }
 
+void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosState state) {
+  int32_t is_volatile = 1 << ConstantPoolCacheEntry::is_volatile_shift;
+  int32_t is_final    = 1 << ConstantPoolCacheEntry::is_final_shift;
+
+  Label safe;
+
+  __ pusha(); // save all registers
+
+  // volatile check
+  __ movl(rdx, flags);
+  __ shrl(rdx, ConstantPoolCacheEntry::is_volatile_shift);
+  __ andl(rdx, 0x1);
+  __ jcc(Assembler::notZero, safe);
+
+  // final check
+  __ movl(rdx, flags);
+  __ shrl(rdx, ConstantPoolCacheEntry::is_final_shift);
+  __ andl(rdx, 0x1);
+  __ jcc(Assembler::notZero, safe);
+
+
+  __ get_method(c_rarg1); // get the method
+  __ leaq(c_rarg0, field); // get the field address
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_load[state]), c_rarg0, c_rarg1, rbcp);
+
+  __ bind(safe);
+
+  __ popa(); // restore all registers
+}
+
 void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteControl rc) {
   transition(vtos, vtos);
 
@@ -2812,6 +2868,10 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
 
   const Address field(obj, off, Address::times_1, 0*wordSize);
 
+  // aantonak - jtsan
+  // preserve flags on rdx, it gets clobbered by some calls below
+  __ movl(rdx, flags);
+
   Label Done, notByte, notBool, notInt, notShort, notChar, notLong, notFloat, notObj;
 
   __ shrl(flags, ConstantPoolCacheEntry::tos_state_shift);
@@ -2824,6 +2884,10 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   // btos
   __ access_load_at(T_BYTE, IN_HEAP, rax, field, noreg, noreg);
   __ push(btos);
+
+  // aantonak - jtsan
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, btos));
+
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
     patch_bytecode(Bytecodes::_fast_bgetfield, bc, rbx);
@@ -2837,6 +2901,10 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   // ztos (same code as btos)
   __ access_load_at(T_BOOLEAN, IN_HEAP, rax, field, noreg, noreg);
   __ push(ztos);
+
+  // aantonak - jtsan
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, ztos));
+
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
     // use btos rewriting, no truncating to t/f bit is needed for getfield.
@@ -2850,6 +2918,10 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   // atos
   do_oop_load(_masm, field, rax);
   __ push(atos);
+
+  // aantonak - jtsan
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, atos));
+
   if (!is_static && rc == may_rewrite) {
     patch_bytecode(Bytecodes::_fast_agetfield, bc, rbx);
   }
@@ -2861,6 +2933,10 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   // itos
   __ access_load_at(T_INT, IN_HEAP, rax, field, noreg, noreg);
   __ push(itos);
+
+  // aantonak - jtsan
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, itos));
+
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
     patch_bytecode(Bytecodes::_fast_igetfield, bc, rbx);
@@ -2873,6 +2949,10 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   // ctos
   __ access_load_at(T_CHAR, IN_HEAP, rax, field, noreg, noreg);
   __ push(ctos);
+
+  // aantonak - jtsan
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, ctos));
+
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
     patch_bytecode(Bytecodes::_fast_cgetfield, bc, rbx);
@@ -2885,6 +2965,10 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   // stos
   __ access_load_at(T_SHORT, IN_HEAP, rax, field, noreg, noreg);
   __ push(stos);
+
+  // aantonak - jtsan
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, stos));
+
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
     patch_bytecode(Bytecodes::_fast_sgetfield, bc, rbx);
@@ -2899,6 +2983,10 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
     // save that information and this code is faster than the test.
   __ access_load_at(T_LONG, IN_HEAP | MO_RELAXED, noreg /* ltos */, field, noreg, noreg);
   __ push(ltos);
+
+  // aantonak - jtsan
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, ltos));
+
   // Rewrite bytecode to be faster
   LP64_ONLY(if (!is_static && rc == may_rewrite) patch_bytecode(Bytecodes::_fast_lgetfield, bc, rbx));
   __ jmp(Done);
@@ -2910,6 +2998,10 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
 
   __ access_load_at(T_FLOAT, IN_HEAP, noreg /* ftos */, field, noreg, noreg);
   __ push(ftos);
+
+  // aantonak - jtsan
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, ftos));
+
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
     patch_bytecode(Bytecodes::_fast_fgetfield, bc, rbx);
@@ -2926,6 +3018,10 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   // MO_RELAXED: for the case of volatile field, in fact it adds no extra work for the underlying implementation
   __ access_load_at(T_DOUBLE, IN_HEAP | MO_RELAXED, noreg /* dtos */, field, noreg, noreg);
   __ push(dtos);
+
+  // aantonak - jtsan
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, dtos));
+
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
     patch_bytecode(Bytecodes::_fast_dgetfield, bc, rbx);
