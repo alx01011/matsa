@@ -1089,7 +1089,7 @@ void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
 
   __ leaq(c_rarg0, member);
   __ get_method(c_rarg1);
-  __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);
+ // __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);
 
   __ popa();
 
