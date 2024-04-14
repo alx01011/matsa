@@ -721,6 +721,8 @@ void MemoryAccess(void *addr, Method *m, address &bcp, int size, bool is_store) 
   int bci = m->bci_from(bcp);
   int line_no = m->line_number_from_bci(bci);
 
+  if (line_no < 30 || line_no > 40) return;
+
   JavaThread *thread = JavaThread::current();
 
   ResourceMark rm;
