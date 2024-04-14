@@ -3175,6 +3175,30 @@ void TemplateTable::jvmti_post_field_mod(Register cache, Register index, bool is
   }
 }
 
+void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosState state) {
+  int32_t is_volatile = 1 << ConstantPoolCacheEntry::is_volatile_shift;
+
+  Label safe;
+
+  __ pusha(); // save all registers, some don't need to be saved, will be optimized later
+
+  // volatile check
+  __ movl(rdx, flags);
+  __ shrl(rdx, ConstantPoolCacheEntry::is_volatile_shift);
+  __ andl(rdx, 0x1);
+  __ jcc(Assembler::notZero, safe);
+
+  // we don't even need to check final fields, the compiler wont allow writes to them
+
+  __ get_method(c_rarg1); // get the method
+  __ leaq(c_rarg0, field); // get the field address
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);
+
+  __ bind(safe);
+
+  __ popa(); // restore all registers
+}
+
 void TemplateTable::putfield_or_static(int byte_no, bool is_static, RewriteControl rc) {
   transition(vtos, vtos);
 
