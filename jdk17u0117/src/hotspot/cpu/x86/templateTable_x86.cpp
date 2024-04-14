@@ -1145,7 +1145,7 @@ void TemplateTable::fastore() {
   JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, ftos));
 
   __ access_store_at(T_FLOAT, IN_HEAP | IS_ARRAY,
-                      addr, noreg /* ftos */, noreg, noreg);
+                      addr, noreg /* ftos */, noreg, noreg, noreg);
 }
 
 void TemplateTable::dastore() {
