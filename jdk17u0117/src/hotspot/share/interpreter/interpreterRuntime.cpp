@@ -922,6 +922,14 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   //     JtsanThreadState::setEpoch(tid, i, lock_state[i]);
   //   }
   // }
+
+  int bci = m->bci_from(bcp);
+  int line_no = m->line_number_from_bci(bci);
+
+  ResourceMark rm;
+  const char *mname = m->external_name_as_fully_qualified();
+
+  fprintf(stderr, "SyncLock at method %s , line %d : %p\n", mname, line_no, p);
 }
 
 void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, address bcp) {
@@ -951,6 +959,14 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   //     lock_state[i] = curr_tstate;
   //   }
   // }
+
+  int bci = m->bci_from(bcp);
+  int line_no = m->line_number_from_bci(bci);
+
+  ResourceMark rm;
+  const char *mname = m->external_name_as_fully_qualified();
+
+  fprintf(stderr, "SyncUnlock at method %s , line %d : %p\n", mname, line_no, p);
 }
 
 
