@@ -1083,6 +1083,18 @@ void TemplateTable::wide_astore() {
   __ movptr(aaddress(rbx), rax);
 }
 
+void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
+  // push all registers, in the future we might want to push only the ones that are used
+  __ pusha();
+
+  __ leaq(c_rarg0, member);
+  __ get_method(c_rarg1);
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);
+
+  __ popa();
+
+}
+
 void TemplateTable::iastore() {
   transition(itos, vtos);
   __ pop_i(rbx);
@@ -1090,10 +1102,14 @@ void TemplateTable::iastore() {
   // rbx: index
   // rdx: array
   index_check(rdx, rbx); // prefer index in rbx
+
+  Address addr(rdx, rbx, Address::times_4,
+                             arrayOopDesc::base_offset_in_bytes(T_INT));
+
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, itos));                            
+
   __ access_store_at(T_INT, IN_HEAP | IS_ARRAY,
-                     Address(rdx, rbx, Address::times_4,
-                             arrayOopDesc::base_offset_in_bytes(T_INT)),
-                     rax, noreg, noreg);
+                     addr, rax, noreg, noreg, noreg);
 }
 
 void TemplateTable::lastore() {
@@ -1104,10 +1120,14 @@ void TemplateTable::lastore() {
   // rdx: high(value)
   index_check(rcx, rbx);  // prefer index in rbx,
   // rbx,: index
+
+  Address addr(rcx, rbx, Address::times_8,
+                arrayOopDesc::base_offset_in_bytes(T_LONG));
+
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, ltos));              
+
   __ access_store_at(T_LONG, IN_HEAP | IS_ARRAY,
-                     Address(rcx, rbx, Address::times_8,
-                             arrayOopDesc::base_offset_in_bytes(T_LONG)),
-                     noreg /* ltos */, noreg, noreg);
+                     addr, noreg /* ltos */, noreg, noreg);
 }
 
 
@@ -1118,10 +1138,14 @@ void TemplateTable::fastore() {
   // rbx:  index
   // rdx:  array
   index_check(rdx, rbx); // prefer index in rbx
+
+  Address addr(rdx, rbx, Address::times_4,
+                  arrayOopDesc::base_offset_in_bytes(T_FLOAT))
+
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, ftos));
+
   __ access_store_at(T_FLOAT, IN_HEAP | IS_ARRAY,
-                     Address(rdx, rbx, Address::times_4,
-                             arrayOopDesc::base_offset_in_bytes(T_FLOAT)),
-                     noreg /* ftos */, noreg, noreg);
+                      addr, noreg /* ftos */, noreg, noreg);
 }
 
 void TemplateTable::dastore() {
@@ -1131,10 +1155,14 @@ void TemplateTable::dastore() {
   // rbx:  index
   // rdx:  array
   index_check(rdx, rbx); // prefer index in rbx
+
+  Address addr(rdx, rbx, Address::times_8,
+                             arrayOopDesc::base_offset_in_bytes(T_DOUBLE));
+
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, dtos));
+
   __ access_store_at(T_DOUBLE, IN_HEAP | IS_ARRAY,
-                     Address(rdx, rbx, Address::times_8,
-                             arrayOopDesc::base_offset_in_bytes(T_DOUBLE)),
-                     noreg /* dtos */, noreg, noreg);
+                      addr, noreg /* dtos */, noreg, noreg);
 }
 
 void TemplateTable::aastore() {
@@ -1150,6 +1178,9 @@ void TemplateTable::aastore() {
                           arrayOopDesc::base_offset_in_bytes(T_OBJECT));
 
   index_check_without_pop(rdx, rcx);     // kills rbx
+
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(element_address, atos));
+
   __ testptr(rax, rax);
   __ jcc(Assembler::zero, is_null);
 
@@ -1209,10 +1240,13 @@ void TemplateTable::bastore() {
   __ jccb(Assembler::zero, L_skip);
   __ andl(rax, 1);  // if it is a T_BOOLEAN array, mask the stored value to 0/1
   __ bind(L_skip);
-  __ access_store_at(T_BYTE, IN_HEAP | IS_ARRAY,
-                     Address(rdx, rbx,Address::times_1,
-                             arrayOopDesc::base_offset_in_bytes(T_BYTE)),
-                     rax, noreg, noreg);
+  Address addr(rdx, rbx,Address::times_1,
+                             arrayOopDesc::base_offset_in_bytes(T_BYTE));
+
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, itos));
+
+  __ access_store_at(T_BYTE, IN_HEAP | IS_ARRAY, addr,
+                     rax, noreg, noreg, noreg);
 }
 
 void TemplateTable::castore() {
@@ -1222,10 +1256,14 @@ void TemplateTable::castore() {
   // rbx: index
   // rdx: array
   index_check(rdx, rbx);  // prefer index in rbx
+
+  Address addr(rdx, rbx, Address::times_2,
+                             arrayOopDesc::base_offset_in_bytes(T_CHAR));
+
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, itos));
+
   __ access_store_at(T_CHAR, IN_HEAP | IS_ARRAY,
-                     Address(rdx, rbx, Address::times_2,
-                             arrayOopDesc::base_offset_in_bytes(T_CHAR)),
-                     rax, noreg, noreg);
+                     addr, rax, noreg, noreg, noreg);
 }
 
 
@@ -3198,6 +3236,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(btos);
     if (!is_static) pop_and_check_object(obj);
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, btos));
     __ access_store_at(T_BYTE, IN_HEAP, field, rax, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_bputfield, bc, rbx, true, byte_no);
@@ -3213,6 +3252,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(ztos);
     if (!is_static) pop_and_check_object(obj);
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, ztos));
     __ access_store_at(T_BOOLEAN, IN_HEAP, field, rax, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_zputfield, bc, rbx, true, byte_no);
@@ -3228,6 +3268,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(atos);
     if (!is_static) pop_and_check_object(obj);
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, atos));
     // Store into the field
     do_oop_store(_masm, field, rax);
     if (!is_static && rc == may_rewrite) {
@@ -3244,6 +3285,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(itos);
     if (!is_static) pop_and_check_object(obj);
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, itos));
     __ access_store_at(T_INT, IN_HEAP, field, rax, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_iputfield, bc, rbx, true, byte_no);
@@ -3259,6 +3301,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(ctos);
     if (!is_static) pop_and_check_object(obj);
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, ctos));
     __ access_store_at(T_CHAR, IN_HEAP, field, rax, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_cputfield, bc, rbx, true, byte_no);
@@ -3274,6 +3317,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(stos);
     if (!is_static) pop_and_check_object(obj);
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, stos));
     __ access_store_at(T_SHORT, IN_HEAP, field, rax, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_sputfield, bc, rbx, true, byte_no);
@@ -3289,6 +3333,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(ltos);
     if (!is_static) pop_and_check_object(obj);
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, ltos));
     // MO_RELAXED: generate atomic store for the case of volatile field (important for x86_32)
     __ access_store_at(T_LONG, IN_HEAP | MO_RELAXED, field, noreg /* ltos*/, noreg, noreg);
 #ifdef _LP64
@@ -3307,6 +3352,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(ftos);
     if (!is_static) pop_and_check_object(obj);
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, ftos));
     __ access_store_at(T_FLOAT, IN_HEAP, field, noreg /* ftos */, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_fputfield, bc, rbx, true, byte_no);
@@ -3325,6 +3371,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(dtos);
     if (!is_static) pop_and_check_object(obj);
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, dtos));
     // MO_RELAXED: for the case of volatile field, in fact it adds no extra work for the underlying implementation
     __ access_store_at(T_DOUBLE, IN_HEAP | MO_RELAXED, field, noreg /* dtos */, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
