@@ -929,7 +929,7 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   ResourceMark rm;
   const char *mname = m->external_name_as_fully_qualified();
 
-  fprintf(stderr, "SyncLock at method %s , line %d : %p\n", mname, line_no, p);
+  fprintf(stderr, "SyncLock at method %s , line %d\n", mname, line_no);
 }
 
 void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, address bcp) {
@@ -966,7 +966,7 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   ResourceMark rm;
   const char *mname = m->external_name_as_fully_qualified();
 
-  fprintf(stderr, "SyncUnlock at method %s , line %d : %p\n", mname, line_no, p);
+  fprintf(stderr, "SyncUnlock at method %s , line %d\n", mname, line_no);
 }
 
 
