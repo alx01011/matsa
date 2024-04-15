@@ -347,15 +347,16 @@
         code; \
       } \
     } while (0)
+#endif
 
+#if INCLUDE_JTSAN
 #define JTSAN_RT_ONLY(code) \
     do { \
       if (JTSAN && ShadowMemory::getInstance() != nullptr) { \
         code; \
       } \
     } while (0)
-
-#endif
+  #endif
 
 
 
