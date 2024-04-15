@@ -785,7 +785,7 @@ void TemplateTable::iaload() {
   Address addr(rdx, rax, Address::times_4,
                          arrayOopDesc::base_offset_in_bytes(T_INT));
 
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_array(addr, itos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, itos));
   
   __ access_load_at(T_INT, IN_HEAP | IS_ARRAY, rax, addr, noreg, noreg);
 }
@@ -800,7 +800,7 @@ void TemplateTable::laload() {
   Address addr(rdx, rbx, Address::times_8,
                             arrayOopDesc::base_offset_in_bytes(T_LONG));
 
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_array(addr, ltos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, ltos));
 
   __ access_load_at(T_LONG, IN_HEAP | IS_ARRAY, noreg /* ltos */,
                     addr, noreg, noreg);
@@ -814,7 +814,7 @@ void TemplateTable::faload() {
   Address addr(rdx, rax, Address::times_4,
                           arrayOopDesc::base_offset_in_bytes(T_FLOAT));
 
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_array(addr, ftos));         
+  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, ftos));         
 
   __ access_load_at(T_FLOAT, IN_HEAP | IS_ARRAY, noreg /* ftos */,
                     addr,
@@ -829,7 +829,7 @@ void TemplateTable::daload() {
   Address addr(rdx, rax, Address::times_8,
                           arrayOopDesc::base_offset_in_bytes(T_DOUBLE));
 
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_array(addr, dtos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, dtos));
   
   __ access_load_at(T_DOUBLE, IN_HEAP | IS_ARRAY, noreg /* dtos */,
                     addr,
@@ -846,7 +846,7 @@ void TemplateTable::aaload() {
                       UseCompressedOops ? Address::times_4 : Address::times_ptr,
                       arrayOopDesc::base_offset_in_bytes(T_OBJECT));
 
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_array(addr, atos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, atos));
 
   do_oop_load(_masm, addr, rax, IS_ARRAY);
 }
@@ -858,7 +858,7 @@ void TemplateTable::baload() {
   index_check(rdx, rax); // kills rbx
   Address addr(rdx, rax, Address::times_1, arrayOopDesc::base_offset_in_bytes(T_BYTE));
 
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_array(addr, itos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, itos));
 
   __ access_load_at(T_BYTE, IN_HEAP | IS_ARRAY, rax, addr, noreg, noreg);
 }
@@ -870,7 +870,7 @@ void TemplateTable::caload() {
   index_check(rdx, rax); // kills rbx
   Address addr(rdx, rax, Address::times_2, arrayOopDesc::base_offset_in_bytes(T_CHAR));
 
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_array(addr, itos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, itos));
 
   __ access_load_at(T_CHAR, IN_HEAP | IS_ARRAY, rax, addr, noreg, noreg);
 }
@@ -898,7 +898,7 @@ void TemplateTable::saload() {
   index_check(rdx, rax); // kills rbx
   Address addr(rdx, rax, Address::times_2, arrayOopDesc::base_offset_in_bytes(T_SHORT));
 
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_array(addr, itos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, itos));
 
   __ access_load_at(T_SHORT, IN_HEAP | IS_ARRAY, rax, addr, noreg, noreg);
 }
@@ -1108,7 +1108,7 @@ void TemplateTable::iastore() {
   Address addr(rdx, rbx, Address::times_4,
                 arrayOopDesc::base_offset_in_bytes(T_INT));
 
-  JTSAN_RT_ONLY(TemplateTable::jtsan_store_array(addr, itos));
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, itos));
 
   __ access_store_at(T_INT, IN_HEAP | IS_ARRAY,
                      addr, rax, noreg, noreg);
@@ -1126,7 +1126,7 @@ void TemplateTable::lastore() {
   Address addr(rcx, rbx, Address::times_8,
                   arrayOopDesc::base_offset_in_bytes(T_LONG));
 
-  JTSAN_RT_ONLY(TemplateTable::jtsan_store_array(addr, ltos));
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, ltos));
 
   __ access_store_at(T_LONG, IN_HEAP | IS_ARRAY,
                      addr, noreg /* ltos */, noreg, noreg);
@@ -1159,7 +1159,7 @@ void TemplateTable::dastore() {
   Address addr(rdx, rbx, Address::times_8,
                 arrayOopDesc::base_offset_in_bytes(T_DOUBLE));
 
-  JTSAN_RT_ONLY(TemplateTable::jtsan_store_array(addr, dtos));                
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, dtos));                
 
   __ access_store_at(T_DOUBLE, IN_HEAP | IS_ARRAY,
                      addr, noreg /* dtos */, noreg, noreg);
@@ -1179,7 +1179,7 @@ void TemplateTable::aastore() {
 
   index_check_without_pop(rdx, rcx);     // kills rbx
 
-  JTSAN_RT_ONLY(TemplateTable::jtsan_store_array(element_address, atos));
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(element_address, atos));
 
   __ testptr(rax, rax);
   __ jcc(Assembler::zero, is_null);
@@ -1244,7 +1244,7 @@ void TemplateTable::bastore() {
   Address addr(rdx, rbx,Address::times_1,
                 arrayOopDesc::base_offset_in_bytes(T_BYTE));
 
-  JTSAN_RT_ONLY(TemplateTable::jtsan_store_array(addr, itos));
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, itos));
 
   __ access_store_at(T_BYTE, IN_HEAP | IS_ARRAY,
                      addr, rax, noreg, noreg);
@@ -1261,7 +1261,7 @@ void TemplateTable::castore() {
   Address addr(rdx, rbx, Address::times_2,
                   arrayOopDesc::base_offset_in_bytes(T_CHAR));
 
-  JTSAN_RT_ONLY(TemplateTable::jtsan_store_array(addr, itos));
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, itos));
 
   __ access_store_at(T_CHAR, IN_HEAP | IS_ARRAY,
                      addr, rax, noreg, noreg);
@@ -2925,7 +2925,7 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ push(btos);
 
   // aantonak - jtsan
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_field(field, rdx, btos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, btos));
 
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
@@ -2942,7 +2942,7 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ push(ztos);
 
   // aantonak - jtsan
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_field(field, rdx, ztos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, ztos));
 
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
@@ -2959,7 +2959,7 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ push(atos);
 
   // aantonak - jtsan
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_field(field, rdx, atos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, atos));
 
   if (!is_static && rc == may_rewrite) {
     patch_bytecode(Bytecodes::_fast_agetfield, bc, rbx);
@@ -2974,7 +2974,7 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ push(itos);
 
   // aantonak - jtsan
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_field(field, rdx, itos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, itos));
 
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
@@ -2990,7 +2990,7 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ push(ctos);
 
   // aantonak - jtsan
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_field(field, rdx, ctos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, ctos));
 
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
@@ -3006,7 +3006,7 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ push(stos);
 
   // aantonak - jtsan
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_field(field, rdx, stos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, stos));
 
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
@@ -3024,7 +3024,7 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ push(ltos);
 
   // aantonak - jtsan
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_field(field, rdx, ltos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, ltos));
 
   // Rewrite bytecode to be faster
   LP64_ONLY(if (!is_static && rc == may_rewrite) patch_bytecode(Bytecodes::_fast_lgetfield, bc, rbx));
@@ -3039,7 +3039,7 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ push(ftos);
 
   // aantonak - jtsan
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_field(field, rdx, ftos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, ftos));
 
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
@@ -3059,7 +3059,7 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ push(dtos);
 
   // aantonak - jtsan
-  JTSAN_RT_ONLY(TemplateTable::jtsan_load_field(field, rdx, dtos));
+  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, dtos));
 
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
@@ -3261,7 +3261,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(btos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_RT_ONLY(TemplateTable::jtsan_store_field(field, rdx, btos));
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, btos));
     __ access_store_at(T_BYTE, IN_HEAP, field, rax, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_bputfield, bc, rbx, true, byte_no);
@@ -3277,7 +3277,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(ztos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_RT_ONLY(TemplateTable::jtsan_store_field(field, rdx, ztos));
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, ztos));
     __ access_store_at(T_BOOLEAN, IN_HEAP, field, rax, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_zputfield, bc, rbx, true, byte_no);
@@ -3293,7 +3293,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(atos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_RT_ONLY(TemplateTable::jtsan_store_field(field, rdx, atos));
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, atos));
     // Store into the field
     do_oop_store(_masm, field, rax);
     if (!is_static && rc == may_rewrite) {
@@ -3310,7 +3310,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(itos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_RT_ONLY(TemplateTable::jtsan_store_field(field, rdx, itos));
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, itos));
     __ access_store_at(T_INT, IN_HEAP, field, rax, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_iputfield, bc, rbx, true, byte_no);
@@ -3326,7 +3326,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(ctos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_RT_ONLY(TemplateTable::jtsan_store_field(field, rdx, ctos));
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, ctos));
     __ access_store_at(T_CHAR, IN_HEAP, field, rax, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_cputfield, bc, rbx, true, byte_no);
@@ -3342,7 +3342,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(stos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_RT_ONLY(TemplateTable::jtsan_store_field(field, rdx, stos));
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, stos));
     __ access_store_at(T_SHORT, IN_HEAP, field, rax, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_sputfield, bc, rbx, true, byte_no);
@@ -3358,7 +3358,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(ltos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_RT_ONLY(TemplateTable::jtsan_store_field(field, rdx, ltos));
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, ltos));
     // MO_RELAXED: generate atomic store for the case of volatile field (important for x86_32)
     __ access_store_at(T_LONG, IN_HEAP | MO_RELAXED, field, noreg /* ltos*/, noreg, noreg);
 #ifdef _LP64
@@ -3377,7 +3377,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(ftos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_RT_ONLY(TemplateTable::jtsan_store_field(field, rdx, ftos));
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, ftos));
     __ access_store_at(T_FLOAT, IN_HEAP, field, noreg /* ftos */, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_fputfield, bc, rbx, true, byte_no);
@@ -3396,7 +3396,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(dtos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_RT_ONLY(TemplateTable::jtsan_store_field(field, rdx, dtos));
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, dtos));
     // MO_RELAXED: for the case of volatile field, in fact it adds no extra work for the underlying implementation
     __ access_store_at(T_DOUBLE, IN_HEAP | MO_RELAXED, field, noreg /* dtos */, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
@@ -4208,8 +4208,8 @@ void TemplateTable::_new() {
     __ store_klass(rax, rcx, tmp_store_klass);  // klass
 
   // aantonak - jtsan lock index initialization
-  JTSAN_RT_ONLY(__ movptr(Address(rax, oopDesc::obj_lock_index_offset_in_bytes()), (intptr_t)0));
-  JTSAN_RT_ONLY(__ movptr(Address(rax, oopDesc::sync_lock_index_offset_in_bytes()), (intptr_t)0));
+  JTSAN_ONLY(__ movptr(Address(rax, oopDesc::obj_lock_index_offset_in_bytes()), (intptr_t)0));
+  JTSAN_ONLY(__ movptr(Address(rax, oopDesc::sync_lock_index_offset_in_bytes()), (intptr_t)0));
 
     {
       SkipIfEqual skip_if(_masm, &DTraceAllocProbes, 0);

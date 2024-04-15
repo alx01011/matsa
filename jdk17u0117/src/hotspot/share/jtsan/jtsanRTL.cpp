@@ -36,17 +36,15 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur) {
 
 
 void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint8_t is_write) {
-    // if vm is not initialized, we can't ignore
-    
+    // if shadow is not initialized, we can ignore
+    if (ShadowMemory::getInstance() == nullptr) {
+        return;
+    }
 
 
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_thread_obj_id(JavaThread::current());
 
-    ResourceMark rm;
-    const char *mname = m->external_name_as_fully_qualified();
-
-    fprintf(stderr, "trying to increment epoch on thread %d, at method %s\n", tid, mname);
 
     // increment the epoch of the current thread
     JtsanThreadState::incrementEpoch(tid);

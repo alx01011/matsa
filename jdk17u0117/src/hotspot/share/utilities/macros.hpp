@@ -340,21 +340,12 @@
 #endif
 
 #if INCLUDE_JTSAN
-// will only run if jtsan is enable and if shadow memory has been initialized
 #define JTSAN_ONLY(code) \
     do { \
       if (JTSAN) { \
         code; \
       } \
     } while (0)
-
-#define JTSAN_RT_ONLY(code) \
-    do { \
-      if (JTSAN && ShadowMemory::getInstance() != nullptr) { \
-        code; \
-      } \
-    } while (0)
-
 #endif
 
 
