@@ -11,7 +11,7 @@
     This is limited due to the number of bits used to represent tid in the shadow cells
 */
 
-#define MAX_THREADS (65536)
+#define MAX_THREADS (256)
 
 class JtsanThreadState : public CHeapObj<mtInternal> {
     private:
