@@ -406,7 +406,11 @@ bool oopDesc::mark_must_be_preserved_for_promotion_failure(markWord m) const {
 
 // jtsan lock index
 #ifdef INCLUDE_JTSAN
-//#include "jtsan/lockState.hpp"
+#include "jtsan/lockState.hpp"
+
+/*
+  FIXME: Not every operation is required to be atomic here.
+*/
 
 void oopDesc::init_lock_index(void) {
   Atomic::store(&_obj_lock_index, (uint32_t)0);
@@ -429,10 +433,10 @@ void oopDesc::set_cur_obj_lock_index(void) {
     return;
   }
 
-  // LockShadow *shadow = LockShadow::ObjectLockShadow();
+  LockShadow *shadow = LockShadow::ObjectLockShadow();
 
-  // Atomic::store(&_obj_lock_index, (uint32_t)shadow->getCurrentLockIndex());
-  // shadow->incrementLockIndex();
+  Atomic::store(&_obj_lock_index, (uint32_t)shadow->getCurrentLockIndex());
+  shadow->incrementLockIndex();
 }
 
 void oopDesc::set_cur_sync_lock_index(void) {
@@ -440,10 +444,10 @@ void oopDesc::set_cur_sync_lock_index(void) {
     return;
   }
 
-  // LockShadow *shadow = LockShadow::SyncLockShadow();
+  LockShadow *shadow = LockShadow::SyncLockShadow();
 
-  // _sync_lock_index = shadow->getCurrentLockIndex();
-  // shadow->incrementLockIndex();
+  _sync_lock_index = shadow->getCurrentLockIndex();
+  shadow->incrementLockIndex();
 }
 #endif
 

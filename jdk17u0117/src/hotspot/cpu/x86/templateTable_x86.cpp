@@ -4205,6 +4205,10 @@ void TemplateTable::_new() {
     Register tmp_store_klass = LP64_ONLY(rscratch1) NOT_LP64(noreg);
     __ store_klass(rax, rcx, tmp_store_klass);  // klass
 
+  // aantonak - jtsan lock index initialization
+  JTSAN_ONLY(__ movptr(Address(rax, oopDesc::obj_lock_index_offset_in_bytes()), (intptr_t)0));
+  JTSAN_ONLY(__ movptr(Address(rax, oopDesc::sync_lock_index_offset_in_bytes()), (intptr_t)0));
+
     {
       SkipIfEqual skip_if(_masm, &DTraceAllocProbes, 0);
       // Trigger dtrace event for fastpath

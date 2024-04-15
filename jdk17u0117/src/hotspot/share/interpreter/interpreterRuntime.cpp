@@ -78,6 +78,12 @@
 #include "opto/runtime.hpp"
 #endif
 
+#if INCLUDE_JTSAN
+#include "jtsan/threadState.hpp"
+#include "jtsan/lockState.hpp"
+#include "jtsan/jtsanRTL.hpp"
+#endif
+
 // Helper class to access current interpreter state
 class LastFrameAccessor : public StackObj {
   frame _last_frame;
@@ -717,22 +723,22 @@ void InterpreterRuntime::resolve_get_put(JavaThread* current, Bytecodes::Code by
 //------------------------------------------------------------------------------------------------------------------------
 // jtsan instrumentation
 
-void MemoryAccess(void *addr, Method *m, address &bcp, int size, bool is_store) {
-  int bci = m->bci_from(bcp);
-  int line_no = m->line_number_from_bci(bci);
+// void MemoryAccess(void *addr, Method *m, address &bcp, int size, bool is_store) {
+//   int bci = m->bci_from(bcp);
+//   int line_no = m->line_number_from_bci(bci);
 
-  if (line_no < 30 || line_no > 40) return;
+//   if (line_no < 30 || line_no > 40) return;
 
-  JavaThread *thread = JavaThread::current();
+//   JavaThread *thread = JavaThread::current();
 
-  ResourceMark rm;
-  const char *mname = m->external_name_as_fully_qualified();
+//   ResourceMark rm;
+//   const char *mname = m->external_name_as_fully_qualified();
 
-  int tid = JavaThread::get_thread_obj_id(thread);
+//   int tid = JavaThread::get_thread_obj_id(thread);
 
-  fprintf(stderr, "Access %s at method %s , line %d : %p\n", is_store ? "store" : "load", mname, line_no, addr);
+//   fprintf(stderr, "Access %s at method %s , line %d : %p\n", is_store ? "store" : "load", mname, line_no, addr);
 
-}
+// }
 
 
 void InterpreterRuntime::jtsan_load1(void *addr, Method *m, address bcp) {
@@ -842,14 +848,16 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
     Store the result into the thread state.
   */
 
-  // uint32_t *lock_state  = LockShadow::ObjectLockShadow()->indexToLockState(p->obj_lock_index())->epoch;
+   uint32_t lock_index = p->obj_lock_index();
+   LockState ls = LockShadow::ObjectLockShadow()->indexToLockState(lock_index);
+   uint16_t* modified_epochs = ls.modified;
 
-  // for (int i = 0; i < MAX_THREADS; i++) {
-  //   uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
-  //   if (curr_tstate < lock_state[i]) {
-  //     JtsanThreadState::setEpoch(tid, i, lock_state[i]);
-  //   }
-  // }
+   for (uint16_t i = 0; i < ls.modifiedSize; i++) {
+      uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, modified_epochs[i]);
+      if (ls.epoch[modified_epochs[i]] > curr_tstate) {
+        JtsanThreadState::setEpoch(tid, modified_epochs[i], ls.epoch[modified_epochs[i]]);
+      }
+   }
 }
 
 void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bcp) {
@@ -871,14 +879,27 @@ void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bc
     Store the result into lock state.
   */
 
-  // uint32_t *lock_state  = LockShadow::ObjectLockShadow()->indexToLockState(p->obj_lock_index())->epoch;
+  uint32_t lock_index = p->obj_lock_index();
+  LockState ls = LockShadow::ObjectLockShadow()->indexToLockState(lock_index);
+  uint16_t* modified_epochs = ls.modified;
 
-  // for (int i = 0; i < MAX_THREADS; i++) {
-  //   uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
-  //   if (lock_state[i] < curr_tstate) {
-  //     lock_state[i] = curr_tstate;
-  //   }
-  // }
+  bool found = false;
+  for (uint16_t i = 0; i < ls.modifiedSize; i++) {
+    if (modified_epochs[i] == tid) {
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
+    ls.modified[ls.modifiedSize++] = tid;
+  }
+
+  uint32_t curr_epoch = JtsanThreadState::getEpoch(tid, tid);
+
+  if (ls.epoch[tid] < curr_epoch) {
+    ls.epoch[tid] = curr_epoch;
+  }
 }
 
 void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, address bcp) {
