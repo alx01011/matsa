@@ -852,7 +852,7 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
    LockState* ls = LockShadow::ObjectLockShadow()->indexToLockState(lock_index);
    //uint16_t* modified_epochs = ls->modified;
 
-   for (uint16_t i = 0; i < MAX_THREADS; i++) {
+   for (uint32_t i = 0; i < MAX_THREADS; i++) {
      uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
      if (ls->epoch[i] > curr_tstate) {
        JtsanThreadState::setEpoch(tid, i, ls->epoch[i]);
