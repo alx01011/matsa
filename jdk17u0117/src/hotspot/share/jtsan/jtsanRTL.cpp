@@ -1,7 +1,7 @@
 #include "jtsanRTL.hpp"
 #include "threadState.hpp"
 
-#include "runtime/Thread.hpp"
+#include "runtime/thread.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/oop.hpp"
 #include "oops/oopsHierarchy.hpp"
