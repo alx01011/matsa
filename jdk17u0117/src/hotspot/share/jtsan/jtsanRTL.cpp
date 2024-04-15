@@ -36,11 +36,9 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur) {
 
 
 void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint8_t is_write) {
-    Thread *t           = Thread::current();
+    // if vm is not initialized, we can't ignore
+    
 
-    if (!t->is_Java_thread()) {
-        return;
-    }
 
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_thread_obj_id(JavaThread::current());

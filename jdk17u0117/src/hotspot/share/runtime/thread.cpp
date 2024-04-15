@@ -2965,11 +2965,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
   assert(Universe::is_fully_initialized(), "not initialized");
 
-  // jtsan initialization must be done after gc initialization
-  JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
-  JTSAN_ONLY(JtsanThreadState::init());
-  JTSAN_ONLY(LockShadow::init());
-
   if (VerifyDuringStartup) {
     // Make sure we're starting with a clean slate.
     VM_Verify verify_op;
@@ -3174,6 +3169,11 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
     MetaspaceShared::preload_and_dump();
     ShouldNotReachHere();
   }
+
+    // jtsan initialization must be done after gc initialization
+  JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
+  JTSAN_ONLY(JtsanThreadState::init());
+  JTSAN_ONLY(LockShadow::init());
 
   return JNI_OK;
 }
