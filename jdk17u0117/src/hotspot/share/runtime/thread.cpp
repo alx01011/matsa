@@ -132,6 +132,11 @@
 #include "utilities/preserveException.hpp"
 #include "utilities/spinYield.hpp"
 #include "utilities/vmError.hpp"
+#if INCLUDE_JTSAN
+#include "jtsan/shadow.hpp"
+#include "jtsan/threadState.hpp"
+#include "jtsan/lockState.hpp"
+#endif
 #if INCLUDE_JVMCI
 #include "jvmci/jvmci.hpp"
 #include "jvmci/jvmciEnv.hpp"
@@ -2959,6 +2964,12 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   }
 
   assert(Universe::is_fully_initialized(), "not initialized");
+
+  // jtsan initialization must be done after gc initialization
+  JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
+  JTSAN_ONLY(JtsanThreadState::init());
+  JTSAN_ONLY(LockShadow::init());
+
   if (VerifyDuringStartup) {
     // Make sure we're starting with a clean slate.
     VM_Verify verify_op;
@@ -3534,6 +3545,10 @@ void Threads::destroy_vm() {
   // Deleting the shutdown thread here is safe. See comment on
   // wait_until_not_protected() above.
   delete thread;
+
+  // jtsan - this is where destruction happens
+  JTSAN_ONLY(ShadowMemory::destroy());
+  // TODO: free rest of jtsan mem
 
 #if INCLUDE_JVMCI
   if (JVMCICounterSize > 0) {
