@@ -62,8 +62,6 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
     //     return;
     // }
 
-    if (obj->klass()->is_subclass_of(SystemDictionary::))
-
     // ResourceMark rm;
 
     // InstanceKlass *klass = m->method_holder();
