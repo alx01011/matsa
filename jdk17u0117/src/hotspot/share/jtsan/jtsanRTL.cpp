@@ -56,6 +56,11 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
 
     // FIXME: this is slow
     oop obj = (oopDesc *)addr;
+    // this means that the access is from a lock object
+    // we can ignore these
+    if (obj->obj_lock_index() != 0) {
+        return;
+    }
     
     // check if obj is child java.util.concurrent.locks
     // if (obj->klass()->is_subclass_of(SystemDictionary::Thread_klass())) {
