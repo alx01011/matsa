@@ -39,17 +39,11 @@ LockShadow::~LockShadow(void) {
 
 // gets the object lock shadow memory
 LockShadow* LockShadow::ObjectLockShadow(void) {
-    if (LockShadow::objectInstance == nullptr) {
-        LockShadow::objectInstance = new LockShadow();
-    }
     return LockShadow::objectInstance;
 }
 
 // gets the sync lock shadow memory
 LockShadow* LockShadow::SyncLockShadow(void) {
-    if (LockShadow::syncInstance == nullptr) {
-        LockShadow::syncInstance = new LockShadow();
-    }
     return LockShadow::syncInstance;
 }
 

@@ -1342,7 +1342,7 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
   // aantonak - jtsan
   // restore lock_reg
   pop(lock_reg);
-  JTSAN_RT_ONLY(jtsan_monitor_enter(lock_reg));
+  JTSAN_ONLY(jtsan_monitor_enter(lock_reg));
 }
 
 // aantonak - jtsan
@@ -1378,7 +1378,7 @@ void InterpreterMacroAssembler::unlock_object(Register lock_reg) {
          "The argument is only for looks. It must be c_rarg1");
 
   // aantonak - jtsan
-  JTSAN_RT_ONLY(jtsan_monitor_exit(lock_reg));
+  JTSAN_ONLY(jtsan_monitor_exit(lock_reg));
 
   if (UseHeavyMonitors) {
     call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorexit), lock_reg);

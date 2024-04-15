@@ -848,8 +848,13 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
     Store the result into the thread state.
   */
 
+  LockShadow *obs = LockShadow::ObjectLockShadow();
+
+  // uninit
+  if (obs == nullptr) return;
+
    uint32_t lock_index = p->obj_lock_index();
-   LockState* ls = LockShadow::ObjectLockShadow()->indexToLockState(lock_index);
+   LockState* ls = obs->indexToLockState(lock_index);
    //uint16_t* modified_epochs = ls->modified;
 
    for (uint32_t i = 0; i < MAX_THREADS; i++) {
@@ -879,8 +884,13 @@ void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bc
     Store the result into lock state.
   */
 
+  LockShadow *obs = LockShadow::ObjectLockShadow();
+
+  // uninit
+  if (obs == nullptr) return;
+
   uint32_t lock_index = p->obj_lock_index();
-  LockState* ls = LockShadow::ObjectLockShadow()->indexToLockState(lock_index);
+  LockState* ls = obs->indexToLockState(lock_index);
   //uint16_t* modified_epochs = ls->modified;
 
   for (uint32_t i = 0; i < MAX_THREADS; i++) {
@@ -952,7 +962,13 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   // }
 
   uint32_t lock_index = p->sync_lock_index();
-  LockState* ls = LockShadow::SyncLockShadow()->indexToLockState(lock_index);
+
+  LockShadow *sls = LockShadow::SyncLockShadow();
+
+  // uninit
+  if (sls == nullptr) return;
+
+  LockState* ls = sls->indexToLockState(lock_index);
   uint16_t* modified_epochs = ls->modified;
 
   for (uint16_t i = 0; i < ls->modifiedSize; i++) {
@@ -991,8 +1007,13 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   //   }
   // }
 
+  LockShadow* sls =  LockShadow::SyncLockShadow();
+
+  // uninit
+  if (sls == nullptr) return;
+
   uint32_t lock_index = p->sync_lock_index();
-  LockState* ls = LockShadow::SyncLockShadow()->indexToLockState(lock_index);
+  LockState* ls = sls->indexToLockState(lock_index);
   uint16_t* modified_epochs = ls->modified;
 
   bool found = false;
