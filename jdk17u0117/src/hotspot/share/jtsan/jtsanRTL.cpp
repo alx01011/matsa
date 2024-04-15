@@ -42,18 +42,6 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
         return;
     }
 
-
-    JavaThread *thread = JavaThread::current();
-    uint16_t tid       = JavaThread::get_thread_obj_id(JavaThread::current());
-
-
-    // increment the epoch of the current thread
-    JtsanThreadState::incrementEpoch(tid);
-    uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
-
-    // create a new shadow cell
-    ShadowCell cur = {tid, epoch, 0, is_write};
-
     // FIXME: this is slow
     oop obj = (oopDesc *)addr;
     // this means that the access is from a lock object
@@ -61,6 +49,17 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
     if (obj->obj_lock_index() != 0) {
         return;
     }
+
+
+    JavaThread *thread = JavaThread::current();
+    uint16_t tid       = JavaThread::get_thread_obj_id(JavaThread::current());
+
+    // increment the epoch of the current thread
+    JtsanThreadState::incrementEpoch(tid);
+    uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
+
+    // create a new shadow cell
+    ShadowCell cur = {tid, epoch, 0, is_write};
     
     // check if obj is child java.util.concurrent.locks
     // if (obj->klass()->is_subclass_of(SystemDictionary::Thread_klass())) {
