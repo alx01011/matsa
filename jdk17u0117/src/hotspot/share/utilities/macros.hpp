@@ -340,7 +340,6 @@
 #endif
 
 #if INCLUDE_JTSAN
-#include "jtsan/shadow.hpp"
 // will only run if jtsan is enable and if shadow memory has been initialized
 #define JTSAN_ONLY(code) \
     do { \
