@@ -370,7 +370,7 @@ oop MemAllocator::finish(HeapWord* mem) const {
     oopDesc::set_mark(mem, markWord::prototype());
   }
 
-  JTSAN_ONLY(
+  JTSAN_RT_ONLY(
   oop o = cast_to_oop(mem);
   o->init_lock_index()
   );

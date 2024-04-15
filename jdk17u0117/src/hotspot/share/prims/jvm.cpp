@@ -3857,9 +3857,11 @@ JVM_ENTRY_NO_ENV(jint, JVM_FindSignal(const char *name))
 JVM_END
 
 
+
+#include "jtsan/shadow.hpp"
 // aantonak - jtsan
 JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env, jobject x))
-    if (thread && thread->is_Java_thread() && JTSAN) {
+    if (JTSAN && ShadowMemory::getInstance() != nullptr && thread && thread->is_Java_thread()) {
       JavaThread *jt = (JavaThread *) thread;
       frame fr = jt->last_frame();
       // To get the actual sender frame, we need to skip Runtime and java.util.concurrent frames
@@ -3881,7 +3883,7 @@ JVM_END
 
 // aantonak - jtsan
 JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env, jobject x))
-    if (thread && thread->is_Java_thread() && JTSAN) {
+    if (JTSAN && ShadowMemory::getInstance() != nullptr && thread && thread->is_Java_thread()) {
         JavaThread *jt = (JavaThread *) thread;
         frame fr = jt->last_frame();
         // To get the actual sender frame, we need to skip Runtime and java.util.concurrent frames
