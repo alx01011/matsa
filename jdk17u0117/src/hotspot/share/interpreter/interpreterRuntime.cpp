@@ -82,6 +82,7 @@
 #include "jtsan/threadState.hpp"
 #include "jtsan/lockState.hpp"
 #include "jtsan/jtsanRTL.hpp"
+#include "jtsan/jtsanGlobals.hpp"
 #endif
 
 // Helper class to access current interpreter state
@@ -820,6 +821,8 @@ void (*InterpreterRuntime::jtsan_store[]) (void *addr, Method *m, address bcp) =
 
 // for object locks
 void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp) {
+  if (!is_jtsan_initialized()) return;
+
   JavaThread *thread = JavaThread::current();
 
   if (thread == NULL || method == NULL || bcp == NULL) return; // ignore null threads
@@ -850,9 +853,6 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
 
   LockShadow *obs = LockShadow::ObjectLockShadow();
 
-  // uninit
-  if (obs == nullptr) return;
-
    uint32_t lock_index = p->obj_lock_index();
    LockState* ls = obs->indexToLockState(lock_index);
    //uint16_t* modified_epochs = ls->modified;
@@ -866,6 +866,8 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
 }
 
 void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bcp) {
+  if (!is_jtsan_initialized()) return;
+
   JavaThread *thread = JavaThread::current();
 
   if (thread == NULL || method == NULL || bcp == NULL) return; // ignore null threads
@@ -885,9 +887,6 @@ void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bc
   */
 
   LockShadow *obs = LockShadow::ObjectLockShadow();
-
-  // uninit
-  if (obs == nullptr) return;
 
   uint32_t lock_index = p->obj_lock_index();
   LockState* ls = obs->indexToLockState(lock_index);
@@ -920,6 +919,8 @@ void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bc
 }
 
 void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, address bcp) {
+  if (!is_jtsan_initialized()) return;
+
   JavaThread *thread = JavaThread::current();
 
   if (thread == NULL || m == NULL || bcp == NULL) return; // ignore null threads
@@ -965,9 +966,6 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
 
   LockShadow *sls = LockShadow::SyncLockShadow();
 
-  // uninit
-  if (sls == nullptr) return;
-
   LockState* ls = sls->indexToLockState(lock_index);
   uint16_t* modified_epochs = ls->modified;
 
@@ -980,6 +978,8 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
 }
 
 void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, address bcp) {
+  if (!is_jtsan_initialized()) return;
+
   JavaThread *thread = JavaThread::current();
 
   if (thread == NULL || m == NULL || bcp == NULL) return; // ignore null threads
@@ -1008,9 +1008,6 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   // }
 
   LockShadow* sls =  LockShadow::SyncLockShadow();
-
-  // uninit
-  if (sls == nullptr) return;
 
   uint32_t lock_index = p->sync_lock_index();
   LockState* ls = sls->indexToLockState(lock_index);

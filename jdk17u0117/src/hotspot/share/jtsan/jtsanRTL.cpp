@@ -1,5 +1,6 @@
 #include "jtsanRTL.hpp"
 #include "threadState.hpp"
+#include "jtsanGlobals.hpp"
 
 #include "runtime/thread.hpp"
 #include "memory/resourceArea.hpp"
@@ -36,8 +37,8 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur) {
 
 
 void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint8_t is_write) {
-    // if shadow is not initialized, we can ignore
-    if (ShadowMemory::getInstance() == nullptr) {
+    // if jtsan is not initialized, we can ignore
+    if (!is_jtsan_initialized()) {
         return;
     }
 

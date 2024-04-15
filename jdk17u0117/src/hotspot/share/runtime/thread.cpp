@@ -136,6 +136,7 @@
 #include "jtsan/shadow.hpp"
 #include "jtsan/threadState.hpp"
 #include "jtsan/lockState.hpp"
+#include "jtsan/jtsanGlobals.hpp"
 #endif
 #if INCLUDE_JVMCI
 #include "jvmci/jvmci.hpp"
@@ -3174,6 +3175,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
   JTSAN_ONLY(JtsanThreadState::init());
   JTSAN_ONLY(LockShadow::init());
+  JTSAN_ONLY(set_jtsan_initialized(true));
 
   return JNI_OK;
 }
