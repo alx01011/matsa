@@ -406,6 +406,7 @@ bool oopDesc::mark_must_be_preserved_for_promotion_failure(markWord m) const {
 
 // jtsan lock index
 #ifdef INCLUDE_JTSAN
+#include "jtsan/jtsanGlobals.hpp"
 #include "jtsan/lockState.hpp"
 
 /*
@@ -429,7 +430,7 @@ uint32_t oopDesc::obj_lock_index(void) const {
 
 void oopDesc::set_cur_obj_lock_index(void) {
   // Lock index is only set once
-  if (Atomic::load(&_obj_lock_index)) {
+  if (Atomic::load(&_obj_lock_index) || !is_jtsan_initialized()) {
     return;
   }
 
@@ -440,7 +441,7 @@ void oopDesc::set_cur_obj_lock_index(void) {
 }
 
 void oopDesc::set_cur_sync_lock_index(void) {
-  if (_sync_lock_index) {
+  if (_sync_lock_index || !is_jtsan_initialized()) {
     return;
   }
 
