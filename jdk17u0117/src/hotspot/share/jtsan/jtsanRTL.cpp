@@ -39,8 +39,6 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_thread_obj_id(JavaThread::current());
 
-    uint32_t *thr = JtsanThreadState::getThreadState(tid);
-
     // increment the epoch of the current thread
     JtsanThreadState::incrementEpoch(tid);
     uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
@@ -51,6 +49,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
     // FIXME: this is slow
     oop obj = (oopDesc *)addr;
     if (obj->obj_lock_index()) {
+        fprintf(stderr, "ignoring oop because of set index to %d\n", obj->obj_lock_index());
         return; // we can ignore locks
     }
 
