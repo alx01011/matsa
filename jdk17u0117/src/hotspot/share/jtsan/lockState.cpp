@@ -64,6 +64,7 @@ void LockShadow::destroy(void) {
 }
 
 LockState* LockShadow::indexToLockState(uint32_t index) {
+    fprintf(stderr, "trying to access lockstate at index %d\n", index);
     return (LockState*)((char*)this->addr + (index * sizeof(LockState)));
 }
 

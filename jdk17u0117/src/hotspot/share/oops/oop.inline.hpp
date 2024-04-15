@@ -430,7 +430,7 @@ uint32_t oopDesc::obj_lock_index(void) const {
 
 void oopDesc::set_cur_obj_lock_index(void) {
   // Lock index is only set once
-  if (Atomic::load(&_obj_lock_index) || !is_jtsan_initialized()) {
+  if (_obj_lock_index || !is_jtsan_initialized()) {
     return;
   }
 
