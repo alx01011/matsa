@@ -2775,6 +2775,9 @@ void Threads::initialize_jsr292_core_classes(TRAPS) {
 jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   extern void JDK_Version_init();
 
+  // jtsan initialization must be done after gc initialization
+  JTSAN_ONLY(set_jtsan_initialized(false));
+
   // Preinitialize version info.
   VM_Version::early_initialize();
 
@@ -3172,6 +3175,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   }
 
     // jtsan initialization must be done after gc initialization
+  JTSAN_ONLY(set_jtsan_initialized(false));
   JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
   JTSAN_ONLY(JtsanThreadState::init());
   JTSAN_ONLY(LockShadow::init());
