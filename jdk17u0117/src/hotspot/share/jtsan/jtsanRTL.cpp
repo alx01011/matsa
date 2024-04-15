@@ -48,7 +48,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
 
     // FIXME: this is slow
     oop obj = (oopDesc *)addr;
-    if (obj->obj_lock_index()) {
+    if (oopDesc::is_oop(obj) && obj->obj_lock_index()) {
         fprintf(stderr, "ignoring oop because of set index to %d\n", obj->obj_lock_index());
         return; // we can ignore locks
     }
