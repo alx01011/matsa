@@ -49,8 +49,8 @@ LockShadow* LockShadow::SyncLockShadow(void) {
 
 // initializes the lock shadow memory
 void LockShadow::init(void) {
-    objectInstance = LockShadow();
-    syncInstance   = LockShadow();
+    objectInstance = new LockShadow();
+    syncInstance   = new LockShadow();
 }
 
 void LockShadow::destroy(void) {
