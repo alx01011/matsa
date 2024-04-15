@@ -851,7 +851,7 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
     Store the result into the thread state.
   */
 
-  JtsanThreadState::incrementEpoch(tid);
+  //JtsanThreadState::incrementEpoch(tid);
 
   LockShadow *obs = LockShadow::ObjectLockShadow();
 
