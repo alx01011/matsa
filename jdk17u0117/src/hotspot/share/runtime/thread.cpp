@@ -2826,13 +2826,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
   os::init_before_ergo();
 
-  // jtsan initialization must be done after gc initialization
-  JTSAN_ONLY(set_jtsan_initialized(false));
-  JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
-  JTSAN_ONLY(JtsanThreadState::init());
-  JTSAN_ONLY(LockShadow::init());
-  JTSAN_ONLY(set_jtsan_initialized(true));
-
   jint ergo_result = Arguments::apply_ergo();
   if (ergo_result != JNI_OK) return ergo_result;
 
@@ -2975,6 +2968,13 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   }
 
   assert(Universe::is_fully_initialized(), "not initialized");
+
+    // jtsan initialization must be done after gc initialization
+  JTSAN_ONLY(set_jtsan_initialized(false));
+  JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
+  JTSAN_ONLY(JtsanThreadState::init());
+  JTSAN_ONLY(LockShadow::init());
+  JTSAN_ONLY(set_jtsan_initialized(true));
 
   if (VerifyDuringStartup) {
     // Make sure we're starting with a clean slate.
