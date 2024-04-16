@@ -27,7 +27,7 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur) {
             }
            // if (print)
             fprintf(stderr, "Previous cell: index %d, tid %d, epoch %lu, is_write %d\n", i, cell.tid, cell.epoch, cell.is_write);
-            fprintf(stderr, "Current epoch for thread %d is %lu\n", cell.tid, thr);
+            fprintf(stderr, "Current epoch for thread %d is %u\n", cell.tid, thr);
             //fprintf(stderr, "Previous access by thread %d, current thread %d\n", cell.tid, cur.tid);
             //fprintf(stderr, "Previous epoch %lu, current epoch %lu\n", cell.epoch, cur.epoch);
             return true;
