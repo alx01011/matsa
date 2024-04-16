@@ -61,6 +61,14 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
 
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, 0, is_write};
+
+    int line = m->line_number_from_bci(m->bci_from(bcp));
+
+    if (line > 0 && line < 6) {
+        ResourceMark rk;
+        fprintf(stderr, "Access at line %d, in method %s\n", line, m->external_name_as_fully_qualified());
+        //fprintf(stderr, "Current cell: tid %d, epoch %lu, is_write %d and epoch %u\n", cur.tid, cur.epoch, cur.is_write, epoch);
+    }
     
     // check if obj is child java.util.concurrent.locks
     // if (obj->klass()->is_subclass_of(SystemDictionary::Thread_klass())) {
