@@ -89,6 +89,6 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
     }
 
     // store the shadow cell
-    fprintf(stderr, "Storing cell {tid : %d, epo : %lu, gc_epo : %d,  is_write : %d}\n", cur.tid, cur.epoch, cur.gc_epoch, cur.is_write);
+    //fprintf(stderr, "Storing cell {tid : %d, epo : %lu, gc_epo : %d,  is_write : %d}\n", cur.tid, cur.epoch, cur.gc_epoch, cur.is_write);
     ShadowBlock::store_cell((uptr)addr, &cur);
 }
