@@ -414,7 +414,7 @@ bool oopDesc::mark_must_be_preserved_for_promotion_failure(markWord m) const {
 */
 
 void oopDesc::init_lock_index(void) {
-  _lock_index = 0;
+  Atomic::store(&_lock_index, (uint64_t)0);
 }
 
 uint32_t oopDesc::sync_lock_index(void) const {
@@ -432,8 +432,10 @@ uint32_t oopDesc::obj_lock_index(void) const {
 }
 
 void oopDesc::set_cur_obj_lock_index(void) {
-  uint32_t _obj_lock_index = _lock_index & 0xFFFFFFFF;
-  uint32_t _sync_lock_index = _lock_index >> 32;
+  uint64_t lock_index = Atomic::load(&_lock_index);
+
+  uint32_t _obj_lock_index = lock_index & 0xFFFFFFFF;
+  uint32_t _sync_lock_index = lock_index >> 32;
 
   // Lock index is only set once
   if (_obj_lock_index || !is_jtsan_initialized()) {
@@ -444,12 +446,16 @@ void oopDesc::set_cur_obj_lock_index(void) {
   _obj_lock_index = (uint32_t)shadow->getCurrentLockIndex();
   shadow->incrementLockIndex();
 
-  _lock_index = ((uint64_t)_sync_lock_index << 32) | _obj_lock_index;
+  lock_index = ((uint64_t)_sync_lock_index << 32) | _obj_lock_index;
+
+  Atomic::store(&_lock_index, lock_index);
 }
 
 void oopDesc::set_cur_sync_lock_index(void) {
-  uint32_t _sync_lock_index = _lock_index >> 32;
-  uint32_t _obj_lock_index  = _lock_index & 0xFFFFFFFF;
+  uint64_t lock_index = Atomic::load(&_lock_index);
+
+  uint32_t _sync_lock_index = lock_index >> 32;
+  uint32_t _obj_lock_index  = lock_index & 0xFFFFFFFF;
 
   if (_sync_lock_index || !is_jtsan_initialized()) {
     return;
@@ -459,7 +465,9 @@ void oopDesc::set_cur_sync_lock_index(void) {
   _sync_lock_index = shadow->getCurrentLockIndex();
   shadow->incrementLockIndex();
 
-  _lock_index = ((uint64_t)_sync_lock_index << 32) | _obj_lock_index;
+  lock_index = ((uint64_t)_sync_lock_index << 32) | _obj_lock_index;
+
+  Atomic::store(&_lock_index, lock_index);
 }
 #endif
 
