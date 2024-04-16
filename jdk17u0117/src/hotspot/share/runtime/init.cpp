@@ -50,6 +50,13 @@
 #include "services/memTracker.hpp"
 #include "utilities/macros.hpp"
 
+#if INCLUDE_JTSAN
+#include "jtsan/shadow.hpp"
+#include "jtsan/threadState.hpp"
+#include "jtsan/lockState.hpp"
+#include "jtsan/jtsanGlobals.hpp"
+#endif
+
 
 // Initialization done by VM thread in vm_init_globals()
 void check_ThreadShadow();
