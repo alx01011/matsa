@@ -4,6 +4,8 @@
 volatile bool    _is_jtsan_initialized = false;
 volatile unsigned char _gc_epoch = 0;
 
+volatile bool   _is_klass_init = false;
+
 unsigned char get_gc_epoch(void) {
     return Atomic::load(&_gc_epoch);
 }
@@ -19,4 +21,15 @@ bool is_jtsan_initialized(void) {
 
 void set_jtsan_initialized(bool value) {
     Atomic::store(&_is_jtsan_initialized, value);
+}
+
+void clear_klass_init(void) {
+    Atomic::store(&_is_klass_init, false);
+}
+void set_klass_init(void) {
+    Atomic::store(&_is_klass_init, true);
+}
+
+bool is_klass_init(void) {
+    return Atomic::load(&_is_klass_init);
 }

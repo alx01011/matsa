@@ -6,7 +6,11 @@
 bool is_jtsan_initialized(void);
 void set_jtsan_initialized(bool value);
 
-void increment_gc_epoch(void);
+void          increment_gc_epoch(void);
 unsigned char get_gc_epoch(void);
+
+void clear_klass_init(void);
+void set_klass_init(void);
+bool is_klass_init(void);
 
 #endif
