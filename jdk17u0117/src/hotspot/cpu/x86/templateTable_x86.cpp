@@ -770,7 +770,11 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
   // push all registers, in the future we might want to push only the ones that are used
   __ pusha();
 
-  __ leaq(c_rarg0, member);
+  if (state == atos) {
+    __ movptr(c_rarg0, member.base());
+  } else {
+    __ leaq(c_rarg0, member);
+  }
   __ get_method(c_rarg1);
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_load[state]), c_rarg0, c_rarg1, rbcp);
 
@@ -1089,7 +1093,11 @@ void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
   // push all registers, in the future we might want to push only the ones that are used
   __ pusha();
 
-  __ leaq(c_rarg0, member);
+  if (state == atos) {
+    __ movptr(c_rarg0, member.base());
+  } else {
+    __ leaq(c_rarg0, member);
+  }
   __ get_method(c_rarg1);
  __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);
 
@@ -3200,7 +3208,12 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   // we don't even need to check final fields, the compiler wont allow writes to them
 
   __ get_method(c_rarg1); // get the method
-  __ leaq(c_rarg0, field); // get the field address
+
+  if (state == atos) {
+    __ movptr(c_rarg0, field.base()); // get oop address
+  } else {
+    __ leaq(c_rarg0, field); // get field address
+  }
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(safe);

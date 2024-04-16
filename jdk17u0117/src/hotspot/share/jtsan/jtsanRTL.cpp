@@ -58,11 +58,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     // this means that the access is from a lock object
     // we can ignore these
     if (is_oop && oopDesc::is_oop(obj) && obj->obj_lock_index() != 0) {
-        if (!oopDesc::is_oop(obj)) {
-            fprintf(stderr, "Object is not an oop\n");
-        } else {
-            fprintf(stderr, "Object is an oop but lock index is %d\n", obj->obj_lock_index());
-        }
+        fprintf(stderr, "Object is an oop but lock index is %d\n", obj->obj_lock_index());
         return;
     }
 
