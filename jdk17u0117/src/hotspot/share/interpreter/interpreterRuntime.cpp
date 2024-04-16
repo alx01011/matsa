@@ -1072,8 +1072,6 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
 }
 
 void InterpreterRuntime::jtsan_oop_lock(Thread *thread, oop obj) {
-  return;
-
   if (!is_jtsan_initialized()) return;
 
   if (thread == NULL || obj == NULL) return; // ignore null threads
@@ -1085,7 +1083,10 @@ void InterpreterRuntime::jtsan_oop_lock(Thread *thread, oop obj) {
   JavaThread *jt = JavaThread::current();
   int tid        = JavaThread::get_thread_obj_id(jt);
 
-  if (tid == -1 || tid >= MAX_THREADS) return;
+  if (tid == -1 || tid >= MAX_THREADS) {
+    fprintf(stderr, "Thread id %d is invalid\n", tid);
+    return;
+  }
 
     /*
     Unfortunately, synchronized methods and synchronized(this) blocks, are associated with a different lock.

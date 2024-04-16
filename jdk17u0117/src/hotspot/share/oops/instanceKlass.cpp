@@ -96,10 +96,6 @@
 #include "jfr/jfrEvents.hpp"
 #endif
 
-#if INCLUDE_JTSAN
-#include "jtsan/jtsanGlobals.hpp"
-#endif
-
 
 #ifdef DTRACE_ENABLED
 
@@ -789,7 +785,6 @@ void InstanceKlass::eager_initialize_impl() {
       set_init_state(old_state);
   } else {
     // linking successfull, mark class as initialized
-    JTSAN_ONLY(clear_klass_init());
     set_init_state(fully_initialized);
     fence_and_clear_init_lock();
     // trace
@@ -811,7 +806,6 @@ void InstanceKlass::initialize(TRAPS) {
     //       OR it may be in the state of being initialized
     //       in case of recursive initialization!
   } else {
-    JTSAN_ONLY(set_klass_init());
     assert(is_initialized(), "sanity check");
   }
 }
