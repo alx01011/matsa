@@ -47,21 +47,21 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
 }
 
 
+// FIXME: This will also report races on thread safe locks lke java.util.Concurrent.Lock
 void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write, bool is_oop) {
     // if jtsan is not initialized, we can ignore
     if (!is_jtsan_initialized()) {
         return;
     }
 
-    // FIXME: this is slow
-    oop obj = (oopDesc *)addr;
-    // this means that the access is from a lock object
-    // we can ignore these
-    if (is_oop && oopDesc::is_oop(obj) && obj->obj_lock_index() != 0) {
-        // find oop from address base
-        fprintf(stderr, "Object is an oop but lock index is %d\n", obj->obj_lock_index());
-        return;
-    }
+    // oop obj = (oopDesc *)addr;
+    // // this means that the access is from a lock object
+    // // we can ignore these
+    // if (is_oop && oopDesc::is_oop(obj) && obj->obj_lock_index() != 0) {
+    //     // find oop from address base
+    //     fprintf(stderr, "Object is an oop but lock index is %d\n", obj->obj_lock_index());
+    //     return;
+    // }
 
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_thread_obj_id(JavaThread::current());
