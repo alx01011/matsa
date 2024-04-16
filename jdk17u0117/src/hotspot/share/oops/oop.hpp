@@ -335,8 +335,7 @@ class oopDesc {
   }
 
 #ifdef INCLUDE_JTSAN
-  static int obj_lock_index_offset_in_bytes() { return (int)offset_of(oopDesc, _obj_lock_index); }
-  static int sync_lock_index_offset_in_bytes() { return (int)offset_of(oopDesc, _sync_lock_index); }
+  static int lock_index_offset_in_bytes() { return (int)offset_of(oopDesc, _lock_index); }
 #endif
 
   // for error reporting
