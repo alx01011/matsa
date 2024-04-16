@@ -2,9 +2,9 @@
 #include "runtime/atomic.hpp"
 
 volatile bool    _is_jtsan_initialized = false;
-volatile uint8_t _gc_epoch = 0;
+volatile unsigned char _gc_epoch = 0;
 
-uint8_t get_gc_epoch(void) {
+unsigned char get_gc_epoch(void) {
     return Atomic::load(&_gc_epoch);
 }
 
