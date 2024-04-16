@@ -7,8 +7,19 @@
 #include "oops/oop.hpp"
 #include "oops/oopsHierarchy.hpp"
 #include "oops/oop.inline.hpp"
+#include "utilities/globalDefinitions.hpp"
 
-bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur) {
+uint8_t TosToSize(TosState tos) {
+    uint8_t lookup[] = 
+    {1 /*byte*/, 1 /*byte*/, 1 /*char*/, 2 /*short*/, 
+    4 /*int*/, 8 /*long*/,  4 /*float*/, 8 /*double*/, 
+    8 /*object*/};
+
+    // this is safe because we only enter this function if tos is one of above
+    return lookup[tos];
+}
+
+ShadowCell CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell = ShadowBlock::load_cell((uptr)addr, i);
 
@@ -26,10 +37,9 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur) {
                 continue;
             }
            // if (print)
-            fprintf(stderr, "Previous cell: index %d, tid %d, epoch %lu, is_write %d\n", i, cell.tid, cell.epoch, cell.is_write);
-            fprintf(stderr, "Current epoch for thread [%d, %d] is %u\n", tid, cell.tid, thr);
             //fprintf(stderr, "Previous access by thread %d, current thread %d\n", cell.tid, cur.tid);
             //fprintf(stderr, "Previous epoch %lu, current epoch %lu\n", cell.epoch, cur.epoch);
+            prev = cell;
             return true;
         }
     }
@@ -37,7 +47,7 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur) {
 }
 
 
-void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint8_t is_write) {
+void MemoryAccess(void *addr, Method *m, address &bcp, TosState tos, uint8_t is_write) {
     // if jtsan is not initialized, we can ignore
     if (!is_jtsan_initialized()) {
         return;
@@ -47,7 +57,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
     oop obj = (oopDesc *)addr;
     // this means that the access is from a lock object
     // we can ignore these
-    if (access_size == 8 && oopDesc::is_oop(obj) && obj->obj_lock_index() != 0) {
+    if (tos == atos && oopDesc::is_oop(obj) && obj->obj_lock_index() != 0) {
         return;
     }
 
@@ -82,10 +92,14 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
     // }
 
     // race
-    if (CheckRaces(tid, addr, cur)) {
+    ShadowCell prev;
+    if (CheckRaces(tid, addr, cur, prev)) {
         ResourceMark rm;
         fprintf(stderr, "Data race detected in method %s, line %d\n",
             m->external_name_as_fully_qualified(), m->line_number_from_bci(m->bci_from(bcp)));
+        fprintf(stderr, "Previous access %s(%d), current access %s(%d)\n",
+            prev.is_write ? "write" : "read", prev.tid, cur.is_write ? "write" : "read", cur.tid);
+
     }
 
     // store the shadow cell

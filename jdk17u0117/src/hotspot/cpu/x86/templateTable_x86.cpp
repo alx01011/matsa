@@ -1144,6 +1144,8 @@ void TemplateTable::fastore() {
   Address addr(rdx, rbx, Address::times_4,
              arrayOopDesc::base_offset_in_bytes(T_FLOAT));
 
+  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, ftos));
+
   __ access_store_at(T_FLOAT, IN_HEAP | IS_ARRAY,
                      addr, noreg /* ftos */, noreg, noreg);
 }
