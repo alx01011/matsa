@@ -9,15 +9,15 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/globalDefinitions.hpp"
 
-uint8_t TosToSize(TosState tos) {
-    uint8_t lookup[] = 
-    {1 /*byte*/, 1 /*byte*/, 1 /*char*/, 2 /*short*/, 
-    4 /*int*/, 8 /*long*/,  4 /*float*/, 8 /*double*/, 
-    8 /*object*/};
+// uint8_t TosToSize(TosState tos) {
+//     uint8_t lookup[] = 
+//     {1 /*byte*/, 1 /*byte*/, 1 /*char*/, 2 /*short*/, 
+//     4 /*int*/, 8 /*long*/,  4 /*float*/, 8 /*double*/, 
+//     8 /*object*/};
 
-    // this is safe because we only enter this function if tos is one of above
-    return lookup[tos];
-}
+//     // this is safe because we only enter this function if tos is one of above
+//     return lookup[tos];
+// }
 
 ShadowCell CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
@@ -47,7 +47,7 @@ ShadowCell CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &pre
 }
 
 
-void MemoryAccess(void *addr, Method *m, address &bcp, TosState tos, uint8_t is_write) {
+void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint8_t is_write) {
     // if jtsan is not initialized, we can ignore
     if (!is_jtsan_initialized()) {
         return;
@@ -57,10 +57,14 @@ void MemoryAccess(void *addr, Method *m, address &bcp, TosState tos, uint8_t is_
     oop obj = (oopDesc *)addr;
     // this means that the access is from a lock object
     // we can ignore these
-    if (tos == atos && oopDesc::is_oop(obj) && obj->obj_lock_index() != 0) {
+    if (access_size == 8 && oopDesc::is_oop(obj) && obj->obj_lock_index() != 0) {
+        if (!is_oop(obj)) {
+            fprintf(stderr, "Object is not an oop\n")
+        } else {
+            fprintf(stderr, "Object is an oop but lock index is %d\n", obj->obj_lock_index());
+        }
         return;
     }
-
 
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_thread_obj_id(JavaThread::current());
@@ -71,25 +75,6 @@ void MemoryAccess(void *addr, Method *m, address &bcp, TosState tos, uint8_t is_
 
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, get_gc_epoch(), is_write};
-    
-    // check if obj is child java.util.concurrent.locks
-    // if (obj->klass()->is_subclass_of(SystemDictionary::Thread_klass())) {
-    //     return;
-    // }
-
-    // ResourceMark rm;
-
-    // InstanceKlass *klass = m->method_holder();
-    // file name
-    // const char * fname = m->external_name_as_fully_qualified();
-
-    // bool print = false;
-
-    // if (strstr(fname, "Race")) {
-    //     fprintf(stderr, "Access at line %d, in method %s\n", m->line_number_from_bci(m->bci_from(bcp)), m->external_name_as_fully_qualified());
-    //     fprintf(stderr, "Current cell: tid %d, epoch %lu, is_write %d and epoch %u\n", cur.tid, cur.epoch, cur.is_write, epoch);
-    //     print = true;
-    // }
 
     // race
     ShadowCell prev;
@@ -97,12 +82,10 @@ void MemoryAccess(void *addr, Method *m, address &bcp, TosState tos, uint8_t is_
         ResourceMark rm;
         fprintf(stderr, "Data race detected in method %s, line %d\n",
             m->external_name_as_fully_qualified(), m->line_number_from_bci(m->bci_from(bcp)));
-        fprintf(stderr, "Previous access %s(%d), current access %s(%d)\n",
-            prev.is_write ? "write" : "read", prev.tid, cur.is_write ? "write" : "read", cur.tid);
-
+        fprintf(stderr, "Previous access %s of size %d, by thread %d, epoch %lu\n",
+            prev.is_write ? "write" : "read", access_size, prev.tid, prev.epoch);
     }
 
     // store the shadow cell
-    //fprintf(stderr, "Storing cell {tid : %d, epo : %lu, gc_epo : %d,  is_write : %d}\n", cur.tid, cur.epoch, cur.gc_epoch, cur.is_write);
     ShadowBlock::store_cell((uptr)addr, &cur);
 }
