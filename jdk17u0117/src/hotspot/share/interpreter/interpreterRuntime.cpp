@@ -1080,12 +1080,9 @@ void InterpreterRuntime::jtsan_oop_lock(Thread *thread, oop obj) {
   
   // if (thread_oop == NULL) return; // ignore null thread objects
 
-  JavaThread *jt = JavaThread::current();
-  int tid        = JavaThread::get_thread_obj_id(jt);
-
-  if (tid == -1 || tid >= MAX_THREADS) {
-    fprintf(stderr, "Thread id %d is invalid\n", tid);
-    return;
+  int tid = -2;
+  if (thread->osthread() != nullptr) {
+    tid = thread->osthread()->thread_id();
   }
 
     /*
@@ -1151,8 +1148,12 @@ void InterpreterRuntime::jtsan_oop_unlock(Thread *thread, oop obj) {
   
   // if (thread_oop == NULL) return; // ignore null thread objects
 
-  JavaThread *jt = JavaThread::current();
-  int tid        = JavaThread::get_thread_obj_id(jt);
+  // JavaThread *jt = JavaThread::current();
+  // int tid        = JavaThread::get_thread_obj_id(jt);
+  int tid = -2;
+  if (thread->osthread() != nullptr) {
+    tid = thread->osthread()->thread_id();
+  }
 
   if (tid == -1 || tid >= MAX_THREADS) return;
 
