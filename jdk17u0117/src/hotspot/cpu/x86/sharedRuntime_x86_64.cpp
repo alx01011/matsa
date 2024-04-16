@@ -2117,9 +2117,9 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     JTSAN_ONLY(
       __ pusha();
       __ get_thread(c_rarg0);
-      __ get_method(c_rarg1);
+      //__ get_method(c_rarg1);
       __ movptr     (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
-      __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_sync_enter), c_rarg0, c_rarg1, c_rarg2);
+      __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_sync_enter), c_rarg0, method, c_rarg2);
       __ popa();
     );
 
