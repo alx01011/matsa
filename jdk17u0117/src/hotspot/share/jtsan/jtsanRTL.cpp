@@ -51,7 +51,10 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
         int line = m->line_number_from_bci(m->bci_from(bcp));
 
 
-        fprintf(stderr, "Acces to lock at line %d, in method %s %u\n", line, m->external_name_as_fully_qualified(), obj->obj_lock_index());
+        fprintf(stderr, "Access to lock at line %d, in method %s %u\n", line, m->external_name_as_fully_qualified(), obj->obj_lock_index());
+        uint32_t cur_obj_index = LockShadow::ObjectLockShadow()->getCurrentLockIndex();
+
+        fprintf(stderr, "Current lock index %u\n", cur_obj_index);
 
         return;
     }
