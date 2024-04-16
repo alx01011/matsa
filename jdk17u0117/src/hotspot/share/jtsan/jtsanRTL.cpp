@@ -9,15 +9,15 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/globalDefinitions.hpp"
 
-// uint8_t TosToSize(TosState tos) {
-//     uint8_t lookup[] = 
-//     {1 /*byte*/, 1 /*byte*/, 1 /*char*/, 2 /*short*/, 
-//     4 /*int*/, 8 /*long*/,  4 /*float*/, 8 /*double*/, 
-//     8 /*object*/};
+uint8_t TosToSize(TosState tos) {
+    uint8_t lookup[] = 
+    {1 /*byte*/, 1 /*byte*/, 1 /*char*/, 2 /*short*/, 
+    4 /*int*/, 8 /*long*/,  4 /*float*/, 8 /*double*/, 
+    8 /*object*/};
 
-//     // this is safe because we only enter this function if tos is one of above
-//     return lookup[tos];
-// }
+    // this is safe because we only enter this function if tos is one of above
+    return lookup[tos];
+}
 
 bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
@@ -47,7 +47,7 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
 }
 
 
-void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint8_t is_write) {
+void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write, bool is_oop = false) {
     // if jtsan is not initialized, we can ignore
     if (!is_jtsan_initialized()) {
         return;
@@ -57,7 +57,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
     oop obj = (oopDesc *)addr;
     // this means that the access is from a lock object
     // we can ignore these
-    if (access_size == 8 && oopDesc::is_oop(obj) && obj->obj_lock_index() != 0) {
+    if (is_oop && oopDesc::is_oop(obj) && obj->obj_lock_index() != 0) {
         if (!oopDesc::is_oop(obj)) {
             fprintf(stderr, "Object is not an oop\n");
         } else {

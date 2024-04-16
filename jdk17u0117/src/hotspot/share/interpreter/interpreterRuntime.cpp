@@ -770,6 +770,11 @@ void InterpreterRuntime::jtsan_load8(void *addr, Method *m, address bcp) {
  // load_store_where((char*)"jtsan_load8:", m, addr, bcp);
 }
 
+void InterpreterRuntime::jtsan_loadOop(void *addr, Method *m, address bcp) {
+  MemoryAccess(addr, m, bcp, 8, false, true);
+ // load_store_where((char*)"jtsan_load8:", m, addr, bcp);
+}
+
 void jtsan_vtos(void *addr, Method *m, address bcp) {
   assert(false, "jtsan vtos");
 }
@@ -788,7 +793,7 @@ void (*InterpreterRuntime::jtsan_load[]) (void *addr, Method *m, address bcp) = 
   InterpreterRuntime::jtsan_load8, //  ltos
   InterpreterRuntime::jtsan_load4, //  ftos
   InterpreterRuntime::jtsan_load8, //  dtos
-  InterpreterRuntime::jtsan_load8, //  atos
+  InterpreterRuntime::jtsan_loadOop, //  atos
   jtsan_vtos // vtos
 };
 
@@ -814,6 +819,11 @@ void InterpreterRuntime::jtsan_store8(void *addr, Method *m, address bcp) {
   //load_store_where((char*)"jtsan_store8:", m, addr, bcp);
 }
 
+void InterpreterRuntime::jtsan_storeOop(void *addr, Method *m, address bcp) {
+  MemoryAccess(addr, m, bcp, 8, true, true);
+  //load_store_where((char*)"jtsan_storeOop:", m, addr, bcp);
+}
+
 void (*InterpreterRuntime::jtsan_store[]) (void *addr, Method *m, address bcp) = {
   InterpreterRuntime::jtsan_store1,  // btos
   InterpreterRuntime::jtsan_store1,  // ztos
@@ -823,7 +833,7 @@ void (*InterpreterRuntime::jtsan_store[]) (void *addr, Method *m, address bcp) =
   InterpreterRuntime::jtsan_store8, //  ltos
   InterpreterRuntime::jtsan_store4, //  ftos
   InterpreterRuntime::jtsan_store8, //  dtos
-  InterpreterRuntime::jtsan_store8, //  atos
+  InterpreterRuntime::jtsan_storeOop, //  atos
   jtsan_vtos // vtos
 };
 
