@@ -414,60 +414,41 @@ bool oopDesc::mark_must_be_preserved_for_promotion_failure(markWord m) const {
 */
 
 void oopDesc::init_lock_index(void) {
-  Atomic::store(&_lock_index, (uint64_t)0);
+  Atomic::store(&_obj_lock_index, (uint32_t)0);
+  Atomic::store(&_sync_lock_index, (uint32_t)0);
 }
 
 uint32_t oopDesc::sync_lock_index(void) const {
-  uint64_t tmp = Atomic::load(&_lock_index);
-
-  // upper 32 bits
-  return (uint32_t)(tmp >> 32);
+  //assert(_sync_lock_index, "JTSAN: Sync lock index not set");
+  return Atomic::load(&_sync_lock_index);
 }
 
 uint32_t oopDesc::obj_lock_index(void) const {
-  uint64_t tmp = Atomic::load(&_lock_index);
-
-  // lower 32 bits
-  return (uint32_t)(tmp & 0xFFFFFFFF);
+  //assert(_obj_lock_index, "JTSAN: Object lock index not set");
+  return Atomic::load(&_obj_lock_index);
 }
 
 void oopDesc::set_cur_obj_lock_index(void) {
-  uint64_t lock_index = Atomic::load(&_lock_index);
-
-  uint32_t _obj_lock_index = lock_index & 0xFFFFFFFF;
-  uint32_t _sync_lock_index = lock_index >> 32;
-
   // Lock index is only set once
-  if (_obj_lock_index || !is_jtsan_initialized()) {
+  if (Atomic::load(&_obj_lock_index) || !is_jtsan_initialized()) {
     return;
   }
 
   LockShadow *shadow = LockShadow::ObjectLockShadow();
-  _obj_lock_index = (uint32_t)shadow->getCurrentLockIndex();
+
+  Atomic::store(&_obj_lock_index, (uint32_t)shadow->getCurrentLockIndex());
   shadow->incrementLockIndex();
-
-  lock_index = ((uint64_t)_sync_lock_index << 32) | _obj_lock_index;
-
-  Atomic::store(&_lock_index, lock_index);
 }
 
 void oopDesc::set_cur_sync_lock_index(void) {
-  uint64_t lock_index = Atomic::load(&_lock_index);
-
-  uint32_t _sync_lock_index = lock_index >> 32;
-  uint32_t _obj_lock_index  = lock_index & 0xFFFFFFFF;
-
   if (_sync_lock_index || !is_jtsan_initialized()) {
     return;
   }
 
   LockShadow *shadow = LockShadow::SyncLockShadow();
+
   _sync_lock_index = shadow->getCurrentLockIndex();
   shadow->incrementLockIndex();
-
-  lock_index = ((uint64_t)_sync_lock_index << 32) | _obj_lock_index;
-
-  Atomic::store(&_lock_index, lock_index);
 }
 #endif
 

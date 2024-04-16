@@ -4208,7 +4208,8 @@ void TemplateTable::_new() {
     __ store_klass(rax, rcx, tmp_store_klass);  // klass
 
   // aantonak - jtsan lock index initialization
-  JTSAN_ONLY(__ movl(Address(rax, oopDesc::lock_index_offset_in_bytes()), 0));
+  JTSAN_ONLY(__ movl(Address(rax, oopDesc::obj_lock_index_offset_in_bytes()), 0));
+  JTSAN_ONLY(__ movl(Address(rax, oopDesc::sync_lock_index_offset_in_bytes()), 0));
 
     {
       SkipIfEqual skip_if(_masm, &DTraceAllocProbes, 0);
