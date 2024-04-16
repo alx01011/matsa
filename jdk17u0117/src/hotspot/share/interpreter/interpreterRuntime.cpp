@@ -974,6 +974,11 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   //   }
   // }
 
+  ResourceMark rm;
+  const char *mname = m->external_name_as_fully_qualified();
+
+  fprintf(stderr, "Thread %d entering synchronized method %s with index %d : %d\n", tid, mname, p->sync_lock_index(), m->line_number_from_bci(m->bci_from(bcp)));
+
   uint32_t lock_index = p->sync_lock_index();
 
   LockShadow *sls = LockShadow::SyncLockShadow();
@@ -1021,6 +1026,12 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   LockShadow* sls =  LockShadow::SyncLockShadow();
 
   uint32_t lock_index = p->sync_lock_index();
+
+  ResourceMark rm;
+  const char *mname = m->external_name_as_fully_qualified();
+
+  fprintf(stderr, "Thread %d exiting synchronized method %s with index %d : %d\n", tid, mname, p->sync_lock_index(), m->line_number_from_bci(m->bci_from(bcp)));
+
   LockState* ls = sls->indexToLockState(lock_index);
 
   for (uint32_t i = 0; i < MAX_THREADS; i++) {
