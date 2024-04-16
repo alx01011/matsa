@@ -58,11 +58,13 @@ class oopDesc {
   } _metadata;
 
 #ifdef INCLUDE_JTSAN
-  // JTSan: Java Thread Sanitizer
-  // Index of the java.util.concurrent.locks.ReentrantLock object
-  // Index of synchronized object
-  volatile uint32_t _obj_lock_index;
-  volatile uint32_t _sync_lock_index;
+  /*
+    JTSAN obj and sync lock index
+
+    bits 0-31: obj lock index
+    bits 32-63: sync lock index
+  */
+  volatile uint64_t _lock_index;
 #endif
 
  public:

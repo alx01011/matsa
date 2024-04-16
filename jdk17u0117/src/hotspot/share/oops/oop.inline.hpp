@@ -414,41 +414,52 @@ bool oopDesc::mark_must_be_preserved_for_promotion_failure(markWord m) const {
 */
 
 void oopDesc::init_lock_index(void) {
-  Atomic::store(&_obj_lock_index, (uint32_t)0);
-  Atomic::store(&_sync_lock_index, (uint32_t)0);
+  _lock_index = 0;
 }
 
 uint32_t oopDesc::sync_lock_index(void) const {
-  //assert(_sync_lock_index, "JTSAN: Sync lock index not set");
-  return Atomic::load(&_sync_lock_index);
+  uint64_t tmp = Atomic::load(&_lock_index);
+
+  // upper 32 bits
+  return (uint32_t)(tmp >> 32);
 }
 
 uint32_t oopDesc::obj_lock_index(void) const {
-  //assert(_obj_lock_index, "JTSAN: Object lock index not set");
-  return Atomic::load(&_obj_lock_index);
+  uint64_t tmp = Atomic::load(&_lock_index);
+
+  // lower 32 bits
+  return (uint32_t)(tmp & 0xFFFFFFFF);
 }
 
 void oopDesc::set_cur_obj_lock_index(void) {
+  uint32_t _obj_lock_index = _lock_index & 0xFFFFFFFF;
+  uint32_t _sync_lock_index = _lock_index >> 32;
+
   // Lock index is only set once
   if (_obj_lock_index || !is_jtsan_initialized()) {
     return;
   }
 
   LockShadow *shadow = LockShadow::ObjectLockShadow();
-
-  Atomic::store(&_obj_lock_index, (uint32_t)shadow->getCurrentLockIndex());
+  _obj_lock_index = (uint32_t)shadow->getCurrentLockIndex();
   shadow->incrementLockIndex();
+
+  _lock_index = _sync_lock_index << 32 | _obj_lock_index;
 }
 
 void oopDesc::set_cur_sync_lock_index(void) {
+  uint32_t _sync_lock_index = _lock_index >> 32;
+  uint32_t _obj_lock_index  = _lock_index & 0xFFFFFFFF;
+
   if (_sync_lock_index || !is_jtsan_initialized()) {
     return;
   }
 
   LockShadow *shadow = LockShadow::SyncLockShadow();
-
   _sync_lock_index = shadow->getCurrentLockIndex();
   shadow->incrementLockIndex();
+
+  _lock_index = _sync_lock_index << 32 | _obj_lock_index;
 }
 #endif
 
