@@ -46,7 +46,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
     oop obj = (oopDesc *)addr;
     // this means that the access is from a lock object
     // we can ignore these
-    if (oopDesc::is_oop(obj) && obj->obj_lock_index() != 0) {
+    if (access_size == 8 && oopDesc::is_oop(obj) && obj->obj_lock_index() != 0) {
         ResourceMark rm;
         int line = m->line_number_from_bci(m->bci_from(bcp));
 
