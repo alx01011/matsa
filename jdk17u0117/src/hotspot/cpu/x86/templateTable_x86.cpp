@@ -2885,7 +2885,7 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   __ get_method(c_rarg1); // get the method
 
   if (state == atos) {
-    __ movptr(c_rarg0, fiel.base()); // get oop address
+    __ movptr(c_rarg0, field.base()); // get oop address
   } else {
     __ leaq(c_rarg0, field); // get address
   }
