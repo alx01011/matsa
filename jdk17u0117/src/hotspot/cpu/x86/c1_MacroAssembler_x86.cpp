@@ -179,7 +179,7 @@ void C1_MacroAssembler::initialize_header(Register obj, Register klass, Register
   }
 
   // aantonak - jtsan init lock
-  JTSAN_ONLY(movptr(Address(obj, oopDesc::lock_index_offset_in_bytes()), (intptr_t)0));
+  JTSAN_ONLY(movl(Address(obj, oopDesc::lock_index_offset_in_bytes()), 0));
 
   if (len->is_valid()) {
     movl(Address(obj, arrayOopDesc::length_offset_in_bytes()), len);
