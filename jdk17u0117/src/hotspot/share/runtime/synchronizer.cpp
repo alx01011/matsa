@@ -598,7 +598,7 @@ void ObjectSynchronizer::jni_enter(Handle obj, JavaThread* current) {
     }
   }
   current->set_current_pending_monitor_is_from_java(true);
-  JTSAN_ONLY(InterpreterRuntime::jtsan_oop_lock(THREAD, obj()));
+  JTSAN_ONLY(InterpreterRuntime::jtsan_oop_lock(current, obj()));
 }
 
 // NOTE: must use heavy weight monitor to handle jni monitor exit
@@ -618,7 +618,7 @@ void ObjectSynchronizer::jni_exit(oop obj, TRAPS) {
   // intentionally do not use CHECK on check_owner because we must exit the
   // monitor even if an exception was already pending.
   if (monitor->check_owner(THREAD)) {
-    JTSAN_ONLY(InterpreterRuntime::jtsan_oop_unlock(THREAD, obj));
+    JTSAN_ONLY(InterpreterRuntime::jtsan_oop_unlock(current, obj));
     monitor->exit(current);
   }
 }
