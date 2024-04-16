@@ -47,6 +47,12 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
     // this means that the access is from a lock object
     // we can ignore these
     if (obj->obj_lock_index() != 0) {
+        ResourceMark rm;
+        int line = m->line_number_from_bci(m->bci_from(bcp));
+
+
+        fprintf(stderr, "Acces to lock at line %d, in method %s %u\n", line, m->external_name_as_fully_qualified(), obj->obj_lock_index());
+
         return;
     }
 
