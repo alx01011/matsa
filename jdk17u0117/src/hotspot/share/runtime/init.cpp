@@ -124,6 +124,13 @@ jint init_globals() {
   if (status != JNI_OK)
     return status;
 
+  // jtsan initialization must be done after gc initialization
+  JTSAN_ONLY(set_jtsan_initialized(false));
+  JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
+  JTSAN_ONLY(JtsanThreadState::init());
+  JTSAN_ONLY(LockShadow::init());
+  JTSAN_ONLY(set_jtsan_initialized(true));
+
   AsyncLogWriter::initialize();
   gc_barrier_stubs_init();  // depends on universe_init, must be before interpreter_init
   interpreter_init_stub();  // before methods get loaded
