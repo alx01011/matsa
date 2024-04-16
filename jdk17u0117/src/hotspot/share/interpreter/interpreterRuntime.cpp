@@ -974,9 +974,9 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
 
   volatile uint32_t lock_index = p->sync_lock_index();
 
-  volatile LockShadow *sls = LockShadow::SyncLockShadow();
+  LockShadow *sls = LockShadow::SyncLockShadow();
 
-  volatile LockState* ls = sls->indexToLockState(lock_index);
+  LockState* ls = sls->indexToLockState(lock_index);
   //uint16_t* modified_epochs = ls->modified;
 
   for (uint32_t i = 0; i < MAX_THREADS; i++) {
