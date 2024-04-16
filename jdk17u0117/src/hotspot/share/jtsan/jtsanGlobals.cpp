@@ -1,8 +1,6 @@
 #include "jtsanGlobals.hpp"
 #include "runtime/atomic.hpp"
 
-#include <cstdint>
-
 volatile bool    _is_jtsan_initialized = false;
 volatile uint8_t _gc_epoch = 0;
 
