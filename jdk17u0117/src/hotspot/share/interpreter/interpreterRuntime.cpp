@@ -248,12 +248,17 @@ JRT_ENTRY(void, InterpreterRuntime::_new(JavaThread* current, ConstantPool* pool
   //       because the _breakpoint bytecode would be lost.
   oop obj = klass->allocate_instance(CHECK);
   current->set_vm_result(obj);
+
+  JTSAN_ONLY(obj->init_lock_index());
 JRT_END
 
 
 JRT_ENTRY(void, InterpreterRuntime::newarray(JavaThread* current, BasicType type, jint size))
   oop obj = oopFactory::new_typeArray(type, size, CHECK);
   current->set_vm_result(obj);
+
+  JTSAN_ONLY(obj->init_lock_index());
+
 JRT_END
 
 
@@ -261,6 +266,9 @@ JRT_ENTRY(void, InterpreterRuntime::anewarray(JavaThread* current, ConstantPool*
   Klass*    klass = pool->klass_at(index, CHECK);
   objArrayOop obj = oopFactory::new_objArray(klass, size, CHECK);
   current->set_vm_result(obj);
+
+  JTSAN_ONLY(obj->init_lock_index());
+
 JRT_END
 
 

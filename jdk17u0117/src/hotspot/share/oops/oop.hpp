@@ -329,7 +329,7 @@ class oopDesc {
   static int klass_gap_offset_in_bytes() {
     assert(has_klass_gap(), "only applicable to compressed klass pointers");
   #ifdef INCLUDE_JTSAN
-    return klass_offset_in_bytes() + sizeof(narrowKlass) + sizeof(uint32_t) + sizeof(uint32_t);
+    return klass_offset_in_bytes() + sizeof(narrowKlass) + sizeof(uint64_t);
   #endif
     return klass_offset_in_bytes() + sizeof(narrowKlass);
   }
