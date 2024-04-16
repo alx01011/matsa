@@ -956,7 +956,7 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   if (p == NULL) return;
 
   // might not be set yet
-  //p->set_cur_sync_lock_index();
+  p->set_cur_sync_lock_index();
 
   /*
     On lock acquisition we have to perform a max operation between the thread state of current thread and the lock state.
@@ -978,6 +978,8 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
 
   LockState* ls = sls->indexToLockState(lock_index);
   //uint16_t* modified_epochs = ls->modified;
+
+  fprintf(stderr, "Sync enter with index %d\n", lock_index);
 
   for (uint32_t i = 0; i < MAX_THREADS; i++) {
     uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
