@@ -974,14 +974,11 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   //   }
   // }
 
-  volatile uint32_t lock_index = p->sync_lock_index();
+  uint32_t lock_index = p->sync_lock_index();
 
   LockShadow *sls = LockShadow::SyncLockShadow();
-
   LockState* ls = sls->indexToLockState(lock_index);
   //uint16_t* modified_epochs = ls->modified;
-
-  fprintf(stderr, "Sync enter with index %d\n", lock_index);
 
   for (uint32_t i = 0; i < MAX_THREADS; i++) {
     uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
@@ -1028,7 +1025,7 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
 
   for (uint32_t i = 0; i < MAX_THREADS; i++) {
     uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
-    if (ls->epoch[i] < curr_tstate) {
+    if (curr_tstate > ls->epoch[i]) {
       ls->epoch[i] = curr_tstate;
     }
   }
