@@ -444,7 +444,7 @@ void oopDesc::set_cur_obj_lock_index(void) {
   _obj_lock_index = (uint32_t)shadow->getCurrentLockIndex();
   shadow->incrementLockIndex();
 
-  _lock_index = _sync_lock_index << 32 | _obj_lock_index;
+  _lock_index = ((uint64_t)_sync_lock_index << 32) | _obj_lock_index;
 }
 
 void oopDesc::set_cur_sync_lock_index(void) {
@@ -459,7 +459,7 @@ void oopDesc::set_cur_sync_lock_index(void) {
   _sync_lock_index = shadow->getCurrentLockIndex();
   shadow->incrementLockIndex();
 
-  _lock_index = _sync_lock_index << 32 | _obj_lock_index;
+  _lock_index = ((uint64_t)_sync_lock_index << 32) | _obj_lock_index;
 }
 #endif
 
