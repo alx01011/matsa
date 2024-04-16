@@ -1071,6 +1071,14 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   // }
 }
 
+void InterpreterRuntime::jtsan_oop_lock(Thread *thread, oop obj) {
+
+}
+
+void InterpreterRuntime::jtsan_oop_unlock(Thread *thread, oop obj) {
+
+}
+
 
 
 //------------------------------------------------------------------------------------------------------------------------

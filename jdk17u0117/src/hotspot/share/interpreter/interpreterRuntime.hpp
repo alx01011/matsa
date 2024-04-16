@@ -93,6 +93,9 @@ class InterpreterRuntime: AllStatic {
   static void jtsan_lock  (void *lock_obj, Method *m, address bcp);
   static void jtsan_unlock(void *lock_obj, Method *m, address bcp);
 
+  static void jtsan_oop_lock(Thread *thread, oop obj);
+  static void jtsan_oop_unlock(Thread *thread, oop obj);
+
   static void jtsan_sync_enter(BasicObjectLock *lock, Method *m, address bcp);
   static void jtsan_sync_exit (BasicObjectLock *lock, Method *m, address bcp);
 
