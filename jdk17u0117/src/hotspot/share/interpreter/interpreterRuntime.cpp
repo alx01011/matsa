@@ -955,6 +955,8 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
 
   if (p == NULL) return;
 
+  assert(oopDesc::is_oop(p), "must be a valid oop");
+
   // might not be set yet
   p->set_cur_sync_lock_index();
 
