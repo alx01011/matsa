@@ -904,8 +904,8 @@ void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bc
 
   for (uint32_t i = 0; i < MAX_THREADS; i++) {
     uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
-    if (ls->epoch[i] > curr_tstate) {
-      JtsanThreadState::setEpoch(tid, i, ls->epoch[i]);
+    if (ls->epoch[i] < curr_tstate) {
+      ls->epoch[i] = curr_tstate;
     }
   }
 
@@ -977,12 +977,12 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   LockShadow *sls = LockShadow::SyncLockShadow();
 
   LockState* ls = sls->indexToLockState(lock_index);
-  uint16_t* modified_epochs = ls->modified;
+  //uint16_t* modified_epochs = ls->modified;
 
-  for (uint16_t i = 0; i < ls->modifiedSize; i++) {
-    uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, modified_epochs[i]);
-    if (ls->epoch[modified_epochs[i]] > curr_tstate) {
-      JtsanThreadState::setEpoch(tid, modified_epochs[i], ls->epoch[modified_epochs[i]]);
+  for (uint32_t i = 0; i < MAX_THREADS; i++) {
+    uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
+    if (ls->epoch[i] > curr_tstate) {
+      JtsanThreadState::setEpoch(tid, i, ls->epoch[i]);
     }
   }
 }
@@ -1021,24 +1021,32 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
 
   uint32_t lock_index = p->sync_lock_index();
   LockState* ls = sls->indexToLockState(lock_index);
-  uint16_t* modified_epochs = ls->modified;
 
-  bool found = false;
-  for (uint16_t i = 0; i < ls->modifiedSize; i++) {
-    if (modified_epochs[i] == tid) {
-      found = true;
-      break;
+  for (uint32_t i = 0; i < MAX_THREADS; i++) {
+    uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
+    if (ls->epoch[i] < curr_tstate) {
+      ls->epoch[i] = curr_tstate;
     }
   }
 
-  if (!found) {
-    ls->modified[ls->modifiedSize++] = tid;
-  }
+  // uint16_t* modified_epochs = ls->modified;
 
-  uint32_t curr_epoch = JtsanThreadState::getEpoch(tid, tid);
-  if (ls->epoch[tid] < curr_epoch) {
-    ls->epoch[tid] = curr_epoch;
-  }
+  // bool found = false;
+  // for (uint16_t i = 0; i < ls->modifiedSize; i++) {
+  //   if (modified_epochs[i] == tid) {
+  //     found = true;
+  //     break;
+  //   }
+  // }
+
+  // if (!found) {
+  //   ls->modified[ls->modifiedSize++] = tid;
+  // }
+
+  // uint32_t curr_epoch = JtsanThreadState::getEpoch(tid, tid);
+  // if (ls->epoch[tid] < curr_epoch) {
+  //   ls->epoch[tid] = curr_epoch;
+  // }
 }
 
 
