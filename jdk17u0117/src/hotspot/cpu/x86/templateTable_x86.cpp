@@ -775,8 +775,8 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
   // } else {
   //   __ leaq(c_rarg0, member);
   // }
-
-  __ leaq(c_rarg0, member);
+  __ movptr(c_rarg0, member.base());
+  //__ leaq(c_rarg0, member);
   __ get_method(c_rarg1);
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_load[state]), c_rarg0, c_rarg1, rbcp);
 
@@ -1101,7 +1101,8 @@ void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
   //   __ leaq(c_rarg0, member);
   // }
 
-  __ leaq(c_rarg0, member);
+  __ movptr(c_rarg0, member.base());
+  //__ leaq(c_rarg0, member);
   __ get_method(c_rarg1);
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);
 
@@ -2902,7 +2903,7 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   //   __ leaq(c_rarg0, field); // get address
   // }
 
-  __ leaq(c_rarg0, field); // get address
+  __ movptr(c_rarg0, field.base()); // get oop address
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_load[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(safe);
@@ -3220,8 +3221,8 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   // } else {
   //   __ leaq(c_rarg0, field); // get field address
   // }
-
-  __ leaq(c_rarg0, field); // get field address
+  __ movptr(c_rarg0, field.base()); // get oop address
+  //__ leaq(c_rarg0, field); // get field address
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(safe);
