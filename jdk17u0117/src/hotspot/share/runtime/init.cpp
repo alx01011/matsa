@@ -55,6 +55,7 @@
 #include "jtsan/threadState.hpp"
 #include "jtsan/lockState.hpp"
 #include "jtsan/jtsanGlobals.hpp"
+#include "gc/shared/gc_globals.hpp"
 #endif
 
 
