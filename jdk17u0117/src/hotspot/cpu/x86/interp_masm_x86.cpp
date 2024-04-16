@@ -1232,7 +1232,7 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
   assert(lock_reg == LP64_ONLY(c_rarg1) NOT_LP64(rdx),
          "The argument is only for looks. It must be c_rarg1");
 
-  push(c_rarg1); // save lock_reg
+  JTSAN_ONLY(push_ptr(lock_reg)); // save lock_reg
 
   if (UseHeavyMonitors) {
     call_VM(noreg,
@@ -1341,7 +1341,7 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
 
   // aantonak - jtsan
   // restore lock_reg
-  pop(lock_reg);
+  JTSAN_ONLY(pop_ptr(lock_reg));
   JTSAN_ONLY(jtsan_monitor_enter(lock_reg));
 }
 
