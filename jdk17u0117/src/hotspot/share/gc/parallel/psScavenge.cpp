@@ -70,6 +70,10 @@
 #include "services/memoryService.hpp"
 #include "utilities/stack.inline.hpp"
 
+#if INCLUDE_JTSAN
+#include "jtsan/jtsanGlobals.hpp"
+#endif
+
 HeapWord*                     PSScavenge::_to_space_top_before_gc = NULL;
 int                           PSScavenge::_consecutive_skipped_scavenges = 0;
 SpanSubjectToDiscoveryClosure PSScavenge::_span_based_discoverer;
@@ -364,6 +368,10 @@ public:
 bool PSScavenge::invoke_no_policy() {
   assert(SafepointSynchronize::is_at_safepoint(), "should be at safepoint");
   assert(Thread::current() == (Thread*)VMThread::vm_thread(), "should be in vm thread");
+
+  // aantonak - jtsan
+  // update gc epoch
+  JTSAN_ONLY(increment_gc_epoch());
 
   _gc_timer.register_gc_start();
 

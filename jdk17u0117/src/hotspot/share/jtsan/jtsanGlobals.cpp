@@ -1,9 +1,18 @@
 #include "jtsanGlobals.hpp"
 #include "runtime/atomic.hpp"
 
-volatile bool _is_jtsan_initialized = false;
+volatile bool    _is_jtsan_initialized = false;
+volatile uint8_t _gc_epoch = 0;
 
-bool is_jtsan_initialized() {
+uint8_t get_gc_epoch(void) {
+    return Atomic::load(&_gc_epoch);
+}
+
+void increment_gc_epoch(void) {
+    Atomic::inc(&_gc_epoch);
+}
+
+bool is_jtsan_initialized(void) {
     return Atomic::load(&_is_jtsan_initialized);
 }
 

@@ -15,7 +15,7 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur) {
         // we can safely ignore if epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
         // previous access was by the same thread so we can skip
-        if (cell.epoch == 0 || cell.tid == cur.tid) {
+        if (cell.epoch == 0 || cell.tid == cur.tid || cur.gc_epoch != cell.gc_epoch) {
             continue;
         }
 
@@ -60,15 +60,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
     uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
 
     // create a new shadow cell
-    ShadowCell cur = {tid, epoch, 0, is_write};
-
-    int line = m->line_number_from_bci(m->bci_from(bcp));
-
-    if (line > 0 && line < 6) {
-        ResourceMark rk;
-        fprintf(stderr, "Access at line %d, in method %s\n", line, m->external_name_as_fully_qualified());
-        //fprintf(stderr, "Current cell: tid %d, epoch %lu, is_write %d and epoch %u\n", cur.tid, cur.epoch, cur.is_write, epoch);
-    }
+    ShadowCell cur = {tid, epoch, get_gc_epoch(), is_write};
     
     // check if obj is child java.util.concurrent.locks
     // if (obj->klass()->is_subclass_of(SystemDictionary::Thread_klass())) {
