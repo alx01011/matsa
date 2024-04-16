@@ -19,7 +19,7 @@
 //     return lookup[tos];
 // }
 
-ShadowCell CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
+bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell = ShadowBlock::load_cell((uptr)addr, i);
 
@@ -58,8 +58,8 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, uint
     // this means that the access is from a lock object
     // we can ignore these
     if (access_size == 8 && oopDesc::is_oop(obj) && obj->obj_lock_index() != 0) {
-        if (!is_oop(obj)) {
-            fprintf(stderr, "Object is not an oop\n")
+        if (!oopDesc::is_oop(obj)) {
+            fprintf(stderr, "Object is not an oop\n");
         } else {
             fprintf(stderr, "Object is an oop but lock index is %d\n", obj->obj_lock_index());
         }
