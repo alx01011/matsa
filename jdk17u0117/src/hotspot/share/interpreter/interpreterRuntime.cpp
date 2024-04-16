@@ -1083,6 +1083,8 @@ void InterpreterRuntime::jtsan_oop_lock(Thread *thread, oop obj) {
   JavaThread *jt = JavaThread::current();
   int tid        = JavaThread::get_thread_obj_id(jt);
 
+  if (tid == -1 || tid >= MAX_THREADS) return;
+
     /*
     Unfortunately, synchronized methods and synchronized(this) blocks, are associated with a different lock.
     That means, each time we enter a synchronized method/block the address of the lock differs.
@@ -1148,6 +1150,8 @@ void InterpreterRuntime::jtsan_oop_unlock(Thread *thread, oop obj) {
 
   JavaThread *jt = JavaThread::current();
   int tid        = JavaThread::get_thread_obj_id(jt);
+
+  if (tid == -1 || tid >= MAX_THREADS) return;
 
   oop p = obj;
 
