@@ -1076,9 +1076,9 @@ void InterpreterRuntime::jtsan_oop_lock(Thread *thread, oop obj) {
 
   if (thread == NULL || obj == NULL) return; // ignore null threads
 
-  oop thread_oop = thread->threadObj();
+  // oop thread_oop = thread->threadObj();
   
-  if (thread_oop == NULL) return; // ignore null thread objects
+  // if (thread_oop == NULL) return; // ignore null thread objects
 
   int tid        = JavaThread::get_thread_obj_id((JavaThread*)thread);
 
@@ -1141,9 +1141,9 @@ void InterpreterRuntime::jtsan_oop_unlock(Thread *thread, oop obj) {
 
   if (thread == NULL || obj == NULL) return; // ignore null threads
 
-  oop thread_oop = thread->threadObj();
+  // oop thread_oop = thread->threadObj();
   
-  if (thread_oop == NULL) return; // ignore null thread objects
+  // if (thread_oop == NULL) return; // ignore null thread objects
 
   int tid        = JavaThread::get_thread_obj_id((JavaThread*)thread);
 
