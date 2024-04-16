@@ -822,15 +822,6 @@ int JavaThread::get_thread_obj_id(JavaThread *thread) {
   if (thread == NULL || !thread->is_Java_thread()) {
     return -1;
   }
-
-  Thread *t;
-
-  // get tid of t
-  if (thread->osthread() != NULL) {
-    t = thread->osthread()->thread_id();
-  } else {
-    t = thread;
-  }
   
   oop threadObj = thread->threadObj();
 
