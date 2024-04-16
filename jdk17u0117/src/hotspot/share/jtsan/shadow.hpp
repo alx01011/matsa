@@ -60,7 +60,7 @@ class ShadowMemory : public CHeapObj<mtInternal>{
 struct ShadowCell {
     uint16_t tid      : 16;
     uint64_t epoch    : 42;
-    uint16_t  gc_epoch : 5;
+    uint8_t  gc_epoch : 5;
     uint8_t  is_write : 1;
 };
 
