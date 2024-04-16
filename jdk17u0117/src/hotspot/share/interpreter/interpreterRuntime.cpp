@@ -1072,11 +1072,115 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
 }
 
 void InterpreterRuntime::jtsan_oop_lock(Thread *thread, oop obj) {
+  if (!is_jtsan_initialized()) return;
 
+  if (thread == NULL || m == NULL || bcp == NULL) return; // ignore null threads
+
+  oop thread_oop = thread->threadObj();
+  
+  if (thread_oop == NULL) return; // ignore null thread objects
+
+  int tid        = JavaThread::get_thread_obj_id((JavaThread*)thread);
+
+    /*
+    Unfortunately, synchronized methods and synchronized(this) blocks, are associated with a different lock.
+    That means, each time we enter a synchronized method/block the address of the lock differs.
+    This leaves no other choice, but to assume each object also has a lock.
+    This makes the virtual memory for locks a lot bigger. (MaxHeapSize / 8 * sizeof(SyncLockState)).
+    SyncLockState, now also has to contain a field for gc_epoch, in case an object has moved, we can discard previous info.
+
+    Overall these locks are expensive to track.
+  */
+
+  oop p = obj;
+
+  if (p == NULL) return;
+
+  assert(oopDesc::is_oop(p), "must be a valid oop");
+
+  // might not be set yet
+  p->set_cur_sync_lock_index();
+
+  /*
+    On lock acquisition we have to perform a max operation between the thread state of current thread and the lock state.
+    Store the result into the thread state.
+  */
+
+  // uint32_t *lock_state  = LockShadow::SyncLockShadow()->indexToLockState(p->sync_lock_index())->epoch;
+
+  // for (int i = 0; i < MAX_THREADS; i++) {
+  //   uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
+  //   if (curr_tstate < lock_state[i]) {
+  //     JtsanThreadState::setEpoch(tid, i, lock_state[i]);
+  //   }
+  // }
+
+  // ResourceMark rm;
+  // const char *mname = m->external_name_as_fully_qualified();
+
+  // fprintf(stderr, "Thread %d entering synchronized method %s with index %d : %d\n", tid, mname, p->sync_lock_index(), m->line_number_from_bci(m->bci_from(bcp)));
+
+  uint32_t lock_index = p->sync_lock_index();
+
+  LockShadow *sls = LockShadow::SyncLockShadow();
+  LockState* ls = sls->indexToLockState(lock_index);
+  //uint16_t* modified_epochs = ls->modified;
+
+  for (uint32_t i = 0; i < MAX_THREADS; i++) {
+    uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
+    if (ls->epoch[i] > curr_tstate) {
+      JtsanThreadState::setEpoch(tid, i, ls->epoch[i]);
+    }
+  }
 }
 
 void InterpreterRuntime::jtsan_oop_unlock(Thread *thread, oop obj) {
+  if (!is_jtsan_initialized()) return;
 
+  //JavaThread *thread = JavaThread::current();
+
+  if (thread == NULL || m == NULL || bcp == NULL) return; // ignore null threads
+
+  oop thread_oop = thread->threadObj();
+  
+  if (thread_oop == NULL) return; // ignore null thread objects
+
+  int tid        = JavaThread::get_thread_obj_id((JavaThread*)thread);
+
+  oop p = obj;
+
+  if (p == NULL) return;
+
+  /*
+    On lock release we have to max the thread state with the lock state.
+    Store the result into lock state.
+  // */
+  // uint32_t *lock_state  = LockShadow::SyncLockShadow()->indexToLockState(p->sync_lock_index())->epoch;
+
+  // for (int i = 0; i < MAX_THREADS; i++) {
+  //   uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
+  //   if (lock_state[i] < curr_tstate) {
+  //     lock_state[i] = curr_tstate;
+  //   }
+  // }
+
+  LockShadow* sls =  LockShadow::SyncLockShadow();
+
+  uint32_t lock_index = p->sync_lock_index();
+
+  // ResourceMark rm;
+  // const char *mname = m->external_name_as_fully_qualified();
+
+  // fprintf(stderr, "Thread %d exiting synchronized method %s with index %d : %d\n", tid, mname, p->sync_lock_index(), m->line_number_from_bci(m->bci_from(bcp)));
+
+  LockState* ls = sls->indexToLockState(lock_index);
+
+  for (uint32_t i = 0; i < MAX_THREADS; i++) {
+    uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
+    if (curr_tstate > ls->epoch[i]) {
+      ls->epoch[i] = curr_tstate;
+    }
+  }
 }
 
 
