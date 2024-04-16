@@ -10,7 +10,7 @@ unsigned char get_gc_epoch(void) {
 
 void increment_gc_epoch(void) {
     uint8_t epoch = Atomic::load(&_gc_epoch);
-    Atomic::store(&_gc_epoch, epoch + 1);
+    Atomic::store(&_gc_epoch, (unsigned char)(epoch + 1));
 }
 
 bool is_jtsan_initialized(void) {
