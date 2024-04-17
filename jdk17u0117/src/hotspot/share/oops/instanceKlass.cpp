@@ -1536,6 +1536,9 @@ void InstanceKlass::call_class_initializer(TRAPS) {
       // manually acquire the lock here.
       oop o = init_lock();
       if (o) {
+        if (!strcmp(external_name, "Race")) {
+          fprintf(stderr, "Acquiring lock for class initializer %p\n", (void*)o);
+        }
         InterpreterRuntime::jtsan_oop_lock(THREAD, o);
       }
     );
@@ -1547,6 +1550,10 @@ void InstanceKlass::call_class_initializer(TRAPS) {
     JTSAN_ONLY(
       oop o = init_lock();
       if (o) {
+        if (!strcmp(external_name, "Race")) {
+          fprintf(stderr, "Releasing lock for class initializer %p\n", (void*)o);
+        }
+
         InterpreterRuntime::jtsan_oop_unlock(THREAD, o);
       }
     );
