@@ -1529,6 +1529,8 @@ void InstanceKlass::call_class_initializer(TRAPS) {
     ls.print_cr("%s (" INTPTR_FORMAT ")", h_method() == NULL ? "(no method)" : "", p2i(this));
   }
   if (h_method() != NULL) {
+    ResourceMark rm;
+    fprintf(stderr, "Calling class initializer for %s\n", external_name());
     JTSAN_ONLY(
       // The class initializer is called by the VM, so we need to
       // manually acquire the lock here.
