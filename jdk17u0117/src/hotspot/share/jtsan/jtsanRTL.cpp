@@ -68,7 +68,6 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     uint16_t tid       = JavaThread::get_thread_obj_id(JavaThread::current());
 
     if (thread->is_thread_initializing()) {
-        fprintf(stderr, "Thread %u is initializing\n", tid);
         return; // ignore during init phase
     }
 
