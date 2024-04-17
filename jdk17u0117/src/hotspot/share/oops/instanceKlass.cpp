@@ -791,6 +791,10 @@ void InstanceKlass::eager_initialize_impl() {
     if (old_state != _init_state)
       set_init_state(old_state);
   } else {
+      JTSAN_ONLY(
+      JavaThread *jt = THREAD;
+      jt->set_thread_initializing(false);
+    );
     // linking successfull, mark class as initialized
     set_init_state(fully_initialized);
     fence_and_clear_init_lock();
@@ -814,6 +818,10 @@ void InstanceKlass::initialize(TRAPS) {
     //       in case of recursive initialization!
   } else {
     assert(is_initialized(), "sanity check");
+    JTSAN_ONLY(
+      JavaThread *jt = THREAD;
+      jt->set_thread_initializing(true);
+    );
   }
 }
 
@@ -1239,6 +1247,12 @@ void InstanceKlass::set_initialization_state_and_notify(ClassState state, TRAPS)
   Handle h_init_lock(THREAD, init_lock());
   if (h_init_lock() != NULL) {
     ObjectLocker ol(h_init_lock, THREAD);
+
+    JTSAN_ONLY(
+      JavaThread *jt = THREAD;
+      jt->set_thread_initializing(false);
+    );
+
     set_init_thread(NULL); // reset _init_thread before changing _init_state
     set_init_state(state);
     fence_and_clear_init_lock();
@@ -1529,11 +1543,6 @@ void InstanceKlass::call_class_initializer(TRAPS) {
     ls.print_cr("%s (" INTPTR_FORMAT ")", h_method() == NULL ? "(no method)" : "", p2i(this));
   }
   if (h_method() != NULL) {
-    JTSAN_ONLY(
-      JavaThread *jt = THREAD;
-      jt->set_thread_initializing(true);
-    );
-
     // JTSAN_ONLY(
     //   // The class initializer is called by the VM, so we need to
     //   // manually acquire the lock here.
@@ -1549,11 +1558,6 @@ void InstanceKlass::call_class_initializer(TRAPS) {
     JavaCallArguments args; // No arguments
     JavaValue result(T_VOID);
     JavaCalls::call(&result, h_method, &args, CHECK); // Static call (no args)
-
-    JTSAN_ONLY(
-      JavaThread *jt = THREAD;
-      jt->set_thread_initializing(false);
-    );
 
     // JTSAN_ONLY(
     //   oop o = init_lock();
