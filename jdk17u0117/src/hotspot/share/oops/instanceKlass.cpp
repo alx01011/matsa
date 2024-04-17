@@ -1529,34 +1529,42 @@ void InstanceKlass::call_class_initializer(TRAPS) {
     ls.print_cr("%s (" INTPTR_FORMAT ")", h_method() == NULL ? "(no method)" : "", p2i(this));
   }
   if (h_method() != NULL) {
-    ResourceMark rm;
-    fprintf(stderr, "Calling class initializer for %s by thread %d\n", external_name(), JavaThread::get_thread_obj_id(THREAD));
     JTSAN_ONLY(
-      // The class initializer is called by the VM, so we need to
-      // manually acquire the lock here.
-      oop o = init_lock();
-      if (o) {
-        if (!strcmp(external_name(), "Race")) {
-          fprintf(stderr, "Acquiring lock f or class initializer %p\n", (void*)o);
-        }
-        InterpreterRuntime::jtsan_oop_lock(THREAD, o);
-      }
+      JavaThread *jt = THREAD;
+      jt->set_thread_initializing(true);
     );
+
+    // JTSAN_ONLY(
+    //   // The class initializer is called by the VM, so we need to
+    //   // manually acquire the lock here.
+    //   oop o = init_lock();
+    //   if (o) {
+    //     if (!strcmp(external_name(), "Race")) {
+    //       fprintf(stderr, "Acquiring lock f or class initializer %p\n", (void*)o);
+    //     }
+    //     InterpreterRuntime::jtsan_oop_lock(THREAD, o);
+    //   }
+    // );
 
     JavaCallArguments args; // No arguments
     JavaValue result(T_VOID);
     JavaCalls::call(&result, h_method, &args, CHECK); // Static call (no args)
 
     JTSAN_ONLY(
-      oop o = init_lock();
-      if (o) {
-        if (!strcmp(external_name(), "Race")) {
-          fprintf(stderr, "Releasing lock for class initializer %p\n", (void*)o);
-        }
-
-        InterpreterRuntime::jtsan_oop_unlock(THREAD, o);
-      }
+      JavaThread *jt = THREAD;
+      jt->set_thread_initializing(false);
     );
+
+    // JTSAN_ONLY(
+    //   oop o = init_lock();
+    //   if (o) {
+    //     if (!strcmp(external_name(), "Race")) {
+    //       fprintf(stderr, "Releasing lock for class initializer %p\n", (void*)o);
+    //     }
+
+    //     InterpreterRuntime::jtsan_oop_unlock(THREAD, o);
+    //   }
+    // );
   }
 }
 

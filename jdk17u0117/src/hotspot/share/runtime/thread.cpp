@@ -832,6 +832,14 @@ int JavaThread::get_thread_obj_id(JavaThread *thread) {
   return java_lang_Thread::thread_id(threadObj);
 }
 
+void JavaThread::set_thread_initializing(bool value) {
+  _initializing_class = value;
+}
+  
+bool JavaThread::is_thread_initializing(void) {
+  return _initializing_class;
+}
+
 void JavaThread::set_threadObj(oop p) {
   assert(_thread_oop_storage != NULL, "not yet initialized");
   _threadObj = OopHandle(_thread_oop_storage, p);

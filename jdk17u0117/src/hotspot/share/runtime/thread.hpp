@@ -719,6 +719,7 @@ class JavaThread: public Thread {
   bool           _in_asgct;                      // Is set when this JavaThread is handling ASGCT call
   bool           _on_thread_list;                // Is set when this JavaThread is added to the Threads list
   OopHandle      _threadObj;                     // The Java level thread object
+  bool           _initializing_class;            // Is set when this JavaThread is initializing a class
 
 #ifdef ASSERT
  private:
@@ -802,6 +803,11 @@ class JavaThread: public Thread {
 
   // aantonak - jtsan
   static int get_thread_obj_id(JavaThread *thread);
+
+  // aantonak - jtsan
+  // helpers to ignore accesses when a thread is doing initialization work
+  void set_thread_initializing(bool value);
+  bool is_thread_initializing(void);
 
  private:
   MonitorChunk* _monitor_chunks;              // Contains the off stack monitors
