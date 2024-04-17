@@ -51,7 +51,7 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
 void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write, bool is_oop) {
     // if jtsan is not initialized, we can ignore
     // we can also ignore during class initialization
-    if (!is_jtsan_initialized() || is_klass_init()) {
+    if (!is_jtsan_initialized()) {
         return;
     }
 

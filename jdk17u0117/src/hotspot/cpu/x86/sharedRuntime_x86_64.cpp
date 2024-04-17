@@ -2115,11 +2115,11 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     __ bind(lock_done);
 
     // TODO: jtsan monitor lock here as well
-    JTSAN_ONLY(
-      __ pusha();
-      __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_oop_lock), obj_reg);
-      __ popa();
-    );
+    // JTSAN_ONLY(
+    //   __ pusha();
+    //   __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_oop_lock), obj_reg);
+    //   __ popa();
+    // );
 
   }
 
@@ -2235,11 +2235,11 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     // Get locked oop from the handle we passed to jni
     __ movptr(obj_reg, Address(oop_handle_reg, 0));
 
-    JTSAN_ONLY(
-      __ pusha();
-      __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_oop_unlock), obj_reg);
-      __ popa();
-    );
+    // JTSAN_ONLY(
+    //   __ pusha();
+    //   __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_oop_unlock), obj_reg);
+    //   __ popa();
+    // );
 
     Label done;
 

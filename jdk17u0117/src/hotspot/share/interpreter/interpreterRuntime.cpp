@@ -1071,8 +1071,7 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   // }
 }
 
-void InterpreterRuntime::jtsan_oop_lock(Thread *thread, oop obj) {
-  return;
+void InterpreterRuntime::jtsan_oop_lock(JavaThread *thread, oop obj) {
   if (!is_jtsan_initialized()) return;
 
   if (thread == NULL || obj == NULL) return; // ignore null threads
@@ -1081,9 +1080,11 @@ void InterpreterRuntime::jtsan_oop_lock(Thread *thread, oop obj) {
   
   // if (thread_oop == NULL) return; // ignore null thread objects
 
-  int tid = -2;
-  if (thread->osthread() != nullptr) {
-    tid = thread->osthread()->thread_id();
+  int tid = JavaThread::get_thread_obj_id(thread);
+
+  if (tid == -1 || tid >= MAX_THREADS) {
+    fprintf(stderr, "(OBJLOCKER) Thread id is invalid: %d\n", tid);
+    return;
   }
 
     /*
@@ -1139,7 +1140,6 @@ void InterpreterRuntime::jtsan_oop_lock(Thread *thread, oop obj) {
 }
 
 void InterpreterRuntime::jtsan_oop_unlock(Thread *thread, oop obj) {
-  return;
   if (!is_jtsan_initialized()) return;
 
   //JavaThread *thread = JavaThread::current();
@@ -1152,10 +1152,7 @@ void InterpreterRuntime::jtsan_oop_unlock(Thread *thread, oop obj) {
 
   // JavaThread *jt = JavaThread::current();
   // int tid        = JavaThread::get_thread_obj_id(jt);
-  int tid = -2;
-  if (thread->osthread() != nullptr) {
-    tid = thread->osthread()->thread_id();
-  }
+  int tid = JavaThread::get_thread_obj_id(thread);
 
   if (tid == -1 || tid >= MAX_THREADS) return;
 

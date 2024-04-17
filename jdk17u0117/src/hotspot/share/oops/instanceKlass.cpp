@@ -96,6 +96,13 @@
 #include "jfr/jfrEvents.hpp"
 #endif
 
+#if INCLUDE_JTSAN
+#include "interpreter/interpreterRuntime.hpp"
+#include "oops/oop.hpp"
+#include "oops/oop.inline.hpp"
+#include "jtsan/lockState.hpp"
+#endif
+
 
 #ifdef DTRACE_ENABLED
 

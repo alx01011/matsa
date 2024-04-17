@@ -103,8 +103,8 @@ ShadowCell cell_load_atomic(ShadowCell *cell) {
 
 void cell_store_atomic(ShadowCell *cell, ShadowCell *val) {
     uint64_t word = 0;
-
-    memcpy(&word, val, sizeof(uint64_t));
+    word = *(uint64_t*)val;
+    //memcpy(&word, val, sizeof(uint64_t));
     // memcpy might not be necessary
 
     Atomic::store((uint64_t*)cell, word);
