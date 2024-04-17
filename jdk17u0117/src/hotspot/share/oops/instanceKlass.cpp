@@ -1094,13 +1094,6 @@ void InstanceKlass::initialize_impl(TRAPS) {
 
   JavaThread* jt = THREAD;
 
-  JTSAN_ONLY(
-    oop o = init_lock();
-    if (o) {
-      InterpreterRuntime::jtsan_oop_lock(jt, o);
-    }
-  );
-
   // refer to the JVM book page 47 for description of steps
   // Step 1
   {
@@ -1121,28 +1114,12 @@ void InstanceKlass::initialize_impl(TRAPS) {
     // Step 3
     if (is_being_initialized() && is_reentrant_initialization(jt)) {
       DTRACE_CLASSINIT_PROBE_WAIT(recursive, -1, wait);
-
-    JTSAN_ONLY(
-      oop o = init_lock();
-      if (o) {
-        InterpreterRuntime::jtsan_oop_unlock(jt, o);
-      }
-    );
-
       return;
     }
 
     // Step 4
     if (is_initialized()) {
       DTRACE_CLASSINIT_PROBE_WAIT(concurrent, -1, wait);
-
-      JTSAN_ONLY(
-        oop o = init_lock();
-        if (o) {
-          InterpreterRuntime::jtsan_oop_unlock(jt, o);
-        }
-      );
-
       return;
     }
 
@@ -1255,13 +1232,6 @@ void InstanceKlass::initialize_impl(TRAPS) {
     }
   }
   DTRACE_CLASSINIT_PROBE_WAIT(end, -1, wait);
-
-  JTSAN_ONLY(
-    oop o = init_lock();
-    if (o) {
-      InterpreterRuntime::jtsan_oop_lock(jt, o);
-    }
-  );
 }
 
 
@@ -1559,9 +1529,25 @@ void InstanceKlass::call_class_initializer(TRAPS) {
     ls.print_cr("%s (" INTPTR_FORMAT ")", h_method() == NULL ? "(no method)" : "", p2i(this));
   }
   if (h_method() != NULL) {
+    JTSAN_ONLY(
+      // The class initializer is called by the VM, so we need to
+      // manually acquire the lock here.
+      oop o = init_lock();
+      if (o) {
+        InterpreterRuntime::jtsan_oop_lock(THREAD, o);
+      }
+    );
+
     JavaCallArguments args; // No arguments
     JavaValue result(T_VOID);
     JavaCalls::call(&result, h_method, &args, CHECK); // Static call (no args)
+
+    JTSAN_ONLY(
+      oop o = init_lock();
+      if (o) {
+        InterpreterRuntime::jtsan_oop_unlock(THREAD, o);
+      }
+    );
   }
 }
 
