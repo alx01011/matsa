@@ -1530,7 +1530,7 @@ void InstanceKlass::call_class_initializer(TRAPS) {
   }
   if (h_method() != NULL) {
     ResourceMark rm;
-    fprintf(stderr, "Calling class initializer for %s\n", external_name());
+    fprintf(stderr, "Calling class initializer for %s by thread %d\n", external_name(), JavaThread::get_thread_obj_id(THREAD));
     JTSAN_ONLY(
       // The class initializer is called by the VM, so we need to
       // manually acquire the lock here.
