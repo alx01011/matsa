@@ -633,13 +633,13 @@ ObjectLocker::ObjectLocker(Handle obj, JavaThread* thread) {
 
   if (_obj() != NULL) {
     ObjectSynchronizer::enter(_obj, &_lock, _thread);
-    JTSAN_ONLY(InterpreterRuntime::jtsan_oop_lock(thread, obj()));
+    //JTSAN_ONLY(InterpreterRuntime::jtsan_oop_lock(thread, obj()));
   }
 }
 
 ObjectLocker::~ObjectLocker() {
   if (_obj() != NULL) {
-    JTSAN_ONLY(InterpreterRuntime::jtsan_oop_unlock(_thread, _obj()));
+    //JTSAN_ONLY(InterpreterRuntime::jtsan_oop_unlock(_thread, _obj()));
     ObjectSynchronizer::exit(_obj(), &_lock, _thread);
   }
 }

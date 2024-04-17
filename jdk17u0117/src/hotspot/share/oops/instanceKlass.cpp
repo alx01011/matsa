@@ -1094,6 +1094,13 @@ void InstanceKlass::initialize_impl(TRAPS) {
 
   JavaThread* jt = THREAD;
 
+  JTSAN_ONLY(
+    oop o = init_lock();
+    if (o) {
+      InterpreterRuntime::jtsan_oop_lock(jt, o);
+    }
+  );
+
   // refer to the JVM book page 47 for description of steps
   // Step 1
   {
@@ -1114,12 +1121,28 @@ void InstanceKlass::initialize_impl(TRAPS) {
     // Step 3
     if (is_being_initialized() && is_reentrant_initialization(jt)) {
       DTRACE_CLASSINIT_PROBE_WAIT(recursive, -1, wait);
+
+    JTSAN_ONLY(
+      oop o = init_lock();
+      if (o) {
+        InterpreterRuntime::jtsan_oop_unlock(jt, o);
+      }
+    );
+
       return;
     }
 
     // Step 4
     if (is_initialized()) {
       DTRACE_CLASSINIT_PROBE_WAIT(concurrent, -1, wait);
+
+      JTSAN_ONLY(
+        oop o = init_lock();
+        if (o) {
+          InterpreterRuntime::jtsan_oop_unlock(jt, o);
+        }
+      );
+
       return;
     }
 
@@ -1149,6 +1172,7 @@ void InstanceKlass::initialize_impl(TRAPS) {
   // interfaces.
   if (!is_interface()) {
     Klass* super_klass = super();
+
     if (super_klass != NULL && super_klass->should_be_initialized()) {
       super_klass->initialize(THREAD);
     }
@@ -1231,6 +1255,13 @@ void InstanceKlass::initialize_impl(TRAPS) {
     }
   }
   DTRACE_CLASSINIT_PROBE_WAIT(end, -1, wait);
+
+  JTSAN_ONLY(
+    oop o = init_lock();
+    if (o) {
+      InterpreterRuntime::jtsan_oop_lock(jt, o);
+    }
+  );
 }
 
 
