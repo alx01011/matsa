@@ -1139,7 +1139,7 @@ void InterpreterRuntime::jtsan_oop_lock(JavaThread *thread, oop obj) {
   }
 }
 
-void InterpreterRuntime::jtsan_oop_unlock(Thread *thread, oop obj) {
+void InterpreterRuntime::jtsan_oop_unlock(JavaThread *thread, oop obj) {
   if (!is_jtsan_initialized()) return;
 
   //JavaThread *thread = JavaThread::current();
