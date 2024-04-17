@@ -1072,6 +1072,7 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
 }
 
 void InterpreterRuntime::jtsan_oop_lock(Thread *thread, oop obj) {
+  return;
   if (!is_jtsan_initialized()) return;
 
   if (thread == NULL || obj == NULL) return; // ignore null threads
@@ -1138,6 +1139,7 @@ void InterpreterRuntime::jtsan_oop_lock(Thread *thread, oop obj) {
 }
 
 void InterpreterRuntime::jtsan_oop_unlock(Thread *thread, oop obj) {
+  return;
   if (!is_jtsan_initialized()) return;
 
   //JavaThread *thread = JavaThread::current();
