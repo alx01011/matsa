@@ -75,6 +75,11 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     //     return; // ignore during init phase
     // }
 
+    int lineno = m->line_number_from_bci(m->bci_from(bcp));
+    if (lineno == 33) {
+        fprintf(stderr, "access at line 33 from thread %u\n", tid);
+    }
+
     // increment the epoch of the current thread
     JtsanThreadState::incrementEpoch(tid);
     uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
