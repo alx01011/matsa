@@ -772,7 +772,7 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
   // push all registers, in the future we might want to push only the ones that are used
   __ pusha();
 
-  Register klass = rscratch1;
+  Register klass = c_rarg0;
 
   __ get_method(c_rarg1); // get the method
   __ load_method_holder(klass, c_rarg1);
@@ -1106,7 +1106,7 @@ void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
   // push all registers, in the future we might want to push only the ones that are used
   Label safe;
   __ pusha();
-  Register klass = rscratch1;
+  Register klass = c_rarg0;
 
   __ get_method(c_rarg1); // get the method
   __ load_method_holder(klass, c_rarg1);
@@ -2901,7 +2901,7 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
 
   __ pusha(); // save all registers
 
-  Register klass = rscratch1;
+  Register klass = c_rarg0;
 
   __ get_method(c_rarg1); // get the method
   __ load_method_holder(klass, c_rarg1);
@@ -3233,7 +3233,7 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
 
   __ pusha(); // save all registers, some don't need to be saved, will be optimized later
 
-  Register klass = rscratch1;
+  Register klass = c_rarg0;
 
   __ get_method(c_rarg1); // get the method
   __ load_method_holder(klass, c_rarg1);
