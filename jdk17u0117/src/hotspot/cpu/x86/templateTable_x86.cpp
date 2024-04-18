@@ -779,7 +779,7 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
 
   // check if class is initialized
   __ cmpb(Address(rcx, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
-  __ jcc(Assembler::notEqual, skip);
+  __ jcc(Assembler::equal, skip);
 
 
   // if (state == atos) {
@@ -1116,7 +1116,7 @@ void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
 
   // check if class is initialized
   __ cmpb(Address(rcx, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
-  __ jcc(Assembler::notEqual, safe);
+  __ jcc(Assembler::equal, safe);
 
   // if (state == atos) {
   //   __ movptr(c_rarg0, member.base());
@@ -2906,13 +2906,13 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   __ pusha(); // save all registers
 
   // check if class is initialized
-  __ get_unsigned_2_byte_index_at_bcp(rdx, 1);
+  __ get_unsigned_2_byte_index_at_bcp(rdi, 1);
   __ get_cpool_and_tags(rcx, rax);
-  __ load_resolved_klass_at_index(rcx, rcx, rdx);
+  __ load_resolved_klass_at_index(rcx, rcx, rdi);
 
   // check if class is initialized
   __ cmpb(Address(rcx, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
-  __ jcc(Assembler::notEqual, safe);
+  __ jcc(Assembler::equal, safe);
 
   // volatile check
   __ movl(rdx, flags);
@@ -3241,13 +3241,13 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   __ pusha(); // save all registers, some don't need to be saved, will be optimized later
 
     // check if class is initialized
-  __ get_unsigned_2_byte_index_at_bcp(rdx, 1);
+  __ get_unsigned_2_byte_index_at_bcp(rdi, 1);
   __ get_cpool_and_tags(rcx, rax);
-  __ load_resolved_klass_at_index(rcx, rcx, rdx);
+  __ load_resolved_klass_at_index(rcx, rcx, rdi);
 
   // check if class is initialized
   __ cmpb(Address(rcx, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
-  __ jcc(Assembler::notEqual, safe);
+  __ jcc(Assembler::equal, safe);
 
   // volatile check
   __ movl(rdx, flags);
