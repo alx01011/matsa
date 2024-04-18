@@ -67,13 +67,13 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_thread_obj_id(JavaThread::current());
 
-    if (thread->is_thread_initializing()) {
-        int lineno = m->line_number_from_bci(m->bci_from(bcp));
-        if (lineno == 33) {
-            fprintf(stderr, "skipping line 33 because thread %d is initializing\n", tid);
-        }
-        return; // ignore during init phase
-    }
+    // if (thread->is_thread_initializing()) {
+    //     int lineno = m->line_number_from_bci(m->bci_from(bcp));
+    //     if (lineno == 33) {
+    //         fprintf(stderr, "skipping line 33 because thread %d is initializing\n", tid);
+    //     }
+    //     return; // ignore during init phase
+    // }
 
     // increment the epoch of the current thread
     JtsanThreadState::incrementEpoch(tid);
