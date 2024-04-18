@@ -781,12 +781,16 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
   __ cmpb(Address(rcx, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
   __ jcc(Assembler::equal, skip);
 
+  __ popa();
+
 
   // if (state == atos) {
   //   __ movptr(c_rarg0, member.base());
   // } else {
   //   __ leaq(c_rarg0, member);
   // }
+
+  __ pusha();
 
   __ leaq(c_rarg0, member);
   __ get_method(c_rarg1);
@@ -1118,11 +1122,15 @@ void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
   __ cmpb(Address(rcx, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
   __ jcc(Assembler::equal, safe);
 
+  __ popa();
+
   // if (state == atos) {
   //   __ movptr(c_rarg0, member.base());
   // } else {
   //   __ leaq(c_rarg0, member);
   // }
+
+  __ pusha();
 
   __ leaq(c_rarg0, member);
   __ get_method(c_rarg1);
@@ -2913,6 +2921,9 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   // check if class is initialized
   __ cmpb(Address(rcx, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
   __ jcc(Assembler::equal, safe);
+  __ popa();
+
+  __ pusha();
 
   // volatile check
   __ movl(rdx, flags);
@@ -3248,6 +3259,10 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   // check if class is initialized
   __ cmpb(Address(rcx, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
   __ jcc(Assembler::equal, safe);
+
+  __ popa();
+
+  __ pusha();
 
   // volatile check
   __ movl(rdx, flags);
