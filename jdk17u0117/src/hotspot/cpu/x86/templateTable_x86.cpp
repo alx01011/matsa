@@ -772,17 +772,14 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
   // push all registers, in the future we might want to push only the ones that are used
   __ pusha();
 
-  // check if class is initialized
-  __ get_unsigned_2_byte_index_at_bcp(rdx, 1);
-  __ get_cpool_and_tags(rcx, rax);
-  __ load_resolved_klass_at_index(rcx, rcx, rdx);
+  Register klass = rcx;
+
+  __ get_method(c_rarg1); // get the method
+  __ load_method_holder(klass, c_rarg1);
 
   // check if class is initialized
-  __ cmpb(Address(rcx, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
+  __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
   __ jcc(Assembler::equal, skip);
-
-  __ popa();
-
 
   // if (state == atos) {
   //   __ movptr(c_rarg0, member.base());
@@ -790,10 +787,7 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
   //   __ leaq(c_rarg0, member);
   // }
 
-  __ pusha();
-
   __ leaq(c_rarg0, member);
-  __ get_method(c_rarg1);
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_load[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(skip);
@@ -1112,17 +1106,14 @@ void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
   // push all registers, in the future we might want to push only the ones that are used
   Label safe;
   __ pusha();
+  Register klass = rcx;
 
-    // check if class is initialized
-  __ get_unsigned_2_byte_index_at_bcp(rdx, 1);
-  __ get_cpool_and_tags(rcx, rax);
-  __ load_resolved_klass_at_index(rcx, rcx, rdx);
+  __ get_method(c_rarg1); // get the method
+  __ load_method_holder(klass, c_rarg1);
 
   // check if class is initialized
-  __ cmpb(Address(rcx, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
+  __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
   __ jcc(Assembler::equal, safe);
-
-  __ popa();
 
   // if (state == atos) {
   //   __ movptr(c_rarg0, member.base());
@@ -1130,10 +1121,7 @@ void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
   //   __ leaq(c_rarg0, member);
   // }
 
-  __ pusha();
-
   __ leaq(c_rarg0, member);
-  __ get_method(c_rarg1);
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(safe);
@@ -2913,17 +2901,14 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
 
   __ pusha(); // save all registers
 
-  // check if class is initialized
-  __ get_unsigned_2_byte_index_at_bcp(rdi, 1);
-  __ get_cpool_and_tags(rcx, rax);
-  __ load_resolved_klass_at_index(rcx, rcx, rdi);
+  Register klass = rcx;
+
+  __ get_method(c_rarg1); // get the method
+  __ load_method_holder(klass, c_rarg1);
 
   // check if class is initialized
-  __ cmpb(Address(rcx, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
+  __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
   __ jcc(Assembler::equal, safe);
-  __ popa();
-
-  __ pusha();
 
   // volatile check
   __ movl(rdx, flags);
@@ -2936,9 +2921,6 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   __ shrl(rdx, ConstantPoolCacheEntry::is_final_shift);
   __ andl(rdx, 0x1);
   __ jcc(Assembler::notZero, safe);
-
-
-  __ get_method(c_rarg1); // get the method
 
   // if (state == atos) {
   //   __ movptr(c_rarg0, field.base()); // get oop address
@@ -3251,18 +3233,14 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
 
   __ pusha(); // save all registers, some don't need to be saved, will be optimized later
 
-    // check if class is initialized
-  __ get_unsigned_2_byte_index_at_bcp(rdi, 1);
-  __ get_cpool_and_tags(rcx, rax);
-  __ load_resolved_klass_at_index(rcx, rcx, rdi);
+  Register klass = rcx;
+
+  __ get_method(c_rarg1); // get the method
+  __ load_method_holder(klass, c_rarg1);
 
   // check if class is initialized
-  __ cmpb(Address(rcx, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
+  __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
   __ jcc(Assembler::equal, safe);
-
-  __ popa();
-
-  __ pusha();
 
   // volatile check
   __ movl(rdx, flags);
@@ -3271,8 +3249,6 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   __ jcc(Assembler::notZero, safe);
 
   // we don't even need to check final fields, the compiler wont allow writes to them
-
-  __ get_method(c_rarg1); // get the method
 
   // if (state == atos) {
   //   __ movptr(c_rarg0, field.base()); // get oop address
