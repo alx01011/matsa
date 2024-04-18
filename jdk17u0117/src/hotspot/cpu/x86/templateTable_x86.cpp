@@ -777,7 +777,7 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
   __ get_method(c_rarg1); // get the method
   __ load_method_holder(klass, c_rarg1);
 
-  // check if class is initialized
+  // check if class is being initialized
   __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::being_initialized);
   __ jcc(Assembler::equal, skip);
 
@@ -2906,7 +2906,7 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   __ get_method(c_rarg1); // get the method
   __ load_method_holder(klass, c_rarg1);
 
-  // check if class is initialized
+  // check if class is being initialized
   __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::being_initialized);
   __ jcc(Assembler::equal, safe);
 
