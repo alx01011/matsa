@@ -2897,6 +2897,8 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   int32_t is_volatile = 1 << ConstantPoolCacheEntry::is_volatile_shift;
   int32_t is_final    = 1 << ConstantPoolCacheEntry::is_final_shift;
 
+  int32_t f_or_v      = is_volatile | is_final;
+
   Label safe;
 
   __ pusha(); // save all registers
@@ -2910,16 +2912,8 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::being_initialized);
   __ jcc(Assembler::equal, safe);
 
-  // volatile check
-  __ movl(rdx, flags);
-  __ shrl(rdx, ConstantPoolCacheEntry::is_volatile_shift);
-  __ andl(rdx, 0x1);
-  __ jcc(Assembler::notZero, safe);
-
-  // final check
-  __ movl(rdx, flags);
-  __ shrl(rdx, ConstantPoolCacheEntry::is_final_shift);
-  __ andl(rdx, 0x1);
+  // volatile and final check
+  __ testl(flags, f_or_v);
   __ jcc(Assembler::notZero, safe);
 
   // if (state == atos) {
@@ -3243,9 +3237,7 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   __ jcc(Assembler::equal, safe);
 
   // volatile check
-  __ movl(rdx, flags);
-  __ shrl(rdx, ConstantPoolCacheEntry::is_volatile_shift);
-  __ andl(rdx, 0x1);
+  __ testl(flags, is_volatile);
   __ jcc(Assembler::notZero, safe);
 
   // we don't even need to check final fields, the compiler wont allow writes to them
