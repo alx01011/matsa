@@ -107,6 +107,7 @@
 
 #if INCLUDE_JTSAN
 #include "interpreter/interpreterRuntime.hpp"
+#include "jtsan/threadState.hpp"
 #include "runtime/registerMap.hpp"
 #endif
 
@@ -2936,6 +2937,15 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
     tl->set_cached_stack_trace_id(JfrStackTraceRepository::record(thread, 2));
   }
 #endif
+
+  JTSAN_ONLY(
+    int new_tid = JavaThread::get_thread_obj_id(native_thread);
+    int cur_tid = JtsanThreadState::get_thread_obj_id(thread);
+
+    if (new_tid != -1 && cur_tid != -1) {
+      JtsanThreadState::transferEpoch(cur_tid, new_tid);
+    }
+  );
 
   Thread::start(native_thread);
 

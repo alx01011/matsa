@@ -5,6 +5,8 @@
 #include "utilities/debug.hpp"
 #include "runtime/os.hpp"
 
+#include <string.h>
+
 JtsanThreadState* JtsanThreadState::instance = nullptr;
 
 JtsanThreadState::JtsanThreadState(void) {
@@ -109,4 +111,14 @@ void JtsanThreadState::maxEpoch(size_t threadId, size_t otherThreadId, uint32_t 
         }
         current = Atomic::load(&(state->epoch[threadId][otherThreadId]));
     }
+}
+
+void JtsanThreadState::transferEpoch(size_t from_tid, size_t to_tid) {
+    JtsanThreadState *state = JtsanThreadState::getInstance();
+
+    assert(from_tid < state->size, "JTSAN: Thread id out of bounds");
+    assert(to_tid < state->size, "JTSAN: OtherThread id out of bounds");
+
+    // copy the whole array
+    memcpy(state->epoch[to_tid], state->epoch[from_tid], state->size * sizeof(uint32_t));
 }

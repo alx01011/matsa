@@ -45,6 +45,8 @@ class JtsanThreadState : public CHeapObj<mtInternal> {
         static uint32_t getEpoch(size_t threadId, size_t otherThreadId);
         // sets the epoch of the thread with id otherThreadId from the thread with id threadId to epoch
         static void     maxEpoch(size_t threadId, size_t otherThreadId, uint32_t epoch);  
+
+        static void     transferEpoch(size_t from_tid, size_t to_tid);
 };
 
 #endif
