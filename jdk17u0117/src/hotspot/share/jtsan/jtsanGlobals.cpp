@@ -6,7 +6,8 @@ volatile unsigned char _gc_epoch = 1;
 
 volatile bool   _is_klass_init = false;
 
-volatile uint16_t _cur_tid = 0;
+// start from 1 since 0 is reserved for the initial java thread
+volatile uint16_t _cur_tid = 1;
 
 unsigned char get_gc_epoch(void) {
     return Atomic::load(&_gc_epoch);
