@@ -2951,7 +2951,6 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
     }
 
     JavaThread::set_jtsan_tid(native_thread, new_tid);
-    JavaThread::set_jtsan_parent_tid(native_thread, cur_tid);
 
     fprintf(stderr, "Starting thread %p\n", (void*)JNIHandles::resolve_non_null(jthread));
   );
