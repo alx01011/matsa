@@ -854,7 +854,7 @@ void JavaThread::set_jtsan_parent_tid(JavaThread *thread, int tid) {
     return;
   }
 
-  thread->_jtsan_parent = tid;
+  thread->_jtsan_parent_tid = tid;
 }
 
 int JavaThread::get_jtsan_parent_tid(JavaThread *thread) {
@@ -862,7 +862,7 @@ int JavaThread::get_jtsan_parent_tid(JavaThread *thread) {
     return -1;
   }
 
-  return thread->_jtsan_parent;
+  return thread->_jtsan_parent_tid;
 }
 
 void JavaThread::set_thread_initializing(bool value) {
