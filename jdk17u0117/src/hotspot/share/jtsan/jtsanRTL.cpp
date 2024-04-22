@@ -19,7 +19,7 @@ uint8_t TosToSize(TosState tos) {
     return lookup[tos];
 }
 
-bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev, bool test) {
+bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
     if (test) {
         fprintf(stderr, "access in line 35 by thread %d at epoch %lu, gc_epoch %u, is_write %u\n", cur.tid, cur.epoch, cur.gc_epoch, cur.is_write);
         fprintf(stderr, "Shadow cells:\n");
@@ -34,11 +34,11 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev, boo
             continue;
         }
 
-        if (test) {
-            fprintf(stderr, "\t i = %u, Previous access by thread %d at epoch %lu, gc_epoch %u, is_write %u\n",
-                i, cell.tid, cell.epoch, cell.gc_epoch, cell.is_write);
-            fprintf(stderr, "\t\t Epoch of cell.tid(%d) by cur.tid(%d) is %u\n", cell.tid, cur.tid, JtsanThreadState::getEpoch(cur.tid, cell.tid));
-        }
+        // if (test) {
+        //     fprintf(stderr, "\t i = %u, Previous access by thread %d at epoch %lu, gc_epoch %u, is_write %u\n",
+        //         i, cell.tid, cell.epoch, cell.gc_epoch, cell.is_write);
+        //     fprintf(stderr, "\t\t Epoch of cell.tid(%d) by cur.tid(%d) is %u\n", cell.tid, cur.tid, JtsanThreadState::getEpoch(cur.tid, cell.tid));
+        // }
 
         // at least one of the accesses is a write
         if (cell.is_write || cur.is_write) {
@@ -99,7 +99,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
 
     // race
     ShadowCell prev;
-    if (CheckRaces(tid, addr, cur, prev, test)) {
+    if (CheckRaces(tid, addr, cur, prev)) {
         ResourceMark rm;
         fprintf(stderr, "Data race detected in method %s, line %d\n",
             m->external_name_as_fully_qualified(), m->line_number_from_bci(m->bci_from(bcp)));
