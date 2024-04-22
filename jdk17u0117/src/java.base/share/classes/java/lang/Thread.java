@@ -1301,19 +1301,21 @@ public class Thread implements Runnable {
     throws InterruptedException {
         if (millis > 0) {
             if (isAlive()) {
-                System.jtsanJoin(this);
                 final long startTime = System.nanoTime();
                 long delay = millis;
                 do {
                     wait(delay);
                 } while (isAlive() && (delay = millis -
                         TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime)) > 0);
+                if (!isAlive()) {
+                    System.jtsanJoin(this);
+                }
             }
         } else if (millis == 0) {
-            System.jtsanJoin(this);
             while (isAlive()) {
                 wait(0);
             }
+            System.jtsanJoin(this);
         } else {
             throw new IllegalArgumentException("timeout value is negative");
         }
