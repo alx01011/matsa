@@ -3890,8 +3890,6 @@ JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env, jobject x))
         oop lock_obj   = JNIHandles::resolve(x);
 
         lock_obj->set_cur_obj_lock_index();
-
-        fprintf(stderr, "lock_obj(l): %p\n", (void*)lock_obj);
       
         InterpreterRuntime::jtsan_lock((void*)lock_obj, m, bcp);
       }
@@ -3911,9 +3909,7 @@ JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env, jobject x))
             Method *m      = fr.interpreter_frame_method();
             address bcp    = fr.interpreter_frame_bcp();
             void *lock_obj = (void*)JNIHandles::resolve(x);
-
-            fprintf(stderr, "lock_obj(u): %p\n", lock_obj);
-
+            
             InterpreterRuntime::jtsan_unlock(lock_obj, m, bcp);
         }
     }
