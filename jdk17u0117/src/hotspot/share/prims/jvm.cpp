@@ -2945,7 +2945,7 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
     int cur_tid = JavaThread::get_jtsan_tid(thread);
 
     if (new_tid != -1 && cur_tid != -1) {
-      fprintf(stderr, "Transfering epoch from thread %d to new %d\n", cur_tid, new_tid);
+      //fprintf(stderr, "Transfering epoch from thread %d to new %d\n", cur_tid, new_tid);
 
       JtsanThreadState::transferEpoch(cur_tid, new_tid);
     }
