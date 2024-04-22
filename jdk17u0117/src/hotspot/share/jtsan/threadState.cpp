@@ -119,6 +119,7 @@ void JtsanThreadState::transferEpoch(size_t from_tid, size_t to_tid) {
     assert(from_tid < state->size, "JTSAN: Thread id out of bounds");
     assert(to_tid < state->size, "JTSAN: OtherThread id out of bounds");
 
-    // copy the whole array
-    memcpy(state->epoch[to_tid], state->epoch[from_tid], state->size * sizeof(uint32_t));
+    for (size_t i = 0; i < state->size; i++) {
+        state->epoch[to_tid][i] = state->epoch[from_tid][i];
+    }
 }

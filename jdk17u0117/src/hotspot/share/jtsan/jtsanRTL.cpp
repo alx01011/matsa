@@ -33,7 +33,7 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
         // at least one of the accesses is a write
         if (cell.is_write + cur.is_write >= 1) {
             uint32_t thr = JtsanThreadState::getEpoch(tid, cell.tid);
-            if (thr >= cell.epoch) {
+            if (thr > cell.epoch) {
                 continue;
             }
            // if (print)
@@ -65,7 +65,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     // }
 
     JavaThread *thread = JavaThread::current();
-    uint16_t tid       = JavaThread::get_thread_obj_id(JavaThread::current());
+    uint16_t tid       = JavaThread::get_thread_obj_id(thread);
 
     // if (thread->is_thread_initializing()) {
     //     int lineno = m->line_number_from_bci(m->bci_from(bcp));
@@ -75,9 +75,11 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     //     return; // ignore during init phase
     // }
 
+    
+    uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
     // increment the epoch of the current thread
     JtsanThreadState::incrementEpoch(tid);
-    uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
+
 
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, get_gc_epoch(), is_write};
