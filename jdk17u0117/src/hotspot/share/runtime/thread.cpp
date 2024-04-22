@@ -1562,10 +1562,10 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
   }
 #endif // INCLUDE_JVMCI
 
-  JTSAN_ONLY(
-    JtsanThreadState::clearEpoch(JavaThread::get_jtsan_tid(this));
-    decrement_tid();
-  );
+  // JTSAN_ONLY(
+  //   JtsanThreadState::clearEpoch(JavaThread::get_jtsan_tid(this));
+  //   decrement_tid();
+  // );
 
   // Remove from list of active threads list, and notify VM thread if we are the last non-daemon thread
   Threads::remove(this, daemon);
