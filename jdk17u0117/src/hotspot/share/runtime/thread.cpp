@@ -857,6 +857,14 @@ void JavaThread::set_jtsan_parent_tid(JavaThread *thread, int tid) {
   thread->_jtsan_parent = tid;
 }
 
+int JavaThread::get_jtsan_parent_tid(JavaThread *thread) {
+  if (thread == NULL || !thread->is_Java_thread()) {
+    return -1;
+  }
+
+  return thread->_jtsan_parent;
+}
+
 void JavaThread::set_thread_initializing(bool value) {
   _initializing_class = value;
 }

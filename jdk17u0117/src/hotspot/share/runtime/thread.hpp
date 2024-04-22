@@ -721,7 +721,7 @@ class JavaThread: public Thread {
   OopHandle      _threadObj;                     // The Java level thread object
   bool           _initializing_class = false;   // Is set when this JavaThread is initializing a class
   int            _jtsan_tid    = 0;            // jtsan thread id
-  int            _jtsan_parent = 0;           // parent thread of current thread
+  int            _jtsan_parent_tid = 0;           // parent thread of current thread
 
 #ifdef ASSERT
  private:
@@ -807,6 +807,7 @@ class JavaThread: public Thread {
   static int get_thread_obj_id(JavaThread *thread);
   static int get_jtsan_tid(JavaThread *thread);
   static void set_jtsan_tid(JavaThread *thread, int tid);
+  static int get_jtsan_parent_tid(JavaThread *thread);
   static void set_jtsan_parent_tid(JavaThread *thread, int tid);
 
   // aantonak - jtsan
