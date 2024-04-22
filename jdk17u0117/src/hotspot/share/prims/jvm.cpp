@@ -107,6 +107,7 @@
 
 #if INCLUDE_JTSAN
 #include "interpreter/interpreterRuntime.hpp"
+#include "jtsan/lockState.hpp"
 #include "jtsan/threadState.hpp"
 #include "runtime/registerMap.hpp"
 #endif
@@ -2947,7 +2948,16 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
     if (new_tid != -1 && cur_tid != -1) {
       //fprintf(stderr, "Transfering epoch from thread %d to new %d\n", cur_tid, new_tid);
 
+      // copies the clock of the current thread to the new thread
       JtsanThreadState::transferEpoch(cur_tid, new_tid);
+
+      oop thread_object = JNIHandles::resolve_non_null(jthread);
+      // this so the thread has a lock index
+      thread_object->set_cur_obj_lock_index();
+
+      // 0x1 is to pass the null checking
+      // FIXME: lock and unlock shouldn't need more arguments than the thread
+      InterpreterRuntime::jtsan_unlock(thread_object, (void*)0x1, (void*)0x1);
     }
 
     JavaThread::set_jtsan_tid(native_thread, new_tid);
@@ -3927,8 +3937,8 @@ JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
       fr = fr.sender(&map);
       fr = fr.sender(&map);
 
-      if (fr.is_interpreted_frame()) {
-        fprintf(stderr, "Join thread %p\n", (void*)JNIHandles::resolve_non_null(x));
-      }
+      oop thread_object = JNIHandles::resolve(x);
+
+      InterpreterRuntime::jtsan_lock((void*)thread_object, (void*)0x1, (void*)0x1);
     }
 JVM_END
