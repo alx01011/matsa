@@ -3928,7 +3928,9 @@ JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
       if (fr.is_interpreted_frame()) {
         oop to = JNIHandles::resolve(x);
 
-        fprintf(stderr, "JVM_jtsanJoin by thread %d", JavaThread::get_jtsan_tid(jt));
+        JavaThread *to_jt = java_lang_Thread::thread(to);
+
+        fprintf(stderr, "JVM_jtsanJoin by thread %d for thread %d\n", JavaThread::get_jtsan_tid(jt), JavaThread::get_jtsan_tid(to_jt));
       }
     }
 JVM_END
