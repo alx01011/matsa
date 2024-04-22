@@ -850,7 +850,7 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
 
   if (thread_oop == NULL) return; // ignore null thread objects
 
-  int tid = JavaThread::get_thread_obj_id(thread);
+  int tid = JavaThread::get_jtsan_tid(thread);
   // int bci = method->bci_from(bcp);
   // int line_no = method->line_number_from_bci(bci);
 
@@ -897,7 +897,7 @@ void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bc
 
   if (thread_oop == NULL) return; // ignore null thread objects
 
-  int tid = JavaThread::get_thread_obj_id(thread);
+  int tid = JavaThread::get_jtsan_tid(thread);
 
   oop p = (oopDesc*)lock_obj;
 
@@ -949,7 +949,7 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   
   if (thread_oop == NULL) return; // ignore null thread objects
 
-  int tid        = JavaThread::get_thread_obj_id(thread);
+  int tid = JavaThread::get_jtsan_tid(thread);
 
     /*
     Unfortunately, synchronized methods and synchronized(this) blocks, are associated with a different lock.
@@ -1014,7 +1014,7 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   
   if (thread_oop == NULL) return; // ignore null thread objects
 
-  int tid        = JavaThread::get_thread_obj_id(thread);
+  int tid = JavaThread::get_jtsan_tid(thread);
 
   oop p = lock->obj();
 
@@ -1080,7 +1080,7 @@ void InterpreterRuntime::jtsan_oop_lock(JavaThread *thread, oop obj) {
   
   // if (thread_oop == NULL) return; // ignore null thread objects
 
-  int tid = JavaThread::get_thread_obj_id(thread);
+  int tid = JavaThread::get_jtsan_tid(thread);
 
   if (tid == -1 || tid >= MAX_THREADS) {
     fprintf(stderr, "(OBJLOCKER) Thread id is invalid: %d\n", tid);
@@ -1152,7 +1152,7 @@ void InterpreterRuntime::jtsan_oop_unlock(JavaThread *thread, oop obj) {
 
   // JavaThread *jt = JavaThread::current();
   // int tid        = JavaThread::get_thread_obj_id(jt);
-  int tid = JavaThread::get_thread_obj_id(thread);
+  int tid = JavaThread::get_jtsan_tid(thread);
 
   if (tid == -1 || tid >= MAX_THREADS) return;
 
