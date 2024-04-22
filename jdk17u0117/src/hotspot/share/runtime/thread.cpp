@@ -137,6 +137,7 @@
 #include "jtsan/threadState.hpp"
 #include "jtsan/lockState.hpp"
 #include "jtsan/jtsanGlobals.hpp"
+#include "interpreter/interpreterRuntime.hpp"
 #endif
 #if INCLUDE_JVMCI
 #include "jvmci/jvmci.hpp"
@@ -1410,6 +1411,13 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
   if (log_is_enabled(Debug, os, thread, timer)) {
     _timer_exit_phase1.start();
   }
+
+  JTSAN_ONLY(
+    oop thread_object = this->threadObj();
+
+    // unlock again to transfer the thread epoch to the parent thread in case of join
+    InterpreterRuntime::jtsan_unlock((void*)thread_object, 0x1, 0x1);
+  );
 
   HandleMark hm(this);
   Handle uncaught_exception(this, this->pending_exception());
