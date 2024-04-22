@@ -20,11 +20,6 @@ uint8_t TosToSize(TosState tos) {
 }
 
 bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
-    if (test) {
-        fprintf(stderr, "access in line 35 by thread %d at epoch %lu, gc_epoch %u, is_write %u\n", cur.tid, cur.epoch, cur.gc_epoch, cur.is_write);
-        fprintf(stderr, "Shadow cells:\n");
-    }
-
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell = ShadowBlock::load_cell((uptr)addr, i);
         // we can safely ignore if gc epoch is 0 it means cell is unassigned
