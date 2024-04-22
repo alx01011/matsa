@@ -2952,6 +2952,8 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
 
     JavaThread::set_jtsan_tid(native_thread, new_tid);
     JavaThread::set_jtsan_parent_tid(native_thread, cur_tid);
+
+    fprintf(stderr, "Starting thread %p\n", (void*)JNIHandles::resolve_non_null(jthread));
   );
 
   Thread::start(native_thread);
@@ -3927,11 +3929,7 @@ JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
       fr = fr.sender(&map);
 
       if (fr.is_interpreted_frame()) {
-        oop to = JNIHandles::resolve(x);
-
-        JavaThread *to_jt = java_lang_Thread::thread(to);
-
-        fprintf(stderr, "JVM_jtsanJoin by thread %d for thread %d\n", JavaThread::get_jtsan_tid(jt), JavaThread::get_jtsan_tid(to_jt));
+        fprintf(stderr, "Join thread %p\n", (void*)JNIHandles::resolve_non_null(x));
       }
     }
 JVM_END

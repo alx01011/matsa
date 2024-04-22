@@ -849,22 +849,6 @@ void JavaThread::set_jtsan_tid(JavaThread *thread, int tid) {
 
 }
 
-void JavaThread::set_jtsan_parent_tid(JavaThread *thread, int tid) {
-  if (thread == NULL || !thread->is_Java_thread()) {
-    return;
-  }
-
-  thread->_jtsan_parent_tid = tid;
-}
-
-int JavaThread::get_jtsan_parent_tid(JavaThread *thread) {
-  if (thread == NULL || !thread->is_Java_thread()) {
-    return -1;
-  }
-
-  return thread->_jtsan_parent_tid;
-}
-
 void JavaThread::set_thread_initializing(bool value) {
   _initializing_class = value;
 }
@@ -1582,10 +1566,6 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
   //   JtsanThreadState::clearEpoch(JavaThread::get_jtsan_tid(this));
   //   decrement_tid();
   // );
-
-  JTSAN_ONLY(
-    fprintf(stderr, "Transfering from exiting thread %d to parent thread %d\n", _jtsan_tid, _jtsan_parent_tid);
-  );
 
   // Remove from list of active threads list, and notify VM thread if we are the last non-daemon thread
   Threads::remove(this, daemon);
