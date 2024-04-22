@@ -3909,8 +3909,26 @@ JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env, jobject x))
             Method *m      = fr.interpreter_frame_method();
             address bcp    = fr.interpreter_frame_bcp();
             void *lock_obj = (void*)JNIHandles::resolve(x);
-            
+
             InterpreterRuntime::jtsan_unlock(lock_obj, m, bcp);
         }
+    }
+JVM_END
+
+// aantonak - jtsan
+JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
+    if (JTSAN && thread && thread->is_Java_thread()) {
+      JavaThread *jt = (JavaThread *) thread;
+      frame fr = jt->last_frame();
+      // To get the actual sender frame, we need to skip Runtime and java.util.concurrent frames
+      RegisterMap map(thread);
+      fr = fr.sender(&map);
+      fr = fr.sender(&map);
+
+      if (fr.is_interpreted_frame()) {
+        oop to = JNIHandles::resolve(x);
+
+        fprintf(stderr, "JVM_jtsanJoin by thread %d", JavaThread::get_jtsan_tid(jt));
+      }
     }
 JVM_END
