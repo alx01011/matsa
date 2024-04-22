@@ -864,6 +864,8 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
 
   oop p = (oopDesc*)lock_obj;
 
+  fprintf(stderr, "Locking in line %d by thread %d\n", method->line_number_from_bci(method->bci_from(bcp)), tid);
+
   /*
     On lock acquisition we have to perform a max operation between the thread state of current thread and the lock state.
     Store the result into the thread state.
@@ -905,6 +907,8 @@ void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bc
     On lock release we have to max the thread state with the lock state.
     Store the result into lock state.
   */
+
+ fprintf(stderr, "Unlocking in line %d by thread %d\n", method->line_number_from_bci(method->bci_from(bcp)), tid);
 
   LockShadow *obs = LockShadow::ObjectLockShadow();
 
