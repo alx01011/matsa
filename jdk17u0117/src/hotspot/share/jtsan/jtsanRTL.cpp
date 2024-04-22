@@ -82,7 +82,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
 
     int lineno = m->line_number_from_bci(m->bci_from(bcp));
     if (lineno == 35) {
-        fprintf(stderr, "access in line 35 by thread %d at epoch %lu\n", tid, epoch);
+        fprintf(stderr, "access in line 35 by thread %d at epoch %u\n", tid, epoch);
         fprintf(stderr, "epoch of thread 1 seen by thread %d is %u\n", tid, JtsanThreadState::getEpoch(tid, 1));
     }
 
