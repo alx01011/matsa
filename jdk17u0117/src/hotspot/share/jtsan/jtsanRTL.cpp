@@ -33,6 +33,7 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
         // at least one of the accesses is a write
         if (cell.is_write || cur.is_write) {
             uint32_t thr = JtsanThreadState::getEpoch(tid, cell.tid);
+
             if (thr > cell.epoch) {
                 continue;
             }
@@ -74,11 +75,16 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     //     }
     //     return; // ignore during init phase
     // }
-
     
     uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, get_gc_epoch(), is_write};
+
+    int lineno = m->line_number_from_bci(m->bci_from(bcp));
+    if (lineno == 35) {
+        fprintf(stderr, "access in line 35 by thread %d at epoch %lu\n", tid, epoch);
+        fprintf(stderr, "epoch of thread 1 seen by thread %d is %lu\n", tid, JtsanThreadState::getEpoch(tid, 1));
+    }
 
     // race
     ShadowCell prev;
