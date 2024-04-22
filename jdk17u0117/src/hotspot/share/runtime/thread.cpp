@@ -1416,7 +1416,7 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
     oop thread_object = this->threadObj();
 
     // unlock again to transfer the thread epoch to the parent thread in case of join
-    InterpreterRuntime::jtsan_unlock((void*)thread_object, 0x1, 0x1);
+    InterpreterRuntime::jtsan_unlock((void*)thread_object, (Method*)0x1, (address)0x1);
   );
 
   HandleMark hm(this);
