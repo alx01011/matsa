@@ -132,4 +132,8 @@ void JtsanThreadState::clearEpoch(size_t threadId) {
     for (size_t i = 0; i < state->size; i++) {
         state->epoch[threadId][i] = 0;
     }
+
+    for (size_t i = 0; i < state->size; i++) {
+        state->epoch[i][threadId] = 0;
+    }
 }
