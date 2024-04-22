@@ -37,11 +37,12 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev, boo
         if (test) {
             fprintf(stderr, "\t i = %u, Previous access by thread %d at epoch %lu, gc_epoch %u, is_write %u\n",
                 i, cell.tid, cell.epoch, cell.gc_epoch, cell.is_write);
+            fprintf(stderr, "\t\t Epoch of cell.tid(%d) by cur.tid(%d) is %lu\n", cell.tid, cur.tid, JtsanThreadState::getEpoch(cur.tid, cell.tid));
         }
 
         // at least one of the accesses is a write
         if (cell.is_write || cur.is_write) {
-            uint32_t thr = JtsanThreadState::getEpoch(tid, cell.tid);
+            uint32_t thr = JtsanThreadState::getEpoch(cur.tid, cell.tid);
 
             if (thr > cell.epoch) {
                 continue;
