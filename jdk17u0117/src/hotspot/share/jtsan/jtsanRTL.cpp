@@ -19,15 +19,24 @@ uint8_t TosToSize(TosState tos) {
     return lookup[tos];
 }
 
-bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
+bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev, bool test) {
+    if (test) {
+        fprintf(stderr, "access in line 35 by thread %d at epoch %u, gc_epoch %u, is_write %u\n", cur.tid, cur.epoch, cur.gc_epoch, cur.is_write);
+        fprintf(stderr, "Shadow cells:\n");
+    }
+
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell = ShadowBlock::load_cell((uptr)addr, i);
-
         // we can safely ignore if gc epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
         // previous access was by the same thread so we can skip
         if (cell.tid == cur.tid || cur.gc_epoch != cell.gc_epoch) {
             continue;
+        }
+
+        if (test) {
+            fprintf(stderr, "\t i = %u, Previous access by thread %d at epoch %u, gc_epoch %u, is_write %u\n",
+                i, cell.tid, cell.epoch, cell.gc_epoch, cell.is_write);
         }
 
         // at least one of the accesses is a write
@@ -65,6 +74,8 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     //     return;
     // }
 
+    bool test = false;
+
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_thread_obj_id(thread);
 
@@ -82,13 +93,12 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
 
     int lineno = m->line_number_from_bci(m->bci_from(bcp));
     if (lineno == 35) {
-        fprintf(stderr, "access in line 35 by thread %d at epoch %u\n", tid, epoch);
-        fprintf(stderr, "epoch of thread 1 seen by thread %d is %u\n", tid, JtsanThreadState::getEpoch(tid, 1));
+        test = true;
     }
 
     // race
     ShadowCell prev;
-    if (CheckRaces(tid, addr, cur, prev)) {
+    if (CheckRaces(tid, addr, cur, prev, test)) {
         ResourceMark rm;
         fprintf(stderr, "Data race detected in method %s, line %d\n",
             m->external_name_as_fully_qualified(), m->line_number_from_bci(m->bci_from(bcp)));
