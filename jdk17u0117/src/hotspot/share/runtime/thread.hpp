@@ -804,7 +804,7 @@ class JavaThread: public Thread {
 
   // aantonak - jtsan
   static int get_thread_obj_id(JavaThread *thread);
-  static int get_jtsan_tid(JavaThread *thread)
+  static int get_jtsan_tid(JavaThread *thread);
   static void set_jtsan_tid(JavaThread *thread, int tid);
 
   // aantonak - jtsan
