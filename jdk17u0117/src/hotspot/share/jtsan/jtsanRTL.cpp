@@ -21,7 +21,7 @@ uint8_t TosToSize(TosState tos) {
 
 bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev, bool test) {
     if (test) {
-        fprintf(stderr, "access in line 35 by thread %d at epoch %u, gc_epoch %u, is_write %u\n", cur.tid, cur.epoch, cur.gc_epoch, cur.is_write);
+        fprintf(stderr, "access in line 35 by thread %d at epoch %lu, gc_epoch %u, is_write %u\n", cur.tid, cur.epoch, cur.gc_epoch, cur.is_write);
         fprintf(stderr, "Shadow cells:\n");
     }
 
@@ -35,7 +35,7 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev, boo
         }
 
         if (test) {
-            fprintf(stderr, "\t i = %u, Previous access by thread %d at epoch %u, gc_epoch %u, is_write %u\n",
+            fprintf(stderr, "\t i = %u, Previous access by thread %d at epoch %lu, gc_epoch %u, is_write %u\n",
                 i, cell.tid, cell.epoch, cell.gc_epoch, cell.is_write);
         }
 
