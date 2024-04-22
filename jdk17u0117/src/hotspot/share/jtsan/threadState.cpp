@@ -83,7 +83,9 @@ void JtsanThreadState::setEpoch(size_t threadId, size_t otherThreadId, uint32_t 
     assert(threadId < state->size, "JTSAN: Thread id out of bounds");
     assert(otherThreadId < state->size, "JTSAN: OtherThread id out of bounds");
 
-    Atomic::store(&(state->epoch[threadId][otherThreadId]), epoch);
+    state->epoch[threadId][otherThreadId] = epoch;
+
+    //Atomic::store(&(state->epoch[threadId][otherThreadId]), epoch);
 }
 
 uint32_t JtsanThreadState::getEpoch(size_t threadId, size_t otherThreadId) {
