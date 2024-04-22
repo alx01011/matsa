@@ -23,10 +23,10 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell = ShadowBlock::load_cell((uptr)addr, i);
 
-        // we can safely ignore if epoch is 0 it means cell is unassigned
+        // we can safely ignore if gc epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
         // previous access was by the same thread so we can skip
-        if (cell.epoch == 0 || cell.tid == cur.tid || cur.gc_epoch != cell.gc_epoch) {
+        if (cell.tid == cur.tid || cur.gc_epoch != cell.gc_epoch) {
             continue;
         }
 
