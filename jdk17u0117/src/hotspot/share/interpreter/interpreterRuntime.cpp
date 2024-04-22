@@ -877,6 +877,8 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
    LockState* ls = obs->indexToLockState(lock_index);
    //uint16_t* modified_epochs = ls->modified;
 
+   fprintf(stderr, "lock for lock index %u, in tid %u\n", lock_index, tid);
+
    for (uint32_t i = 0; i < MAX_THREADS; i++) {
      uint32_t curr_tstate = JtsanThreadState::getEpoch(tid, i);
      if (ls->epoch[i] > curr_tstate) {
