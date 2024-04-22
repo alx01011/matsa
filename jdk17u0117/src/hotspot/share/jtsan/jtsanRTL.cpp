@@ -31,7 +31,7 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
         }
 
         // at least one of the accesses is a write
-        if (cell.is_write + cur.is_write >= 1) {
+        if (cell.is_write || cur.is_write) {
             uint32_t thr = JtsanThreadState::getEpoch(tid, cell.tid);
             if (thr > cell.epoch) {
                 continue;
@@ -77,10 +77,6 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
 
     
     uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
-    // increment the epoch of the current thread
-    JtsanThreadState::incrementEpoch(tid);
-
-
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, get_gc_epoch(), is_write};
 
@@ -94,6 +90,8 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
             prev.is_write ? "write" : "read", access_size, prev.tid, prev.epoch);
     }
 
+    // increment the epoch of the current thread
+    JtsanThreadState::incrementEpoch(tid);
     // store the shadow cell
     ShadowBlock::store_cell((uptr)addr, &cur);
 }
