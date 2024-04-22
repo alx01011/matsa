@@ -2957,7 +2957,7 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
 
       // 0x1 is to pass the null checking
       // FIXME: lock and unlock shouldn't need more arguments than the thread
-      InterpreterRuntime::jtsan_unlock(thread_object, (void*)0x1, (void*)0x1);
+      InterpreterRuntime::jtsan_unlock(thread_object, (Method*)0x1, (address*)0x1);
     }
 
     JavaThread::set_jtsan_tid(native_thread, new_tid);
@@ -3939,6 +3939,6 @@ JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
 
       oop thread_object = JNIHandles::resolve(x);
 
-      InterpreterRuntime::jtsan_lock((void*)thread_object, (void*)0x1, (void*)0x1);
+      InterpreterRuntime::jtsan_lock((void*)thread_object, (Method*)0x1, (address)0x1);
     }
 JVM_END
