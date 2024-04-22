@@ -1547,7 +1547,7 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
 
 // TODO: jtsan clear thread array
 
-  
+  JTSAN_ONLY(JtsanThreadState::clearEpoch(JavaThread::get_thread_obj_id(this)));
 
   // Remove from list of active threads list, and notify VM thread if we are the last non-daemon thread
   Threads::remove(this, daemon);
