@@ -1307,15 +1307,11 @@ public class Thread implements Runnable {
                     wait(delay);
                 } while (isAlive() && (delay = millis -
                         TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime)) > 0);
-                if (!isAlive()) {
-                    System.jtsanJoin(this);
-                }
             }
         } else if (millis == 0) {
             while (isAlive()) {
                 wait(0);
             }
-            System.jtsanJoin(this);
         } else {
             throw new IllegalArgumentException("timeout value is negative");
         }
