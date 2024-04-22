@@ -3937,7 +3937,7 @@ JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
 
       oop thread_object = JNIHandles::resolve(x);
 
-      fprintf(stderr, "Join in thread %d\n", JavaThread::get_jtsan_tid(jt))
+      fprintf(stderr, "Join in thread %d\n", JavaThread::get_jtsan_tid(jt));
 
       InterpreterRuntime::jtsan_lock((void*)thread_object, (Method*)0x1, (address)0x1);
     }
