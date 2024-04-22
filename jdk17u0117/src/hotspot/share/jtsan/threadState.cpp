@@ -123,3 +123,13 @@ void JtsanThreadState::transferEpoch(size_t from_tid, size_t to_tid) {
         state->epoch[to_tid][i] = state->epoch[from_tid][i];
     }
 }
+
+void JtsanThreadState::clearEpoch(size_t threadId) {
+    JtsanThreadState *state = JtsanThreadState::getInstance();
+
+    assert(threadId < state->size, "JTSAN: Thread id out of bounds");
+
+    for (size_t i = 0; i < state->size; i++) {
+        state->epoch[threadId][i] = 0;
+    }
+}

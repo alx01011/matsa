@@ -47,6 +47,7 @@ class JtsanThreadState : public CHeapObj<mtInternal> {
         static void     maxEpoch(size_t threadId, size_t otherThreadId, uint32_t epoch);  
 
         static void     transferEpoch(size_t from_tid, size_t to_tid);
+        static void     clearEpoch(size_t threadId);
 };
 
 #endif
