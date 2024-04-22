@@ -44,3 +44,8 @@ void increment_tid(void) {
     uint16_t tid = Atomic::load(&_cur_tid);
     Atomic::store(&_cur_tid, (uint16_t)(tid + 1));
 }
+
+void decrement_tid(void) {
+    uint16_t tid = Atomic::load(&_cur_tid);
+    Atomic::store(&_cur_tid, (uint16_t)(tid - 1));
+}

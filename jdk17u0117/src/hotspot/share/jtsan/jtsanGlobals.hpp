@@ -15,5 +15,6 @@ bool is_klass_init(void);
 
 uint16_t get_tid(void);
 void     increment_tid(void);
+void     decrement_tid(void);
 
 #endif
