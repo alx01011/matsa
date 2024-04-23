@@ -58,7 +58,7 @@ echo -e "\e[33mRunning racy tests\e[0m"
 for i in `ls ./race/*.java`; do
     echo -e "\e[32mRunning $i\e[0m"
     $BUILD/javac $i
-    $BUILD/java $JAVA_OPTS `basename $i .java`
+    $BUILD/java $JAVA_OPTS no_race/`basename $i .java`
 
     # cleanup
     rm -f `basename $i .java`.class
