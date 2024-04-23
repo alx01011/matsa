@@ -1,5 +1,5 @@
-public class nr_volatile {
-    public static volatile int x = 3;
+public class nr_sync {
+    public static int x = 3;
 
     public static void main(String... args) {
         Thread t1 = new Thread(() -> {
@@ -20,7 +20,6 @@ public class nr_volatile {
             throw new RuntimeException(e);
         }
 
-        x = 3;
     }
 
     public static void increment() {
