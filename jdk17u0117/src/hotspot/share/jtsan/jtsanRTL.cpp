@@ -105,6 +105,8 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
             m->external_name_as_fully_qualified(), m->line_number_from_bci(m->bci_from(bcp)));
         fprintf(stderr, "Previous access %s of size %d, by thread %d, epoch %lu\n",
             prev.is_write ? "write" : "read", access_size, prev.tid, prev.epoch);
+        fprintf(stderr, "Current access %s of size %d, by thread %d, epoch %lu\n",
+            cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch);
     }
 
     // increment the epoch of the current thread
