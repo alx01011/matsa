@@ -1,6 +1,6 @@
 import java.util.concurrent.locks.ReentrantLock;
 
-public class nr_simple {
+public class nr_locks {
     public static int x = 3;
     public static int y = 4;
 

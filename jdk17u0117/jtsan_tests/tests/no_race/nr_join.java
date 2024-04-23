@@ -1,4 +1,4 @@
-public class nr_simple {
+public class nr_join {
     public static int x = 3;
     public static int y = 4;
 
