@@ -93,8 +93,8 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     ShadowCell cur = {tid, epoch, get_gc_epoch(), is_write};
 
     int lineno = m->line_number_from_bci(m->bci_from(bcp));
-    if (lineno == 30) {
-        fprintf(stderr, "Accessing memory at line 30 by thread %d\n", tid);
+    if (lineno == 30 || lineno == 26) {
+        fprintf(stderr, "Accessing memory (%p), at line %d by thread %d\n", addr, lineno, tid);
     }
 
     // race
