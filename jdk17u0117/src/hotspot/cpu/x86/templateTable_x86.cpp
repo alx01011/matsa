@@ -3307,8 +3307,9 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
 
   const Register bc    = LP64_ONLY(c_rarg3) NOT_LP64(rcx);
 
-  // jtsan - get a new copy of flags
- // previous is clobbered by some tests above
+// jtsan - get a new copy of flags
+// it is destroyed by the shift below
+// we need to know if a store is in volatile var
   __ movl(rdx, flags);
 
   __ shrl(flags, ConstantPoolCacheEntry::tos_state_shift);
