@@ -3309,6 +3309,10 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
 
   __ shrl(flags, ConstantPoolCacheEntry::tos_state_shift);
 
+// jtsan - get a new copy of flags
+// previous is clobbered by some tests above
+  __ movl(rdx, flags);
+
   assert(btos == 0, "change code, btos != 0");
   __ andl(flags, ConstantPoolCacheEntry::tos_state_mask);
   __ jcc(Assembler::notZero, notByte);
