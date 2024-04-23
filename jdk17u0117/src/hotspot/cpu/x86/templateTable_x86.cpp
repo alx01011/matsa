@@ -2903,6 +2903,10 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
 
   __ pusha(); // save all registers
 
+    // volatile and final check
+  __ testl(flags, f_or_v);
+  __ jcc(Assembler::notZero, safe);
+
   Register klass = c_rarg0;
 
   __ get_method(c_rarg1); // get the method
@@ -2911,10 +2915,6 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   // check if class is being initialized
   __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::being_initialized);
   __ jcc(Assembler::equal, safe);
-
-  // volatile and final check
-  __ testl(flags, f_or_v);
-  __ jcc(Assembler::notZero, safe);
 
   // if (state == atos) {
   //   __ movptr(c_rarg0, field.base()); // get oop address
@@ -3229,6 +3229,10 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
 
   Register klass = c_rarg0;
 
+  // volatile check
+  __ testl(flags, is_volatile);
+  __ jcc(Assembler::notZero, safe);
+
   __ get_method(c_rarg1); // get the method
   __ load_method_holder(klass, c_rarg1);
 
@@ -3236,9 +3240,6 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::being_initialized);
   __ jcc(Assembler::equal, safe);
 
-  // volatile check
-  __ testl(flags, is_volatile);
-  __ jcc(Assembler::notZero, safe);
 
   // we don't even need to check final fields, the compiler wont allow writes to them
 
