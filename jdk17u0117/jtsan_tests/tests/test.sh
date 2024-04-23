@@ -38,30 +38,43 @@ if [ "$1" == "-s" ]; then
     shift
 fi
 
+# create class output dir if it doesn't exist
+mkdir -p ./class_files
+
 
 # Run non racy tests (in no_race dir)
 echo -e "\e[33mRunning non racy tests\e[0m"
 
 for i in `ls ./no_race/*.java`; do
-    echo -e "\e[32mRunning $i\e[0m"
-    $BUILD/javac $i
-    $BUILD/java $JAVA_OPTS `basename $i .java`
+    # get basename
+    base_name=$(basename $i .java)
+    echo -e "\e[32mRunning $base_name\e[0m"
 
-    rm -f `basename $i .java`.class
-    # some spacing
+    # Compile Java file to the class_files directory
+    $BUILD/javac -d ./class_files $i
+    $BUILD/java -cp ./class_files $base_name $JAVA_OPTS
+
+    # Some spacing
     echo ""
 done
+
 
 # Run racy
 echo -e "\e[33mRunning racy tests\e[0m"
 
 for i in `ls ./race/*.java`; do
-    echo -e "\e[32mRunning $i\e[0m"
-    $BUILD/javac $i
-    $BUILD/java $JAVA_OPTS no_race/`basename $i .java`
+    # get basename
+    base_name=$(basename $i .java)
+    echo -e "\e[32mRunning $base_name\e[0m"
 
-    # cleanup
-    rm -f `basename $i .java`.class
-    # some spacing
+    # Compile Java file to the class_files directory
+    $BUILD/javac -d ./class_files $i
+    $BUILD/java -cp ./class_files $base_name $JAVA_OPTS
+
+    # Some spacing
     echo ""
 done
+
+# Clean up
+echo -e "\e[33mCleaning up\e[0m"
+rm -rf ./class_files
