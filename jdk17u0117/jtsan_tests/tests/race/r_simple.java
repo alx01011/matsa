@@ -1,4 +1,4 @@
-public class nr_sync {
+public class r_simple {
     public static int x = 3;
 
     public static void main(String... args) {
