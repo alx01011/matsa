@@ -94,7 +94,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
 
     int lineno = m->line_number_from_bci(m->bci_from(bcp));
     if (lineno == 30 || lineno == 26) {
-        fprintf(stderr, "Accessing memory (%llu), at line %d by thread %d\n", (uptr)addr, lineno, tid);
+        fprintf(stderr, "Accessing memory (%lu), at line %d by thread %d\n", (uptr)addr, lineno, tid);
     }
 
     // race
