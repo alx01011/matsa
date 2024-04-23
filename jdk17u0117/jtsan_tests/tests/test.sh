@@ -12,7 +12,7 @@ JAVA_OPTS="-XX:-UseCompressedOops -XX:-UseCompressedClassPointers -Xint -XX:+Use
 # Set up environment
 BUILD=../build/linux-x86_64-server-release/jdk/bin/
 
-while getopts "hs:" opt; do
+while getopts ":hfd:s:" opt; do
     case $opt in
         h)
             echo "Usage: test.sh [options]"
