@@ -9,6 +9,8 @@
 
 # Parse options
 JAVA_OPTS="-XX:-UseCompressedOops -XX:-UseCompressedClassPointers -Xint -XX:+UseParallelGC -XX:+JTSAN"
+# Set up environment
+BUILD=../build/linux-x86_64-server-release/jdk/bin/
 
 while getopts "hs:" opt; do
     case $opt in
@@ -16,29 +18,27 @@ while getopts "hs:" opt; do
             echo "Usage: test.sh [options]"
             echo "Options:"
             echo "  -h, Display this help and exit"
+            echo "  -fd, Run with fast debug build"
+            echo "  -sd, Run with slow debug build"
             echo "  -s, Adds additional switches to java command"
             exit 0
             ;;
         s)
             JAVA_OPTS="$JAVA_OPTS $OPTARG"
             ;;
+        fd)
+            BUILD=../build/linux-x86_64-server-fastdebug/jdk/bin/
+            ;;
+        sd)
+            BUILD=../build/linux-x86_64-server-slowdebug/jdk/bin/
+            ;;
         \?)
-            echo "Invalid option: -$OPTARG" >&2
+            echo "Invalid option: $OPTARG" 1>&2
+            exit 1
             ;;
     esac
 done
 
-# Set up environment
-BUILD=../build/linux-x86_64-server-release/jdk/bin/
-
-#check for debug
-if [ "$1" == "-fd" ]; then
-    BUILD=../build/linux-x86_64-server-fastdebug/jdk/bin/
-    shift
-elif [ "$1" == "-sd" ]; then
-    BUILD=../build/linux-x86_64-server-slowdebug/jdk/bin/
-    shift
-fi
 
 # Run non racy tests (in no_race dir)
 echo -e "\e[33mRunning non racy tests\e[0m"
