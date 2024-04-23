@@ -3307,11 +3307,11 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
 
   const Register bc    = LP64_ONLY(c_rarg3) NOT_LP64(rcx);
 
-  __ shrl(flags, ConstantPoolCacheEntry::tos_state_shift);
-
-// jtsan - get a new copy of flags
-// previous is clobbered by some tests above
+  // jtsan - get a new copy of flags
+ // previous is clobbered by some tests above
   __ movl(rdx, flags);
+
+  __ shrl(flags, ConstantPoolCacheEntry::tos_state_shift);
 
   assert(btos == 0, "change code, btos != 0");
   __ andl(flags, ConstantPoolCacheEntry::tos_state_mask);
