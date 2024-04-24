@@ -23,6 +23,11 @@ currently we only tested on linux x86_64
 */
 typedef uintptr_t uptr;
 
+struct MemAddr {
+    uptr addr;
+    uptr size;
+};
+
 class ShadowMemory : public CHeapObj<mtInternal>{
     private:
         static ShadowMemory *shadow; // singleton
@@ -41,7 +46,19 @@ class ShadowMemory : public CHeapObj<mtInternal>{
 
         static ShadowMemory* getInstance(void);
 
-        void *MemToShadow(uptr mem);
+        /*
+            Since address might not always be associated with 8byte words
+            we allocate 4 different spaces:
+
+            1 byte shadow space
+            2 byte shadow space
+            4 byte shadow space
+            8 byte shadow space
+        */
+
+        static ShadowMemory *instances[9] = {nullptr};
+
+        void *MemToShadow(MemAddr mem);
 };
 
 /*
@@ -66,8 +83,8 @@ struct ShadowCell {
 
 class ShadowBlock : AllStatic {
     public:
-        static ShadowCell  load_cell(uptr mem, uint8_t index);
-        static void       store_cell(uptr mem, ShadowCell* cell); 
+        static ShadowCell  load_cell(MemAddr mem, uint8_t index);
+        static void       store_cell(MemAddr mem, ShadowCell* cell); 
 };
 
 #endif

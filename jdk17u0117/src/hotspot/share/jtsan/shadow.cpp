@@ -11,8 +11,6 @@
 #include "runtime/os.hpp"
 
 #define MAX_CAS_ATTEMPTS (100)
-#define SHADOW_RATE (4.0/8.0) // 4 shadow cells per dword
-
 #define GB_TO_BYTES(x) ((x) * 1024UL * 1024UL * 1024UL)
 
 ShadowMemory* ShadowMemory::shadow = nullptr;
@@ -51,27 +49,43 @@ void ShadowMemory::init(size_t bytes) {
     ParallelScavengeHeap *heap = ParallelScavengeHeap::heap();
     uptr base = (uptr)heap->base();
 
-    /*
-        total number of locations = HeapSize / 8
-        total_shadow = total number of locations * 32 (4 * sizeof(ShadowCell) = 32)
-        so total_shadow = HeapSize * 4
-    */
-    size_t shadow_size  = SHADOW_CELLS * bytes; 
+    // one instance per possible access (1 byte, 2 byte, 4 byte or 8 byte)
+    for (int i = 1; i <= 8; i+=i) {
+        size_t locations   = bytes / i;
+        size_t shadow_size = locations * 32; // 4 * sizeof(ShadowCell) = 32
 
-    void *shadow_base  = os::reserve_memory(shadow_size);
-    
-    /*
-        Address returned by os::reserve_memory is allocated using PROT_NONE, which means we can't access it.
-        Change the protection to read/write so we can use it.
-    */
-    bool protect = os::protect_memory((char*)shadow_base, shadow_size, os::MEM_PROT_RW);
+        void *shadow_base  = os::reserve_memory(shadow_size);
+        bool protect       = os::protect_memory((char*)shadow_base, shadow_size, os::MEM_PROT_RW);
 
-    if (shadow_base == nullptr || !protect) {
-        fprintf(stderr, "JTSAN: Failed to allocate shadow memory\n");
-        exit(1);
+        if (shadow_base == nullptr || !protect) {
+            fprintf(stderr, "JTSAN: Failed to allocate shadow memory\n");
+            exit(1);
+        }
+
+        ShadowMemory::instances[i] = new ShadowMemory(shadow_size, shadow_base, (uptr)shadow_base, base);
     }
 
-    ShadowMemory::shadow = new ShadowMemory(shadow_size, shadow_base, (uptr)shadow_base, base);
+    // /*
+    //     total number of locations = HeapSize / 8
+    //     total_shadow = total number of locations * 32 (4 * sizeof(ShadowCell) = 32)
+    //     so total_shadow = HeapSize * 4
+    // */
+    // size_t shadow_size  = SHADOW_CELLS * bytes; 
+
+    // void *shadow_base  = os::reserve_memory(shadow_size);
+    
+    // /*
+    //     Address returned by os::reserve_memory is allocated using PROT_NONE, which means we can't access it.
+    //     Change the protection to read/write so we can use it.
+    // */
+    // bool protect = os::protect_memory((char*)shadow_base, shadow_size, os::MEM_PROT_RW);
+
+    // if (shadow_base == nullptr || !protect) {
+    //     fprintf(stderr, "JTSAN: Failed to allocate shadow memory\n");
+    //     exit(1);
+    // }
+
+    // ShadowMemory::shadow = new ShadowMemory(shadow_size, shadow_base, (uptr)shadow_base, base);
 }
 
 void ShadowMemory::destroy(void) {
@@ -81,13 +95,13 @@ void ShadowMemory::destroy(void) {
 }
 
 
-ShadowMemory* ShadowMemory::getInstance(void) {
-    return ShadowMemory::shadow;
+ShadowMemory* ShadowMemory::getInstance(uptr size) {
+    return ShadowMemory::instances[size];
 }
 
-void* ShadowMemory::MemToShadow(uptr mem) {
-    uptr index = ((uptr)mem - (uptr)this->heap_base) / 8; // index in heap
-    uptr shadow_offset = index * 32; // Each metadata entry is 8 bytes 
+void* ShadowMemory::MemToShadow(MemAddr mem) {
+    uptr index = ((uptr)mem - (uptr)this->heap_base) / mem.size;
+    uptr shadow_offset = index * 4; // 4 shadow cells per word
 
     return (void*)((uptr)this->offset + shadow_offset);
 }
@@ -110,9 +124,9 @@ void cell_store_atomic(ShadowCell *cell, ShadowCell *val) {
     Atomic::store((uint64_t*)cell, word);
 }
 
-ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
-    ShadowMemory *shadow = ShadowMemory::getInstance();
-    void *shadow_addr = shadow->MemToShadow(mem);
+ShadowCell ShadowBlock::load_cell(MemAddr mem, uint8_t index) {
+    ShadowMemory *shadow = ShadowMemory::getInstance(mem.size);
+    void *shadow_addr = shadow->MemToShadow(mem.addr);
 
     ShadowCell *cell_ref = &((ShadowCell *)shadow_addr)[index];
 
@@ -124,8 +138,8 @@ ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
     return cell_load_atomic(cell_ref);
 }
 
-void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
-    ShadowMemory *shadow = ShadowMemory::getInstance();
+void ShadowBlock::store_cell(MemAddr mem, ShadowCell* cell) {
+    ShadowMemory *shadow = ShadowMemory::getInstance(mem.size);
     void *shadow_addr = shadow->MemToShadow(mem);
 
     ShadowCell *cell_addr = (ShadowCell *)((uptr)shadow_addr);
