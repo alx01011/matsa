@@ -100,7 +100,7 @@ ShadowMemory* ShadowMemory::getInstance(uptr size) {
 }
 
 void* ShadowMemory::MemToShadow(MemAddr mem) {
-    uptr index = ((uptr)mem - (uptr)this->heap_base) / mem.size;
+    uptr index = (mem.addr - (uptr)this->heap_base) / mem.size;
     uptr shadow_offset = index * 4; // 4 shadow cells per word
 
     return (void*)((uptr)this->offset + shadow_offset);
