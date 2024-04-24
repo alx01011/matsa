@@ -112,7 +112,7 @@ void cell_store_atomic(ShadowCell *cell, ShadowCell *val) {
 
 ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t size, uint8_t index) {
     ShadowMemory *shadow = ShadowMemory::getInstance();
-    void *shadow_addr = shadow->MemToShadow(mem);
+    void *shadow_addr = shadow->MemToShadow(mem, size);
 
     ShadowCell *cell_ref = &((ShadowCell *)shadow_addr)[index];
 
@@ -126,7 +126,7 @@ ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t size, uint8_t index) {
 
 void ShadowBlock::store_cell(uptr mem, uint8_t size, ShadowCell* cell) {
     ShadowMemory *shadow = ShadowMemory::getInstance();
-    void *shadow_addr = shadow->MemToShadow(mem);
+    void *shadow_addr = shadow->MemToShadow(mem, size);
 
     ShadowCell *cell_addr = (ShadowCell *)((uptr)shadow_addr);
 
