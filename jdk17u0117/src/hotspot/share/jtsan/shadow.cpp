@@ -14,6 +14,7 @@
 #define GB_TO_BYTES(x) ((x) * 1024UL * 1024UL * 1024UL)
 
 ShadowMemory* ShadowMemory::shadow = nullptr;
+ShadowMemory* ShadowMemory::instances[9] = {nullptr};
 
 ShadowMemory::ShadowMemory(size_t size, void *shadow_base, uptr offset, uptr heap_base) {
     this->size              = size;
