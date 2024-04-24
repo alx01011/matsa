@@ -19,9 +19,9 @@ uint8_t TosToSize(TosState tos) {
     return lookup[tos];
 }
 
-bool CheckRaces(uint16_t tid, uint8_t size, void *addr, ShadowCell &cur, ShadowCell &prev) {
+bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
-        ShadowCell cell = ShadowBlock::load_cell((uptr)addr,size, i);
+        ShadowCell cell = ShadowBlock::load_cell((uptr)addr, i);
         // we can safely ignore if gc epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
         // previous access was by the same thread so we can skip
@@ -94,16 +94,16 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
 
     int lineno = m->line_number_from_bci(m->bci_from(bcp));
     if (lineno == 30 || lineno == 26) {
-        // ShadowMemory *shadow = ShadowMemory::getInstance();
+        ShadowMemory *shadow = ShadowMemory::getInstance();
 
-        // fprintf(stderr, "\t\tAccessing memory (%lu), at line %d by thread %d\n", (uptr)addr, lineno, tid);
-        // fprintf(stderr, "\t\tShadow addr: %p\n", shadow->MemToShadow((uptr)addr, access_size));
+        fprintf(stderr, "\t\tAccessing memory (%lu), at line %d by thread %d\n", (uptr)addr, lineno, tid);
+        fprintf(stderr, "\t\tShadow addr: %p\n", shadow->MemToShadow((uptr)addr));
 
     }
 
     // race
     ShadowCell prev;
-    if (CheckRaces(tid, access_size, addr, cur, prev)) {
+    if (CheckRaces(tid, addr, cur, prev)) {
         ResourceMark rm;
         fprintf(stderr, "Data race detected in method %s, line %d\n",
             m->external_name_as_fully_qualified(), m->line_number_from_bci(m->bci_from(bcp)));
@@ -116,5 +116,5 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     // increment the epoch of the current thread
     JtsanThreadState::incrementEpoch(tid);
     // store the shadow cell
-    ShadowBlock::store_cell((uptr)addr,access_size, &cur);
+    ShadowBlock::store_cell((uptr)addr, &cur);
 }
