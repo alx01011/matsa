@@ -103,7 +103,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
 
     // race
     ShadowCell prev;
-    if (CheckRaces(tid, addr, cur, prev)) {
+    if (CheckRaces(tid, access_size, addr, cur, prev)) {
         ResourceMark rm;
         fprintf(stderr, "Data race detected in method %s, line %d\n",
             m->external_name_as_fully_qualified(), m->line_number_from_bci(m->bci_from(bcp)));
