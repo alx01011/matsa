@@ -44,7 +44,7 @@ class ShadowMemory : public CHeapObj<mtInternal>{
         static void init(size_t bytes);
         static void destroy(void);
 
-        static ShadowMemory* getInstance(void);
+        static ShadowMemory* getInstance(uptr size);
 
         /*
             Since address might not always be associated with 8byte words
