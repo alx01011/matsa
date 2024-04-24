@@ -41,7 +41,7 @@ class ShadowMemory : public CHeapObj<mtInternal>{
 
         static ShadowMemory* getInstance(void);
 
-        void *MemToShadow(uptr mem);
+        void *MemToShadow(uptr mem, uint8_t size);
 };
 
 /*
@@ -66,8 +66,8 @@ struct ShadowCell {
 
 class ShadowBlock : AllStatic {
     public:
-        static ShadowCell  load_cell(uptr mem, uint8_t index);
-        static void       store_cell(uptr mem, ShadowCell* cell); 
+        static ShadowCell  load_cell(uptr mem, uint8_t size, uint8_t index);
+        static void       store_cell(uptr mem, uint8_t size, ShadowCell* cell); 
 };
 
 #endif

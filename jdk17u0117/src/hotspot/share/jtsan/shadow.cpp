@@ -85,8 +85,8 @@ ShadowMemory* ShadowMemory::getInstance(void) {
     return ShadowMemory::shadow;
 }
 
-void* ShadowMemory::MemToShadow(uptr mem) {
-    uptr index = ((uptr)mem - (uptr)this->heap_base) / 8; // index in heap
+void* ShadowMemory::MemToShadow(uptr mem, uint8_t size) {
+    uptr index = ((uptr)mem - (uptr)this->heap_base) / size; // size is the size of the reference
     uptr shadow_offset = index * 32; // Each metadata entry is 8 bytes 
 
     return (void*)((uptr)this->offset + shadow_offset);
@@ -110,7 +110,7 @@ void cell_store_atomic(ShadowCell *cell, ShadowCell *val) {
     Atomic::store((uint64_t*)cell, word);
 }
 
-ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
+ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t size, uint8_t index) {
     ShadowMemory *shadow = ShadowMemory::getInstance();
     void *shadow_addr = shadow->MemToShadow(mem);
 
@@ -124,7 +124,7 @@ ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
     return cell_load_atomic(cell_ref);
 }
 
-void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
+void ShadowBlock::store_cell(uptr mem, uint8_t size, ShadowCell* cell) {
     ShadowMemory *shadow = ShadowMemory::getInstance();
     void *shadow_addr = shadow->MemToShadow(mem);
 
