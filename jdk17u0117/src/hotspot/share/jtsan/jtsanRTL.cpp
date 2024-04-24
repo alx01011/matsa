@@ -19,9 +19,15 @@ uint8_t TosToSize(TosState tos) {
     return lookup[tos];
 }
 
+uptr round_up_to_dword(uptr addr) {
+    return (addr + 7) & ~7;
+}
+
 bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
+    uptr addr_aligned = round_up_to_dword((uptr)addr);
+
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
-        ShadowCell cell = ShadowBlock::load_cell((uptr)addr, i);
+        ShadowCell cell = ShadowBlock::load_cell(addr_aligned, i);
         // we can safely ignore if gc epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
         // previous access was by the same thread so we can skip
@@ -80,6 +86,8 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_jtsan_tid(thread);
 
+    uptr addr_aligned  = round_up_to_dword((uptr)addr);
+
     // if (thread->is_thread_initializing()) {
     //     int lineno = m->line_number_from_bci(m->bci_from(bcp));
     //     if (lineno == 33) {
@@ -96,8 +104,8 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     if (lineno == 30 || lineno == 26) {
         ShadowMemory *shadow = ShadowMemory::getInstance();
 
-        fprintf(stderr, "\t\tAccessing memory (%lu), at line %d by thread %d\n", (uptr)addr, lineno, tid);
-        fprintf(stderr, "\t\tShadow addr: %p\n", shadow->MemToShadow((uptr)addr));
+        fprintf(stderr, "\t\tAccessing memory (%lu), at line %d by thread %d\n", addr_aligned, lineno, tid);
+        fprintf(stderr, "\t\tShadow addr: %p\n", shadow->MemToShadow(addr_aligned));
 
     }
 
@@ -116,5 +124,5 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     // increment the epoch of the current thread
     JtsanThreadState::incrementEpoch(tid);
     // store the shadow cell
-    ShadowBlock::store_cell((uptr)addr, &cur);
+    ShadowBlock::store_cell(addr_aligned, &cur);
 }
