@@ -56,7 +56,7 @@ class ShadowMemory : public CHeapObj<mtInternal>{
             8 byte shadow space
         */
 
-        static ShadowMemory *instances[9] = {nullptr};
+        static ShadowMemory *instances[9];
 
         void *MemToShadow(MemAddr mem);
 };
