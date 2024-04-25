@@ -88,7 +88,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
 
     uptr addr_aligned  = ((uptr)addr);
 
-    fprintf(stderr, "Accessing memory (%lu), by thread %d\n", addr_aligned, tid);
+    //fprintf(stderr, "Accessing memory (%lu), by thread %d\n", addr_aligned, tid);
 
     // if (thread->is_thread_initializing()) {
     //     int lineno = m->line_number_from_bci(m->bci_from(bcp));
