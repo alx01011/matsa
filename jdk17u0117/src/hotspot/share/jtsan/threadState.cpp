@@ -22,7 +22,7 @@ JtsanThreadState::JtsanThreadState(void) {
     exit(1);
   }
 
-  bool protect = os::protect_memory(this->epoch, this->size * sizeof(uint32_t[MAX_THREADS]), os::MEM_PROT_RW);
+  bool protect = os::protect_memory((char*)this->epoch, this->size * sizeof(uint32_t[MAX_THREADS]), os::MEM_PROT_RW);
   if (!protect) {
     fprintf(stderr, "JTSAN: Failed to protect thread state\n");
     exit(1);
