@@ -31,7 +31,7 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
         // we can safely ignore if gc epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
         // previous access was by the same thread so we can skip
-        if (cell.tid == cur.tid || cur.gc_epoch != cell.gc_epoch) {
+        if (cell.tid == cur.tid || cur.gc_epoch != cell.gc_epoch || cell.offset != cur.offset) {
             continue;
         }
 
@@ -100,7 +100,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     
     uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
     // create a new shadow cell
-    ShadowCell cur = {tid, epoch, get_gc_epoch(), is_write};
+    ShadowCell cur = {tid, epoch, get_gc_epoch(), (uptr)addr % 8, is_write};
 
     int lineno = m->line_number_from_bci(m->bci_from(bcp));
     if (lineno == 30 || lineno == 26) {
@@ -117,10 +117,10 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         ResourceMark rm;
         fprintf(stderr, "Data race detected in method %s, line %d\n",
             m->external_name_as_fully_qualified(), m->line_number_from_bci(m->bci_from(bcp)));
-        fprintf(stderr, "Previous access %s of size %d, by thread %d, epoch %lu\n",
-            prev.is_write ? "write" : "read", access_size, prev.tid, prev.epoch);
-        fprintf(stderr, "Current access %s of size %d, by thread %d, epoch %lu\n",
-            cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch);
+        fprintf(stderr, "Previous access %s of size %d, by thread %d, epoch %lu, offset %d\n",
+            prev.is_write ? "write" : "read", access_size, prev.tid, prev.epoch, prev.offset);
+        fprintf(stderr, "Current access %s of size %d, by thread %d, epoch %lu, offset %d\n",
+            cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch, cur.offset);
     }
 
     // increment the epoch of the current thread

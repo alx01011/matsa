@@ -92,8 +92,7 @@ ShadowMemory* ShadowMemory::getInstance(void) {
 
 void* ShadowMemory::MemToShadow(uptr mem) {
     uptr index = ((uptr)mem - (uptr)this->heap_base) / 8; // index in heap
-    //uptr shadow_offset = index * 32; // Each metadata entry is 8 bytes 
-    uptr shadow_offset = mem >> 3;
+    uptr shadow_offset = index * 32; // Each metadata entry is 8 bytes 
 
     // size of a shadow cell is 8 bytes
     uptr kShadowCell = 8;
