@@ -13,6 +13,10 @@
 #define MAX_CAS_ATTEMPTS (100)
 #define GB_TO_BYTES(x) ((x) * 1024UL * 1024UL * 1024UL)
 
+static const uptr beg = 0x100000000000ull;
+static const uptr end = 0x300000000000ull;
+
+
 ShadowMemory* ShadowMemory::shadow = nullptr;
 
 ShadowMemory::ShadowMemory(size_t size, void *shadow_base, uptr offset, uptr heap_base) {
@@ -54,9 +58,9 @@ void ShadowMemory::init(size_t bytes) {
         total_shadow = total number of locations * 32 (4 * sizeof(ShadowCell) = 32)
         so total_shadow = HeapSize * 4
     */
-    size_t shadow_size  = SHADOW_CELLS * bytes; 
+    size_t shadow_size  = end - beg;
 
-    void *shadow_base  = os::reserve_memory(shadow_size);
+    void *shadow_base  = os::attempt_reserve_memory_at((char*)beg, shadow_size);
     
     /*
         Address returned by os::reserve_memory is allocated using PROT_NONE, which means we can't access it.
@@ -85,7 +89,8 @@ ShadowMemory* ShadowMemory::getInstance(void) {
 
 void* ShadowMemory::MemToShadow(uptr mem) {
     uptr index = ((uptr)mem - (uptr)this->heap_base) / 8; // index in heap
-    uptr shadow_offset = index * 32; // Each metadata entry is 8 bytes 
+    //uptr shadow_offset = index * 32; // Each metadata entry is 8 bytes 
+    uptr shadow_offset = mem >> 3;
 
     return (void*)((uptr)this->offset + shadow_offset);
 }
