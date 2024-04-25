@@ -92,7 +92,9 @@ void* ShadowMemory::MemToShadow(uptr mem) {
     //uptr shadow_offset = index * 32; // Each metadata entry is 8 bytes 
     uptr shadow_offset = mem >> 3;
 
-    return (void*)((uptr)this->offset + shadow_offset);
+    // ((x & ~(kShadowCell - 1)) * kShadowCnt) + kShadowBeg;
+
+    return (void*)((mem & ~(8 - 1)) * 4 + beg);
 }
 
 ShadowCell cell_load_atomic(ShadowCell *cell) {
