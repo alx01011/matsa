@@ -31,6 +31,7 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
         // we can safely ignore if gc epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
         // previous access was by the same thread so we can skip
+        // different offset means different memory location in case of 1,2 or 4 byte access
         if (cell.tid == cur.tid || cur.gc_epoch != cell.gc_epoch || cell.offset != cur.offset) {
             continue;
         }
@@ -102,14 +103,14 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, get_gc_epoch(),(uint8_t)((uptr)addr % 8), is_write};
 
-    int lineno = m->line_number_from_bci(m->bci_from(bcp));
-    if (lineno == 30 || lineno == 26) {
-        ShadowMemory *shadow = ShadowMemory::getInstance();
+    // int lineno = m->line_number_from_bci(m->bci_from(bcp));
+    // if (lineno == 30 || lineno == 26) {
+    //     ShadowMemory *shadow = ShadowMemory::getInstance();
 
-        fprintf(stderr, "\t\tAccessing memory (%lu), at line %d by thread %d\n", addr_aligned, lineno, tid);
-        fprintf(stderr, "\t\tShadow addr: %p\n", shadow->MemToShadow(addr_aligned));
+    //     fprintf(stderr, "\t\tAccessing memory (%lu), at line %d by thread %d\n", addr_aligned, lineno, tid);
+    //     fprintf(stderr, "\t\tShadow addr: %p\n", shadow->MemToShadow(addr_aligned));
 
-    }
+    // }
 
     // race
     ShadowCell prev;
