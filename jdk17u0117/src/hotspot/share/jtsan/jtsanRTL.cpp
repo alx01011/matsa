@@ -86,7 +86,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_jtsan_tid(thread);
 
-    uptr addr_aligned  = round_up_to_dword((uptr)addr);
+    uptr addr_aligned  = ((uptr)addr);
 
     // if (thread->is_thread_initializing()) {
     //     int lineno = m->line_number_from_bci(m->bci_from(bcp));
