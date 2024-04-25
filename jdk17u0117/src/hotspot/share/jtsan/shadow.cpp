@@ -13,8 +13,11 @@
 #define MAX_CAS_ATTEMPTS (100)
 #define GB_TO_BYTES(x) ((x) * 1024UL * 1024UL * 1024UL)
 
-static const uptr beg = 0x100000000000ull;
-static const uptr end = 0x300000000000ull;
+static const uptr beg = 0x020000000000ull;
+static const uptr end = 0x100000000000ull;
+
+const uptr kAppMemMsk     = 0xfc00000000ull;
+const uptr kAppMemXor     = 0x0400000000ull;
 
 
 ShadowMemory* ShadowMemory::shadow = nullptr;
@@ -92,9 +95,16 @@ void* ShadowMemory::MemToShadow(uptr mem) {
     //uptr shadow_offset = index * 32; // Each metadata entry is 8 bytes 
     uptr shadow_offset = mem >> 3;
 
-    // ((x & ~(kShadowCell - 1)) * kShadowCnt) + kShadowBeg;
+    // size of a shadow cell is 8 bytes
+    uptr kShadowCell = 8;
+    // number of shadow cells per word
+    uptr kShadowCnt = 4;
 
-    return (void*)((mem & ~(8 - 1)) * 4 + beg);
+    /* (((x) & ~(kAppMemMsk | (kShadowCell - 1)))
+      ^ kAppMemXor) * kShadowCnt;
+    */
+
+    return (void*)((((mem) * ~(kAppMemMsk | (kShadowCell - 1))) ^ kAppMemXor) * kShadowCnt);
 }
 
 ShadowCell cell_load_atomic(ShadowCell *cell) {
