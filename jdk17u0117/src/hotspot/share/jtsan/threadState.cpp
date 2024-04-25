@@ -9,17 +9,20 @@
 
 JtsanThreadState* JtsanThreadState::instance = nullptr;
 
+  static const uintptr_t kMetaShadowBeg = 0x300000000000ull;
+  static const uintptr_t kMetaShadowEnd = kMetaShadowBeg + (MAX_THREADS * sizeof(uint32_t[MAX_THREADS]));
+
 JtsanThreadState::JtsanThreadState(void) {
   this->size = MAX_THREADS;
 
-  this->epoch = (uint32_t (*)[MAX_THREADS])os::reserve_memory(this->size * sizeof(uint32_t[MAX_THREADS]));
+  this->epoch = os::attempt_reserve_memory_at((char*)kMetaShadowBeg, this->size * sizeof(uint32_t[MAX_THREADS]));
 
   if (this->epoch == nullptr) {
     fprintf(stderr, "JTSAN: Failed to allocate thread state memory\n");
     exit(1);
   }
 
-  bool protect = os::protect_memory((char*)this->epoch, this->size * sizeof(uint32_t[MAX_THREADS]), os::MEM_PROT_RW);
+  bool protect = os::protect_memory(this->epoch, this->size * sizeof(uint32_t[MAX_THREADS]), os::MEM_PROT_RW);
   if (!protect) {
     fprintf(stderr, "JTSAN: Failed to protect thread state\n");
     exit(1);
