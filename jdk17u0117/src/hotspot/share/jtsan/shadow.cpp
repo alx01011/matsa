@@ -16,8 +16,8 @@
 static const uptr beg = 0x020000000000ull;
 static const uptr end = 0x100000000000ull;
 
-const uptr kAppMemMsk     = 0xfc00000000ull;
-const uptr kAppMemXor     = 0x0400000000ull;
+const uptr kAppMemMsk     = 0x7c0000000000ull;
+const uptr kAppMemXor     = 0x020000000000ull;
 
 
 ShadowMemory* ShadowMemory::shadow = nullptr;
@@ -132,7 +132,7 @@ ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
     ShadowCell *cell_ref = &((ShadowCell *)shadow_addr)[index];
 
     if ((uptr)cell_ref < (uptr)shadow->shadow_base || (uptr)cell_ref >= (uptr)shadow->shadow_base + shadow->size) {
-        fprintf(stderr, "Shadow memory out of bounds in load_cell with index %d\n", index);
+        fprintf(stderr, "Shadow memory (%p) out of bounds in load_cell with index %d\n", shadow_addr, index);
         exit(1);
     }
 
