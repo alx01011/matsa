@@ -24,7 +24,7 @@ uptr round_up_to_dword(uptr addr) {
 }
 
 bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
-    uptr addr_aligned = round_up_to_dword((uptr)addr);
+    uptr addr_aligned = ((uptr)addr);
 
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell = ShadowBlock::load_cell(addr_aligned, i);
