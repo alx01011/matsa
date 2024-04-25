@@ -103,8 +103,10 @@ void* ShadowMemory::MemToShadow(uptr mem) {
     /* (((x) & ~(kAppMemMsk | (kShadowCell - 1)))
       ^ kAppMemXor) * kShadowCnt;
     */
+   uptr x = mem;
 
-    return (void*)((((mem) * ~(kAppMemMsk | (kShadowCell - 1))) ^ kAppMemXor) * kShadowCnt);
+    return (void*)(((x) & ~(kAppMemMsk | (kShadowCell - 1)))
+      ^ kAppMemXor) * kShadowCnt;
 }
 
 ShadowCell cell_load_atomic(ShadowCell *cell) {
