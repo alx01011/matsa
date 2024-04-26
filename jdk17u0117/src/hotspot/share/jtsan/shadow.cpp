@@ -62,7 +62,7 @@ void ShadowMemory::init(size_t bytes) {
         so total_shadow = HeapSize * 4
     */
     //size_t shadow_size  = end - beg;
-    size_t shadow_size = bytes;
+    size_t shadow_size = bytes * 4;
 
     //void *shadow_base  = os::attempt_reserve_memory_at((char*)beg, shadow_size);
     void *shadow_base = os::reserve_memory(shadow_size);
