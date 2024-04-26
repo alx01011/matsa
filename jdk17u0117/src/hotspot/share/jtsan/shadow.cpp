@@ -61,9 +61,11 @@ void ShadowMemory::init(size_t bytes) {
         total_shadow = total number of locations * 32 (4 * sizeof(ShadowCell) = 32)
         so total_shadow = HeapSize * 4
     */
-    size_t shadow_size  = end - beg;
+    //size_t shadow_size  = end - beg;
+    size_t shadow_size = bytes;
 
-    void *shadow_base  = os::attempt_reserve_memory_at((char*)beg, shadow_size);
+    //void *shadow_base  = os::attempt_reserve_memory_at((char*)beg, shadow_size);
+    void *shadow_base = os::reserve_memory(shadow_size);
     
     /*
         Address returned by os::reserve_memory is allocated using PROT_NONE, which means we can't access it.
