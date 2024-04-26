@@ -94,18 +94,20 @@ void* ShadowMemory::MemToShadow(uptr mem) {
     uptr index = ((uptr)mem - (uptr)this->heap_base) / 8; // index in heap
     uptr shadow_offset = index * 32; // Each metadata entry is 8 bytes 
 
-    // size of a shadow cell is 8 bytes
-    uptr kShadowCell = 8;
-    // number of shadow cells per word
-    uptr kShadowCnt = 4;
+//     // size of a shadow cell is 8 bytes
+//     uptr kShadowCell = 8;
+//     // number of shadow cells per word
+//     uptr kShadowCnt = 4;
 
-    /* (((x) & ~(kAppMemMsk | (kShadowCell - 1)))
-      ^ kAppMemXor) * kShadowCnt;
-    */
-   uptr x = mem;
+//     /* (((x) & ~(kAppMemMsk | (kShadowCell - 1)))
+//       ^ kAppMemXor) * kShadowCnt;
+//     */
+//    uptr x = mem;
 
-    return (void*)((((x) & ~(kAppMemMsk | (kShadowCell - 1)))
-      ^ kAppMemXor) * kShadowCnt);
+//     return (void*)((((x) & ~(kAppMemMsk | (kShadowCell - 1)))
+//       ^ kAppMemXor) * kShadowCnt);
+
+    return (void*)((uptr)this->shadow_base + shadow_offset);
 }
 
 ShadowCell cell_load_atomic(ShadowCell *cell) {

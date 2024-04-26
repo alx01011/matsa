@@ -15,7 +15,8 @@ JtsanThreadState* JtsanThreadState::instance = nullptr;
 JtsanThreadState::JtsanThreadState(void) {
   this->size = MAX_THREADS;
 
-  this->epoch = (uint32_t (*)[MAX_THREADS])os::attempt_reserve_memory_at((char*)kMetaShadowBeg, this->size * sizeof(uint32_t[MAX_THREADS]));
+  //this->epoch = (uint32_t (*)[MAX_THREADS])os::attempt_reserve_memory_at((char*)kMetaShadowBeg, this->size * sizeof(uint32_t[MAX_THREADS]));
+  this->epoch = (uint32_t (*)[MAX_THREADS])os::reserve_memory(this->size * sizeof(uint32_t[MAX_THREADS]));
 
   if (this->epoch == nullptr) {
     fprintf(stderr, "JTSAN: Failed to allocate thread state memory\n");

@@ -101,7 +101,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     
     uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
     // create a new shadow cell
-    ShadowCell cur = {tid, epoch, get_gc_epoch(),(uint8_t)((uptr)addr & (8 - 1)), is_write};
+    ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write};
 
     // int lineno = m->line_number_from_bci(m->bci_from(bcp));
     // if (lineno == 30 || lineno == 26) {
