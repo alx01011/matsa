@@ -44,9 +44,9 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     }
 
     // ignore accesses from non-java threads
-    if (!Thread::current()->is_Java_thread()) {
-        return;
-    }
+    // if (!Thread::current()->is_Java_thread()) {
+    //     return;
+    // }
 
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_jtsan_tid(thread);
