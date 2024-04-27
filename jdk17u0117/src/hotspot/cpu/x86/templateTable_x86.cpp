@@ -2904,8 +2904,8 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   //__ pusha(); // save all registers
 
   // push only the registers we are using
-  __ push(c_rarg0);
-  __ push(c_rarg1);
+  // __ push(c_rarg0);
+  // __ push(c_rarg1);
   //__ push(rbcp);
   __ push(rsi);
   __ push(rax);
@@ -2941,8 +2941,8 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   __ bind(safe);
 
   //__ popa(); // restore all registers
-  __ pop(c_rarg1);
-  __ pop(c_rarg0);
+  // __ pop(c_rarg1);
+  // __ pop(c_rarg0);
   //__ pop(rbcp);
   __ pop(rsi);
   __ pop(rax);
@@ -3246,8 +3246,8 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   Label safe;
 
   //__ pusha(); // save all registers, some don't need to be saved, will be optimized later
-  __ push(c_rarg0);
-  __ push(c_rarg1);
+  // __ push(c_rarg0);
+  // __ push(c_rarg1);
   //__ push(rbcp);
   __ push(rsi);
   __ push(rax);
@@ -3285,8 +3285,8 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   __ bind(safe);
 
   //__ popa(); // restore all registers
-  __ pop(c_rarg1);
-  __ pop(c_rarg0);
+  // __ pop(c_rarg1);
+  // __ pop(c_rarg0);
   __ pop(rsi);
   __ pop(rax);
   __ pop(rcx);
