@@ -855,7 +855,7 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
 
   Vectorclock* cur = JtsanThreadState::getThreadState(tid);
 
-  *ts = *cur;
+  *cur = *ts;
 }
 
 void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bcp) {
@@ -886,7 +886,7 @@ void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bc
 
   Vectorclock* cur = JtsanThreadState::getThreadState(tid);
 
-  *cur = *ls;
+  *ls = *cur;
 }
 
 void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, address bcp) {
@@ -932,7 +932,7 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
 
   Vectorclock* cur = JtsanThreadState::getThreadState(tid);
 
-  *ts = *cur;
+  *cur = *ts;
 }
 
 void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, address bcp) {
@@ -964,7 +964,7 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
 
   Vectorclock* cur = JtsanThreadState::getThreadState(tid);
 
-  *cur = *ls;
+  *ls = *cur;
 }
 
 //------------------------------------------------------------------------------------------------------------------------
