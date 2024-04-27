@@ -9,20 +9,6 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/globalDefinitions.hpp"
 
-uint8_t TosToSize(TosState tos) {
-    uint8_t lookup[] = 
-    {1 /*byte*/, 1 /*byte*/, 1 /*char*/, 2 /*short*/, 
-    4 /*int*/, 8 /*long*/,  4 /*float*/, 8 /*double*/, 
-    8 /*object*/};
-
-    // this is safe because we only enter this function if tos is one of above
-    return lookup[tos];
-}
-
-uptr round_up_to_dword(uptr addr) {
-    return (addr + 7) & ~7;
-}
-
 bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
 
@@ -36,12 +22,6 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
             continue;
         }
 
-        // if (test) {
-        //     fprintf(stderr, "\t i = %u, Previous access by thread %d at epoch %lu, gc_epoch %u, is_write %u\n",
-        //         i, cell.tid, cell.epoch, cell.gc_epoch, cell.is_write);
-        //     fprintf(stderr, "\t\t Epoch of cell.tid(%d) by cur.tid(%d) is %u\n", cell.tid, cur.tid, JtsanThreadState::getEpoch(cur.tid, cell.tid));
-        // }
-
         // at least one of the accesses is a write
         if (cell.is_write || cur.is_write) {
             uint32_t thr = JtsanThreadState::getEpoch(cur.tid, cell.tid);
@@ -49,9 +29,7 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
             if (thr > cell.epoch) {
                 continue;
             }
-           // if (print)
-            //fprintf(stderr, "Previous access by thread %d, current thread %d\n", cell.tid, cur.tid);
-            //fprintf(stderr, "Previous epoch %lu, current epoch %lu\n", cell.epoch, cur.epoch);
+    
             prev = cell;
             return true;
         }
@@ -63,21 +41,9 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
 // FIXME: This will also report races on thread safe locks lke java.util.Concurrent.Lock
 void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write, bool is_oop) {
     // if jtsan is not initialized, we can ignore
-    // we can also ignore during class initialization
     if (!is_jtsan_initialized()) {
         return;
     }
-
-    // oop obj = (oopDesc *)addr;
-    // // this means that the access is from a lock object
-    // // we can ignore these
-    // if (is_oop && oopDesc::is_oop(obj) && obj->obj_lock_index() != 0) {
-    //     // find oop from address base
-    //     fprintf(stderr, "Object is an oop but lock index is %d\n", obj->obj_lock_index());
-    //     return;
-    // }
-
-    bool test = false;
 
     // ignore accesses from non-java threads
     if (!Thread::current()->is_Java_thread()) {
@@ -86,31 +52,10 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
 
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_jtsan_tid(thread);
-
-    uptr addr_aligned  = ((uptr)addr);
-
-    //fprintf(stderr, "Accessing memory (%lu), by thread %d\n", addr_aligned, tid);
-
-    // if (thread->is_thread_initializing()) {
-    //     int lineno = m->line_number_from_bci(m->bci_from(bcp));
-    //     if (lineno == 33) {
-    //         fprintf(stderr, "skipping line 33 because thread %d is initializing\n", tid);
-    //     }
-    //     return; // ignore during init phase
-    // }
     
     uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write};
-
-    // int lineno = m->line_number_from_bci(m->bci_from(bcp));
-    // if (lineno == 30 || lineno == 26) {
-    //     ShadowMemory *shadow = ShadowMemory::getInstance();
-
-    //     fprintf(stderr, "\t\tAccessing memory (%lu), at line %d by thread %d\n", addr_aligned, lineno, tid);
-    //     fprintf(stderr, "\t\tShadow addr: %p\n", shadow->MemToShadow(addr_aligned));
-
-    // }
 
     // race
     ShadowCell prev;
@@ -118,14 +63,14 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         ResourceMark rm;
         fprintf(stderr, "Data race detected in method %s, line %d\n",
             m->external_name_as_fully_qualified(), m->line_number_from_bci(m->bci_from(bcp)));
-        fprintf(stderr, "Previous access %s of size %d, by thread %d, epoch %lu, offset %d\n",
+        fprintf(stderr, "\t\tPrevious access %s of size %d, by thread %d, epoch %lu, offset %d\n",
             prev.is_write ? "write" : "read", access_size, prev.tid, prev.epoch, prev.offset);
-        fprintf(stderr, "Current access %s of size %d, by thread %d, epoch %lu, offset %d\n",
+        fprintf(stderr, "\t\tCurrent access %s of size %d, by thread %d, epoch %lu, offset %d\n",
             cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch, cur.offset);
     }
 
     // increment the epoch of the current thread
     JtsanThreadState::incrementEpoch(tid);
     // store the shadow cell
-    ShadowBlock::store_cell(addr_aligned, &cur);
+    ShadowBlock::store_cell((uptr)addr, &cur);
 }
