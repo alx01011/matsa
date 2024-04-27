@@ -67,8 +67,6 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
             cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch, cur.offset);
     }
 
-    // increment the epoch of the current thread
-    JtsanThreadState::incrementEpoch(tid);
     // store the shadow cell
     ShadowBlock::store_cell((uptr)addr, &cur);
 }

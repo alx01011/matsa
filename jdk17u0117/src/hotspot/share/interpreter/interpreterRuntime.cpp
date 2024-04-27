@@ -884,6 +884,9 @@ void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bc
   uint32_t lock_index = p->obj_lock_index();
   Vectorclock* ls = obs->indexToLockVector(lock_index);
 
+  // increment the epoch of the current thread
+  JtsanThreadState::incrementEpoch(tid);
+
   Vectorclock* cur = JtsanThreadState::getThreadState(tid);
 
   *ls = *cur;
@@ -961,6 +964,9 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   uint32_t lock_index = p->sync_lock_index();
 
   Vectorclock* ls = sls->indexToLockVector(lock_index);
+
+  // increment the epoch of the current thread
+  JtsanThreadState::incrementEpoch(tid);
 
   Vectorclock* cur = JtsanThreadState::getThreadState(tid);
 

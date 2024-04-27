@@ -11,12 +11,6 @@ Vectorclock& Vectorclock::operator=(const Vectorclock& other) {
             this->_map[this->_map_size++] = other._map[i];
         }
     }
-
-    // for (size_t i = 0; i < MAX_THREADS; i++) {
-    //     if (other._clock[i] > this->_clock[i]) {
-    //         this->_clock[i] = other._clock[i];
-    //     }
-    // }
     return *this;
 }
 
