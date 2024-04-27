@@ -69,7 +69,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     }
 
     if (isRace) {
-        fprintf(stderr, "\t\t\tRace because: %d <= %ld", JtsanThreadState::getEpoch(cur.tid, prev.tid), prev.epoch);
+        fprintf(stderr, "\t\t\tRace because: %d <= %ld\n", JtsanThreadState::getEpoch(cur.tid, prev.tid), prev.epoch);
     }
 
     // store the shadow cell
