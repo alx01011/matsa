@@ -72,3 +72,7 @@ size_t LockShadow::getCurrentLockIndex(void) {
     // because multiple threads (locks) can get an index at the same time
     return Atomic::load(&(this->cur));
 }
+
+void LockShadow::incrementLockIndex(void) {
+    Atomic::inc(&(this->cur));
+}

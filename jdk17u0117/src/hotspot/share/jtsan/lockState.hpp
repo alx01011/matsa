@@ -45,6 +45,8 @@ class LockShadow : public CHeapObj<mtInternal>{
         Vectorclock* indexToLockVector(uint32_t index);
         
         size_t getCurrentLockIndex(void);
+
+        void incrementLockIndex(void);
 };
 
 #endif
