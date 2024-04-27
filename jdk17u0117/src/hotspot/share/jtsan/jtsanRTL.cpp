@@ -37,9 +37,7 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
     return false;
 }
 
-
-// FIXME: This will also report races on thread safe locks lke java.util.Concurrent.Lock
-void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write, bool is_oop) {
+void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write) {
     // if jtsan is not initialized, we can ignore
     if (!is_jtsan_initialized()) {
         return;

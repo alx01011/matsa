@@ -60,10 +60,8 @@ class InterpreterRuntime: AllStatic {
   static void jtsan_load2(void *addr, Method *m, address bcp);
   // load 4 bytes (itos, ftos) (int, float)
   static void jtsan_load4(void *addr, Method *m, address bcp);
-  // load 8 bytes (ltos, dtos) (long, double, object)
+  // load 8 bytes (ltos, dtos, atos) (long, double, object)
   static void jtsan_load8(void *addr, Method *m, address bcp);
-  // load oop
-  static void jtsan_loadOop(void *addr, Method *m, address bcp);
 
   // aantonak - jtsan
   // store 1 byte (stob, stos, stoc) (byte, short, char)
@@ -72,11 +70,8 @@ class InterpreterRuntime: AllStatic {
   static void jtsan_store2(void *addr, Method *m, address bcp);
   // store 4 bytes (itos, ftos) (int, float)
   static void jtsan_store4(void *addr, Method *m, address bcp);
-  // store 8 bytes (ltos, dtos) (long, double, object)
+  // store 8 bytes (ltos, dtos, atos) (long, double, object)
   static void jtsan_store8(void *addr, Method *m, address bcp);
-  // store oop
-  static void jtsan_storeOop(void *addr, Method *m, address bcp);
-
 
  public:
   // Constants
