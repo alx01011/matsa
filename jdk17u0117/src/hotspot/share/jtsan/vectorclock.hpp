@@ -1,6 +1,6 @@
 #include <cstdint>
 
-#include "threadState.hpp"
+#define MAX_THREADS (256)
 
 class Vectorclock {
     private:
