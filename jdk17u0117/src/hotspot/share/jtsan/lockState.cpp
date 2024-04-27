@@ -67,3 +67,8 @@ void LockShadow::destroy(void) {
 Vectorclock* LockShadow::indexToLockVector(uint32_t index) {
     return (Vectorclock*)((char*)this->addr + (index * sizeof(Vectorclock)));
 }
+
+size_t LockShadow::getCurrentLockIndex(void) {
+    // because multiple threads (locks) can get an index at the same time
+    return Atomic::load(&(this->cur));
+}

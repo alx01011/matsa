@@ -43,7 +43,8 @@ class LockShadow : public CHeapObj<mtInternal>{
         static void destroy(void);
 
         Vectorclock* indexToLockVector(uint32_t index);
-        // TODO
+        
+        size_t getCurrentLockIndex(void);
 };
 
 #endif
