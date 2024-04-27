@@ -2901,18 +2901,7 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
 
   Label safe;
 
-  //__ pusha(); // save all registers
-
-  // push only the registers we are using
-  // __ push(c_rarg0);
-  // __ push(c_rarg1);
-  //__ push(rbcp);
-  __ push(rsi);
-  __ push(rax);
-  __ push(rcx);
-  __ push(rdx);
-  __ push(rbx);
-  __ push(rdi);
+  __ pusha(); // save all registers
 
     // volatile and final check
   __ testl(flags, f_or_v);
@@ -2927,12 +2916,6 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::being_initialized);
   __ jcc(Assembler::equal, safe);
 
-  // if (state == atos) {
-  //   __ movptr(c_rarg0, field.base()); // get oop address
-  // } else {
-  //   __ leaq(c_rarg0, field); // get address
-  // }
-
   __ leaq(c_rarg0, field); // get address
 
   //__ movptr(c_rarg0, field.base()); // get oop address
@@ -2940,16 +2923,7 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
 
   __ bind(safe);
 
-  //__ popa(); // restore all registers
-  // __ pop(c_rarg1);
-  // __ pop(c_rarg0);
-  //__ pop(rbcp);
-  __ pop(rsi);
-  __ pop(rax);
-  __ pop(rcx);
-  __ pop(rdx);
-  __ pop(rbx);
-  __ pop(rdi);
+  __ popa(); // restore all registers
 }
 
 void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteControl rc) {
@@ -3245,17 +3219,7 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
 
   Label safe;
 
-  //__ pusha(); // save all registers, some don't need to be saved, will be optimized later
-  // __ push(c_rarg0);
-  // __ push(c_rarg1);
-  //__ push(rbcp);
-  __ push(rsi);
-  __ push(rax);
-  __ push(rcx);
-  __ push(rdx);
-  __ push(rbx);
-  __ push(rdi);
-
+  __ pusha(); // save all registers, some don't need to be saved, will be optimized later
 
   Register klass = c_rarg0;
 
@@ -3270,30 +3234,12 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::being_initialized);
   __ jcc(Assembler::equal, safe);
 
-
-  // we don't even need to check final fields, the compiler wont allow writes to them
-
-  // if (state == atos) {
-  //   __ movptr(c_rarg0, field.base()); // get oop address
-  // } else {
-  //   __ leaq(c_rarg0, field); // get field address
-  // }
-
   __ leaq(c_rarg0, field); // get field address
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(safe);
 
-  //__ popa(); // restore all registers
-  // __ pop(c_rarg1);
-  // __ pop(c_rarg0);
-  __ pop(rsi);
-  __ pop(rax);
-  __ pop(rcx);
-  __ pop(rdx);
-  __ pop(rbx);
-  __ pop(rdi);
-
+  __ popa(); // restore all registers
 }
 
 void TemplateTable::putfield_or_static(int byte_no, bool is_static, RewriteControl rc) {
