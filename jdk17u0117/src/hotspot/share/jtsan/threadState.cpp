@@ -45,10 +45,12 @@ JtsanThreadState* JtsanThreadState::getInstance(void) {
     return instance;
 }
 
-uint32_t* JtsanThreadState::getThreadState(size_t threadId) {
+Vectorclock* JtsanThreadState::getThreadState(size_t threadId) {
     JtsanThreadState *state = JtsanThreadState::getInstance();
 
-    return nullptr;
+    assert(threadId < MAX_THREADS, "JTSAN: Thread id out of bounds");
+
+    return &(state->epoch[threadId]);
 }
 
 void JtsanThreadState::init(void) {
@@ -70,7 +72,7 @@ void JtsanThreadState::incrementEpoch(size_t threadId) {
     assert(threadId < MAX_THREADS, "JTSAN: Thread id out of bounds");
     // might be unnecessary
     // Atomic::inc(&(state->epoch[threadId][threadId]));
-    state->epoch[threadId][threadId]++;
+    state->epoch[threadId].set(threadId, state->epoch[threadId].get(threadId) + 1);
 }
 
 void JtsanThreadState::setEpoch(size_t threadId, size_t otherThreadId, uint32_t epoch) {
@@ -98,17 +100,17 @@ uint32_t JtsanThreadState::getEpoch(size_t threadId, size_t otherThreadId) {
 void JtsanThreadState::maxEpoch(size_t threadId, size_t otherThreadId, uint32_t epoch) {
     JtsanThreadState *state = JtsanThreadState::getInstance();
 
-    assert(threadId < state->size, "JTSAN: Thread id out of bounds");
-    assert(otherThreadId < state->size, "JTSAN: OtherThread id out of bounds");
+    assert(threadId < MAX_THREADS, "JTSAN: Thread id out of bounds");
+    assert(otherThreadId < MAX_THREADS, "JTSAN: OtherThread id out of bounds");
 
-    uint32_t current = Atomic::load(&(state->epoch[threadId][otherThreadId]));
+    // uint32_t current = Atomic::load(&(state->epoch[threadId][otherThreadId]));
 
-    while (epoch > current) {
-        if (Atomic::cmpxchg(&(state->epoch[threadId][otherThreadId]), current, epoch) == current) {
-            break;
-        }
-        current = Atomic::load(&(state->epoch[threadId][otherThreadId]));
-    }
+    // while (epoch > current) {
+    //     if (Atomic::cmpxchg(&(state->epoch[threadId][otherThreadId]), current, epoch) == current) {
+    //         break;
+    //     }
+    //     current = Atomic::load(&(state->epoch[threadId][otherThreadId]));
+    // }
 }
 
 void JtsanThreadState::transferEpoch(size_t from_tid, size_t to_tid) {

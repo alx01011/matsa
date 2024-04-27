@@ -598,7 +598,6 @@ void ObjectSynchronizer::jni_enter(Handle obj, JavaThread* current) {
     }
   }
   current->set_current_pending_monitor_is_from_java(true);
-  //JTSAN_ONLY(InterpreterRuntime::jtsan_oop_lock(current, obj()));
 }
 
 // NOTE: must use heavy weight monitor to handle jni monitor exit
@@ -633,13 +632,11 @@ ObjectLocker::ObjectLocker(Handle obj, JavaThread* thread) {
 
   if (_obj() != NULL) {
     ObjectSynchronizer::enter(_obj, &_lock, _thread);
-    //JTSAN_ONLY(InterpreterRuntime::jtsan_oop_lock(thread, obj()));
   }
 }
 
 ObjectLocker::~ObjectLocker() {
   if (_obj() != NULL) {
-    //JTSAN_ONLY(InterpreterRuntime::jtsan_oop_unlock(_thread, _obj()));
     ObjectSynchronizer::exit(_obj(), &_lock, _thread);
   }
 }

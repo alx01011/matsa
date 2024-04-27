@@ -33,7 +33,7 @@ class JtsanThreadState : public CHeapObj<mtInternal> {
         static void destroy(void);
 
         // returns the thread state of thread threadId
-        static uint32_t* getThreadState(size_t threadId);
+        static Vectorclock* getThreadState(size_t threadId);
 
         static void     setEpoch(size_t threadId, size_t otherThreadId, uint32_t epoch);
 

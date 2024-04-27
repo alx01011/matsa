@@ -2113,14 +2113,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     // Slow path will re-enter here
 
     __ bind(lock_done);
-
-    // TODO: jtsan monitor lock here as well
-    // JTSAN_ONLY(
-    //   __ pusha();
-    //   __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_oop_lock), obj_reg);
-    //   __ popa();
-    // );
-
   }
 
   // Finally just about ready to make the JNI call
