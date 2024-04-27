@@ -5,9 +5,15 @@ uint64_t& Vectorclock::operator[](size_t index) {
 }
 
 Vectorclock& Vectorclock::operator=(const Vectorclock& other) {
-    for (size_t i = 0; i < other._map_size; i++) {
-        if (other._clock[other._map[i]] > this->_clock[other._map[i]]) {
-            this->_clock[other._map[i]] = other._clock[other._map[i]];
+    // for (size_t i = 0; i < other._map_size; i++) {
+    //     if (other._clock[other._map[i]] > this->_clock[other._map[i]]) {
+    //         this->_clock[other._map[i]] = other._clock[other._map[i]];
+    //     }
+    // }
+
+    for (size_t i = 0; i < MAX_THREADS; i++) {
+        if (other._clock[i] > this->_clock[i]) {
+            this->_clock[i] = other._clock[i];
         }
     }
     return *this;
