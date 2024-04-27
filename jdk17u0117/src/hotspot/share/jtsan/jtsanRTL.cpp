@@ -57,7 +57,8 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
 
     // race
     ShadowCell prev;
-    if (CheckRaces(tid, addr, cur, prev)) {
+    bool isRace = CheckRaces(tid, addr, cur, prev);
+    if (isRace) {
         ResourceMark rm;
         fprintf(stderr, "Data race detected in method %s, line %d\n",
             m->external_name_as_fully_qualified(), m->line_number_from_bci(m->bci_from(bcp)));
@@ -65,6 +66,10 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
             prev.is_write ? "write" : "read", access_size, prev.tid, prev.epoch, prev.offset);
         fprintf(stderr, "\t\tCurrent access %s of size %d, by thread %d, epoch %lu, offset %d\n",
             cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch, cur.offset);
+    }
+
+    if (isRace) {
+        fprintf(stderr, "\t\t\tRace because: %d <= %ld", JtsanThreadState::getEpoch(cur.tid, prev.tid), prev.epoch);
     }
 
     // store the shadow cell
