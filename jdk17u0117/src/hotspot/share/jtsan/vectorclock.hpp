@@ -1,3 +1,6 @@
+#ifndef VECTORCLOCK_HPP
+#define VECTORCLOCK_HPP
+
 #include <cstdint>
 #include <cstddef>
 
@@ -19,3 +22,5 @@ class Vectorclock {
         uint64_t get(size_t index);
         void set(size_t index, uint64_t value);
 };
+
+#endif
