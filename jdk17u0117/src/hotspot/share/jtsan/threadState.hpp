@@ -3,6 +3,8 @@
 
 #include "memory/allocation.hpp"
 
+#include "vectorclock.hpp"
+
 #include <cstddef>
 #include <cstdint>
 
@@ -17,7 +19,8 @@ class JtsanThreadState : public CHeapObj<mtInternal> {
             It needs to be of MAX_THREADS x MAX_THREADS because each thread has to know the epochs of other threads aswell.
             Epochs can change after a synchronization event, or a memory access
         */
-        uint32_t (*epoch)[MAX_THREADS];
+
+        Vectorclock *epoch;
         size_t   size;
 
         JtsanThreadState(void);
