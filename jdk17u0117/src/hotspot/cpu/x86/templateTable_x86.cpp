@@ -2911,7 +2911,8 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   __ push(rax);
   __ push(rcx);
   __ push(rdx);
-  __ push(rbp);
+  __ push(rbx);
+  __ push(rdi);
 
     // volatile and final check
   __ testl(flags, f_or_v);
@@ -2947,7 +2948,8 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   __ pop(rax);
   __ pop(rcx);
   __ pop(rdx);
-  __ pop(rbp);
+  __ pop(rbx);
+  __ pop(rdi);
 }
 
 void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteControl rc) {
@@ -3251,7 +3253,8 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   __ push(rax);
   __ push(rcx);
   __ push(rdx);
-  __ push(rbp);
+  __ push(rbx);
+  __ push(rdi);
 
 
   Register klass = c_rarg0;
@@ -3288,7 +3291,9 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   __ pop(rax);
   __ pop(rcx);
   __ pop(rdx);
-  __ pop(rbp);
+  __ pop(rbx);
+  __ pop(rdi);
+
 }
 
 void TemplateTable::putfield_or_static(int byte_no, bool is_static, RewriteControl rc) {
