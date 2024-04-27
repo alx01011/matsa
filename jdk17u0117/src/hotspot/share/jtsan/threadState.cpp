@@ -45,7 +45,7 @@ JtsanThreadState* JtsanThreadState::getInstance(void) {
     return instance;
 }
 
-Vectorclock JtsanThreadState::getThreadState(size_t threadId) {
+uint32_t* JtsanThreadState::getThreadState(size_t threadId) {
     JtsanThreadState *state = JtsanThreadState::getInstance();
 
     return nullptr;
