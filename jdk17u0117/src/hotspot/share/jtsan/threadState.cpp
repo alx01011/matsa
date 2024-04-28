@@ -28,9 +28,6 @@ JtsanThreadState::JtsanThreadState(void) {
 }
 
 JtsanThreadState::~JtsanThreadState(void) {
-    fprintf(stderr, "JTSAN: Destroying thread state\n");
-
-
     if (this->epoch != nullptr) {
         os::release_memory((char*)this->epoch, this->size);
     }
