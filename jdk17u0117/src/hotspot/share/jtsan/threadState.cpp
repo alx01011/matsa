@@ -120,6 +120,11 @@ void JtsanThreadState::transferEpoch(size_t from_tid, size_t to_tid) {
     assert(to_tid < state->size, "JTSAN: OtherThread id out of bounds");
     
     state->epoch[to_tid] = state->epoch[from_tid];
+
+
+    if (to_tid == 0 && from_tid == 5) {
+        fprintf(stderr, "JTSAN: Transferred epoch from %lu to %lu\n", from_tid, to_tid);
+    }
 }
 
 void JtsanThreadState::clearEpoch(size_t threadId) {
