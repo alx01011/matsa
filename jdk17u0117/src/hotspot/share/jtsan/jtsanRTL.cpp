@@ -33,11 +33,13 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev, int
             uint32_t thr = JtsanThreadState::getEpoch(cur.tid, cell.tid);
 
             if (thr > cell.epoch) {
-                fprintf(stderr, "\t\t\tNo race because %d > %ld\n", thr, cell.epoch);
+                if (lineno == 39 || lineno == 33) {
+                    fprintf(stderr, "\t\t\tNo race because %d > %ld\n", thr, cell.epoch);
                 fprintf(stderr, "\t\t\t\tCurrent Cell: tid %d, epoch %lu, offset %d, gc_epoch %u, is_write %d\n",
                     cur.tid, cur.epoch, cur.offset, cur.gc_epoch, cur.is_write);
                 fprintf(stderr, "\t\t\t\tCell %d: tid %d, epoch %lu, offset %d, gc_epoch %u, is_write %d\n",
                     i, cell.tid, cell.epoch, cell.offset, cell.gc_epoch, cell.is_write);
+                }
 
                 continue;
             }
