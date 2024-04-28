@@ -830,12 +830,7 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
 
   JavaThread *thread = JavaThread::current();
 
-  if (thread == NULL || method == NULL || bcp == NULL) return; // ignore null threads
-  if (!thread->is_Java_thread()) return; // ignore non-Java threads
-
-  oop thread_oop = thread->threadObj();
-
-  if (thread_oop == NULL) return; // ignore null thread objects
+  if (thread == NULL || method == NULL || bcp == NULL) return;
 
   int tid = JavaThread::get_jtsan_tid(thread);
 
