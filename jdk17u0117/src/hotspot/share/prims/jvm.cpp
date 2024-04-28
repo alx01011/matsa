@@ -3951,9 +3951,8 @@ JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
     if (JTSAN && thread && thread->is_Java_thread()) {
       JavaThread *jt = (JavaThread *) thread;
       frame fr = jt->last_frame();
-      // To get the actual sender frame, we need to skip Runtime and java.util.concurrent frames
+      // get the actual frame
       RegisterMap map(thread);
-      fr = fr.sender(&map);
       fr = fr.sender(&map);
 
       oop thread_object = JNIHandles::resolve(x);
@@ -3963,13 +3962,6 @@ JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
         address bcp    = fr.interpreter_frame_bcp();
 
         InterpreterRuntime::jtsan_lock((void*)thread_object, m, bcp);
-
-        ResourceMark rm;
-        const char *mname = m->external_name_as_fully_qualified();
-        int lineno = m->line_number_from_bci(m->bci_from(bcp));
-        int tid = JavaThread::get_jtsan_tid(thread);
-
-        fprintf(stderr, "Thread %d is joining at method %s, line %d\n", tid, mname, lineno);
       }
     }
 JVM_END
