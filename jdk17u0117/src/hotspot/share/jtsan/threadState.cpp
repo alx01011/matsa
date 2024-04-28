@@ -73,7 +73,6 @@ void JtsanThreadState::incrementEpoch(size_t threadId) {
     // might be unnecessary
     // Atomic::inc(&(state->epoch[threadId][threadId]));
     state->epoch[threadId].set(threadId, state->epoch[threadId].get(threadId) + 1);
-    fprintf(stderr, "JTSAN: Incrementing epoch for thread %zu\n", threadId);
 }
 
 void JtsanThreadState::setEpoch(size_t threadId, size_t otherThreadId, uint32_t epoch) {
