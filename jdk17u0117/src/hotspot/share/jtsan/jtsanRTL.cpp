@@ -9,7 +9,7 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/globalDefinitions.hpp"
 
-bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
+bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev, int lineno) {
     uptr addr_aligned = ((uptr)addr);
 
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
@@ -19,6 +19,12 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
         // previous access was by the same thread so we can skip
         // different offset means different memory location in case of 1,2 or 4 byte access
         if (cell.tid == cur.tid || cur.gc_epoch != cell.gc_epoch || cell.offset != cur.offset) {
+            if (lineno == 39 || lineno == 33) {
+                fprintf(stderr, "\t\t\tSkipping Cell %d: tid %d, epoch %lu, offset %d, gc_epoch %u, is_write %d\n",
+                    i, cell.tid, cell.epoch, cell.offset, cell.gc_epoch, cell.is_write);
+                fprintf(stderr, "\t\t\t\tCurrent Cell: tid %d, epoch %lu, offset %d, gc_epoch %u, is_write %d\n",
+                    cur.tid, cur.epoch, cur.offset, cur.gc_epoch, cur.is_write);
+            }
             continue;
         }
 
@@ -27,6 +33,12 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
             uint32_t thr = JtsanThreadState::getEpoch(cur.tid, cell.tid);
 
             if (thr > cell.epoch) {
+                fprintf(stderr, "\t\t\tNo race because %d > %ld\n", thr, cell.epoch);
+                fprintf(stderr, "\t\t\t\tCurrent Cell: tid %d, epoch %lu, offset %d, gc_epoch %u, is_write %d\n",
+                    cur.tid, cur.epoch, cur.offset, cur.gc_epoch, cur.is_write);
+                fprintf(stderr, "\t\t\t\tCell %d: tid %d, epoch %lu, offset %d, gc_epoch %u, is_write %d\n",
+                    i, cell.tid, cell.epoch, cell.offset, cell.gc_epoch, cell.is_write);
+
                 continue;
             }
     
