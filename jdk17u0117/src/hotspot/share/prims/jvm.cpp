@@ -2955,7 +2955,7 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
         // print the vector clock of the current thread
         fprintf(stderr, "New thread 5 will see:\n");
         Vectorclock *vc = JtsanThreadState::getThreadState(cur_tid);
-        fprintf(stderr, "Thread %d vector clock: %d\n", cur_tid, vc->get(cur_tid));
+        fprintf(stderr, "Thread %d vector clock: %ld\n", cur_tid, vc->get(cur_tid));
       }
 
       // oop thread_object = JNIHandles::resolve_non_null(jthread);
