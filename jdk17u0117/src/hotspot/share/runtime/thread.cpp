@@ -1417,8 +1417,8 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
 
     oop thread_object = this->threadObj();
 
-    LockShadow *ls = LockShadow::ObjectLockShadow();
-    uint32_t index = thread_object->obj_lock_index();
+    LockShadow *ls      = LockShadow::ObjectLockShadow();
+    uint32_t lock_index = thread_object->obj_lock_index();
 
     // transfer the vector clock from the current thread to the thread object (Thread ...)
     ls->transferVectorclock(cur_tid, lock_index);
