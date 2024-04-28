@@ -2949,15 +2949,15 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
       //fprintf(stderr, "Transfering epoch from thread %d to new %d\n", cur_tid, new_tid);
 
       // copies the clock of the current thread to the new thread
-      JtsanThreadState::transferEpoch(cur_tid, new_tid);
+      // JtsanThreadState::transferEpoch(cur_tid, new_tid);
 
-      oop thread_object = JNIHandles::resolve_non_null(jthread);
-      // this so the thread has a lock index
-      thread_object->set_cur_obj_lock_index();
-      uint32_t lock_index = thread_object->obj_lock_index();
+      // oop thread_object = JNIHandles::resolve_non_null(jthread);
+      // // this so the thread has a lock index
+      // thread_object->set_cur_obj_lock_index();
+      // uint32_t lock_index = thread_object->obj_lock_index();
 
-      LockShadow *ls = LockShadow::ObjectLockShadow();
-      ls->transferVectorclock(cur_tid, lock_index);
+      // LockShadow *ls = LockShadow::ObjectLockShadow();
+      // ls->transferVectorclock(cur_tid, lock_index);
 
       // // 0x1 is to pass the null checking
       // // FIXME: lock and unlock shouldn't need more arguments than the thread
