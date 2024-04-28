@@ -10,7 +10,7 @@
 
 typedef uintptr_t uptr;
 
-void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write);
+void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write, int);
 
 bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev);
 

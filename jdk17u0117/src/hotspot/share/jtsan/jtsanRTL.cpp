@@ -82,7 +82,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
 
     // race
     ShadowCell prev;
-    bool isRace = CheckRaces(tid, addr, cur, prev);
+    bool isRace = CheckRaces(tid, addr, cur, prev, lineno);
     if (isRace) {
         ResourceMark rm;
         fprintf(stderr, "Data race detected in method %s, line %d\n",
