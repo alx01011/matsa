@@ -2949,6 +2949,7 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
     JtsanThreadState::transferEpoch(cur_tid, new_tid);
 
     oop thread_object   = JNIHandles::resolve_non_null(jthread);
+    thread_object->set_cur_obj_lock_index();
 
     LockShadow *ls      = LockShadow::ObjectLockShadow();
     uint32_t lock_index = thread_object->obj_lock_index();
