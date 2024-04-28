@@ -2946,17 +2946,17 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
     int cur_tid = JavaThread::get_jtsan_tid(thread);
 
     if (new_tid != -1 && cur_tid != -1) {
-      fprintf(stderr, "Transfering epoch from thread %d to new %d\n", cur_tid, new_tid);
+      //fprintf(stderr, "Transfering epoch from thread %d to new %d\n", cur_tid, new_tid);
 
       // copies the clock of the current thread to the new thread
-      JtsanThreadState::transferEpoch(cur_tid, new_tid);
+      //JtsanThreadState::transferEpoch(cur_tid, new_tid);
 
-      if (new_tid == 5) {
-        // print the vector clock of the current thread
-        fprintf(stderr, "New thread 5 will see:\n");
-        Vectorclock *vc = JtsanThreadState::getThreadState(cur_tid);
-        fprintf(stderr, "Thread %d vector clock: %ld\n", 4, vc->get(4));
-      }
+      // if (new_tid == 5) {
+      //   // print the vector clock of the current thread
+      //   fprintf(stderr, "New thread 5 will see:\n");
+      //   Vectorclock *vc = JtsanThreadState::getThreadState(cur_tid);
+      //   fprintf(stderr, "Thread %d vector clock: %ld\n", 4, vc->get(4));
+      // }
 
       // oop thread_object = JNIHandles::resolve_non_null(jthread);
       // // this so the thread has a lock index
