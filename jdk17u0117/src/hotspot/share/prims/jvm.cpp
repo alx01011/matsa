@@ -2951,6 +2951,13 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
       // copies the clock of the current thread to the new thread
       JtsanThreadState::transferEpoch(cur_tid, new_tid);
 
+      if (new_tid == 5) {
+        // print the vector clock of the current thread
+        fprintf(stderr, "New thread 5 will see:\n");
+        Vectorclock *vc = JtsanThreadState::getThreadState(cur_tid);
+        fprintf(stderr, "Thread %d vector clock: %d\n", cur_tid, vc->get(cur));
+      }
+
       // oop thread_object = JNIHandles::resolve_non_null(jthread);
       // // this so the thread has a lock index
       // thread_object->set_cur_obj_lock_index();
