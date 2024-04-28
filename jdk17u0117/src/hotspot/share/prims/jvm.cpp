@@ -2954,10 +2954,14 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
       oop thread_object = JNIHandles::resolve_non_null(jthread);
       // this so the thread has a lock index
       thread_object->set_cur_obj_lock_index();
+      uint32_t lock_index = thread_object->obj_lock_index();
 
-      // 0x1 is to pass the null checking
-      // FIXME: lock and unlock shouldn't need more arguments than the thread
-      InterpreterRuntime::jtsan_unlock(thread_object, (Method*)0x1, (address)0x1);
+      LockShadow *ls = LockShadow::ObjectLockShadow();
+      ls->transferVectorclock(cur_tid, lock_index);
+
+      // // 0x1 is to pass the null checking
+      // // FIXME: lock and unlock shouldn't need more arguments than the thread
+      // InterpreterRuntime::jtsan_unlock(thread_object, (Method*)0x1, (address)0x1);
     }
 
     JavaThread::set_jtsan_tid(native_thread, new_tid);

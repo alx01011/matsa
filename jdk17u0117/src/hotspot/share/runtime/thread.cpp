@@ -1413,10 +1413,15 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
   }
 
   JTSAN_ONLY(
+    int cur_tid = JavaThread::get_jtsan_tid(this);
+
     oop thread_object = this->threadObj();
 
-    // unlock again to transfer the thread epoch to the parent thread in case of join
-    InterpreterRuntime::jtsan_unlock((void*)thread_object, (Method*)0x1, (address)0x1);
+    LockShadow *ls = LockShadow::ObjectLockShadow();
+    uint32_t index = thread_object->obj_lock_index();
+
+    // transfer the vector clock from the current thread to the thread object (Thread ...)
+    ls->transferVectorclock(cur_tid, lock_index);
   );
 
   HandleMark hm(this);

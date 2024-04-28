@@ -68,6 +68,13 @@ Vectorclock* LockShadow::indexToLockVector(uint32_t index) {
     return (Vectorclock*)((char*)this->addr + (index * sizeof(Vectorclock)));
 }
 
+void LockShadow::transferVectorclock(size_t tid, uint32_t index) {
+    Vectorclock *vc = this->indexToLockVector(index);
+    Vectorclock *threadState = JtsanThreadState::getThreadState(tid);
+
+    *vc = *threadState;
+}
+
 size_t LockShadow::getCurrentLockIndex(void) {
     // because multiple threads (locks) can get an index at the same time
     return Atomic::load(&(this->cur));
