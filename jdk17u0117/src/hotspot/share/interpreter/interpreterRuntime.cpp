@@ -915,15 +915,6 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
     Overall these locks are expensive to track.
   */
 
- {
-  ResourceMark rm;
-  const char *mname = m->external_name_as_fully_qualified();
-  int bci = m->bci_from(bcp);
-  int line_no = m->line_number_from_bci(bci);
-
-  fprintf(stderr, "Sync enter at method %s , line %d\n", mname, line_no);
- }
-
   oop p = lock->obj();
 
   if (p == NULL) return;
@@ -963,15 +954,6 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   oop p = lock->obj();
 
   if (p == NULL) return;
-
-   {
-  ResourceMark rm;
-  const char *mname = m->external_name_as_fully_qualified();
-  int bci = m->bci_from(bcp);
-  int line_no = m->line_number_from_bci(bci);
-
-  fprintf(stderr, "Sync exit at method %s , line %d\n", mname, line_no);
- }
 
   /*
     On lock release we have to max the thread state with the lock state.
