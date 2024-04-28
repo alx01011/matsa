@@ -2949,7 +2949,7 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
       //fprintf(stderr, "Transfering epoch from thread %d to new %d\n", cur_tid, new_tid);
 
       // copies the clock of the current thread to the new thread
-      // JtsanThreadState::transferEpoch(cur_tid, new_tid);
+      JtsanThreadState::transferEpoch(cur_tid, new_tid);
 
       // oop thread_object = JNIHandles::resolve_non_null(jthread);
       // // this so the thread has a lock index
