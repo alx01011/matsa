@@ -63,7 +63,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         uptr addr_aligned = ((uptr)addr);
         for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
             ShadowCell cell = ShadowBlock::load_cell(addr_aligned, i);
-            fprintf(stderr, "\t\t\tCell %d: tid %d, epoch %lu, offset %d, gc_epoch %lu, is_write %d\n",
+            fprintf(stderr, "\t\t\tCell %d: tid %d, epoch %lu, offset %d, gc_epoch %u, is_write %d\n",
                 i, cell.tid, cell.epoch, cell.offset, cell.gc_epoch, cell.is_write);
         }
     }
