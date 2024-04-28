@@ -38,17 +38,10 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
 }
 
 void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write) {
-    int lineno = m->line_number_from_bci(m->bci_from(bcp));
-    if (lineno == 39 || lineno == 33) {
-        ResourceMark rm;
-        fprintf(stderr, "MemoryAccess: %s, %d by tid %d\n", m->external_name_as_fully_qualified(), lineno, tid);
-    }
-
-
     // if jtsan is not initialized, we can ignore
-    if (!is_jtsan_initialized()) {
-        return;
-    }
+    // if (!is_jtsan_initialized()) {
+    //     return;
+    // }
 
     // ignore accesses from non-java threads
     // if (!Thread::current()->is_Java_thread()) {
@@ -61,6 +54,12 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write};
+
+    int lineno = m->line_number_from_bci(m->bci_from(bcp));
+    if (lineno == 39 || lineno == 33) {
+        ResourceMark rm;
+        fprintf(stderr, "MemoryAccess: %s, %d by tid %d\n", m->external_name_as_fully_qualified(), lineno, tid);
+    }
 
     // race
     ShadowCell prev;
