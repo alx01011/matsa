@@ -59,6 +59,13 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     if (lineno == 39 || lineno == 33) {
         ResourceMark rm;
         fprintf(stderr, "MemoryAccess: %s, %d by tid %d\n", m->external_name_as_fully_qualified(), lineno, tid);
+        // print rest shadow cells in that area
+        uptr addr_aligned = ((uptr)addr);
+        for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
+            ShadowCell cell = ShadowBlock::load_cell(addr_aligned, i);
+            fprintf(stderr, "\t\t\tCell %d: tid %d, epoch %lu, offset %d, gc_epoch %lu, is_write %d\n",
+                i, cell.tid, cell.epoch, cell.offset, cell.gc_epoch, cell.is_write);
+        }
     }
 
     // race
