@@ -851,6 +851,10 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
   Vectorclock* cur = JtsanThreadState::getThreadState(tid);
 
   *cur = *ts;
+
+  if (tid == 0) {
+    fprintf(stderr, "Locking(obj) in thread 0 at line %d\n", method->line_number_from_bci(method->bci_from(bcp)));
+  }
 }
 
 void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bcp) {
@@ -931,6 +935,10 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   Vectorclock* cur = JtsanThreadState::getThreadState(tid);
 
   *cur = *ts;
+
+    if (tid == 0) {
+    fprintf(stderr, "Locking(sync) in thread 0 at line %d\n", method->line_number_from_bci(method->bci_from(bcp)));
+  }
 }
 
 void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, address bcp) {
