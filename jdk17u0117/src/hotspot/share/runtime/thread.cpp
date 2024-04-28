@@ -1421,6 +1421,7 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
     uint32_t lock_index = thread_object->obj_lock_index();
 
     // transfer the vector clock from the current thread to the thread object (Thread ...)
+    JtsanThreadState::incrementEpoch(cur_tid);
     ls->transferVectorclock(cur_tid, lock_index);
   );
 

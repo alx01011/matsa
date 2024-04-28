@@ -3958,8 +3958,6 @@ JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
 
       oop thread_object = JNIHandles::resolve(x);
 
-
-
       InterpreterRuntime::jtsan_lock((void*)thread_object, (Method*)0x1, (address)0x1);
     }
 JVM_END
