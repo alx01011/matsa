@@ -937,7 +937,7 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   *cur = *ts;
 
     if (tid == 0) {
-    fprintf(stderr, "Locking(sync) in thread 0 at line %d\n", method->line_number_from_bci(method->bci_from(bcp)));
+    fprintf(stderr, "Locking(sync) in thread 0 at line %d\n", m->line_number_from_bci(m->bci_from(bcp)));
   }
 }
 
