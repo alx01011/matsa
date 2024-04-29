@@ -57,6 +57,9 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         fprintf(stderr, "\t\tCurrent access %s of size %d, by thread %d, epoch %lu, offset %d\n",
             cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch, cur.offset);
 
+        fprintf(stderr, "\t\t Stack trace\n");
+        thread->print_stack_on(stderr);
+
         // unlock report lock after printing the report
         // this is to avoid multiple reports for consecutive accesses
         ShadowMemory::unlock_report();
