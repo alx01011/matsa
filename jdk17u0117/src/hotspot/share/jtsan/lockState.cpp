@@ -13,7 +13,7 @@
     One way to solve this could to clear mappings of locks to clear the shadow memory of oops that have been freed.
 */
 
-#define MAX_LOCKS (8589934592) // 8.5billion locks should be sufficient this is the equivelant of about 8terabytes of virtual memory
+#define MAX_LOCKS (8589934592 / 2) // 4.25billion locks should be sufficient this is the equivelant of about 8terabytes of virtual memory
 
 /*
     LockShadow is a singleton class that holds the shadow memory for locks.
