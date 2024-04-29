@@ -3,6 +3,8 @@
 #include "jtsanGlobals.hpp"
 
 #include "runtime/thread.hpp"
+#include "runtime/frame.hpp"
+#include "runtime/registerMap.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/oop.hpp"
 #include "oops/oopsHierarchy.hpp"
@@ -50,16 +52,35 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     // try to lock the report lock
     if (CheckRaces(tid, addr, cur, prev) && ShadowMemory::try_lock_report()) {
         ResourceMark rm;
+        int lineno = m->line_number_from_bci(m->bci_from(bcp));
         fprintf(stderr, "Data race detected in method %s, line %d\n",
-            m->external_name_as_fully_qualified(), m->line_number_from_bci(m->bci_from(bcp)));
+            m->external_name_as_fully_qualified(),lineno);
         fprintf(stderr, "\t\tPrevious access %s of size %d, by thread %d, epoch %lu, offset %d\n",
             prev.is_write ? "write" : "read", access_size, prev.tid, prev.epoch, prev.offset);
         fprintf(stderr, "\t\tCurrent access %s of size %d, by thread %d, epoch %lu, offset %d\n",
             cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch, cur.offset);
 
         fprintf(stderr, "\t\t Stack trace\n");
-        thread->trace_stack();
-        thread->print_stack_on(tty);
+        frame fr = thread->last_frame();
+        RegisterMap map(thread);
+        Method *bt_method;
+        address bt_bcp;
+    // second frame
+        fr                = fr.sender(&map);
+        bt_bcp            = fr.interpreter_frame_bcp();
+        bt_method         = fr.interpreter_frame_method();
+        lineno            = bt_method->line_number_from_bci(bt_method->bci_from(bt_bcp));
+
+        fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
+        
+    // third frame
+        fr = fr.sender(&map);
+        bt_bcp            = fr.interpreter_frame_bcp();
+        bt_method         = fr.interpreter_frame_method();
+        lineno            = bt_method->line_number_from_bci(bt_method->bci_from(bt_bcp));
+
+
+        fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
 
         // unlock report lock after printing the report
         // this is to avoid multiple reports for consecutive accesses
