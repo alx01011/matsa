@@ -58,6 +58,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
             cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch, cur.offset);
 
         fprintf(stderr, "\t\t Stack trace\n");
+        thread->trace_stack();
         thread->print_stack_on(tty);
 
         // unlock report lock after printing the report
