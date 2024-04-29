@@ -7,9 +7,7 @@ uint64_t& Vectorclock::operator[](size_t index) {
 Vectorclock& Vectorclock::operator=(const Vectorclock& other) {
     for (size_t i = 0; i < other._slot_size; i++) {
         size_t index = other._slot[i];
-        this->_clock[index] = other._clock[index];
-        this->_slot[this->_slot_size++] = index;
-        this->_map[index] = 1;
+        this->set(index, other._clock[index]);
     }
 
     return *this;
