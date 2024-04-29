@@ -4,15 +4,18 @@
 #include <cstdint>
 #include <cstddef>
 
-#define MAX_THREADS (256)
+#define MAX_THREADS (1024)
 
 class Vectorclock {
     private:
         // clock contains the epoch of each thread seen by the current thread
         uint64_t _clock[MAX_THREADS];
-        // map contains the ids of the threads that the clock has been set to
-        uint8_t  _map[MAX_THREADS];
-        size_t   _map_size;
+        // slot contains the ids of the threads that the clock has been set to
+        uint8_t  _slot[MAX_THREADS];
+        size_t   _slot_size;
+        // map is used for faster lookup in slot, to determine if a thread has been added
+        uint8_t _map[MAX_THREADS];
+
     public:
         // overload [] operator to access clock of specific thread
         uint64_t& operator[](size_t index);

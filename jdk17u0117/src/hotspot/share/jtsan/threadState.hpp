@@ -9,8 +9,6 @@
 #include <cstddef>
 #include <cstdint>
 
-#define MAX_THREADS (256)
-
 class JtsanThreadState : public CHeapObj<mtInternal> {
     private:
         static JtsanThreadState* instance;

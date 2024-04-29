@@ -5,18 +5,13 @@ uint64_t& Vectorclock::operator[](size_t index) {
 }
 
 Vectorclock& Vectorclock::operator=(const Vectorclock& other) {
-    // for (size_t i = 0; i < other._map_size; i++) {
-    //     if (other._clock[other._map[i]] > this->_clock[other._map[i]]) {
-    //         this->_clock[other._map[i]] = other._clock[other._map[i]];
-    //         this->_map[this->_map_size++] = other._map[i];
-    //     }
-    // }
-
-    for (size_t i = 0; i < MAX_THREADS; i++) {
-        if (other._clock[i] > this->_clock[i]) {
-            this->_clock[i] = other._clock[i];
-        }
+    for (size_t i = 0; i < other._slot_size; i++) {
+        size_t index = other._slot[i];
+        this->_clock[index] = other._clock[index];
+        this->_slot[this->_slot_size++] = index;
+        this->_map[index] = 1;
     }
+
     return *this;
 }
 
@@ -27,12 +22,9 @@ uint64_t Vectorclock::get(size_t index) {
 void Vectorclock::set(size_t index, uint64_t value) {
     this->_clock[index] = value;
     
-    // if the index is not in the map, add it
-    for (size_t i = 0; i < this->_map_size; i++) {
-        if (this->_map[i] == index) {
-            return;
-        }
+    if (this->_map[index] == 0) {
+        // unsafe
+        this->_slot[this->_slot_size++] = index;
+        this->_map[index] = 1;
     }
-
-    this->_map[this->_map_size++] = index;
 }
