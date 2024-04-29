@@ -65,6 +65,10 @@ void LockShadow::destroy(void) {
 }
 
 Vectorclock* LockShadow::indexToLockVector(uint32_t index) {
+    if (index >= this->nmemb) {
+        fprintf(stderr, "Index %u out of bounds of %u\n", index, this->nmemb);
+    }
+
     return (Vectorclock*)((char*)this->addr + (index * sizeof(Vectorclock)));
 }
 

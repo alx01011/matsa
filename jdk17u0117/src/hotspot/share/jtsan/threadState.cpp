@@ -50,6 +50,10 @@ Vectorclock* JtsanThreadState::getThreadState(size_t threadId) {
 
     assert(threadId < MAX_THREADS, "JTSAN: Thread id out of bounds");
 
+    if (threadId >= MAX_THREADS) {
+        fprintf(stderr, "JTSAN: Thread id %lu out of bounds\n", threadId);
+    }
+
     return &(state->epoch[threadId]);
 }
 
