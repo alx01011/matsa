@@ -13,12 +13,12 @@ void signal_handler(int signal) {
  
 
 Vectorclock& Vectorclock::operator=(const Vectorclock& other) {
-        std::signal(SIGSEGV, signal_handler);
+        //std::signal(SIGSEGV, signal_handler);
 
     for (size_t i = 0; i < other._slot_size; i++) {
-        if (other._slot_size >= MAX_THREADS) {
-            std::raise(SIGSEGV);
-        }
+        // if (other._slot_size >= MAX_THREADS) {
+        //     std::raise(SIGSEGV);
+        // }
 
         size_t index = other._slot[i];
 
