@@ -60,33 +60,35 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         fprintf(stderr, "\t\tCurrent access %s of size %d, by thread %d, epoch %lu, offset %d\n",
             cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch, cur.offset);
 
-        fprintf(stderr, "\t\t Stack trace\n");
-        frame fr = thread->last_frame();
-        RegisterMap map(thread);
-        Method *bt_method;
-        address bt_bcp;
-        if (fr.is_interpreted_frame()) {
-    // second frame
-        fr                = fr.sender(&map);
-        bt_bcp            = fr.interpreter_frame_bcp();
-        bt_method         = fr.interpreter_frame_method();
-        lineno            = bt_method->line_number_from_bci(bt_method->bci_from(bt_bcp));
+        thread->print_jni_stack();
 
-        fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
-    }
+    //     fprintf(stderr, "\t\tStack trace\n");
+    //     frame fr = thread->last_frame();
+    //     RegisterMap map(thread);
+    //     Method *bt_method;
+    //     address bt_bcp;
+    //     if (fr.is_interpreted_frame()) {
+    // // second frame
+    //     fr                = fr.sender(&map);
+    //     bt_bcp            = fr.interpreter_frame_bcp();
+    //     bt_method         = fr.interpreter_frame_method();
+    //     lineno            = bt_method->line_number_from_bci(bt_method->bci_from(bt_bcp));
+
+    //     fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
+    // }
         
-    // third frame
+    // // third frame
 
-    if (fr.is_interpreted_frame()) {
+    // if (fr.is_interpreted_frame()) {
 
-        fr = fr.sender(&map);
-        bt_bcp            = fr.interpreter_frame_bcp();
-        bt_method         = fr.interpreter_frame_method();
-        lineno            = bt_method->line_number_from_bci(bt_method->bci_from(bt_bcp));
+    //     fr = fr.sender(&map);
+    //     bt_bcp            = fr.interpreter_frame_bcp();
+    //     bt_method         = fr.interpreter_frame_method();
+    //     lineno            = bt_method->line_number_from_bci(bt_method->bci_from(bt_bcp));
 
 
-        fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
-    }
+    //     fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
+    // }
 
         // unlock report lock after printing the report
         // this is to avoid multiple reports for consecutive accesses
