@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <pthread.h>
 
-#define MAX_LOCKS (100000) // 100k locks should be sufficient
+#define MAX_LOCKS (1000000) // 1m locks should be sufficient
 
 /*
     LockShadow is a singleton class that holds the shadow memory for locks.
