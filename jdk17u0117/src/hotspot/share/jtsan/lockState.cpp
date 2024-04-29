@@ -6,9 +6,14 @@
 #include "runtime/atomic.hpp"
 
 #include <stdio.h>
-#include <pthread.h>
 
-#define MAX_LOCKS (1000000) // 1m locks should be sufficient
+/*
+    FIXME: 
+    MAX_LOCKS should not be hard coded, it could also reach very high values.
+    One way to solve this could to clear mappings of locks to clear the shadow memory of oops that have been freed.
+*/
+
+#define MAX_LOCKS (8589934592) // 8.5billion locks should be sufficient this is the equivelant of about 8terabytes of virtual memory
 
 /*
     LockShadow is a singleton class that holds the shadow memory for locks.
@@ -16,8 +21,6 @@
 */
 LockShadow* LockShadow::objectInstance = nullptr;
 LockShadow* LockShadow::syncInstance   = nullptr;
-
-static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 LockShadow::LockShadow(void) {
     this->nmemb = MAX_LOCKS;
