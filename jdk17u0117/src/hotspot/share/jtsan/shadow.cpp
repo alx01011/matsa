@@ -27,6 +27,8 @@ ShadowMemory::ShadowMemory(size_t size, void *shadow_base, uptr offset, uptr hea
     this->shadow_base       = shadow_base;
     this->offset            = offset;
     this->heap_base         = heap_base;
+
+    this->_report_lock = new Mutex(Mutex::tty, "JTSAN Report Lock");
 }
 
 ShadowMemory::~ShadowMemory() {
@@ -169,6 +171,18 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
     cell_addr = &cell_addr[ci];
 
     cell_store_atomic(cell_addr, cell);
+}
+
+bool ShadowMemory::try_lock_report(void) {
+    ShadowMemory *shadow = ShadowMemory::getInstance();
+
+    return shadow->_report_lock->try_lock();
+}
+
+void ShadowMemory::unlock_report(void) {
+    ShadowMemory *shadow = ShadowMemory::getInstance();
+
+    shadow->_report_lock->unlock();
 }
 
 

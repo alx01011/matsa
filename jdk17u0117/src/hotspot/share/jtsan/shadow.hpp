@@ -14,6 +14,7 @@
 #include <cstddef>  
 
 #include "memory/allocation.hpp"
+#include "runtime/mutex.hpp"
 
 #define SHADOW_CELLS (4)
 
@@ -26,6 +27,9 @@ typedef uintptr_t uptr;
 class ShadowMemory : public CHeapObj<mtInternal>{
     private:
         static ShadowMemory *shadow; // singleton
+
+        Mutex *_report_lock;
+
         ShadowMemory(size_t size, void *shadow_base, uptr offset, uptr heap_start); // private constructor
         ~ShadowMemory();
 
@@ -42,6 +46,9 @@ class ShadowMemory : public CHeapObj<mtInternal>{
         static ShadowMemory* getInstance(void);
 
         void *MemToShadow(uptr mem);
+
+        static bool try_lock_report(void);
+        static void unlock_report(void);
 };
 
 /*
