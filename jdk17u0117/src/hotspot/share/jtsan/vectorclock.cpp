@@ -5,11 +5,19 @@
 uint64_t& Vectorclock::operator[](size_t index) {
     return this->_clock[index];
 }
+#include <csignal>
+#include <iostream>
+void signal_handler(int signal) {
+    // dummy
+}
+ 
 
 Vectorclock& Vectorclock::operator=(const Vectorclock& other) {
+        std::signal(SIGSEGV, signal_handler);
+
     for (size_t i = 0; i < other._slot_size; i++) {
         if (other._slot_size >= MAX_THREADS) {
-            fprintf(stderr, "Slot size %zu out of bounds of 1024\n", other._slot_size);
+            std::raise(SIGSEGV);
         }
 
         size_t index = other._slot[i];
