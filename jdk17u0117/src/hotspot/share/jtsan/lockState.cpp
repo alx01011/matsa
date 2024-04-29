@@ -75,7 +75,7 @@ void LockShadow::transferVectorclock(size_t tid, uint32_t index) {
     *vc = *threadState;
 }
 
-size_t LockShadow::getCurrentLockIndex(void) {
+uint32_t LockShadow::getCurrentLockIndex(void) {
     // because multiple threads (locks) can get an index at the same time
     return Atomic::load(&(this->cur));
 }
