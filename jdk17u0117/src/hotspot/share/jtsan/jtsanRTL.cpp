@@ -91,8 +91,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
 
         frame fr = os::current_frame();
         // print up to 10 frames
-        frame invalid;
-        for (int i = 0; i < 10 && fr != invalid; i++) {
+        for (int i = 0; i < 10; i++) {
             if (Interpreter::contains(fr.pc())) {
                 Method *bt_method = fr.interpreter_frame_method();
                 address bt_bcp = (fr.is_interpreted_frame()) ? fr.interpreter_frame_bcp() : fr.pc();
