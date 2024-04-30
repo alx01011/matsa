@@ -129,7 +129,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
 
         // unlock report lock after printing the report
         // this is to avoid multiple reports for consecutive accesses
-        //ShadowMemory::unlock_report();
+        ShadowMemory::unlock_report();
     }
 
     // store the shadow cell
