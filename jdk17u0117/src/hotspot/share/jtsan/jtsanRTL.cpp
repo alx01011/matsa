@@ -87,9 +87,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         fprintf(stderr, "\t\tCurrent access %s of size %d, by thread %d, epoch %lu, offset %d\n",
             cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch, cur.offset);
 
-            thread->print_jni_stack();
-
-        fprintf(stderr, "\t\tStack trace\n");
+        fprintf(stderr, "\t\t==================Stack trace==================\n");
         frame fr = os::current_frame();
 
         for (int i = 0; i < 4; i++) {
