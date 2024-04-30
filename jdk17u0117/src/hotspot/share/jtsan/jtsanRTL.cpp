@@ -94,7 +94,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
 
         for (int i = 0; i < 4; i++) {
             if (Interpreter::contains(fr.pc())) {
-                Method *bt_method = fr.method();
+                Method *bt_method = fr.interpreter_frame_method();
                 int lineno = bt_method->line_number_from_bci(bt_method->bci_from(fr.pc()));
                 fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
             }
