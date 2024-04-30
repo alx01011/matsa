@@ -90,6 +90,8 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         fprintf(stderr, "\t\t==================Stack trace==================\n");
 
         frame fr = os::current_frame();
+        // ignore the first frame as it is the current frame and we have already printed it
+        fr = next_frame(fr, (Thread*)thread);
         // print up to 10 frames
         for (int i = 0; i < 10; i++) {
             if (Interpreter::contains(fr.pc())) {
