@@ -3,7 +3,7 @@
 #include "jtsanGlobals.hpp"
 
 #include "runtime/thread.hpp"
-#include "runtime/frame.hpp"
+#include "runtime/frame.inline.hpp"
 #include "runtime/osThread.hpp"
 #include "interpreter/interpreter.hpp"
 #include "runtime/registerMap.hpp"
