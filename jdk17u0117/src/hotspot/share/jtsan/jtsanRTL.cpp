@@ -88,9 +88,10 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
             cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch, cur.offset);
 
         fprintf(stderr, "\t\t==================Stack trace==================\n");
-        frame fr = os::current_frame();
 
-        for (int i = 0; i < 4; i++) {
+        frame fr = os::current_frame();
+        // print up to 10 frames
+        for (int i = 0; i < 10 && fr != invalid; i++) {
             if (Interpreter::contains(fr.pc())) {
                 Method *bt_method = fr.interpreter_frame_method();
                 address bt_bcp = (fr.is_interpreted_frame()) ? fr.interpreter_frame_bcp() : fr.pc();
