@@ -101,31 +101,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
             fr = next_frame(fr, (Thread*)thread);
         }
 
-    //     RegisterMap map(thread);
-    //     Method *bt_method;
-    //     address bt_bcp;
-    //     if (fr.is_interpreted_frame()) {
-    // // second frame
-    //     fr                = fr.sender(&map);
-    //     bt_bcp            = fr.interpreter_frame_bcp();
-    //     bt_method         = fr.interpreter_frame_method();
-    //     lineno            = bt_method->line_number_from_bci(bt_method->bci_from(bt_bcp));
-
-    //     fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
-    // }
-        
-    // // third frame
-
-    // if (fr.is_interpreted_frame()) {
-
-    //     fr = fr.sender(&map);
-    //     bt_bcp            = fr.interpreter_frame_bcp();
-    //     bt_method         = fr.interpreter_frame_method();
-    //     lineno            = bt_method->line_number_from_bci(bt_method->bci_from(bt_bcp));
-
-
-    //     fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
-    // }
+        fprintf(stderr, "\t\t===============================================\n");
 
         // unlock report lock after printing the report
         // this is to avoid multiple reports for consecutive accesses
