@@ -4,12 +4,39 @@
 
 #include "runtime/thread.hpp"
 #include "runtime/frame.hpp"
+#include "runtime/osThread.hpp"
+#include "interpreter/interpreter.hpp"
 #include "runtime/registerMap.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/oop.hpp"
 #include "oops/oopsHierarchy.hpp"
 #include "oops/oop.inline.hpp"
 #include "utilities/globalDefinitions.hpp"
+
+static frame next_frame(frame fr, Thread* t) {
+  // Compiled code may use EBP register on x86 so it looks like
+  // non-walkable C frame. Use frame.sender() for java frames.
+  frame invalid;
+  if (t != nullptr && t->is_Java_thread()) {
+    // Catch very first native frame by using stack address.
+    // For JavaThread stack_base and stack_size should be set.
+    if (!t->is_in_full_stack((address)(fr.real_fp() + 1))) {
+      return invalid;
+    }
+    if (fr.is_java_frame() || fr.is_native_frame() || fr.is_runtime_frame()) {
+      RegisterMap map(t->as_Java_thread(), false); // No update
+      return fr.sender(&map);
+    } else {
+      // is_first_C_frame() does only simple checks for frame pointer,
+      // it will pass if java compiled code has a pointer in EBP.
+      if (os::is_first_C_frame(&fr)) return invalid;
+      return os::get_sender_for_C_frame(&fr);
+    }
+  } else {
+    if (os::is_first_C_frame(&fr)) return invalid;
+    return os::get_sender_for_C_frame(&fr);
+  }
+}
 
 bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
@@ -50,7 +77,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     // race
     ShadowCell prev;
     // try to lock the report lock
-    if (CheckRaces(tid, addr, cur, prev)) {
+    if (CheckRaces(tid, addr, cur, prev) && ShadowMemory::try_lock_report()) {
         ResourceMark rm;
         int lineno = m->line_number_from_bci(m->bci_from(bcp));
         fprintf(stderr, "Data race detected in method %s, line %d\n",
@@ -60,10 +87,20 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         fprintf(stderr, "\t\tCurrent access %s of size %d, by thread %d, epoch %lu, offset %d\n",
             cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch, cur.offset);
 
-        thread->print_jni_stack();
+            thread->print_jni_stack();
 
-    //     fprintf(stderr, "\t\tStack trace\n");
-    //     frame fr = thread->last_frame();
+        fprintf(stderr, "\t\tStack trace\n");
+        frame fr = os::current_frame();
+
+        for (int i = 0; i < 4; i++) {
+            if (Interpreter::contains(fr.pc())) {
+                Method *bt_method = fr.method();
+                int lineno = bt_method->line_number_from_bci(bt_method->bci_from(fr.pc()));
+                fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
+            }
+            fr = next_frame(fr, (Thread*)thread);
+        }
+
     //     RegisterMap map(thread);
     //     Method *bt_method;
     //     address bt_bcp;
