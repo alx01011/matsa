@@ -89,7 +89,7 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
       ShadowBlock::store_cell((uptr)addr, &cur);
     }
 
-    return 
+    return;
 }
 
 void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write) {
