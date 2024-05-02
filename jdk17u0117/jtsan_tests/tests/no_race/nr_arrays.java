@@ -35,4 +35,8 @@ public class nr_arrays {
     public static void increment(int[] arr, int index) {
         arr[index]++;
     }
+
+    public static void increment(double[] arr, int index) {
+        arr[index]++;
+    }
 }
