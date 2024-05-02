@@ -125,7 +125,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
               int lineno = -1;
               bool info = Decoder::get_source_info(fr.pc(), buf, sizeof(buf), &lineno);
 
-              if (info) {
+              if (true) {
                 fprintf(stderr, "\t\t\t%s : %d\n", buf, lineno);
               }
                 // Method *bt_method = fr.interpreter_frame_method();
