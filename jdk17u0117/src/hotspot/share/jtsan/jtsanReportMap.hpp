@@ -1,7 +1,7 @@
 #ifndef JTSAN_REPORT_MAP_HPP
 #define JTSAN_REPORT_MAP_HPP
 
-#include <cstdef>
+#include <cstddef>
 
 #include "runtime/mutex.hpp"
 #include "memory/allocation.hpp"
