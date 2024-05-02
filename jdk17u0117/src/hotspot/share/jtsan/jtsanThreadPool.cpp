@@ -25,7 +25,7 @@ uint8_t ThreadQueue::enqueue(uint8_t tid) {
     return 0;
 }
 
-int16_t ThreadQueue::dequeue(void) {
+int ThreadQueue::dequeue(void) {
     _lock->lock();
 
     if (_front == _rear) {
@@ -40,7 +40,7 @@ int16_t ThreadQueue::dequeue(void) {
     return tid;
 }
 
-int16_t ThreadQueue::front(void) {
+int ThreadQueue::front(void) {
     _lock->lock();
     uint8_t tid = _queue[_front];
     _lock->unlock();

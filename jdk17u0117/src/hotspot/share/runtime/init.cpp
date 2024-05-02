@@ -57,6 +57,7 @@
 #include "jtsan/jtsanGlobals.hpp"
 #include "gc/shared/gc_globals.hpp"
 #include "jtsan/jtsanThreadPool.hpp"
+#include "jtsan/jtsanReportMap.hpp"
 #endif
 
 
@@ -183,7 +184,10 @@ jint init_globals() {
   JTSAN_ONLY(JtsanThreadState::init());
   JTSAN_ONLY(LockShadow::init());
   JTSAN_ONLY(JtsanThreadPool::jtsan_threadpool_init());
+  JTSAN_ONLY(JtsanReportMap::jtsan_reportmap_init());
   JTSAN_ONLY(set_jtsan_initialized(true));
+
+
 
   return JNI_OK;
 }

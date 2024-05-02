@@ -1,6 +1,7 @@
 #include "jtsanRTL.hpp"
 #include "threadState.hpp"
 #include "jtsanGlobals.hpp"
+#include "jtsanReportMap.hpp"
 
 #include "runtime/thread.hpp"
 #include "runtime/frame.inline.hpp"
@@ -103,6 +104,13 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     ShadowCell prev;
     // try to lock the report lock
     if (CheckRaces(tid, addr, cur, prev) && ShadowMemory::try_lock_report()) {
+      // we have found a race now see if we have recently reported it
+      if (JtsanReportMap::get_instance()->get((void*)bcp) != nullptr) {
+        // ignore
+        ShadowMemory::unlock_report();
+        return;
+      }
+
         ResourceMark rm;
         int lineno = m->line_number_from_bci(m->bci_from(bcp));
         fprintf(stderr, "Data race detected in method %s, line %d\n",
@@ -130,6 +138,9 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         }
 
         fprintf(stderr, "\t\t===============================================\n");
+
+        // store the bcp in the report map
+        JtsanReportMap::get_instance()->put((void*)bcp);
 
         // unlock report lock after printing the report
         // this is to avoid multiple reports for consecutive accesses
