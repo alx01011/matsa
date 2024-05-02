@@ -14,11 +14,6 @@
 #include "utilities/globalDefinitions.hpp"
 
 static frame next_frame(frame fr, Thread* t) {
-  // can be traced
-  if (fr.is_interpreted_frame()) {
-    return fr.sender();
-  }
-
   // Compiled code may use EBP register on x86 so it looks like
   // non-walkable C frame. Use frame.sender() for java frames.
   frame invalid;
