@@ -11,7 +11,10 @@
 #include "oops/oop.hpp"
 #include "oops/oopsHierarchy.hpp"
 #include "oops/oop.inline.hpp"
+#include "utilities/decoder.hpp"
 #include "utilities/globalDefinitions.hpp"
+
+#define MAX_FRAMES (25)
 
 static frame next_frame(frame fr, Thread* t) {
   // Compiled code may use EBP register on x86 so it looks like
@@ -41,14 +44,29 @@ static frame next_frame(frame fr, Thread* t) {
 bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
 
+    bool stored = false;
+    bool isRace   = false;
+
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell = ShadowBlock::load_cell(addr_aligned, i);
         // we can safely ignore if gc epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
         // previous access was by the same thread so we can skip
         // different offset means different memory location in case of 1,2 or 4 byte access
-        if (cell.tid == cur.tid || cur.gc_epoch != cell.gc_epoch || cell.offset != cur.offset) {
+        if (cur.gc_epoch != cell.gc_epoch || cell.offset != cur.offset) {
             continue;
+        }
+
+        // same slot this is not a race
+        // even if a tid was reused it can't be race because the previous thread has obviously finished
+        // making the tid available
+        if (cell.tid == cur.tid) {
+          // if the access is stronger overwrite
+          if (cur.is_write && !cell.is_write) {
+              ShadowBlock::store_cell((uptr)addr, &cur, i);
+              stored = true;
+          }
+          continue;
         }
 
         // at least one of the accesses is a write
@@ -60,10 +78,18 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
             }
     
             prev = cell;
-            return true;
+            isRace = true;
+
+            break;
         }
     }
-    return false;
+
+    if (!stored) {
+    // store the shadow cell
+      ShadowBlock::store_cell((uptr)addr, &cur);
+    }
+
+    return 
 }
 
 void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write) {
@@ -92,14 +118,21 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         frame fr = os::current_frame();
         // ignore the first frame as it is the current frame and we have already printed it
         fr = next_frame(fr, (Thread*)thread);
-        // print up to 10 frames
-        for (int i = 0; i < 10; i++) {
+        // print up to MAX_FRAMES frames
+        for (int i = 0; i < MAX_FRAMES; i++) {
             if (Interpreter::contains(fr.pc())) {
-                Method *bt_method = fr.interpreter_frame_method();
-                address bt_bcp = (fr.is_interpreted_frame()) ? fr.interpreter_frame_bcp() : fr.pc();
+              char buf[1024];
+              int lineno = -1;
+              bool info = Decoder::get_source_info(fr.pc(), buf, sizeof(buf), &lineno);
 
-                int lineno = bt_method->line_number_from_bci(bt_method->bci_from(bt_bcp));
-                fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
+              if (info) {
+                fprintf(stderr, "\t\t\t%s : %d\n", buf, lineno);
+              }
+                // Method *bt_method = fr.interpreter_frame_method();
+                // address bt_bcp = (fr.is_interpreted_frame()) ? fr.interpreter_frame_bcp() : fr.pc();
+
+                // int lineno = bt_method->line_number_from_bci(bt_method->bci_from(bt_bcp));
+                // fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
             }
             fr = next_frame(fr, (Thread*)thread);
         }
@@ -110,7 +143,4 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         // this is to avoid multiple reports for consecutive accesses
         ShadowMemory::unlock_report();
     }
-
-    // store the shadow cell
-    ShadowBlock::store_cell((uptr)addr, &cur);
 }
