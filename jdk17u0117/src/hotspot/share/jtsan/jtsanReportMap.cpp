@@ -34,7 +34,7 @@ void JtsanReportMap::put(void* value) {
     _lock->lock();
     entry->next = _map[hash];
 
-    if (size + 1 > MAX_MAP_SIZE) {
+    if (_size + 1 >= MAX_MAP_SIZE) {
         // for now clear the whole map
         clear();
     }
