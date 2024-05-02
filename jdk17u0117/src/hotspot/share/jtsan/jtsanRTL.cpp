@@ -12,7 +12,6 @@
 #include "oops/oopsHierarchy.hpp"
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
-#include "utilities/globalDefinitions.hpp"
 
 #define MAX_FRAMES (25)
 
@@ -119,20 +118,13 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         // ignore the first frame as it is the current frame and we have already printed it
         fr = next_frame(fr, (Thread*)thread);
         // print up to MAX_FRAMES frames
-        for (int i = 0; i < MAX_FRAMES; i++) {
+        for (int i = 0; i < MAX_FRAMES && fr.pc() != nullptr; i++) {
             if (Interpreter::contains(fr.pc())) {
-              char buf[1024];
-              int lineno = -1;
-              bool info = Decoder::get_source_info(fr.pc(), buf, sizeof(buf), &lineno);
+                Method *bt_method = fr.interpreter_frame_method();
+                address bt_bcp = (fr.is_interpreted_frame()) ? fr.interpreter_frame_bcp() : fr.pc();
 
-              if (true) {
-                fprintf(stderr, "\t\t\t%s : %d\n", buf, lineno);
-              }
-                // Method *bt_method = fr.interpreter_frame_method();
-                // address bt_bcp = (fr.is_interpreted_frame()) ? fr.interpreter_frame_bcp() : fr.pc();
-
-                // int lineno = bt_method->line_number_from_bci(bt_method->bci_from(bt_bcp));
-                // fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
+                int lineno = bt_method->line_number_from_bci(bt_method->bci_from(bt_bcp));
+                fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
             }
             fr = next_frame(fr, (Thread*)thread);
         }
