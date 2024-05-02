@@ -173,16 +173,11 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
     cell_store_atomic(cell_addr, cell);
 }
 
-void ShadowBlock::store_cell_atomic(uptr mem, ShadowCell* cell, uint8_t index) {
+void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
     ShadowMemory *shadow = ShadowMemory::getInstance();
     void *shadow_addr = shadow->MemToShadow(mem);
 
     ShadowCell *cell_addr = &((ShadowCell *)shadow_addr)[index];
-
-    if ((uptr)cell_addr < (uptr)shadow->shadow_base || (uptr)cell_addr >= (uptr)shadow->shadow_base + shadow->size) {
-        fprintf(stderr, "Shadow memory (%p) out of bounds in store_cell with index %d\n", shadow_addr, index);
-        exit(1);
-    }
 
     cell_store_atomic(cell_addr, cell);
 }
