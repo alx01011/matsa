@@ -73,7 +73,7 @@ JtsanThreadPool::JtsanThreadPool(void) {
 
     // init the thread stack with all the available tids 0 - 255
     // we are skipping 0 as it is reserved for the main thread
-    for (uint8_t i = 1; i < MAX_THREADS; i++) {
+    for (int i = 1; i < MAX_THREADS; i++) {
        _queue->enqueue_unsafe(i); 
     }
 }
