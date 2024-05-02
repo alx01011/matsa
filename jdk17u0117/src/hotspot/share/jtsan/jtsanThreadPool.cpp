@@ -82,7 +82,7 @@ JtsanThreadPool::~JtsanThreadPool(void) {
     delete _queue;
 }
 
-ThreadStack* JtsanThreadPool::get_queue(void) {
+ThreadQueue* JtsanThreadPool::get_queue(void) {
     return _queue;
 }
 
