@@ -108,6 +108,7 @@
 #if INCLUDE_JTSAN
 #include "interpreter/interpreterRuntime.hpp"
 #include "jtsan/lockState.hpp"
+#include "jtsan/jtsanThreadPool.hpp"
 #include "jtsan/threadState.hpp"
 #include "runtime/registerMap.hpp"
 #endif
@@ -2940,10 +2941,15 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
 #endif
 
   JTSAN_ONLY(
-    int new_tid = get_tid();
-    increment_tid();
+    int new_tid = JtsanThreadPool::get_instance()->get_queue()->dequeue();
+
+    if (new_tid == -1) {
+      // This should never happen
+      fatal("No more threads available for JTSan");
+    }
 
     int cur_tid = JavaThread::get_jtsan_tid(thread);
+
     JavaThread::set_jtsan_tid(native_thread, new_tid);
 
     JtsanThreadState::transferEpoch(cur_tid, new_tid);

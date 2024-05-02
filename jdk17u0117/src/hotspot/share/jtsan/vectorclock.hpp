@@ -21,9 +21,11 @@ class Vectorclock {
         uint64_t& operator[](size_t index);
         // this is essentially the max operation between the two clocks
         Vectorclock& operator=(const Vectorclock& other);
-
+    
         uint64_t get(size_t index);
         void set(size_t index, uint64_t value);
+        // clear (zero out) the clock
+        void clear(void);
 };
 
 #endif

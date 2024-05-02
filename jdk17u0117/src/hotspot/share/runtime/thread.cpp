@@ -137,6 +137,7 @@
 #include "jtsan/threadState.hpp"
 #include "jtsan/lockState.hpp"
 #include "jtsan/jtsanGlobals.hpp"
+#include "jtsan/jtsanThreadPool.hpp"
 #include "interpreter/interpreterRuntime.hpp"
 #endif
 #if INCLUDE_JVMCI
@@ -1413,9 +1414,9 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
   }
 
   JTSAN_ONLY(
-    int cur_tid = JavaThread::get_jtsan_tid(this);
+    int cur_tid         = JavaThread::get_jtsan_tid(this);
 
-    oop thread_object = this->threadObj();
+    oop thread_object   = this->threadObj();
 
     LockShadow *ls      = LockShadow::ObjectLockShadow();
     uint32_t lock_index = thread_object->obj_lock_index();
@@ -1423,6 +1424,10 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
     // transfer the vector clock from the current thread to the thread object (Thread ...)
     JtsanThreadState::incrementEpoch(cur_tid);
     ls->transferVectorclock(cur_tid, lock_index);
+
+    // pop the thread from the stack (make it available to be reused)
+    // cast is always safe because on start of the thread we have set the thread id
+    JtsanThreadPool::get_queue()->enqueue(cur_tid);
   );
 
   HandleMark hm(this);

@@ -15,8 +15,7 @@ class JtsanThreadState : public CHeapObj<mtInternal> {
         
         /*
             Each thread has an array of epochs.
-            It needs to be of MAX_THREADS x MAX_THREADS because each thread has to know the epochs of other threads aswell.
-            Epochs can change after a synchronization event, or a memory access
+            Epochs can change after a synchronization event
         */
 
         Vectorclock *epoch;

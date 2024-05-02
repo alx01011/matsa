@@ -46,3 +46,19 @@ void Vectorclock::set(size_t index, uint64_t value) {
         this->_map[index] = 1;
     }
 }
+
+void Vectorclock::clear(void) {
+    if (this->_slot_size == 0) {
+        return;
+    }
+
+    // clear every array
+    // this only happens when a thread is created to clear previous values
+    // this is because threads are reused from a pool
+    // not a common operation due to the use of a queue
+    memset(this->_clock, 0, sizeof(this->_clock));
+    memset(this->_slot,  0, sizeof(this->_slot));
+    memset(this->_map,   0, sizeof(this->_map));
+
+    this->_slot_size = 0;
+}
