@@ -13,7 +13,7 @@
 // this is pretty naive, we could do a circular buffer along with a map for faster access
 class JtsanReportMap : public CHeapObj<mtInternal> {
     private:
-        struct hashmap {
+        class hashmap : public CHeapObj<mtInternal> {
             // value is the bcp of the access
             void* value;
             struct hashmap* next;
