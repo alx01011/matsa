@@ -5,11 +5,11 @@ public class nr_copy_on_write_arraylist {
         list.add(2);
 
         Thread t1 = new Thread(() -> {
-            increment(list, 1);
+            increment(list, 0);
         });
 
         Thread t2 = new Thread(() -> {
-            increment(list, 2);
+            increment(list, 1);
         });
 
         t1.start();
