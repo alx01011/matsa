@@ -12,6 +12,16 @@ public class r_arrays {
             increment(arr, 4);
         });
 
+        t1.start();
+        t2.start();
+
+        try {
+            t1.join();
+            t2.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     public static void increment(int[] arr, int index) {
