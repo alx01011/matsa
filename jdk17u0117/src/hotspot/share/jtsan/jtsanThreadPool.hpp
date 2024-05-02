@@ -8,7 +8,7 @@
 #include "jtsanDefs.hpp"
 
 // a circular queue
-class ThreadQueue {
+class ThreadQueue : public CHeapObj<mtInternal> {
     private:
         uint8_t _queue[MAX_THREADS];
         uint8_t _front;
