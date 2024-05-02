@@ -1425,6 +1425,9 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
     JtsanThreadState::incrementEpoch(cur_tid);
     ls->transferVectorclock(cur_tid, lock_index);
 
+    // clear the thread state
+    // to be reused by another thread
+    JtsanThreadState::getThreadState(cur_tid)->clear();
     // pop the thread from the stack (make it available to be reused)
     // cast is always safe because on start of the thread we have set the thread id
     JtsanThreadPool::get_queue()->enqueue(cur_tid);

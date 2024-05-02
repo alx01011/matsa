@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <cstddef>
 
-#define MAX_THREADS (1024)
+#define MAX_THREADS (256)
 
 class Vectorclock {
     private:
