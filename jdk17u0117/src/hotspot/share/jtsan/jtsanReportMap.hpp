@@ -15,8 +15,9 @@ class JtsanReportMap : public CHeapObj<mtInternal> {
     private:
         class hashmap : public CHeapObj<mtInternal> {
             // value is the bcp of the access
-            void* value;
-            hashmap* next;
+            public:
+                void* value;
+                hashmap* next;
         };
 
         hashmap* _map[MAX_MAP_SIZE];
