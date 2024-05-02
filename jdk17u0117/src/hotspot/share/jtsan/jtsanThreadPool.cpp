@@ -83,7 +83,7 @@ JtsanThreadPool::~JtsanThreadPool(void) {
 }
 
 ThreadQueue* JtsanThreadPool::get_queue(void) {
-    return _queue;
+    return instance->_queue;
 }
 
 JtsanThreadPool* JtsanThreadPool::get_instance(void) {

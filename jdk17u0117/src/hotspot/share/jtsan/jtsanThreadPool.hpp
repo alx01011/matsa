@@ -41,7 +41,7 @@ class JtsanThreadPool : public CHeapObj<mtInternal> {
         static void jtsan_threadpool_destroy(void);
         static void jtsan_threadpool_init(void);
 
-        ThreadQueue* get_queue(void);
+        static ThreadQueue* get_queue(void);
 };
 
 #endif
