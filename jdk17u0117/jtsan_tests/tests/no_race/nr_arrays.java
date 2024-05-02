@@ -1,5 +1,5 @@
 public class nr_arrays {
-    double[] darr = new double[20];
+    static double[] darr = new double[20];
 
     public static void main(String... args) {
         int[] iarr = new int[20];
