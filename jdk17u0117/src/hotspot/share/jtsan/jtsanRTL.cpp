@@ -105,7 +105,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     // try to lock the report lock
     if (CheckRaces(tid, addr, cur, prev) && ShadowMemory::try_lock_report()) {
       // we have found a race now see if we have recently reported it
-      if (JtsanReportMap::get_instance()->get((void*)bcp) != nullptr) {
+      if (JtsanReportMap::get_instance()->get(addr) != nullptr) {
         // ignore
         ShadowMemory::unlock_report();
         return;
@@ -140,7 +140,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         fprintf(stderr, "\t\t===============================================\n");
 
         // store the bcp in the report map
-        JtsanReportMap::get_instance()->put((void*)bcp);
+        JtsanReportMap::get_instance()->put(addr);
 
         // unlock report lock after printing the report
         // this is to avoid multiple reports for consecutive accesses
