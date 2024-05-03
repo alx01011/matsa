@@ -29,15 +29,15 @@ uint64_t fnv1a_64(void *bcp) {
 void JtsanReportMap::put(void* value) {
     uint64_t hash = fnv1a_64(value);
     hashmap* entry = new hashmap();
-    entry->value = value;
 
     _lock->lock();
-    entry->next = _map[hash];
-
     if (_size + 1 >= MAX_MAP_SIZE) {
         // for now clear the whole map
         clear();
     }
+
+    entry->value = value;
+    entry->next = _map[hash];
 
     _map[hash] = entry;
     _size++;
