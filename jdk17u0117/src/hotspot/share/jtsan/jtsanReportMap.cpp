@@ -65,9 +65,8 @@ void* JtsanReportMap::get(void* value) {
     return result;
 }
 
+// unsafe, somebody needs to hold a lock
 void JtsanReportMap::clear() {
-    _lock->lock();
-
     for (int i = 0; i < MAX_MAP_SIZE; i++) {
         hashmap* entry = _map[i];
         while (entry != nullptr) {
@@ -78,8 +77,6 @@ void JtsanReportMap::clear() {
         _map[i] = nullptr;
     }
     _size = 0;
-
-    _lock->unlock();
 }
 
 JtsanReportMap* JtsanReportMap::get_instance() {
