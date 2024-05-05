@@ -548,6 +548,29 @@ void Thread::start(Thread* thread) {
   // Start is different from resume in that its safety is guaranteed by context or
   // being called from a Java method synchronized on the Thread object.
   if (thread->is_Java_thread()) {
+    JTSAN_ONLY(
+      int new_tid = JtsanThreadPool::get_instance()->get_queue()->dequeue();
+
+      if (new_tid == -1) {
+        // out of available threads
+        fatal("No more threads available for JTSan");
+      }
+
+      int cur_tid = JavaThread::get_jtsan_tid(this->as_Java_thread());
+
+      JavaThread::set_jtsan_tid(thread, new_tid);
+
+      // before transferring the vector clock, we need to update the epoch of the current thread
+      JtsanThreadState::incrementEpoch(cur_tid);
+      JtsanThreadState::transferEpoch(cur_tid, new_tid);
+
+      oop thread_object   = JNIHandles::resolve_non_null(thread->as_Java_thread()->threadObj());
+
+      LockShadow *ls      = (LockShadow*)thread_object->lock_state();
+      // transfer the vector clock of the current thread to the new thread object
+      ls->transfer_vc(cur_tid);
+  );
+
     // Initialize the thread state to RUNNABLE before starting this thread.
     // Can not set it after the thread started because we do not know the
     // exact thread state at that time. It could be in MONITOR_WAIT or
