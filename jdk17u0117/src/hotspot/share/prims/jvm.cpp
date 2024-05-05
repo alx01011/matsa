@@ -2955,13 +2955,13 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
     JtsanThreadState::transferEpoch(cur_tid, new_tid);
 
     oop thread_object   = JNIHandles::resolve_non_null(jthread);
-    thread_object->set_cur_obj_lock_index();
 
-    LockShadow *ls      = LockShadow::ObjectLockShadow();
-    uint32_t lock_index = thread_object->obj_lock_index();
+    LockShadow *ls      = (LockShadow*)thread_object->lock_state();
+    //uint32_t lock_index = thread_object->obj_lock_index();
 
     // transfer the vector clock of the current thread to the new thread object
-    ls->transferVectorclock(cur_tid, lock_index);
+    //ls->transferVectorclock(cur_tid, lock_index);
+    ls->transfer_vc(cur_tid);
 
     // if (new_tid != -1 && cur_tid != -1) {
     //   //fprintf(stderr, "Transfering epoch from thread %d to new %d\n", cur_tid, new_tid);
@@ -3925,8 +3925,6 @@ JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env, jobject x))
         Method *m      = fr.interpreter_frame_method();
         address bcp    = fr.interpreter_frame_bcp();
         oop lock_obj   = JNIHandles::resolve(x);
-
-        lock_obj->set_cur_obj_lock_index();
       
         InterpreterRuntime::jtsan_lock((void*)lock_obj, m, bcp);
       }

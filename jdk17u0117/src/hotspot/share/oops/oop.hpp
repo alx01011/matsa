@@ -61,8 +61,10 @@ class oopDesc {
   /*
     JTSAN obj and sync lock index
   */
-  volatile uint32_t _obj_lock_index;
-  volatile uint32_t _sync_lock_index;
+  // volatile uint32_t _obj_lock_index;
+  // volatile uint32_t _sync_lock_index;
+
+  volatile void* _lock_state;
 #endif
 
  public:
@@ -122,6 +124,9 @@ class oopDesc {
 
   // jtsan - lock index
 #ifdef INCLUDE_JTSAN
+  inline void  init_lock_state(void);
+  inline void* lock_state(void) const;
+
   inline void    init_lock_index(void);
 
   inline uint32_t obj_lock_index(void) const;
@@ -327,14 +332,16 @@ class oopDesc {
   static int klass_gap_offset_in_bytes() {
     assert(has_klass_gap(), "only applicable to compressed klass pointers");
   #ifdef INCLUDE_JTSAN
-    return klass_offset_in_bytes() + sizeof(narrowKlass) + sizeof(uint32_t) + sizeof(uint32_t);
+    return klass_offset_in_bytes() + sizeof(narrowKlass) + sizeof(void*);
   #endif
     return klass_offset_in_bytes() + sizeof(narrowKlass);
   }
 
 #ifdef INCLUDE_JTSAN
-  static int obj_lock_index_offset_in_bytes() { return (int)offset_of(oopDesc, _obj_lock_index); }
-  static int sync_lock_index_offset_in_bytes() { return (int)offset_of(oopDesc, _sync_lock_index); }
+  // static int obj_lock_index_offset_in_bytes() { return (int)offset_of(oopDesc, _obj_lock_index); }
+  // static int sync_lock_index_offset_in_bytes() { return (int)offset_of(oopDesc, _sync_lock_index); }
+
+  static int lock_state_offset_in_bytes() { return (int)offset_of(oopDesc, _lock_state); }
 #endif
 
   // for error reporting

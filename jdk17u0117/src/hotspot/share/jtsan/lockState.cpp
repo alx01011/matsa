@@ -24,7 +24,7 @@ LockShadow* LockShadow::syncInstance   = nullptr;
 
 LockShadow::LockShadow(void) {
     this->nmemb = MAX_LOCKS;
-    this->size = MAX_LOCKS * sizeof(Vectorclock);
+    this->size = sizeof(Vectorclock);
     this->cur = 1; // start from 1, as 0 is reserved as invalid index
     this->addr = os::reserve_memory(this->size);
     bool protect = os::protect_memory((char*)this->addr, this->size, os::MEM_PROT_RW);
@@ -75,8 +75,19 @@ Vectorclock* LockShadow::indexToLockVector(uint32_t index) {
     return (Vectorclock*)((char*)this->addr + (index * sizeof(Vectorclock)));
 }
 
+Vectorclock* LockShadow::get_vectorclock(void) {
+    return (Vectorclock*)this->addr;
+}
+
 void LockShadow::transferVectorclock(size_t tid, uint32_t index) {
     Vectorclock *vc = this->indexToLockVector(index);
+    Vectorclock *threadState = JtsanThreadState::getThreadState(tid);
+
+    *vc = *threadState;
+}
+
+void LockShadow::transfer_vc(size_t tid) {
+    Vectorclock *vc = this->get_vectorclock();
     Vectorclock *threadState = JtsanThreadState::getThreadState(tid);
 
     *vc = *threadState;

@@ -30,9 +30,6 @@ class LockShadow : public CHeapObj<mtInternal>{
         
         uint32_t   cur; // current lock index
 
-        LockShadow(void);
-        ~LockShadow(void);
-
     public:
         // shadow memory for object locks
         static LockShadow* ObjectLockShadow(void);
@@ -50,6 +47,13 @@ class LockShadow : public CHeapObj<mtInternal>{
 
         // transfers vector clock from tid to lock object
         void transferVectorclock(size_t tid, uint32_t index);
+
+        void transfer_vc(size_t tid);
+
+        Vectorclock* get_vectorclock(void);
+
+        LockShadow(void);
+        ~LockShadow(void);
 };
 
 #endif
