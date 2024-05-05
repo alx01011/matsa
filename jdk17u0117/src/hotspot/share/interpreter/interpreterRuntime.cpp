@@ -835,11 +835,7 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
     Store the result into the thread state.
   */
 
-  //JtsanThreadState::incrementEpoch(tid);
-
   LockShadow *obs = (LockShadow*)p->lock_state();
-  // uint32_t lock_index = p->obj_lock_index();
-
   Vectorclock* ts = obs->get_vectorclock();
 
   Vectorclock* cur = JtsanThreadState::getThreadState(tid);
@@ -870,7 +866,6 @@ void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bc
 
   LockShadow *obs = (LockShadow*)p->lock_state();
 
-  // uint32_t lock_index = p->obj_lock_index();
   Vectorclock* ls = obs->get_vectorclock();
 
   // increment the epoch of the current thread
@@ -910,14 +905,10 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
 
   assert(oopDesc::is_oop(p), "must be a valid oop");
 
-  // // might not be set yet
-  // p->set_cur_sync_lock_index();
-
   /*
     On lock acquisition we have to perform a max operation between the thread state of current thread and the lock state.
     Store the result into the thread state.
   */
-  // uint32_t lock_index = p->sync_lock_index();
 
   LockShadow *sls = (LockShadow*)p->lock_state();
   Vectorclock* ts = sls->get_vectorclock();
@@ -950,13 +941,10 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   */
 
   LockShadow* sls =  (LockShadow*)p->lock_state();
-  // uint32_t lock_index = p->sync_lock_index();
-
   Vectorclock* ls = sls->get_vectorclock();
 
   // increment the epoch of the current thread
   JtsanThreadState::incrementEpoch(tid);
-
   Vectorclock* cur = JtsanThreadState::getThreadState(tid);
 
   *ls = *cur;

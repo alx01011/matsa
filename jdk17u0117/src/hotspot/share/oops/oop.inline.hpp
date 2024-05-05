@@ -410,10 +410,6 @@ bool oopDesc::mark_must_be_preserved_for_promotion_failure(markWord m) const {
 #include "jtsan/lockState.hpp"
 #include "jtsan/jtsanGlobals.hpp"
 
-/*
-  FIXME: Not every operation is required to be atomic here.
-*/
-
 void oopDesc::init_lock_state(void) {
   _lock_state = nullptr;
 }
@@ -424,46 +420,6 @@ void* oopDesc::lock_state(void) {
   }
 
   return _lock_state;
-}
-
-void oopDesc::init_lock_index(void) {
-  // Atomic::store(&_obj_lock_index, (uint32_t)0);
-  // Atomic::store(&_sync_lock_index, (uint32_t)0);
-}
-
-uint32_t oopDesc::sync_lock_index(void) const {
-  //assert(_sync_lock_index, "JTSAN: Sync lock index not set");
-  // return Atomic::load(&_sync_lock_index);
-  return 0;
-}
-
-uint32_t oopDesc::obj_lock_index(void) const {
-  //assert(_obj_lock_index, "JTSAN: Object lock index not set");
-  // return Atomic::load(&_obj_lock_index);
-  return 0;
-}
-
-void oopDesc::set_cur_obj_lock_index(void) {
-  // Lock index is only set once
-  // if (Atomic::load(&_obj_lock_index) || !is_jtsan_initialized()) {
-  //   return;
-  // }
-
-  // LockShadow *shadow = LockShadow::ObjectLockShadow();
-
-  // Atomic::store(&_obj_lock_index, (uint32_t)shadow->getCurrentLockIndex());
-  // shadow->incrementLockIndex();
-}
-
-void oopDesc::set_cur_sync_lock_index(void) {
-  // if (_sync_lock_index || !is_jtsan_initialized()) {
-  //   return;
-  // }
-
-  // LockShadow *shadow = LockShadow::SyncLockShadow();
-
-  // _sync_lock_index = shadow->getCurrentLockIndex();
-  // shadow->incrementLockIndex();
 }
 
 #endif

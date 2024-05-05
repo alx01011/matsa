@@ -126,14 +126,6 @@ class oopDesc {
 #ifdef INCLUDE_JTSAN
   inline void  init_lock_state(void);
   inline void* lock_state(void);
-
-  inline void    init_lock_index(void);
-
-  inline uint32_t obj_lock_index(void) const;
-  inline uint32_t sync_lock_index(void) const;
-
-  inline void set_cur_obj_lock_index(void);
-  inline void set_cur_sync_lock_index(void);
 #endif
 
  protected:

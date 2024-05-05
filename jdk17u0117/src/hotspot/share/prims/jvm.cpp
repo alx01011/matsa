@@ -2944,7 +2944,7 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
     int new_tid = JtsanThreadPool::get_instance()->get_queue()->dequeue();
 
     if (new_tid == -1) {
-      // This should never happen
+      // out of available threads
       fatal("No more threads available for JTSan");
     }
 
@@ -2957,37 +2957,8 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
     oop thread_object   = JNIHandles::resolve_non_null(jthread);
 
     LockShadow *ls      = (LockShadow*)thread_object->lock_state();
-    //uint32_t lock_index = thread_object->obj_lock_index();
-
     // transfer the vector clock of the current thread to the new thread object
-    //ls->transferVectorclock(cur_tid, lock_index);
     ls->transfer_vc(cur_tid);
-
-    // if (new_tid != -1 && cur_tid != -1) {
-    //   //fprintf(stderr, "Transfering epoch from thread %d to new %d\n", cur_tid, new_tid);
-
-    //   // copies the clock of the current thread to the new thread
-    //   //JtsanThreadState::transferEpoch(cur_tid, new_tid);
-
-    //   // if (new_tid == 5) {
-    //   //   // print the vector clock of the current thread
-    //   //   fprintf(stderr, "New thread 5 will see:\n");
-    //   //   Vectorclock *vc = JtsanThreadState::getThreadState(cur_tid);
-    //   //   fprintf(stderr, "Thread %d vector clock: %ld\n", 4, vc->get(4));
-    //   // }
-
-    //   // oop thread_object = JNIHandles::resolve_non_null(jthread);
-    //   // // this so the thread has a lock index
-    //   // thread_object->set_cur_obj_lock_index();
-    //   // uint32_t lock_index = thread_object->obj_lock_index();
-
-    //   // LockShadow *ls = LockShadow::ObjectLockShadow();
-    //   // ls->transferVectorclock(cur_tid, lock_index);
-
-    //   // // 0x1 is to pass the null checking
-    //   // // FIXME: lock and unlock shouldn't need more arguments than the thread
-    //   // InterpreterRuntime::jtsan_unlock(thread_object, (Method*)0x1, (address)0x1);
-    // }
   );
 
   Thread::start(native_thread);
