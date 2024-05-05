@@ -124,8 +124,8 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         frame fr = os::current_frame();
         // ignore the first frame as it is the current frame and we have already printed it
         fr = next_frame(fr, (Thread*)thread);
-        // print up to MAX_FRAMES frames
-        for (int i = 0; i < MAX_FRAMES && fr.pc() != nullptr; i++) {
+        // print the stack trace
+        for (; fr.pc() != nullptr;) {
             if (Interpreter::contains(fr.pc())) {
                 Method *bt_method = fr.interpreter_frame_method();
                 address bt_bcp = (fr.is_interpreted_frame()) ? fr.interpreter_frame_bcp() : fr.pc();
