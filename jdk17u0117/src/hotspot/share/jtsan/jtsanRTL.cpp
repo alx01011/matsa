@@ -80,6 +80,8 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
             prev = cell;
             isRace = true;
 
+            fprintf(stderr, "Epochs %d %d\n", thr, cell.epoch);
+
             break;
         }
     }
