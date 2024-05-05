@@ -561,7 +561,7 @@ void Thread::start(Thread* thread) {
 
         int cur_tid = JavaThread::get_jtsan_tid(cur_thread);
 
-        JavaThread::set_jtsan_tid(thread, new_tid);
+        JavaThread::set_jtsan_tid(thread->as_Java_thread(), new_tid);
 
         // before transferring the vector clock, we need to update the epoch of the current thread
         JtsanThreadState::incrementEpoch(cur_tid);
