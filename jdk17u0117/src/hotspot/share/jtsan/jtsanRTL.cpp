@@ -106,6 +106,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         fprintf(stderr, "Accessing memory in method %s, line %d\n",
             m->external_name_as_fully_qualified(),lineno);
             // print epoch
+            epoch = JtsanThreadState::getThreadState(tid)->get(tid);
         fprintf(stderr, "\tThread %d epoch %u\n", tid, epoch);
     }
 
