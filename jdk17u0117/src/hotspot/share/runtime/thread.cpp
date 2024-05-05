@@ -1428,10 +1428,11 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
 
     // clear the thread state
     // to be reused by another thread
-    //JtsanThreadState::getThreadState(cur_tid)->clear();
+    JtsanThreadState::getThreadState(cur_tid)->clear();
+    fprintf(stderr, "Clearing thread state for tid %d\n", cur_tid);
     // pop the thread from the stack (make it available to be reused)
     // cast is always safe because on start of the thread we have set the thread id
-    //JtsanThreadPool::get_queue()->enqueue(cur_tid);
+    JtsanThreadPool::get_queue()->enqueue(cur_tid);
   );
 
   HandleMark hm(this);
