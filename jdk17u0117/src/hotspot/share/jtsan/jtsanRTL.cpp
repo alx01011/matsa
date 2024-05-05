@@ -101,7 +101,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
 
     int lineno = m->line_number_from_bci(m->bci_from(bcp));
 
-    if (lineno == 6 || lineno == 7) {
+    if (lineno == 6) {
       ResourceMark rm;
         fprintf(stderr, "Accessing memory in method %s, line %d\n",
             m->external_name_as_fully_qualified(),lineno);

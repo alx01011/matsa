@@ -2958,7 +2958,7 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
 
     fprintf(stderr, "Jtsan: Transfer vector clock from %d to %d\n", cur_tid, new_tid);
     fprintf(stderr, "Jtsan: vc of tid[%d][%d] = %ld\n", new_tid, cur_tid, JtsanThreadState::getThreadState(new_tid)->get(cur_tid));
-    fprintf(stderr, "Jtsan: vc of tid[%d][%d] = %ld\n", cur_tid, cur_tid, JtsanThreadState::getThreadState(cur_tid)->get(cur_tid));
+    fprintf(stderr, "Jtsan: vc of tid[%d][%d] = %ld\n", cur_tid, cur_tid, JtsanThreadState::getEpoch(cur_tid, cur_tid));
 
     oop thread_object   = JNIHandles::resolve_non_null(jthread);
 
