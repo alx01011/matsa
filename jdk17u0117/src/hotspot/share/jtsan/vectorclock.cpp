@@ -22,12 +22,15 @@ uint64_t Vectorclock::get(size_t index) {
 }
 
 void Vectorclock::set(size_t index, uint64_t value) {
-    this->_clock[index] = value;
-    
-    if (this->_map[index] == 0) {
-        // unsafe
-        this->_slot[this->_slot_size++] = index;
-        this->_map[index] = 1;
+    // only apply if the value is greater
+    if (this->_clock[index] < value) {
+        this->_clock[index] = value;
+
+        if (this->_map[index] == 0) {
+            // unsafe
+            this->_slot[this->_slot_size++] = index;
+            this->_map[index] = 1;
+        }
     }
 }
 
