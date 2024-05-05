@@ -182,7 +182,6 @@ jint init_globals() {
   JTSAN_ONLY(set_jtsan_initialized(false));
   JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
   JTSAN_ONLY(JtsanThreadState::init());
-  JTSAN_ONLY(LockShadow::init());
   JTSAN_ONLY(JtsanThreadPool::jtsan_threadpool_init());
   JTSAN_ONLY(JtsanReportMap::jtsan_reportmap_init());
   JTSAN_ONLY(set_jtsan_initialized(true));
