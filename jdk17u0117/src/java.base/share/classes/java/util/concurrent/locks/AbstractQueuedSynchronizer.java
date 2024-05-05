@@ -675,6 +675,8 @@ public abstract class AbstractQueuedSynchronizer
                     throw ex;
                 }
                 if (acquired) {
+                    // lock success
+                    System.jtsanLock(this);
                     if (first) {
                         node.prev = null;
                         head = node;
@@ -685,8 +687,6 @@ public abstract class AbstractQueuedSynchronizer
                         if (interrupted)
                             current.interrupt();
                     }
-                    // lock success
-                    System.jtsanLock(this);
                     return 1;
                 }
             }
@@ -696,7 +696,10 @@ public abstract class AbstractQueuedSynchronizer
                 else
                     node = new ExclusiveNode();
             } else if (pred == null) {          // try to enqueue
+                // form a happens-before edge, as waiter can't be race
+                System.jtsanLock(this);
                 node.waiter = current;
+                System.jtsanUnlock(this);
                 Node t = tail;
                 node.setPrevRelaxed(t);         // avoid unnecessary fence
                 if (t == null)
