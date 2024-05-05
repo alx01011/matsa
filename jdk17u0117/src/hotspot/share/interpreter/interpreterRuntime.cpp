@@ -840,7 +840,7 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
   LockShadow *obs = (LockShadow*)p->lock_state();
   // uint32_t lock_index = p->obj_lock_index();
 
-  Vectorclock* ts = obs->indexToLockVector(lock_index);
+  Vectorclock* ts = obs->get_vectorclock();
 
   Vectorclock* cur = JtsanThreadState::getThreadState(tid);
 
