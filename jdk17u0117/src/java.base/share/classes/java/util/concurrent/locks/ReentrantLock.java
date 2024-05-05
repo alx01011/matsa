@@ -149,8 +149,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         @ReservedStackAccess
         final void lock() {
-            if (!initialTryLock())
+            if (!initialTryLock()) {
                 acquire(1);
+            } else {
+                // in case initial trylock succeeded, we have to lock here as well
+                System.jtsanLock(this);
+            }
         }
 
         @ReservedStackAccess
