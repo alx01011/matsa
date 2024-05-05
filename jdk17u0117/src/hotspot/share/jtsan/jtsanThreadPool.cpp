@@ -9,9 +9,8 @@ ThreadQueue::ThreadQueue(void) {
 ThreadQueue::~ThreadQueue(void) {
     delete _lock;
 }
-#include <stdio.h>
+
 uint8_t ThreadQueue::enqueue(uint8_t tid) {
-    fprintf(stderr, "killing thread %d\n", tid);
     _lock->lock();
 
     if ((_rear + 1) % MAX_THREADS == _front) {

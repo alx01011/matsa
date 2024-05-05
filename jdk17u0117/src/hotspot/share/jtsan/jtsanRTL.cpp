@@ -99,6 +99,17 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write};
 
+    int lineno = m->line_number_from_bci(m->bci_from(bcp));
+
+    if (lineno == 6 || lineno == 7) {
+      ResourceMark rm;
+        fprintf(stderr, "Accessing memory in method %s, line %d\n",
+            m->external_name_as_fully_qualified(),lineno);
+            // print epoch
+        fprintf(stderr, "\t\tCurrent access %s of size %d, by thread %d, epoch %lu, offset %d\n",
+            cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch, cur.offset);
+    }
+
     // race
     ShadowCell prev;
     // try to lock the report lock
