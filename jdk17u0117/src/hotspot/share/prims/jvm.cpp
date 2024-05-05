@@ -3875,9 +3875,6 @@ JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env, jobject x))
         Method *m      = fr.interpreter_frame_method();
         address bcp    = fr.interpreter_frame_bcp();
         oop lock_obj   = JNIHandles::resolve(x);
-
-        int lineno     = m->line_number_from_bci(m->bci_from(bcp));
-        fprintf(stderr, "JVM_jtsanLock:   %p, line %d\n", (void*)lock_obj, lineno);
       
         InterpreterRuntime::jtsan_lock((void*)lock_obj, m, bcp);
       }
@@ -3897,9 +3894,6 @@ JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env, jobject x))
             Method *m      = fr.interpreter_frame_method();
             address bcp    = fr.interpreter_frame_bcp();
             void *lock_obj = (void*)JNIHandles::resolve(x);
-
-            int lineno     = m->line_number_from_bci(m->bci_from(bcp));
-            fprintf(stderr, "JVM_jtsanUnlock: %p, line %d\n", (void*)lock_obj, lineno);
 
             InterpreterRuntime::jtsan_unlock(lock_obj, m, bcp);
         }
