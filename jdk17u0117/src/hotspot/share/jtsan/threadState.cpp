@@ -79,7 +79,7 @@ void JtsanThreadState::incrementEpoch(size_t threadId) {
     state->epoch[threadId].set(threadId, state->epoch[threadId].get(threadId) + 1);
 
     if (threadId == 0 && state->epoch[threadId].get(threadId) > 250) {
-        fprintf(stderr, "JTSAN: Incremented epoch for thread %lu\n", threadId);
+        fprintf(stderr, "JTSAN: Incremented epoch for thread %lu, epoch %lu\n", threadId, state->epoch[threadId].get(threadId));
     }
 }
 
