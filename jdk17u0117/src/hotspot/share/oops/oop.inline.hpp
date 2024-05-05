@@ -434,11 +434,13 @@ void oopDesc::init_lock_index(void) {
 uint32_t oopDesc::sync_lock_index(void) const {
   //assert(_sync_lock_index, "JTSAN: Sync lock index not set");
   // return Atomic::load(&_sync_lock_index);
+  return 0;
 }
 
 uint32_t oopDesc::obj_lock_index(void) const {
   //assert(_obj_lock_index, "JTSAN: Object lock index not set");
   // return Atomic::load(&_obj_lock_index);
+  return 0;
 }
 
 void oopDesc::set_cur_obj_lock_index(void) {
