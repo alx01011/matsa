@@ -420,7 +420,7 @@ void oopDesc::init_lock_state(void) {
 
 void* oopDesc::lock_state(void) const {
   if (UNLIKELY(_lock_state == nullptr)){
-    _lock_state = new LockShadow();
+    _lock_state = (volatile void*)new LockShadow();
   }
 
   return _lock_state;
