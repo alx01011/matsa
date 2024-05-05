@@ -2954,7 +2954,6 @@ JVM_ENTRY(void, JVM_StartThread(JNIEnv* env, jobject jthread))
 
     // before transferring the vector clock, we need to update the epoch of the current thread
     JtsanThreadState::incrementEpoch(cur_tid);
-    fprintf(stderr, "Transfering epoch from %d to %d\n", cur_tid, new_tid);
     JtsanThreadState::transferEpoch(cur_tid, new_tid);
 
     oop thread_object   = JNIHandles::resolve_non_null(jthread);
