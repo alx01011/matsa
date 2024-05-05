@@ -3877,7 +3877,7 @@ JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env, jobject x))
         oop lock_obj   = JNIHandles::resolve(x);
 
         int lineno     = m->line_number_from_bci(m->bci_from(bcp));
-        fprintf(stderr, "JVM_jtsanLock: %p, line %d\n", (void*)lock_obj, lineno);
+        fprintf(stderr, "JVM_jtsanLock:   %p, line %d\n", (void*)lock_obj, lineno);
       
         InterpreterRuntime::jtsan_lock((void*)lock_obj, m, bcp);
       }
