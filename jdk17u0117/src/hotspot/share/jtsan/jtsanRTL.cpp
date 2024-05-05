@@ -106,8 +106,7 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         fprintf(stderr, "Accessing memory in method %s, line %d\n",
             m->external_name_as_fully_qualified(),lineno);
             // print epoch
-        fprintf(stderr, "\t\tCurrent access %s of size %d, by thread %d, epoch %lu, offset %d\n",
-            cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch, cur.offset);
+        fprintf(stderr, "\tThread %d epoch %u\n", tid, epoch);
     }
 
     // race
