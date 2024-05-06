@@ -64,7 +64,7 @@ void Vectorclock::acquire(Vectorclock* other) {
     for (size_t i = 0; i < other->_slot_size; i++) {
         size_t index = other->_slot[i];
 
-        this->_clock[index] = max(this->_clock[index], other->_clock[index]);
+        this->set(index, other->_clock[index]);
     }
 }
 

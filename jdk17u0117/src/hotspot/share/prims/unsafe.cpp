@@ -802,7 +802,7 @@ public:
       JtsanThreadState::incrementEpoch(tid);
       Vectorclock* cur = JtsanThreadState::getThreadState(_tid);
 
-      *ls = *cur;
+      cur->release(ls);
     );
   }
 
@@ -812,7 +812,7 @@ public:
     Vectorclock* ts  = obs->get_vectorclock();
     Vectorclock* cur = JtsanThreadState::getThreadState(_tid);
 
-    *cur = *ts;
+    cur->acquire(ts);
     );
   }
 };
