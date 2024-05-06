@@ -142,8 +142,8 @@ final class VarForm {
 
         System.jtsanLock(this);
 
-        MemberName m memberName_table[mode] = MethodHandles.Lookup.IMPL_LOOKUP
-            .resolveOrNull(REF_invokeStatic, implClass, methodName, type);
+        MemberName m = (memberName_table[mode] = MethodHandles.Lookup.IMPL_LOOKUP
+            .resolveOrNull(REF_invokeStatic, implClass, methodName, type));
 
         System.jtsanUnlock(this);
 
