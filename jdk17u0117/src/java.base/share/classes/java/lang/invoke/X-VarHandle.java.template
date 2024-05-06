@@ -184,7 +184,7 @@ final class VarHandle$Type$s {
             FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
 
             System.jtsanLock(holder);
-            bool ret = UNSAFE.compareAndSet$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+            boolean ret = UNSAFE.compareAndSet$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
                                                handle.fieldOffset,
                                                {#if[Object]?handle.fieldType.cast(expected):expected},
                                                {#if[Object]?handle.fieldType.cast(value):value});
