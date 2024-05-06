@@ -746,22 +746,22 @@ void InterpreterRuntime::resolve_get_put(JavaThread* current, Bytecodes::Code by
 
 
 void InterpreterRuntime::jtsan_load1(void *addr, Method *m, address bcp) {
-  MemoryAccess(addr, m, bcp, 1, false);
+  JtsanRTL::MemoryAccess(addr, m, bcp, 1, false);
   //load_store_where((char*)"jtsan_load1:", m, addr, bcp);
 }
 
 void InterpreterRuntime::jtsan_load2(void *addr, Method *m, address bcp) {
-  MemoryAccess(addr, m, bcp, 2, false);
+  JtsanRTL::MemoryAccess(addr, m, bcp, 2, false);
   //load_store_where((char*)"jtsan_load2:", m, addr, bcp);
 }
 
 void InterpreterRuntime::jtsan_load4(void *addr, Method *m, address bcp) {
-  MemoryAccess(addr, m, bcp, 4, false);
+  JtsanRTL::MemoryAccess(addr, m, bcp, 4, false);
   //load_store_where((char*)"jtsan_load4:", m, addr, bcp);
 }
 
 void InterpreterRuntime::jtsan_load8(void *addr, Method *m, address bcp) {
-  MemoryAccess(addr, m, bcp, 8, false);
+  JtsanRTL::MemoryAccess(addr, m, bcp, 8, false);
  // load_store_where((char*)"jtsan_load8:", m, addr, bcp);
 }
 
@@ -789,19 +789,19 @@ void (*InterpreterRuntime::jtsan_load[]) (void *addr, Method *m, address bcp) = 
 
 // Store instrumentation
 void InterpreterRuntime::jtsan_store1(void *addr, Method *m, address bcp) {
-  MemoryAccess(addr, m, bcp, 1, true);
+  JtsanRTL::MemoryAccess(addr, m, bcp, 1, true);
 }
 
 void InterpreterRuntime::jtsan_store2(void *addr, Method *m, address bcp) {
-  MemoryAccess(addr, m, bcp, 2, true);
+  JtsanRTL::MemoryAccess(addr, m, bcp, 2, true);
 }
 
 void InterpreterRuntime::jtsan_store4(void *addr, Method *m, address bcp) {
-  MemoryAccess(addr, m, bcp, 4, true);
+  JtsanRTL::MemoryAccess(addr, m, bcp, 4, true);
 }
 
 void InterpreterRuntime::jtsan_store8(void *addr, Method *m, address bcp) {
-  MemoryAccess(addr, m, bcp, 8, true);
+  JtsanRTL::MemoryAccess(addr, m, bcp, 8, true);
 }
 
 

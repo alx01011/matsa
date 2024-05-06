@@ -41,7 +41,7 @@ static frame next_frame(frame fr, Thread* t) {
   }
 }
 
-bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
+bool JtsanRTL::CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
 
     bool stored = false;
@@ -91,7 +91,7 @@ bool CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
     return isRace;
 }
 
-void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write) {
+void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write) {
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_jtsan_tid(thread);
     
@@ -109,6 +109,8 @@ void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool
         ShadowMemory::unlock_report();
         return;
       }
+
+      if (method == nullptr || bcp == nullptr) return;
 
         ResourceMark rm;
         int lineno = m->line_number_from_bci(m->bci_from(bcp));
