@@ -275,7 +275,7 @@ UNSAFE_ENTRY(jobject, Unsafe_GetReference(JNIEnv *env, jobject unsafe, jobject o
   oop v = HeapAccess<ON_UNKNOWN_OOP_REF>::oop_load_at(p, offset);
   JTSAN_ONLY(
     void* addr = index_oop_from_field_offset_long(p, offset);
-    MemoryAccess(addr, nullptr, nullptr, 8, false);
+    JtsanRTL::MemoryAccess(addr, nullptr, nullptr, 8, false);
   );
   return JNIHandles::make_local(THREAD, v);
 } UNSAFE_END
