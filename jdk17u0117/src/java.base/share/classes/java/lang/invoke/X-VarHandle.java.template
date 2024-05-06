@@ -183,7 +183,6 @@ final class VarHandle$Type$s {
         static boolean compareAndSet(VarHandle ob, Object holder, $type$ expected, $type$ value) {
             FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
             // forms a happens-before edge
-            System.jtsanUnlock(holder);
             System.jtsanLock(holder);
             return UNSAFE.compareAndSet$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
                                                handle.fieldOffset,
