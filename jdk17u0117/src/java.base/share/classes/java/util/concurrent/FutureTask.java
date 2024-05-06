@@ -226,11 +226,13 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * @param v the value
      */
     protected void set(V v) {
+        System.jtsanLock(this);
         if (STATE.compareAndSet(this, NEW, COMPLETING)) {
             outcome = v;
             STATE.setRelease(this, NORMAL); // final state
             finishCompletion();
         }
+        System.jtsanUnlock(this);
     }
 
     /**
