@@ -128,6 +128,9 @@ JVM_jtsanUnlock(JNIEnv *env, jobject obj);
 JNIEXPORT void JNICALL
 JVM_jtsanJoin(JNIEnv *env, jobject obj);
 
+JNIEXPORT void JNICALL
+JVM_jtsanTransferVectorClock(JNIEnv *env, jobject obj);
+
 
 /* Returns the number of real-time milliseconds that have elapsed since the
  * least-recently-inspected heap object was last inspected by the garbage

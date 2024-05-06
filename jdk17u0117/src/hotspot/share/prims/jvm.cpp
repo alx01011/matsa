@@ -3919,3 +3919,31 @@ JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
       }
     }
 JVM_END
+
+// aantonak - jtsan
+JVM_ENTRY(void, JVM_jtsanTransferVectorClock(JNIEnv* env, jobject x))
+    if (JTSAN && thread && thread->is_Java_thread()) {
+      JavaThread *jt = (JavaThread *) thread;
+      frame fr = jt->last_frame();
+      // get the actual frame
+      RegisterMap map(thread);
+      fr = fr.sender(&map);
+
+      oop thread_object = JNIHandles::resolve(x);
+
+      if (fr.is_interpreted_frame()) {
+        Method *m      = fr.interpreter_frame_method();
+        address bcp    = fr.interpreter_frame_bcp();
+
+        int cur_tid = JavaThread::get_jtsan_tid(thread);
+
+        // before transferring the vector clock, we need to update the epoch of the current thread
+        JtsanThreadState::incrementEpoch(cur_tid);
+        oop obj = JNIHandles::resolve(x);
+
+        LockShadow *ls      = (LockShadow*)obj->lock_state();
+        // transfer the vector clock of the current thread to the new thread object
+        ls->transfer_vc(cur_tid);
+      }
+    }
+JVM_END

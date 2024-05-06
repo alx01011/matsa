@@ -78,6 +78,13 @@ Java_java_lang_System_jtsanJoin(JNIEnv *env, jobject this, jobject x)
     JVM_jtsanJoin(env, x);
 }
 
+//aantonak - jtsan
+JNIEXPORT void JNICALL
+Java_java_lang_System_jtsanTransferVectorClock(JNIEnv *env, jobject this, jobject x)
+{
+    JVM_jtsanTransferVectorClock(env, x);
+}
+
 /* VENDOR, VENDOR_URL, VENDOR_URL_BUG are set in VersionProps.java.template. */
 
 /*
