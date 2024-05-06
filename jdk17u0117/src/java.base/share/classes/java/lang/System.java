@@ -679,13 +679,21 @@ public final class System {
 
     public static native void jtsanUnlock(Object x);
 
-        /**
+    /**
      * aantonak
      * Gets called on thread.join
      * @param x the thread object
      */
 
     public static native void jtsanJoin(Object x);
+
+    /**
+     * aantonak
+     * Gets called on varhandle atomic operation
+     * @param x the thread object
+     */
+
+    public static native void jtsanTransferVectorClock(Object x);
 
     /**
      * System properties.
