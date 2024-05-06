@@ -472,7 +472,7 @@ final class VarHandle$Type$s {
         static $type$ getAcquire(VarHandle ob) {
             FieldStaticReadOnly handle = (FieldStaticReadOnly)ob;
 
-            Systema.jtsanAcquire(ob);
+            System.jtsanAcquire(ob);
 
             return UNSAFE.get$Type$Acquire(handle.base,
                                  handle.fieldOffset);
