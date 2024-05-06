@@ -111,17 +111,13 @@ final class VarForm {
     final MemberName getMemberName(int mode) {
         // Can be simplified by calling getMemberNameOrNull, but written in this
         // form to improve interpreter/coldpath performance.
-        System.jtsanLock(this);
         MemberName mn = memberName_table[mode];
         if (mn == null) {
             mn = resolveMemberName(mode);
             if (mn == null) {
-                System.jtsanUnlock(this);
                 throw new UnsupportedOperationException();
             }
         }
-        System.jtsanUnlock(this);
-
         return mn;
     }
 
@@ -139,15 +135,8 @@ final class VarForm {
         AccessMode value = AccessMode.values()[mode];
         String methodName = value.methodName();
         MethodType type = methodType_table[value.at.ordinal()].insertParameterTypes(0, VarHandle.class);
-
-        System.jtsanLock(this);
-
-        MemberName m = (memberName_table[mode] = MethodHandles.Lookup.IMPL_LOOKUP
-            .resolveOrNull(REF_invokeStatic, implClass, methodName, type));
-
-        System.jtsanUnlock(this);
-
-        return m;
+        return memberName_table[mode] = MethodHandles.Lookup.IMPL_LOOKUP
+            .resolveOrNull(REF_invokeStatic, implClass, methodName, type);
     }
 
     @Stable
