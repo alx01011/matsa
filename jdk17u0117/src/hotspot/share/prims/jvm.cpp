@@ -3998,3 +3998,4 @@ JVM_ENTRY(void, JVM_jtsanRelease(JNIEnv* env, jobject x))
         JtsanThreadState::getThreadState(cur_tid)->release(ls->get_vectorclock());
       }
     }
+JVM_END
