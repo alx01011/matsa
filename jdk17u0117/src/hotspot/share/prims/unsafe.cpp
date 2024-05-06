@@ -799,7 +799,7 @@ public:
       LockShadow *obs = (LockShadow*)_p->lock_state();
 
       Vectorclock* ls = obs->get_vectorclock();
-      JtsanThreadState::incrementEpoch(tid);
+      JtsanThreadState::incrementEpoch(_tid);
       Vectorclock* cur = JtsanThreadState::getThreadState(_tid);
 
       cur->release(ls);
