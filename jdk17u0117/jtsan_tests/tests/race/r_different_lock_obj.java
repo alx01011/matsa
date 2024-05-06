@@ -1,4 +1,4 @@
-public class r_different_obj_locks {
+public class r_different_lock_obj {
     public static int x = 3;
 
     public static void main(String... args) {
