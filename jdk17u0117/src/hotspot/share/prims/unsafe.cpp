@@ -786,11 +786,47 @@ UNSAFE_ENTRY(void, Unsafe_ThrowException(JNIEnv *env, jobject unsafe, jthrowable
 
 // JSR166 ------------------------------------------------------------------
 
+class ScopedReleaseAcquire: public StackObj {
+private:
+  oop _p;
+  JavaThread *_thread;
+public:
+  ScopedReleaseAcquire(oop p, JavaThread *thread) {
+      _p    = p;
+    JTSAN_ONLY(
+    int tid = JavaThread::get_jtsan_tid(thread);
+
+    LockShadow *obs = (LockShadow*)_p->lock_state();
+
+    Vectorclock* ls = obs->get_vectorclock();
+
+    // increment the epoch of the current thread
+    JtsanThreadState::incrementEpoch(tid);
+    Vectorclock* cur = JtsanThreadState::getThreadState(tid);
+
+    *ls = *cur;
+  );
+  }
+
+  ~ScopedReleaseAcquire() {
+    JTSAN_ONLY(
+    int tid = JavaThread::get_jtsan_tid(_thread);
+
+    LockShadow *obs  = (LockShadow*)_p->lock_state();
+    Vectorclock* ts  = obs->get_vectorclock();
+    Vectorclock* cur = JtsanThreadState::getThreadState(tid);
+
+    *cur = *ts;
+    );
+  }
+};
+
 UNSAFE_ENTRY(jobject, Unsafe_CompareAndExchangeReference(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, jobject e_h, jobject x_h)) {
   oop x = JNIHandles::resolve(x_h);
   oop e = JNIHandles::resolve(e_h);
   oop p = JNIHandles::resolve(obj);
   assert_field_offset_sane(p, offset);
+  ScopedReleaseAcquire releaseAcquire(p, thread);
   oop res = HeapAccess<ON_UNKNOWN_OOP_REF>::oop_atomic_cmpxchg_at(p, (ptrdiff_t)offset, e, x);
   return JNIHandles::make_local(THREAD, res);
 } UNSAFE_END
@@ -799,9 +835,13 @@ UNSAFE_ENTRY(jint, Unsafe_CompareAndExchangeInt(JNIEnv *env, jobject unsafe, job
   oop p = JNIHandles::resolve(obj);
   if (p == NULL) {
     volatile jint* addr = (volatile jint*)index_oop_from_field_offset_long(p, offset);
+    // TODO: this might not be correct, we are locking on the unsafe object
+    oop up = JNIHandles::resolve(unsafe);
+    ScopedReleaseAcquire releaseAcquire(up, thread);
     return RawAccess<>::atomic_cmpxchg(addr, e, x);
   } else {
     assert_field_offset_sane(p, offset);
+    ScopedReleaseAcquire releaseAcquire(p, thread);
     return HeapAccess<>::atomic_cmpxchg_at(p, (ptrdiff_t)offset, e, x);
   }
 } UNSAFE_END
@@ -810,9 +850,12 @@ UNSAFE_ENTRY(jlong, Unsafe_CompareAndExchangeLong(JNIEnv *env, jobject unsafe, j
   oop p = JNIHandles::resolve(obj);
   if (p == NULL) {
     volatile jlong* addr = (volatile jlong*)index_oop_from_field_offset_long(p, offset);
+    oop up = JNIHandles::resolve(unsafe);
+    ScopedReleaseAcquire releaseAcquire(up, thread);
     return RawAccess<>::atomic_cmpxchg(addr, e, x);
   } else {
     assert_field_offset_sane(p, offset);
+    ScopedReleaseAcquire releaseAcquire(p, thread);
     return HeapAccess<>::atomic_cmpxchg_at(p, (ptrdiff_t)offset, e, x);
   }
 } UNSAFE_END
@@ -822,6 +865,7 @@ UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSetReference(JNIEnv *env, jobject unsafe
   oop e = JNIHandles::resolve(e_h);
   oop p = JNIHandles::resolve(obj);
   assert_field_offset_sane(p, offset);
+  ScopedReleaseAcquire releaseAcquire(p, thread);
   oop ret = HeapAccess<ON_UNKNOWN_OOP_REF>::oop_atomic_cmpxchg_at(p, (ptrdiff_t)offset, e, x);
   return ret == e;
 } UNSAFE_END
@@ -830,9 +874,12 @@ UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSetInt(JNIEnv *env, jobject unsafe, jobj
   oop p = JNIHandles::resolve(obj);
   if (p == NULL) {
     volatile jint* addr = (volatile jint*)index_oop_from_field_offset_long(p, offset);
+    oop up = JNIHandles::resolve(unsafe);
+    ScopedReleaseAcquire releaseAcquire(up, thread);
     return RawAccess<>::atomic_cmpxchg(addr, e, x) == e;
   } else {
     assert_field_offset_sane(p, offset);
+    ScopedReleaseAcquire releaseAcquire(p, thread);
     return HeapAccess<>::atomic_cmpxchg_at(p, (ptrdiff_t)offset, e, x) == e;
   }
 } UNSAFE_END
@@ -841,9 +888,12 @@ UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSetLong(JNIEnv *env, jobject unsafe, job
   oop p = JNIHandles::resolve(obj);
   if (p == NULL) {
     volatile jlong* addr = (volatile jlong*)index_oop_from_field_offset_long(p, offset);
+    oop up = JNIHandles::resolve(unsafe);
+    ScopedReleaseAcquire releaseAcquire(up, thread);
     return RawAccess<>::atomic_cmpxchg(addr, e, x) == e;
   } else {
     assert_field_offset_sane(p, offset);
+    ScopedReleaseAcquire releaseAcquire(p, thread);
     return HeapAccess<>::atomic_cmpxchg_at(p, (ptrdiff_t)offset, e, x) == e;
   }
 } UNSAFE_END
