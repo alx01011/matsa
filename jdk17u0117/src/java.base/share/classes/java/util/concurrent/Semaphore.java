@@ -188,7 +188,7 @@ public class Semaphore implements java.io.Serializable {
                     compareAndSetState(available, remaining))
 
                     if (remaining >= 0) {
-                        System.jtsanLock(this)
+                        System.jtsanLock(this);
                     }
 
                     return remaining;
