@@ -182,6 +182,7 @@ final class VarHandle$Type$s {
         @ForceInline
         static boolean compareAndSet(VarHandle ob, Object holder, $type$ expected, $type$ value) {
             FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+            System.jtsanLock(this)
             return UNSAFE.compareAndSet$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
                                                handle.fieldOffset,
                                                {#if[Object]?handle.fieldType.cast(expected):expected},
