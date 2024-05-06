@@ -173,9 +173,6 @@ final class VarHandle$Type$s {
         @ForceInline
         static void setRelease(VarHandle ob, Object holder, $type$ value) {
             FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
-
-            System.jtsanRelease(ob);
-
             UNSAFE.put$Type$Release(Objects.requireNonNull(handle.receiverType.cast(holder)),
                                     handle.fieldOffset,
                                     {#if[Object]?handle.fieldType.cast(value):value});
@@ -185,27 +182,19 @@ final class VarHandle$Type$s {
         @ForceInline
         static boolean compareAndSet(VarHandle ob, Object holder, $type$ expected, $type$ value) {
             FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
-            boolean ret =  UNSAFE.compareAndSet$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+            return UNSAFE.compareAndSet$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
                                                handle.fieldOffset,
                                                {#if[Object]?handle.fieldType.cast(expected):expected},
                                                {#if[Object]?handle.fieldType.cast(value):value});
-
-            System.jtsanReleaseAcquire(ob);
-
-            return ret;
         }
 
         @ForceInline
         static $type$ compareAndExchange(VarHandle ob, Object holder, $type$ expected, $type$ value) {
             FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
-            $type$ ret =  UNSAFE.compareAndExchange$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+            return UNSAFE.compareAndExchange$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
                                                handle.fieldOffset,
                                                {#if[Object]?handle.fieldType.cast(expected):expected},
                                                {#if[Object]?handle.fieldType.cast(value):value});
-
-            System.jtsanReleaseAcquire(ob);
-
-            return ret;
         }
 
         @ForceInline
@@ -472,8 +461,6 @@ final class VarHandle$Type$s {
         static $type$ getAcquire(VarHandle ob) {
             FieldStaticReadOnly handle = (FieldStaticReadOnly)ob;
 
-            System.jtsanAcquire(ob);
-
             return UNSAFE.get$Type$Acquire(handle.base,
                                  handle.fieldOffset);
         }
@@ -533,9 +520,6 @@ final class VarHandle$Type$s {
         @ForceInline
         static void setRelease(VarHandle ob, $type$ value) {
             FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
-
-            System.jtsanRelease(ob);
-
             UNSAFE.put$Type$Release(handle.base,
                                     handle.fieldOffset,
                                     {#if[Object]?handle.fieldType.cast(value):value});
@@ -634,9 +618,6 @@ final class VarHandle$Type$s {
         @ForceInline
         static $type$ getAndSetRelease(VarHandle ob, $type$ value) {
             FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
-
-            System.jtsanRelease(ob);
-
             return UNSAFE.getAndSet$Type$Release(handle.base,
                                           handle.fieldOffset,
                                           {#if[Object]?handle.fieldType.cast(value):value});

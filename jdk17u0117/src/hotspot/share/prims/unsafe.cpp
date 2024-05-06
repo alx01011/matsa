@@ -60,6 +60,12 @@
 #include "utilities/dtrace.hpp"
 #include "utilities/macros.hpp"
 
+#if INCLUDE_JTSAN
+#include "jtsan/lockState.hpp"
+#include "jtsan/threadState.hpp"
+#include "jtsan/vectorclock.hpp"
+#endif
+
 /**
  * Implementation of the jdk.internal.misc.Unsafe class
  */
@@ -280,6 +286,19 @@ UNSAFE_ENTRY(jobject, Unsafe_GetReferenceVolatile(JNIEnv *env, jobject unsafe, j
   oop p = JNIHandles::resolve(obj);
   assert_field_offset_sane(p, offset);
   oop v = HeapAccess<MO_SEQ_CST | ON_UNKNOWN_OOP_REF>::oop_load_at(p, offset);
+
+  JTSAN_ONLY(
+    int tid = JavaThread::get_jtsan_tid(thread);
+
+    LockShadow *obs = (LockShadow*)p->lock_state();
+    
+    Vectorclock* ts = obs->get_vectorclock();
+
+    Vectorclock* cur = JtsanThreadState::getThreadState(tid);
+
+    *cur = *ts;
+  );
+
   return JNIHandles::make_local(THREAD, v);
 } UNSAFE_END
 
@@ -287,6 +306,22 @@ UNSAFE_ENTRY(void, Unsafe_PutReferenceVolatile(JNIEnv *env, jobject unsafe, jobj
   oop x = JNIHandles::resolve(x_h);
   oop p = JNIHandles::resolve(obj);
   assert_field_offset_sane(p, offset);
+
+  JTSAN_ONLY(
+    int tid = JavaThread::get_jtsan_tid(thread);
+
+    LockShadow *obs = (LockShadow*)p->lock_state();
+
+    Vectorclock* ls = obs->get_vectorclock();
+
+    // increment the epoch of the current thread
+    JtsanThreadState::incrementEpoch(tid);
+
+    Vectorclock* cur = JtsanThreadState::getThreadState(tid);
+
+    *ls = *cur;
+  );
+
   HeapAccess<MO_SEQ_CST | ON_UNKNOWN_OOP_REF>::oop_store_at(p, offset, x);
 } UNSAFE_END
 
@@ -321,10 +356,38 @@ DEFINE_GETSETOOP(jdouble, Double);
 #define DEFINE_GETSETOOP_VOLATILE(java_type, Type) \
  \
 UNSAFE_ENTRY(java_type, Unsafe_Get##Type##Volatile(JNIEnv *env, jobject unsafe, jobject obj, jlong offset)) { \
+  JTSAN_ONLY(
+  oop p   = JNIHandles::resolve(obj);
+  int tid = JavaThread::get_jtsan_tid(thread);
+
+  LockShadow *obs = (LockShadow*)p->lock_state();
+  
+  Vectorclock* ts = obs->get_vectorclock();
+
+  Vectorclock* cur = JtsanThreadState::getThreadState(tid);
+
+  *cur = *ts;
+);
+
   return MemoryAccess<java_type>(thread, obj, offset).get_volatile(); \
 } UNSAFE_END \
  \
 UNSAFE_ENTRY(void, Unsafe_Put##Type##Volatile(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, java_type x)) { \
+  JTSAN_ONLY(
+    int tid = JavaThread::get_jtsan_tid(thread);
+
+    oop p           = JNIHandles::resolve(obj);
+    LockShadow *obs = (LockShadow*)p->lock_state();
+
+    Vectorclock* ls = obs->get_vectorclock();
+
+    // increment the epoch of the current thread
+    JtsanThreadState::incrementEpoch(tid);
+
+    Vectorclock* cur = JtsanThreadState::getThreadState(tid);
+
+    *ls = *cur;
+  );
   MemoryAccess<java_type>(thread, obj, offset).put_volatile(x); \
 } UNSAFE_END \
  \
