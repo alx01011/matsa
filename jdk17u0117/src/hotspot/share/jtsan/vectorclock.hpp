@@ -26,6 +26,8 @@ class Vectorclock {
         void set(size_t index, uint64_t value);
         // clear (zero out) the clock
         void clear(void);
+
+        void release_acquire(Vectorclock* other);
 };
 
 #endif

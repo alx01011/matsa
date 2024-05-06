@@ -3938,12 +3938,12 @@ JVM_ENTRY(void, JVM_jtsanTransferVectorClock(JNIEnv* env, jobject x))
         int cur_tid = JavaThread::get_jtsan_tid(thread);
 
         // before transferring the vector clock, we need to update the epoch of the current thread
-        JtsanThreadState::incrementEpoch(cur_tid);
         oop obj = JNIHandles::resolve(x);
 
         LockShadow *ls      = (LockShadow*)obj->lock_state();
         // transfer the vector clock of the current thread to the new thread object
-        ls->transfer_vc(cur_tid);
+        ls->get_vectorclock()->release_acquire(JtsanThreadState::getThreadState(cur_tid));
+        JtsanThreadState::incrementEpoch(cur_tid);
       }
     }
 JVM_END

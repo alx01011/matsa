@@ -182,19 +182,27 @@ final class VarHandle$Type$s {
         @ForceInline
         static boolean compareAndSet(VarHandle ob, Object holder, $type$ expected, $type$ value) {
             FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
-            return UNSAFE.compareAndSet$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+            boolean ret =  UNSAFE.compareAndSet$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
                                                handle.fieldOffset,
                                                {#if[Object]?handle.fieldType.cast(expected):expected},
                                                {#if[Object]?handle.fieldType.cast(value):value});
+
+            System.jtsanTransferVectorClock(holder);
+
+            return ret;
         }
 
         @ForceInline
         static $type$ compareAndExchange(VarHandle ob, Object holder, $type$ expected, $type$ value) {
             FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
-            return UNSAFE.compareAndExchange$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+            boolean ret =  UNSAFE.compareAndExchange$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
                                                handle.fieldOffset,
                                                {#if[Object]?handle.fieldType.cast(expected):expected},
                                                {#if[Object]?handle.fieldType.cast(value):value});
+
+            System.jtsanTransferVectorClock(holder);
+
+            return ret;
         }
 
         @ForceInline

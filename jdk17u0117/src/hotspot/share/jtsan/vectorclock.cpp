@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <cstring>
 
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
 uint64_t& Vectorclock::operator[](size_t index) {
     return this->_clock[index];
 } 
@@ -47,4 +49,13 @@ void Vectorclock::clear(void) {
     memset(this->_map,   0, sizeof(this->_map));
 
     this->_slot_size = 0;
+}
+
+void Vectorclock::release_acquire(Vectorclock* other) {
+    for (size_t i = 0; i < other->_slot_size; i++) {
+        size_t index = other->_slot[i];
+
+        other->_clock[index] = max(other->_clock[index], this->_clock[index]);
+        this->_clock[index]  = other->_clock[index];
+    }
 }
