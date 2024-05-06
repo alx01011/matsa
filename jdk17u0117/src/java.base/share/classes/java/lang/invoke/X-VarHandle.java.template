@@ -190,7 +190,7 @@ final class VarHandle$Type$s {
                                                {#if[Object]?handle.fieldType.cast(expected):expected},
                                                {#if[Object]?handle.fieldType.cast(value):value});
 
-            System.jtsanReleaseAcquire(holder);
+            System.jtsanReleaseAcquire(ob);
 
             return ret;
         }
@@ -203,7 +203,7 @@ final class VarHandle$Type$s {
                                                {#if[Object]?handle.fieldType.cast(expected):expected},
                                                {#if[Object]?handle.fieldType.cast(value):value});
 
-            System.jtsanTransferVectorClock(holder);
+            System.jtsanReleaseAcquire(ob);
 
             return ret;
         }
