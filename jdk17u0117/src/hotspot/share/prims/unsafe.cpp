@@ -789,33 +789,28 @@ UNSAFE_ENTRY(void, Unsafe_ThrowException(JNIEnv *env, jobject unsafe, jthrowable
 class ScopedReleaseAcquire: public StackObj {
 private:
   oop _p;
-  JavaThread *_thread;
+  int _tid;
 public:
   ScopedReleaseAcquire(oop p, JavaThread *thread) {
-      _p      = p;
-      _thread = thread;
     JTSAN_ONLY(
-    int tid = JavaThread::get_jtsan_tid(_thread);
+      _p   = p;
+      _tid = JavaThread::get_jtsan_tid(thread);
 
-    LockShadow *obs = (LockShadow*)_p->lock_state();
+      LockShadow *obs = (LockShadow*)_p->lock_state();
 
-    Vectorclock* ls = obs->get_vectorclock();
+      Vectorclock* ls = obs->get_vectorclock();
+      JtsanThreadState::incrementEpoch(tid);
+      Vectorclock* cur = JtsanThreadState::getThreadState(_tid);
 
-    // increment the epoch of the current thread
-    JtsanThreadState::incrementEpoch(tid);
-    Vectorclock* cur = JtsanThreadState::getThreadState(tid);
-
-    *ls = *cur;
-  );
+      *ls = *cur;
+    );
   }
 
   ~ScopedReleaseAcquire() {
     JTSAN_ONLY(
-    int tid = JavaThread::get_jtsan_tid(_thread);
-
     LockShadow *obs  = (LockShadow*)_p->lock_state();
     Vectorclock* ts  = obs->get_vectorclock();
-    Vectorclock* cur = JtsanThreadState::getThreadState(tid);
+    Vectorclock* cur = JtsanThreadState::getThreadState(_tid);
 
     *cur = *ts;
     );
