@@ -184,10 +184,12 @@ final class VarHandle$Type$s {
             FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
             // forms a happen-before edge
             System.jtsanTransferVectorClock(holder);
-            return UNSAFE.compareAndSet$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
+            System.jtsanLock(holder);
+            boolean ret = UNSAFE.compareAndSet$Type$(Objects.requireNonNull(handle.receiverType.cast(holder)),
                                                handle.fieldOffset,
                                                {#if[Object]?handle.fieldType.cast(expected):expected},
                                                {#if[Object]?handle.fieldType.cast(value):value});
+            System.jtsanUnlock(holder);
         }
 
         @ForceInline
