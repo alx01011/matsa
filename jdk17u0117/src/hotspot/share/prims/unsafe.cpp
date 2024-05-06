@@ -792,9 +792,10 @@ private:
   JavaThread *_thread;
 public:
   ScopedReleaseAcquire(oop p, JavaThread *thread) {
-      _p    = p;
+      _p      = p;
+      _thread = thread;
     JTSAN_ONLY(
-    int tid = JavaThread::get_jtsan_tid(thread);
+    int tid = JavaThread::get_jtsan_tid(_thread);
 
     LockShadow *obs = (LockShadow*)_p->lock_state();
 
