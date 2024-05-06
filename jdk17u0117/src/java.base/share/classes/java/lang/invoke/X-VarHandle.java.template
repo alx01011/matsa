@@ -190,6 +190,8 @@ final class VarHandle$Type$s {
                                                {#if[Object]?handle.fieldType.cast(expected):expected},
                                                {#if[Object]?handle.fieldType.cast(value):value});
             System.jtsanUnlock(holder);
+
+            return ret;
         }
 
         @ForceInline
