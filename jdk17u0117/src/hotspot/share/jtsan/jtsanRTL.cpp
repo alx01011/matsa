@@ -110,7 +110,7 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
         return;
       }
 
-      if (method == nullptr || bcp == nullptr) return;
+      if (m == nullptr) return;
 
         ResourceMark rm;
         int lineno = m->line_number_from_bci(m->bci_from(bcp));
