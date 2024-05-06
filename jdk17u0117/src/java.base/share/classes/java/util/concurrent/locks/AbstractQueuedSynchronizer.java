@@ -1096,6 +1096,7 @@ public abstract class AbstractQueuedSynchronizer
     public final boolean releaseShared(int arg) {
         if (tryReleaseShared(arg)) {
             signalNext(head);
+            System.jtsanUnlock(this);
             return true;
         }
         return false;
