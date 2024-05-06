@@ -173,6 +173,9 @@ final class VarHandle$Type$s {
         @ForceInline
         static void setRelease(VarHandle ob, Object holder, $type$ value) {
             FieldInstanceReadWrite handle = (FieldInstanceReadWrite)ob;
+
+            System.jtsanRelease(ob);
+
             UNSAFE.put$Type$Release(Objects.requireNonNull(handle.receiverType.cast(holder)),
                                     handle.fieldOffset,
                                     {#if[Object]?handle.fieldType.cast(value):value});
@@ -187,7 +190,7 @@ final class VarHandle$Type$s {
                                                {#if[Object]?handle.fieldType.cast(expected):expected},
                                                {#if[Object]?handle.fieldType.cast(value):value});
 
-            System.jtsanTransferVectorClock(holder);
+            System.jtsanReleaseAcquire(holder);
 
             return ret;
         }
@@ -468,6 +471,9 @@ final class VarHandle$Type$s {
         @ForceInline
         static $type$ getAcquire(VarHandle ob) {
             FieldStaticReadOnly handle = (FieldStaticReadOnly)ob;
+
+            Systema.jtsanAcquire(ob);
+
             return UNSAFE.get$Type$Acquire(handle.base,
                                  handle.fieldOffset);
         }
@@ -527,6 +533,9 @@ final class VarHandle$Type$s {
         @ForceInline
         static void setRelease(VarHandle ob, $type$ value) {
             FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+
+            System.jtsanRelease(ob);
+
             UNSAFE.put$Type$Release(handle.base,
                                     handle.fieldOffset,
                                     {#if[Object]?handle.fieldType.cast(value):value});
@@ -625,6 +634,9 @@ final class VarHandle$Type$s {
         @ForceInline
         static $type$ getAndSetRelease(VarHandle ob, $type$ value) {
             FieldStaticReadWrite handle = (FieldStaticReadWrite)ob;
+
+            System.jtsanRelease(ob);
+
             return UNSAFE.getAndSet$Type$Release(handle.base,
                                           handle.fieldOffset,
                                           {#if[Object]?handle.fieldType.cast(value):value});

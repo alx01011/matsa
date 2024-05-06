@@ -28,6 +28,8 @@ class Vectorclock {
         void clear(void);
 
         void release_acquire(Vectorclock* other);
+        void release(Vectorclock* other);
+        void acquire(Vectorclock* other);
 };
 
 #endif

@@ -689,11 +689,28 @@ public final class System {
 
     /**
      * aantonak
-     * Gets called on varhandle atomic operation
+     * Acquire and release vector clock
      * @param x the thread object
      */
 
-    public static native void jtsanTransferVectorClock(Object x);
+    public static native void jtsanReleaseAcquire(Object x);
+
+    /**
+     * aantonak
+     * Acquire vector clock
+     * @param x the thread object
+     */
+
+    public static native void jtsanAcquire(Object x);
+
+    /**
+     * aantonak
+     * Release vector clock
+     * @param x the thread object
+     */
+
+    public static native void jtsanRelease(Object x);
+
 
     /**
      * System properties.
