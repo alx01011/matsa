@@ -338,37 +338,27 @@ UNSAFE_ENTRY(jobject, Unsafe_GetUncompressedObject(JNIEnv *env, jobject unsafe, 
   return JNIHandles::make_local(THREAD, v);
 } UNSAFE_END
 
-#define DEFINE_GETSETOOP(java_type, Type, size) \
+#define DEFINE_GETSETOOP(java_type, Type) \
  \
 UNSAFE_ENTRY(java_type, Unsafe_Get##Type(JNIEnv *env, jobject unsafe, jobject obj, jlong offset)) { \
-  java_type ret = MemoryAccess<java_type>(thread, obj, offset).get();\
-  JTSAN_ONLY(\
-  void* addr = index_oop_from_field_offset_long(JNIHandles::resolve(obj), offset); \
-  address a;\
-  JtsanRTL::MemoryAccess(addr, (Method*)nullptr, a, size, false);\
-);\
+  java_type ret = MemoryAccess<java_type>(thread, obj, offset).get(); \
   return ret;\
 } UNSAFE_END \
  \
 UNSAFE_ENTRY(void, Unsafe_Put##Type(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, java_type x)) { \
-  JTSAN_ONLY(\
-    void* addr = index_oop_from_field_offset_long(JNIHandles::resolve(obj), offset); \
-    address a;\
-    JtsanRTL::MemoryAccess(addr, (Method*)nullptr, a, size, true);\
-);\
   MemoryAccess<java_type>(thread, obj, offset).put(x); \
 } UNSAFE_END \
  \
 // END DEFINE_GETSETOOP.
 
-DEFINE_GETSETOOP(jboolean, Boolean, 1)
-DEFINE_GETSETOOP(jbyte, Byte, 1)
-DEFINE_GETSETOOP(jshort, Short, 2);
-DEFINE_GETSETOOP(jchar, Char, 2);
-DEFINE_GETSETOOP(jint, Int, 4);
-DEFINE_GETSETOOP(jlong, Long, 8);
-DEFINE_GETSETOOP(jfloat, Float, 4);
-DEFINE_GETSETOOP(jdouble, Double, 8);
+DEFINE_GETSETOOP(jboolean, Boolean)
+DEFINE_GETSETOOP(jbyte, Byte)
+DEFINE_GETSETOOP(jshort, Short);
+DEFINE_GETSETOOP(jchar, Char);
+DEFINE_GETSETOOP(jint, Int);
+DEFINE_GETSETOOP(jlong, Long);
+DEFINE_GETSETOOP(jfloat, Float);
+DEFINE_GETSETOOP(jdouble, Double);
 
 #undef DEFINE_GETSETOOP
 
@@ -885,10 +875,7 @@ UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSetReference(JNIEnv *env, jobject unsafe
   oop e = JNIHandles::resolve(e_h);
   oop p = JNIHandles::resolve(obj);
   assert_field_offset_sane(p, offset);
-    JTSAN_ONLY(
-    oop up = JNIHandles::resolve(unsafe);
-    ScopedReleaseAcquire releaseAcquire(up, thread);
-  );
+  ScopedReleaseAcquire releaseAcquire(p, thread);
   oop ret = HeapAccess<ON_UNKNOWN_OOP_REF>::oop_atomic_cmpxchg_at(p, (ptrdiff_t)offset, e, x);
   return ret == e;
 } UNSAFE_END
