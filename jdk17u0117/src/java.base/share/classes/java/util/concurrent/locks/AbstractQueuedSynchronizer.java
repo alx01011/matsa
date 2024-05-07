@@ -1007,8 +1007,8 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final boolean release(int arg) {
         if (tryRelease(arg)) {
-            System.jtsanUnlock(this);
             signalNext(head);
+            System.jtsanUnlock(this);
             return true;
         }
         return false;
