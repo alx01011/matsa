@@ -864,7 +864,10 @@ UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSetReference(JNIEnv *env, jobject unsafe
   oop e = JNIHandles::resolve(e_h);
   oop p = JNIHandles::resolve(obj);
   assert_field_offset_sane(p, offset);
-  ScopedReleaseAcquire releaseAcquire(p, thread);
+  JTSAN_ONLY(
+    oop up = JNIHandles::resolve(unsafe);
+    ScopedReleaseAcquire releaseAcquire(up, thread);
+  );
   oop ret = HeapAccess<ON_UNKNOWN_OOP_REF>::oop_atomic_cmpxchg_at(p, (ptrdiff_t)offset, e, x);
   return ret == e;
 } UNSAFE_END
