@@ -341,9 +341,9 @@ UNSAFE_ENTRY(jobject, Unsafe_GetUncompressedObject(JNIEnv *env, jobject unsafe, 
 #define DEFINE_GETSETOOP(java_type, Type) \
  \
 UNSAFE_ENTRY(java_type, Unsafe_Get##Type(JNIEnv *env, jobject unsafe, jobject obj, jlong offset)) { \
-  java_type ret = MemoryAccess<java_type>(thread, obj, offset).get(); \
+  java_type ret = MemoryAccess<java_type>(thread, obj, offset).get();\
   JTSAN_ONLY(\
-  void* addr = index_oop_from_field_offset_long(p, offset);\
+  void* addr = index_oop_from_field_offset_long(unsafe, 0);\
   address a;\
   JtsanRTL::MemoryAccess(addr, (Method*)nullptr, a, size, false);\
 );\
@@ -352,7 +352,7 @@ UNSAFE_ENTRY(java_type, Unsafe_Get##Type(JNIEnv *env, jobject unsafe, jobject ob
  \
 UNSAFE_ENTRY(void, Unsafe_Put##Type(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, java_type x)) { \
   JTSAN_ONLY(\
-    void* addr = index_oop_from_field_offset_long(p, offset);\
+    void* addr = index_oop_from_field_offset_long(unsafe, 0);\
     address a;\
     JtsanRTL::MemoryAccess(addr, (Method*)nullptr, a, size, true);\
 );\
