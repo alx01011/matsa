@@ -292,7 +292,7 @@ UNSAFE_ENTRY(jobject, Unsafe_GetReferenceVolatile(JNIEnv *env, jobject unsafe, j
   JTSAN_ONLY(
   oop p   = JNIHandles::resolve(obj);\
   address tmp_addr;\
-  InterpreterRuntime::jtsan_lock((void *)p, 0x1, tmp_addr);\
+  InterpreterRuntime::jtsan_lock((void *)p, (Method*)0x1, tmp_addr);\
   );
 
   return JNIHandles::make_local(THREAD, v);
@@ -305,7 +305,7 @@ UNSAFE_ENTRY(void, Unsafe_PutReferenceVolatile(JNIEnv *env, jobject unsafe, jobj
 
   JTSAN_ONLY(
     address tmp_addr;
-    InterpreterRuntime::jtsan_lock((void *)p, 0x1, tmp_addr);
+    InterpreterRuntime::jtsan_lock((void *)p, (Method*)0x1, tmp_addr);
   );
 
   HeapAccess<MO_SEQ_CST | ON_UNKNOWN_OOP_REF>::oop_store_at(p, offset, x);
@@ -347,7 +347,7 @@ UNSAFE_ENTRY(java_type, Unsafe_Get##Type##Volatile(JNIEnv *env, jobject unsafe, 
   JTSAN_ONLY(\
   oop p   = JNIHandles::resolve(obj);\
   address tmp_addr;\
-  InterpreterRuntime::jtsan_lock((void *)p, 0x1, tmp_addr);\
+  InterpreterRuntime::jtsan_lock((void *)p, (Method*)0x1, tmp_addr);\
 );\
   return ret; \
 } UNSAFE_END \
@@ -356,7 +356,7 @@ UNSAFE_ENTRY(void, Unsafe_Put##Type##Volatile(JNIEnv *env, jobject unsafe, jobje
   JTSAN_ONLY(\
   oop p   = JNIHandles::resolve(obj);\
   address tmp_addr;\
-  InterpreterRuntime::jtsan_unlock((void *)p, 0x1, tmp_addr);\
+  InterpreterRuntime::jtsan_unlock((void *)p, (Method*)0x1, tmp_addr);\
   );\
   MemoryAccess<java_type>(thread, obj, offset).put_volatile(x); \
 } UNSAFE_END \
@@ -775,14 +775,14 @@ public:
   ScopedReleaseAcquire(oop p, JavaThread *thread) {
     JTSAN_ONLY(
     address tmp_addr;
-    InterpreterRuntime::jtsan_unlock((void *)_p, 0x1, tmp_addr);
+    InterpreterRuntime::jtsan_unlock((void *)_p, (Method*)0x1, tmp_addr);
     );
   }
 
   ~ScopedReleaseAcquire() {
     JTSAN_ONLY(
     address tmp_addr;
-    InterpreterRuntime::jtsan_lock((void *)_p, 0x1, tmp_addr);
+    InterpreterRuntime::jtsan_lock((void *)_p, (Method*)0x1, tmp_addr);
     );
   }
 };
