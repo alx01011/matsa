@@ -402,14 +402,14 @@ public class ReentrantReadWriteLock
                     throw new Error("Maximum lock count exceeded");
                 // Reentrant acquire
                 setState(c + acquires);
-                System.jtsanLock(this);
+                // System.jtsanLock(this);
                 return true;
             }
             if (writerShouldBlock() ||
                 !compareAndSetState(c, c + acquires))
                 return false;
             setExclusiveOwnerThread(current);
-            System.jtsanLock(this);
+            // System.jtsanLock(this);
             return true;
         }
 
