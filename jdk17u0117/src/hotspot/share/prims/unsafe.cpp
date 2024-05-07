@@ -300,7 +300,7 @@ UNSAFE_ENTRY(jobject, Unsafe_GetReferenceVolatile(JNIEnv *env, jobject unsafe, j
   JTSAN_ONLY(
     oop p   = JNIHandles::resolve(unsafe);
     address tmp_addr;
-    InterpreterRuntime::jtsan_lock((void *)p, (Method*)0x1, tmp_addr);
+    InterpreterRuntime::jtsan_unlock((void *)p, (Method*)0x1, tmp_addr);
   );
 
   return ret;
@@ -367,7 +367,7 @@ UNSAFE_ENTRY(java_type, Unsafe_Get##Type##Volatile(JNIEnv *env, jobject unsafe, 
   JTSAN_ONLY(\
   oop p   = JNIHandles::resolve(unsafe);\
   address tmp_addr;\
-  InterpreterRuntime::jtsan_ulock((void *)p, (Method*)0x1, tmp_addr);\
+  InterpreterRuntime::jtsan_unlock((void *)p, (Method*)0x1, tmp_addr);\
 );\
   return ret; \
 } UNSAFE_END \
