@@ -153,7 +153,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 acquire(1);
             } else {
                 // in case initial trylock succeeded, we have to lock here as well
-                //System.jtsanLock(this);
+                System.jtsanLock(this);
             }
         }
 
@@ -245,7 +245,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         protected final boolean tryAcquire(int acquires) {
             if (getState() == 0 && compareAndSetState(0, acquires)) {
                 setExclusiveOwnerThread(Thread.currentThread());
-                //System.jtsanLock(this);
+                System.jtsanLock(this);
                 return true;
             }
             return false;
@@ -285,7 +285,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             if (getState() == 0 && !hasQueuedPredecessors() &&
                 compareAndSetState(0, acquires)) {
                 setExclusiveOwnerThread(Thread.currentThread());
-                //System.jtsanLock(this);
+                System.jtsanLock(this);
                 return true;
             }
             return false;
