@@ -303,9 +303,7 @@ UNSAFE_ENTRY(jobject, Unsafe_GetReferenceVolatile(JNIEnv *env, jobject unsafe, j
     int tid = JavaThread::get_jtsan_tid(thread);
 
     LockShadow *obs = (LockShadow*)p->lock_state();
-    
     Vectorclock* ts = obs->get_vectorclock();
-
     Vectorclock* cur = JtsanThreadState::getThreadState(tid);
 
     *cur = *ts;
@@ -323,14 +321,12 @@ UNSAFE_ENTRY(void, Unsafe_PutReferenceVolatile(JNIEnv *env, jobject unsafe, jobj
     int tid = JavaThread::get_jtsan_tid(thread);
 
     LockShadow *obs = (LockShadow*)p->lock_state();
-
     Vectorclock* ls = obs->get_vectorclock();
 
     // increment the epoch of the current thread
     JtsanThreadState::incrementEpoch(tid);
 
     Vectorclock* cur = JtsanThreadState::getThreadState(tid);
-
     *ls = *cur;
   );
 
@@ -345,10 +341,21 @@ UNSAFE_ENTRY(jobject, Unsafe_GetUncompressedObject(JNIEnv *env, jobject unsafe, 
 #define DEFINE_GETSETOOP(java_type, Type) \
  \
 UNSAFE_ENTRY(java_type, Unsafe_Get##Type(JNIEnv *env, jobject unsafe, jobject obj, jlong offset)) { \
-  return MemoryAccess<java_type>(thread, obj, offset).get(); \
+  java_type ret = MemoryAccess<java_type>(thread, obj, offset).get(); \
+  JTSAN_ONLY(\
+  void* addr = index_oop_from_field_offset_long(p, offset);\
+  address a;\
+  JtsanRTL::MemoryAccess(addr, (Method*)nullptr, a, size, false);\
+);\
+  return ret;\
 } UNSAFE_END \
  \
 UNSAFE_ENTRY(void, Unsafe_Put##Type(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, java_type x)) { \
+  JTSAN_ONLY(\
+    void* addr = index_oop_from_field_offset_long(p, offset);\
+    address a;\
+    JtsanRTL::MemoryAccess(addr, (Method*)nullptr, a, size, true);\
+);\
   MemoryAccess<java_type>(thread, obj, offset).put(x); \
 } UNSAFE_END \
  \
@@ -368,6 +375,7 @@ DEFINE_GETSETOOP(jdouble, Double);
 #define DEFINE_GETSETOOP_VOLATILE(java_type, Type) \
  \
 UNSAFE_ENTRY(java_type, Unsafe_Get##Type##Volatile(JNIEnv *env, jobject unsafe, jobject obj, jlong offset)) { \
+  java_type ret = MemoryAccess<java_type>(thread, obj, offset).get_volatile(); \
   JTSAN_ONLY(\
   oop p   = JNIHandles::resolve(obj);\
   int tid = JavaThread::get_jtsan_tid(thread);\
@@ -376,7 +384,7 @@ UNSAFE_ENTRY(java_type, Unsafe_Get##Type##Volatile(JNIEnv *env, jobject unsafe, 
   Vectorclock* cur = JtsanThreadState::getThreadState(tid);\
   *cur = *ts;\
 );\
-  return MemoryAccess<java_type>(thread, obj, offset).get_volatile(); \
+  return ret; \
 } UNSAFE_END \
  \
 UNSAFE_ENTRY(void, Unsafe_Put##Type##Volatile(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, java_type x)) { \
@@ -834,36 +842,40 @@ UNSAFE_ENTRY(jobject, Unsafe_CompareAndExchangeReference(JNIEnv *env, jobject un
   oop e = JNIHandles::resolve(e_h);
   oop p = JNIHandles::resolve(obj);
   assert_field_offset_sane(p, offset);
-  ScopedReleaseAcquire releaseAcquire(p, thread);
+    JTSAN_ONLY(
+    oop up = JNIHandles::resolve(unsafe);
+    ScopedReleaseAcquire releaseAcquire(up, thread);
+  );
   oop res = HeapAccess<ON_UNKNOWN_OOP_REF>::oop_atomic_cmpxchg_at(p, (ptrdiff_t)offset, e, x);
   return JNIHandles::make_local(THREAD, res);
 } UNSAFE_END
 
 UNSAFE_ENTRY(jint, Unsafe_CompareAndExchangeInt(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, jint e, jint x)) {
   oop p = JNIHandles::resolve(obj);
-  if (p == NULL) {
-    volatile jint* addr = (volatile jint*)index_oop_from_field_offset_long(p, offset);
-    // TODO: this might not be correct, we are locking on the unsafe object
+  JTSAN_ONLY(
     oop up = JNIHandles::resolve(unsafe);
     ScopedReleaseAcquire releaseAcquire(up, thread);
+  );
+  if (p == NULL) {
+    volatile jint* addr = (volatile jint*)index_oop_from_field_offset_long(p, offset);
     return RawAccess<>::atomic_cmpxchg(addr, e, x);
   } else {
     assert_field_offset_sane(p, offset);
-    ScopedReleaseAcquire releaseAcquire(p, thread);
     return HeapAccess<>::atomic_cmpxchg_at(p, (ptrdiff_t)offset, e, x);
   }
 } UNSAFE_END
 
 UNSAFE_ENTRY(jlong, Unsafe_CompareAndExchangeLong(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, jlong e, jlong x)) {
   oop p = JNIHandles::resolve(obj);
-  if (p == NULL) {
-    volatile jlong* addr = (volatile jlong*)index_oop_from_field_offset_long(p, offset);
+  JTSAN_ONLY(
     oop up = JNIHandles::resolve(unsafe);
     ScopedReleaseAcquire releaseAcquire(up, thread);
+  );
+  if (p == NULL) {
+    volatile jlong* addr = (volatile jlong*)index_oop_from_field_offset_long(p, offset);
     return RawAccess<>::atomic_cmpxchg(addr, e, x);
   } else {
     assert_field_offset_sane(p, offset);
-    ScopedReleaseAcquire releaseAcquire(p, thread);
     return HeapAccess<>::atomic_cmpxchg_at(p, (ptrdiff_t)offset, e, x);
   }
 } UNSAFE_END
@@ -873,35 +885,40 @@ UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSetReference(JNIEnv *env, jobject unsafe
   oop e = JNIHandles::resolve(e_h);
   oop p = JNIHandles::resolve(obj);
   assert_field_offset_sane(p, offset);
-  ScopedReleaseAcquire releaseAcquire(p, thread);
+    JTSAN_ONLY(
+    oop up = JNIHandles::resolve(unsafe);
+    ScopedReleaseAcquire releaseAcquire(up, thread);
+  );
   oop ret = HeapAccess<ON_UNKNOWN_OOP_REF>::oop_atomic_cmpxchg_at(p, (ptrdiff_t)offset, e, x);
   return ret == e;
 } UNSAFE_END
 
 UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSetInt(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, jint e, jint x)) {
   oop p = JNIHandles::resolve(obj);
-  if (p == NULL) {
-    volatile jint* addr = (volatile jint*)index_oop_from_field_offset_long(p, offset);
+  JTSAN_ONLY(
     oop up = JNIHandles::resolve(unsafe);
     ScopedReleaseAcquire releaseAcquire(up, thread);
+  );
+  if (p == NULL) {
+    volatile jint* addr = (volatile jint*)index_oop_from_field_offset_long(p, offset);
     return RawAccess<>::atomic_cmpxchg(addr, e, x) == e;
   } else {
     assert_field_offset_sane(p, offset);
-    ScopedReleaseAcquire releaseAcquire(p, thread);
     return HeapAccess<>::atomic_cmpxchg_at(p, (ptrdiff_t)offset, e, x) == e;
   }
 } UNSAFE_END
 
 UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSetLong(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, jlong e, jlong x)) {
   oop p = JNIHandles::resolve(obj);
-  if (p == NULL) {
-    volatile jlong* addr = (volatile jlong*)index_oop_from_field_offset_long(p, offset);
+  JTSAN_ONLY(
     oop up = JNIHandles::resolve(unsafe);
     ScopedReleaseAcquire releaseAcquire(up, thread);
+  );
+  if (p == NULL) {
+    volatile jlong* addr = (volatile jlong*)index_oop_from_field_offset_long(p, offset);
     return RawAccess<>::atomic_cmpxchg(addr, e, x) == e;
   } else {
     assert_field_offset_sane(p, offset);
-    ScopedReleaseAcquire releaseAcquire(p, thread);
     return HeapAccess<>::atomic_cmpxchg_at(p, (ptrdiff_t)offset, e, x) == e;
   }
 } UNSAFE_END
