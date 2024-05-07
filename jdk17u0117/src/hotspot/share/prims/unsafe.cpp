@@ -361,7 +361,7 @@ UNSAFE_ENTRY(java_type, Unsafe_Get##Type##Volatile(JNIEnv *env, jobject unsafe, 
   LockShadow *obs = (LockShadow*)p->lock_state();\
   Vectorclock* ts = obs->get_vectorclock();\
   Vectorclock* cur = JtsanThreadState::getThreadState(tid);\
-  cur->acquire(ts);
+  cur->acquire(ts);\
 );\
   return ret; \
 } UNSAFE_END \
@@ -374,7 +374,7 @@ UNSAFE_ENTRY(void, Unsafe_Put##Type##Volatile(JNIEnv *env, jobject unsafe, jobje
     Vectorclock* ls = obs->get_vectorclock();\
     JtsanThreadState::incrementEpoch(tid);\
     Vectorclock* cur = JtsanThreadState::getThreadState(tid);\
-    cur->acquire(ls);
+    cur->release(ls);\
   );\
   MemoryAccess<java_type>(thread, obj, offset).put_volatile(x); \
 } UNSAFE_END \
