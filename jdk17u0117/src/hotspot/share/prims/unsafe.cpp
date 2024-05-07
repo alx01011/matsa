@@ -65,6 +65,7 @@
 #include "jtsan/threadState.hpp"
 #include "jtsan/vectorclock.hpp"
 #include "jtsan/jtsanRTL.hpp"
+#include "interpreter/interpreterRuntime.hpp"
 #endif
 
 /**
@@ -289,13 +290,9 @@ UNSAFE_ENTRY(jobject, Unsafe_GetReferenceVolatile(JNIEnv *env, jobject unsafe, j
   oop v = HeapAccess<MO_SEQ_CST | ON_UNKNOWN_OOP_REF>::oop_load_at(p, offset);
 
   JTSAN_ONLY(
-    int tid = JavaThread::get_jtsan_tid(thread);
-
-    LockShadow *obs = (LockShadow*)p->lock_state();
-    Vectorclock* ts = obs->get_vectorclock();
-    Vectorclock* cur = JtsanThreadState::getThreadState(tid);
-
-    cur->acquire(ts);
+  oop p   = JNIHandles::resolve(obj);\
+  address tmp_addr;\
+  InterpreterRuntime::jtsan_lock((void *)p, 0x1, tmp_addr);\
   );
 
   return JNIHandles::make_local(THREAD, v);
@@ -307,16 +304,8 @@ UNSAFE_ENTRY(void, Unsafe_PutReferenceVolatile(JNIEnv *env, jobject unsafe, jobj
   assert_field_offset_sane(p, offset);
 
   JTSAN_ONLY(
-    int tid = JavaThread::get_jtsan_tid(thread);
-
-    LockShadow *obs = (LockShadow*)p->lock_state();
-    Vectorclock* ls = obs->get_vectorclock();
-
-    // increment the epoch of the current thread
-    JtsanThreadState::incrementEpoch(tid);
-
-    Vectorclock* cur = JtsanThreadState::getThreadState(tid);
-    cur->release(ls);
+    address tmp_addr;
+    InterpreterRuntime::jtsan_lock((void *)p, 0x1, tmp_addr);
   );
 
   HeapAccess<MO_SEQ_CST | ON_UNKNOWN_OOP_REF>::oop_store_at(p, offset, x);
@@ -357,24 +346,17 @@ UNSAFE_ENTRY(java_type, Unsafe_Get##Type##Volatile(JNIEnv *env, jobject unsafe, 
   java_type ret = MemoryAccess<java_type>(thread, obj, offset).get_volatile(); \
   JTSAN_ONLY(\
   oop p   = JNIHandles::resolve(obj);\
-  int tid = JavaThread::get_jtsan_tid(thread);\
-  LockShadow *obs = (LockShadow*)p->lock_state();\
-  Vectorclock* ts = obs->get_vectorclock();\
-  Vectorclock* cur = JtsanThreadState::getThreadState(tid);\
-  cur->acquire(ts);\
+  address tmp_addr;\
+  InterpreterRuntime::jtsan_lock((void *)p, 0x1, tmp_addr);\
 );\
   return ret; \
 } UNSAFE_END \
  \
 UNSAFE_ENTRY(void, Unsafe_Put##Type##Volatile(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, java_type x)) { \
   JTSAN_ONLY(\
-    int tid = JavaThread::get_jtsan_tid(thread);\
-    oop p           = JNIHandles::resolve(obj);\
-    LockShadow *obs = (LockShadow*)p->lock_state();\
-    Vectorclock* ls = obs->get_vectorclock();\
-    JtsanThreadState::incrementEpoch(tid);\
-    Vectorclock* cur = JtsanThreadState::getThreadState(tid);\
-    cur->release(ls);\
+  oop p   = JNIHandles::resolve(obj);\
+  address tmp_addr;\
+  InterpreterRuntime::jtsan_unlock((void *)p, 0x1, tmp_addr);\
   );\
   MemoryAccess<java_type>(thread, obj, offset).put_volatile(x); \
 } UNSAFE_END \
@@ -792,26 +774,15 @@ private:
 public:
   ScopedReleaseAcquire(oop p, JavaThread *thread) {
     JTSAN_ONLY(
-      _p   = p;
-      _tid = JavaThread::get_jtsan_tid(thread);
-
-      LockShadow *obs = (LockShadow*)_p->lock_state();
-
-      Vectorclock* ls = obs->get_vectorclock();
-      JtsanThreadState::incrementEpoch(_tid);
-      Vectorclock* cur = JtsanThreadState::getThreadState(_tid);
-
-      cur->release(ls);
+    address tmp_addr;
+    InterpreterRuntime::jtsan_unlock((void *)_p, 0x1, tmp_addr);
     );
   }
 
   ~ScopedReleaseAcquire() {
     JTSAN_ONLY(
-    LockShadow *obs  = (LockShadow*)_p->lock_state();
-    Vectorclock* ts  = obs->get_vectorclock();
-    Vectorclock* cur = JtsanThreadState::getThreadState(_tid);
-
-    cur->acquire(ts);
+    address tmp_addr;
+    InterpreterRuntime::jtsan_lock((void *)_p, 0x1, tmp_addr);
     );
   }
 };

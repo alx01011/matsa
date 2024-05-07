@@ -110,8 +110,6 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
         return;
       }
 
-      if (m == nullptr) return;
-
         ResourceMark rm;
         int lineno = m->line_number_from_bci(m->bci_from(bcp));
         fprintf(stderr, "Data race detected in method %s, line %d\n",
