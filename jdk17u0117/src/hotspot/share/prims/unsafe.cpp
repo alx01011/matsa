@@ -285,6 +285,12 @@ UNSAFE_ENTRY(void, Unsafe_PutReference(JNIEnv *env, jobject unsafe, jobject obj,
   oop x = JNIHandles::resolve(x_h);
   oop p = JNIHandles::resolve(obj);
   assert_field_offset_sane(p, offset);
+  JTSAN_ONLY(
+    void* addr = index_oop_from_field_offset_long(p, offset);
+    address a;
+    JtsanRTL::MemoryAccess(addr, (Method*)nullptr, a, 8, true);
+  );
+
   HeapAccess<ON_UNKNOWN_OOP_REF>::oop_store_at(p, offset, x);
 } UNSAFE_END
 
