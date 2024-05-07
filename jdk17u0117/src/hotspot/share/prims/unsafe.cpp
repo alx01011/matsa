@@ -338,7 +338,7 @@ UNSAFE_ENTRY(jobject, Unsafe_GetUncompressedObject(JNIEnv *env, jobject unsafe, 
   return JNIHandles::make_local(THREAD, v);
 } UNSAFE_END
 
-#define DEFINE_GETSETOOP(java_type, Type) \
+#define DEFINE_GETSETOOP(java_type, Type, size) \
  \
 UNSAFE_ENTRY(java_type, Unsafe_Get##Type(JNIEnv *env, jobject unsafe, jobject obj, jlong offset)) { \
   java_type ret = MemoryAccess<java_type>(thread, obj, offset).get();\
@@ -363,14 +363,14 @@ UNSAFE_ENTRY(void, Unsafe_Put##Type(JNIEnv *env, jobject unsafe, jobject obj, jl
  \
 // END DEFINE_GETSETOOP.
 
-DEFINE_GETSETOOP(jboolean, Boolean)
-DEFINE_GETSETOOP(jbyte, Byte)
-DEFINE_GETSETOOP(jshort, Short);
-DEFINE_GETSETOOP(jchar, Char);
-DEFINE_GETSETOOP(jint, Int);
-DEFINE_GETSETOOP(jlong, Long);
-DEFINE_GETSETOOP(jfloat, Float);
-DEFINE_GETSETOOP(jdouble, Double);
+DEFINE_GETSETOOP(jboolean, Boolean, 1)
+DEFINE_GETSETOOP(jbyte, Byte, 1)
+DEFINE_GETSETOOP(jshort, Short, 2);
+DEFINE_GETSETOOP(jchar, Char, 2);
+DEFINE_GETSETOOP(jint, Int, 4);
+DEFINE_GETSETOOP(jlong, Long, 8);
+DEFINE_GETSETOOP(jfloat, Float, 4);
+DEFINE_GETSETOOP(jdouble, Double, 8);
 
 #undef DEFINE_GETSETOOP
 
