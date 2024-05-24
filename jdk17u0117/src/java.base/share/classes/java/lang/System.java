@@ -87,6 +87,9 @@ import sun.reflect.annotation.AnnotationType;
 import sun.nio.ch.Interruptible;
 import sun.security.util.SecurityConstants;
 
+// for jtsan methods
+import jdk.internal.vm.annotation.Hidden;
+
 /**
  * The {@code System} class contains several useful class fields
  * and methods. It cannot be instantiated.
