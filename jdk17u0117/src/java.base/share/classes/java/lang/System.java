@@ -669,6 +669,7 @@ public final class System {
      * Gets called on ReEntrantLock.lock()
      * @param x the lock object
      */
+    @Hidden
     public static native void jtsanLock(Object x);
 
     /**
@@ -676,7 +677,7 @@ public final class System {
      * Gets called on ReEntrantLock.unlock()
      * @param x the lock object
      */
-
+    @Hidden
     public static native void jtsanUnlock(Object x);
 
     /**
@@ -684,7 +685,7 @@ public final class System {
      * Gets called on thread.join
      * @param x the thread object
      */
-
+    @Hidden
     public static native void jtsanJoin(Object x);
 
     /**
@@ -692,7 +693,7 @@ public final class System {
      * Acquire and release vector clock
      * @param x the thread object
      */
-
+    @Hidden
     public static native void jtsanReleaseAcquire(Object x);
 
     /**
@@ -700,7 +701,7 @@ public final class System {
      * Acquire vector clock
      * @param x the thread object
      */
-
+    @Hidden
     public static native void jtsanAcquire(Object x);
 
     /**
@@ -708,7 +709,7 @@ public final class System {
      * Release vector clock
      * @param x the thread object
      */
-
+    @Hidden
     public static native void jtsanRelease(Object x);
 
 
