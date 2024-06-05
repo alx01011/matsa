@@ -675,6 +675,8 @@ public abstract class AbstractQueuedSynchronizer
                     throw ex;
                 }
                 if (acquired) {
+                    // lock success
+                    System.jtsanLock(this);
                     if (first) {
                         node.prev = null;
                         head = node;
@@ -685,8 +687,6 @@ public abstract class AbstractQueuedSynchronizer
                         if (interrupted)
                             current.interrupt();
                     }
-                    // lock success
-                    System.jtsanLock(this);
                     return 1;
                 }
             }
@@ -1049,9 +1049,6 @@ public abstract class AbstractQueuedSynchronizer
             (tryAcquireShared(arg) < 0 &&
              acquire(null, arg, true, true, false, 0L) < 0))
             throw new InterruptedException();
-       
-        // we may lock now since acquire succeeded
-        System.jtsanLock(this);
     }
 
     /**
