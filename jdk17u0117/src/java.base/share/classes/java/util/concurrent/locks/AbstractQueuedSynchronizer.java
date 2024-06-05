@@ -1007,8 +1007,8 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final boolean release(int arg) {
         if (tryRelease(arg)) {
-            signalNext(head);
             System.jtsanUnlock(this);
+            signalNext(head);
             return true;
         }
         return false;
@@ -1049,6 +1049,9 @@ public abstract class AbstractQueuedSynchronizer
             (tryAcquireShared(arg) < 0 &&
              acquire(null, arg, true, true, false, 0L) < 0))
             throw new InterruptedException();
+       
+        // we may lock now since acquire succeeded
+        System.jtsanLock(this);
     }
 
     /**
@@ -1095,8 +1098,8 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final boolean releaseShared(int arg) {
         if (tryReleaseShared(arg)) {
-            signalNext(head);
             System.jtsanUnlock(this);
+            signalNext(head);
             return true;
         }
         return false;
