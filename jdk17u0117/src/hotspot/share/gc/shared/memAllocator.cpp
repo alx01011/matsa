@@ -369,6 +369,12 @@ oop MemAllocator::finish(HeapWord* mem) const {
     // May be bootstrapping
     oopDesc::set_mark(mem, markWord::prototype());
   }
+
+  JTSAN_ONLY(
+  oop o = cast_to_oop(mem);
+  o->init_lock_state();
+  );
+
   // Need a release store to ensure array/class length, mark word, and
   // object zeroing are visible before setting the klass non-NULL, for
   // concurrent collectors.

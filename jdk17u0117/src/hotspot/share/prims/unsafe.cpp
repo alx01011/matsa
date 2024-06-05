@@ -60,6 +60,13 @@
 #include "utilities/dtrace.hpp"
 #include "utilities/macros.hpp"
 
+#if INCLUDE_JTSAN
+#include "jtsan/lockState.hpp"
+#include "jtsan/threadState.hpp"
+#include "jtsan/vectorclock.hpp"
+#include "jtsan/jtsanRTL.hpp"
+#endif
+
 /**
  * Implementation of the jdk.internal.misc.Unsafe class
  */
@@ -298,7 +305,8 @@ UNSAFE_ENTRY(jobject, Unsafe_GetUncompressedObject(JNIEnv *env, jobject unsafe, 
 #define DEFINE_GETSETOOP(java_type, Type) \
  \
 UNSAFE_ENTRY(java_type, Unsafe_Get##Type(JNIEnv *env, jobject unsafe, jobject obj, jlong offset)) { \
-  return MemoryAccess<java_type>(thread, obj, offset).get(); \
+  java_type ret = MemoryAccess<java_type>(thread, obj, offset).get(); \
+  return ret;\
 } UNSAFE_END \
  \
 UNSAFE_ENTRY(void, Unsafe_Put##Type(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, java_type x)) { \
@@ -321,7 +329,8 @@ DEFINE_GETSETOOP(jdouble, Double);
 #define DEFINE_GETSETOOP_VOLATILE(java_type, Type) \
  \
 UNSAFE_ENTRY(java_type, Unsafe_Get##Type##Volatile(JNIEnv *env, jobject unsafe, jobject obj, jlong offset)) { \
-  return MemoryAccess<java_type>(thread, obj, offset).get_volatile(); \
+  java_type ret = MemoryAccess<java_type>(thread, obj, offset).get_volatile(); \
+  return ret; \
 } UNSAFE_END \
  \
 UNSAFE_ENTRY(void, Unsafe_Put##Type##Volatile(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, java_type x)) { \

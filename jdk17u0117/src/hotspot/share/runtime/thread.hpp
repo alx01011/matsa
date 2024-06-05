@@ -716,9 +716,11 @@ class JavaThread: public Thread {
   friend class ThreadsSMRSupport; // to access _threadObj for exiting_threads_oops_do
   friend class HandshakeState;
  private:
-  bool           _in_asgct;                      // Is set when this JavaThread is handling ASGCT call
-  bool           _on_thread_list;                // Is set when this JavaThread is added to the Threads list
+  bool           _in_asgct;                        // Is set when this JavaThread is handling ASGCT call
+  bool           _on_thread_list;                 // Is set when this JavaThread is added to the Threads list
   OopHandle      _threadObj;                     // The Java level thread object
+  bool           _initializing_class = false;   // Is set when this JavaThread is initializing a class
+  int            _jtsan_tid    = 0;            // jtsan thread id
 
 #ifdef ASSERT
  private:
@@ -799,6 +801,16 @@ class JavaThread: public Thread {
   void set_current_waiting_monitor(ObjectMonitor* monitor) {
     Atomic::store(&_current_waiting_monitor, monitor);
   }
+
+  // aantonak - jtsan
+  static int get_thread_obj_id(JavaThread *thread);
+  static int get_jtsan_tid(JavaThread *thread);
+  static void set_jtsan_tid(JavaThread *thread, int tid);
+
+  // aantonak - jtsan
+  // helpers to ignore accesses when a thread is doing initialization work
+  void set_thread_initializing(bool value);
+  bool is_thread_initializing(void);
 
  private:
   MonitorChunk* _monitor_chunks;              // Contains the off stack monitors

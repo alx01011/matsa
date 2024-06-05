@@ -646,6 +646,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
         protected boolean tryAcquire(int unused) {
             if (compareAndSetState(0, 1)) {
+                System.jtsanLock(this);
                 setExclusiveOwnerThread(Thread.currentThread());
                 return true;
             }
@@ -653,6 +654,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         }
 
         protected boolean tryRelease(int unused) {
+            System.jtsanUnlock(this);
             setExclusiveOwnerThread(null);
             setState(0);
             return true;

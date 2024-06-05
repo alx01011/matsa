@@ -50,6 +50,16 @@
 #include "services/memTracker.hpp"
 #include "utilities/macros.hpp"
 
+#if INCLUDE_JTSAN
+#include "jtsan/shadow.hpp"
+#include "jtsan/threadState.hpp"
+#include "jtsan/lockState.hpp"
+#include "jtsan/jtsanGlobals.hpp"
+#include "gc/shared/gc_globals.hpp"
+#include "jtsan/jtsanThreadPool.hpp"
+#include "jtsan/jtsanReportMap.hpp"
+#endif
+
 
 // Initialization done by VM thread in vm_init_globals()
 void check_ThreadShadow();
@@ -166,6 +176,17 @@ jint init_globals() {
   if (PrintFlagsFinal || PrintFlagsRanges) {
     JVMFlag::printFlags(tty, false, PrintFlagsRanges);
   }
+
+  // jtsan initialization must be done after gc initialization
+  // we want to delay jtsan init as much as possible
+  JTSAN_ONLY(set_jtsan_initialized(false));
+  JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
+  JTSAN_ONLY(JtsanThreadState::init());
+  JTSAN_ONLY(JtsanThreadPool::jtsan_threadpool_init());
+  JTSAN_ONLY(JtsanReportMap::jtsan_reportmap_init());
+  JTSAN_ONLY(set_jtsan_initialized(true));
+
+
 
   return JNI_OK;
 }

@@ -204,8 +204,25 @@ char* Method::name_and_sig_as_C_string(Klass* klass, Symbol* method_name, Symbol
   return buf;
 }
 
+// aantonak -jtsan
+const char* Method::external_name_as_fully_qualified() const {
+  return external_name(constants()->pool_holder(), name());
+}
+
+// aantonak -jtsan
+const char* Method::external_name(Klass *klass, Symbol* method_name) {
+  stringStream ss;
+  print_external_name(&ss, klass, method_name);
+  return ss.as_string();
+}
+
 const char* Method::external_name() const {
   return external_name(constants()->pool_holder(), name(), signature());
+}
+
+// aantonak - jtsan
+void Method::print_external_name(outputStream* os, Klass* klass, Symbol* method_name) {
+  os->print("%s.%s", klass->external_name(), method_name->as_C_string());
 }
 
 void Method::print_external_name(outputStream *os) const {

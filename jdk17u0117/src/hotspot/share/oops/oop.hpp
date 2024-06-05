@@ -57,6 +57,16 @@ class oopDesc {
     narrowKlass _compressed_klass;
   } _metadata;
 
+#ifdef INCLUDE_JTSAN
+  /*
+    JTSAN obj and sync lock index
+  */
+  // volatile uint32_t _obj_lock_index;
+  // volatile uint32_t _sync_lock_index;
+
+    void* _lock_state;
+#endif
+
  public:
   inline markWord  mark()          const;
   inline markWord  mark_acquire()  const;
@@ -110,6 +120,13 @@ class oopDesc {
   bool is_array_noinline()             const;
   bool is_objArray_noinline()          const;
   bool is_typeArray_noinline()         const;
+
+
+  // jtsan - lock index
+#ifdef INCLUDE_JTSAN
+  inline void  init_lock_state(void);
+  inline void* lock_state(void);
+#endif
 
  protected:
   inline oop        as_oop() const { return const_cast<oopDesc*>(this); }
@@ -306,8 +323,18 @@ class oopDesc {
   static int klass_offset_in_bytes()     { return offset_of(oopDesc, _metadata._klass); }
   static int klass_gap_offset_in_bytes() {
     assert(has_klass_gap(), "only applicable to compressed klass pointers");
+  #ifdef INCLUDE_JTSAN
+    return klass_offset_in_bytes() + sizeof(narrowKlass) + sizeof(void*);
+  #endif
     return klass_offset_in_bytes() + sizeof(narrowKlass);
   }
+
+#ifdef INCLUDE_JTSAN
+  // static int obj_lock_index_offset_in_bytes() { return (int)offset_of(oopDesc, _obj_lock_index); }
+  // static int sync_lock_index_offset_in_bytes() { return (int)offset_of(oopDesc, _sync_lock_index); }
+
+  static int lock_state_offset_in_bytes() { return (int)offset_of(oopDesc, _lock_state); }
+#endif
 
   // for error reporting
   static void* load_klass_raw(oop obj);

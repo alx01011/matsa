@@ -87,6 +87,9 @@ import sun.reflect.annotation.AnnotationType;
 import sun.nio.ch.Interruptible;
 import sun.security.util.SecurityConstants;
 
+// for jtsan methods
+import jdk.internal.vm.annotation.Hidden;
+
 /**
  * The {@code System} class contains several useful class fields
  * and methods. It cannot be instantiated.
@@ -663,6 +666,55 @@ public final class System {
      */
     @IntrinsicCandidate
     public static native int identityHashCode(Object x);
+
+    /**
+     * aantonak
+     * Gets called on ReEntrantLock.lock()
+     * @param x the lock object
+     */
+    @Hidden
+    public static native void jtsanLock(Object x);
+
+    /**
+     * aantonak
+     * Gets called on ReEntrantLock.unlock()
+     * @param x the lock object
+     */
+    @Hidden
+    public static native void jtsanUnlock(Object x);
+
+    /**
+     * aantonak
+     * Gets called on thread.join
+     * @param x the thread object
+     */
+    @Hidden
+    public static native void jtsanJoin(Object x);
+
+    /**
+     * aantonak
+     * Acquire and release vector clock
+     * @param x the thread object
+     */
+    @Hidden
+    public static native void jtsanReleaseAcquire(Object x);
+
+    /**
+     * aantonak
+     * Acquire vector clock
+     * @param x the thread object
+     */
+    @Hidden
+    public static native void jtsanAcquire(Object x);
+
+    /**
+     * aantonak
+     * Release vector clock
+     * @param x the thread object
+     */
+    @Hidden
+    public static native void jtsanRelease(Object x);
+
 
     /**
      * System properties.

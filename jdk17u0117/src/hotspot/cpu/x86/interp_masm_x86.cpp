@@ -1205,6 +1205,21 @@ void InterpreterMacroAssembler::get_method_counters(Register method,
   bind(has_counters);
 }
 
+// aantonak - jtsan
+void InterpreterMacroAssembler::jtsan_monitor_enter(Register lock_reg) {
+  pusha();
+
+  // get lock_obj and method pointers
+  movptr    (c_rarg0, lock_reg);
+  get_method(c_rarg1);
+  // gets bcp
+  // if we have a synchronized method, the line number will be the first line of the method
+  movptr    (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
+
+  call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_sync_enter), c_rarg0, c_rarg1, c_rarg2);
+
+  popa();
+}
 
 // Lock object
 //
@@ -1216,6 +1231,8 @@ void InterpreterMacroAssembler::get_method_counters(Register method,
 void InterpreterMacroAssembler::lock_object(Register lock_reg) {
   assert(lock_reg == LP64_ONLY(c_rarg1) NOT_LP64(rdx),
          "The argument is only for looks. It must be c_rarg1");
+
+  JTSAN_ONLY(push_ptr(lock_reg)); // save lock_reg
 
   if (UseHeavyMonitors) {
     call_VM(noreg,
@@ -1321,6 +1338,26 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
 
     bind(done);
   }
+
+  // aantonak - jtsan
+  // restore lock_reg
+  JTSAN_ONLY(pop_ptr(lock_reg));
+  JTSAN_ONLY(jtsan_monitor_enter(lock_reg));
+}
+
+// aantonak - jtsan
+void InterpreterMacroAssembler::jtsan_monitor_exit(Register lock_reg) {
+  pusha();
+
+  // get lock_obj and method pointers
+  movptr    (c_rarg0, lock_reg);
+  get_method(c_rarg1);
+  // gets bcp
+  movptr    (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
+
+  call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_sync_exit), c_rarg0, c_rarg1, c_rarg2);
+
+  popa();
 }
 
 
@@ -1339,6 +1376,9 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
 void InterpreterMacroAssembler::unlock_object(Register lock_reg) {
   assert(lock_reg == LP64_ONLY(c_rarg1) NOT_LP64(rdx),
          "The argument is only for looks. It must be c_rarg1");
+
+  // aantonak - jtsan
+  JTSAN_ONLY(jtsan_monitor_exit(lock_reg));
 
   if (UseHeavyMonitors) {
     call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorexit), lock_reg);

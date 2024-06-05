@@ -58,6 +58,9 @@
 #include "utilities/dtrace.hpp"
 #include "utilities/events.hpp"
 #include "utilities/preserveException.hpp"
+#if INCLUDE_JTSAN
+#include "interpreter/interpreterRuntime.hpp"
+#endif
 
 void MonitorList::add(ObjectMonitor* m) {
   ObjectMonitor* head;
@@ -614,6 +617,7 @@ void ObjectSynchronizer::jni_exit(oop obj, TRAPS) {
   // intentionally do not use CHECK on check_owner because we must exit the
   // monitor even if an exception was already pending.
   if (monitor->check_owner(THREAD)) {
+    //JTSAN_ONLY(InterpreterRuntime::jtsan_oop_unlock(current, obj));
     monitor->exit(current);
   }
 }

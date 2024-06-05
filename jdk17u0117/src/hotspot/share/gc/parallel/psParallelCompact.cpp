@@ -89,6 +89,10 @@
 #include "jvmci/jvmci.hpp"
 #endif
 
+#if INCLUDE_JTSAN
+#include "jtsan/jtsanGlobals.hpp"
+#endif
+
 #include <math.h>
 
 // All sizes are in HeapWords.
@@ -1725,6 +1729,8 @@ bool PSParallelCompact::invoke_no_policy(bool maximum_heap_compaction) {
   if (GCLocker::check_active_before_gc()) {
     return false;
   }
+
+  JTSAN_ONLY(increment_gc_epoch());
 
   ParallelScavengeHeap* heap = ParallelScavengeHeap::heap();
 

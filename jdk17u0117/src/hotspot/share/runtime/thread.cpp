@@ -132,6 +132,14 @@
 #include "utilities/preserveException.hpp"
 #include "utilities/spinYield.hpp"
 #include "utilities/vmError.hpp"
+#if INCLUDE_JTSAN
+#include "jtsan/shadow.hpp"
+#include "jtsan/threadState.hpp"
+#include "jtsan/lockState.hpp"
+#include "jtsan/jtsanGlobals.hpp"
+#include "jtsan/jtsanThreadPool.hpp"
+#include "interpreter/interpreterRuntime.hpp"
+#endif
 #if INCLUDE_JVMCI
 #include "jvmci/jvmci.hpp"
 #include "jvmci/jvmciEnv.hpp"
@@ -540,6 +548,33 @@ void Thread::start(Thread* thread) {
   // Start is different from resume in that its safety is guaranteed by context or
   // being called from a Java method synchronized on the Thread object.
   if (thread->is_Java_thread()) {
+    JTSAN_ONLY(
+      if (Thread::current()->is_Java_thread()) {
+        JavaThread *cur_thread = JavaThread::current();
+
+        int new_tid = JtsanThreadPool::get_instance()->get_queue()->dequeue();
+
+        if (new_tid == -1) {
+          // out of available threads
+          fatal("No more threads available for JTSan");
+        }
+
+        int cur_tid = JavaThread::get_jtsan_tid(cur_thread);
+
+        JavaThread::set_jtsan_tid(thread->as_Java_thread(), new_tid);
+
+        // before transferring the vector clock, we need to update the epoch of the current thread
+        JtsanThreadState::incrementEpoch(cur_tid);
+        JtsanThreadState::transferEpoch(cur_tid, new_tid);
+
+        oop thread_object   = thread->as_Java_thread()->threadObj();
+
+        LockShadow *ls      = (LockShadow*)thread_object->lock_state();
+        // transfer the vector clock of the current thread to the new thread object
+        ls->transfer_vc(cur_tid);
+      }
+  );
+
     // Initialize the thread state to RUNNABLE before starting this thread.
     // Can not set it after the thread started because we do not know the
     // exact thread state at that time. It could be in MONITOR_WAIT or
@@ -810,6 +845,45 @@ static OopStorage* _thread_oop_storage = NULL;
 
 oop  JavaThread::threadObj() const    {
   return _threadObj.resolve();
+}
+
+int JavaThread::get_thread_obj_id(JavaThread *thread) {
+  if (thread == NULL || !thread->is_Java_thread()) {
+    return -1;
+  }
+  
+  oop threadObj = thread->threadObj();
+
+  if (threadObj == NULL) {
+    return -1;
+  }
+
+  return java_lang_Thread::thread_id(threadObj);
+}
+
+int JavaThread::get_jtsan_tid(JavaThread *thread) {
+  if (thread == NULL || !thread->is_Java_thread()) {
+    return -1;
+  }
+
+  return thread->_jtsan_tid;
+}
+
+void JavaThread::set_jtsan_tid(JavaThread *thread, int tid) {
+  if (thread == NULL || !thread->is_Java_thread()) {
+    return;
+  }
+
+  thread->_jtsan_tid = tid;
+
+}
+
+void JavaThread::set_thread_initializing(bool value) {
+  _initializing_class = value;
+}
+  
+bool JavaThread::is_thread_initializing(void) {
+  return _initializing_class;
 }
 
 void JavaThread::set_threadObj(oop p) {
@@ -1365,6 +1439,27 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
   if (log_is_enabled(Debug, os, thread, timer)) {
     _timer_exit_phase1.start();
   }
+
+  JTSAN_ONLY(
+    int cur_tid         = JavaThread::get_jtsan_tid(this);
+
+    oop thread_object   = this->threadObj();
+
+    LockShadow *ls      = (LockShadow*)thread_object->lock_state();
+    //uint32_t lock_index = thread_object->obj_lock_index();
+
+    // transfer the vector clock from the current thread to the thread object (Thread ...)
+    JtsanThreadState::incrementEpoch(cur_tid);
+    // ls->transferVectorclock(cur_tid, lock_index);
+    ls->transfer_vc(cur_tid);
+
+    // clear the thread state
+    // to be reused by another thread
+    JtsanThreadState::getThreadState(cur_tid)->clear();
+    // pop the thread from the stack (make it available to be reused)
+    // cast is always safe because on start of the thread we have set the thread id
+    JtsanThreadPool::get_queue()->enqueue(cur_tid);
+  );
 
   HandleMark hm(this);
   Handle uncaught_exception(this, this->pending_exception());
@@ -2755,6 +2850,9 @@ void Threads::initialize_jsr292_core_classes(TRAPS) {
 jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   extern void JDK_Version_init();
 
+  // jtsan initialization must be done after gc initialization
+  JTSAN_ONLY(set_jtsan_initialized(false));
+
   // Preinitialize version info.
   VM_Version::early_initialize();
 
@@ -2945,6 +3043,14 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   }
 
   assert(Universe::is_fully_initialized(), "not initialized");
+
+  //   // jtsan initialization must be done after gc initialization
+  // JTSAN_ONLY(set_jtsan_initialized(false));
+  // JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
+  // JTSAN_ONLY(JtsanThreadState::init());
+  // JTSAN_ONLY(LockShadow::init());
+  // JTSAN_ONLY(set_jtsan_initialized(true));
+
   if (VerifyDuringStartup) {
     // Make sure we're starting with a clean slate.
     VM_Verify verify_op;
@@ -3520,6 +3626,10 @@ void Threads::destroy_vm() {
   // Deleting the shutdown thread here is safe. See comment on
   // wait_until_not_protected() above.
   delete thread;
+
+  // jtsan - this is where destruction happens
+  JTSAN_ONLY(ShadowMemory::destroy());
+  // TODO: free rest of jtsan mem
 
 #if INCLUDE_JVMCI
   if (JVMCICounterSize > 0) {

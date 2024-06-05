@@ -685,6 +685,8 @@ public abstract class AbstractQueuedSynchronizer
                         if (interrupted)
                             current.interrupt();
                     }
+                    // lock success
+                    System.jtsanLock(this);
                     return 1;
                 }
             }
@@ -1006,6 +1008,7 @@ public abstract class AbstractQueuedSynchronizer
     public final boolean release(int arg) {
         if (tryRelease(arg)) {
             signalNext(head);
+            System.jtsanUnlock(this);
             return true;
         }
         return false;
@@ -1093,6 +1096,7 @@ public abstract class AbstractQueuedSynchronizer
     public final boolean releaseShared(int arg) {
         if (tryReleaseShared(arg)) {
             signalNext(head);
+            System.jtsanUnlock(this);
             return true;
         }
         return false;

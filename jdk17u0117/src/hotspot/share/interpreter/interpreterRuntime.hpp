@@ -53,10 +53,43 @@ class InterpreterRuntime: AllStatic {
   // Inner work method for Interpreter's frequency counter overflow.
   static nmethod* frequency_counter_overflow_inner(JavaThread* current, address branch_bcp);
 
+   // aantonak - jtsan
+  // load 1 byte (btos, ztos, ctos) (byte, boolean, char)
+  static void jtsan_load1(void *addr, Method *m, address bcp);
+  // load 2 bytes (stos) (short)
+  static void jtsan_load2(void *addr, Method *m, address bcp);
+  // load 4 bytes (itos, ftos) (int, float)
+  static void jtsan_load4(void *addr, Method *m, address bcp);
+  // load 8 bytes (ltos, dtos, atos) (long, double, object)
+  static void jtsan_load8(void *addr, Method *m, address bcp);
+
+  // aantonak - jtsan
+  // store 1 byte (stob, stos, stoc) (byte, short, char)
+  static void jtsan_store1(void *addr, Method *m, address bcp);
+  // store 2 bytes (stos) (short)
+  static void jtsan_store2(void *addr, Method *m, address bcp);
+  // store 4 bytes (itos, ftos) (int, float)
+  static void jtsan_store4(void *addr, Method *m, address bcp);
+  // store 8 bytes (ltos, dtos, atos) (long, double, object)
+  static void jtsan_store8(void *addr, Method *m, address bcp);
+
  public:
   // Constants
   static void    ldc           (JavaThread* current, bool wide);
   static void    resolve_ldc   (JavaThread* current, Bytecodes::Code bytecode);
+
+   // aantonak - jtsan
+  static void (*jtsan_load[]) (void *addr, Method *m, address bcp);
+  static void (*jtsan_store[])(void *addr, Method *m, address bcp);
+
+
+  // aantonak - jtsan
+  // for all lock and unlock operations
+  static void jtsan_lock  (void *lock_obj, Method *m, address bcp);
+  static void jtsan_unlock(void *lock_obj, Method *m, address bcp);
+
+  static void jtsan_sync_enter(BasicObjectLock *lock, Method *m, address bcp);
+  static void jtsan_sync_exit (BasicObjectLock *lock, Method *m, address bcp);
 
   // Allocation
   static void    _new          (JavaThread* current, ConstantPool* pool, int index);

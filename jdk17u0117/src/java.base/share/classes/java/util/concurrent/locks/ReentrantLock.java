@@ -149,8 +149,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         @ReservedStackAccess
         final void lock() {
-            if (!initialTryLock())
+            if (!initialTryLock()) {
                 acquire(1);
+            } else {
+                // in case initial trylock succeeded, we have to lock here as well
+                System.jtsanLock(this);
+            }
         }
 
         @ReservedStackAccess
@@ -241,6 +245,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         protected final boolean tryAcquire(int acquires) {
             if (getState() == 0 && compareAndSetState(0, acquires)) {
                 setExclusiveOwnerThread(Thread.currentThread());
+                System.jtsanLock(this);
                 return true;
             }
             return false;
@@ -280,6 +285,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             if (getState() == 0 && !hasQueuedPredecessors() &&
                 compareAndSetState(0, acquires)) {
                 setExclusiveOwnerThread(Thread.currentThread());
+                System.jtsanLock(this);
                 return true;
             }
             return false;
@@ -399,7 +405,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      *         thread; and {@code false} otherwise
      */
     public boolean tryLock() {
-        return sync.tryLock();
+        if (sync.tryLock()) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -476,8 +485,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public boolean tryLock(long timeout, TimeUnit unit)
             throws InterruptedException {
-        return sync.tryLockNanos(unit.toNanos(timeout));
-    }
+        if (sync.tryLockNanos(unit.toNanos(timeout))) {
+            return true;
+        }
+        return false;
+}
 
     /**
      * Attempts to release this lock.

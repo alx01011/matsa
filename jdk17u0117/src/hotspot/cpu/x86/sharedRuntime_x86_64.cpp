@@ -63,6 +63,9 @@
 #if INCLUDE_JVMCI
 #include "jvmci/jvmciJavaClasses.hpp"
 #endif
+#if INCLUDE_JTSAN
+#include "interpreter/interpreterRuntime.hpp"
+#endif
 
 #define __ masm->
 
@@ -2223,6 +2226,12 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
     // Get locked oop from the handle we passed to jni
     __ movptr(obj_reg, Address(oop_handle_reg, 0));
+
+    // JTSAN_ONLY(
+    //   __ pusha();
+    //   __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_oop_unlock), obj_reg);
+    //   __ popa();
+    // );
 
     Label done;
 

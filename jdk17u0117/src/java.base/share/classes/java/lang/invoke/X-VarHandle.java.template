@@ -460,6 +460,7 @@ final class VarHandle$Type$s {
         @ForceInline
         static $type$ getAcquire(VarHandle ob) {
             FieldStaticReadOnly handle = (FieldStaticReadOnly)ob;
+
             return UNSAFE.get$Type$Acquire(handle.base,
                                  handle.fieldOffset);
         }
