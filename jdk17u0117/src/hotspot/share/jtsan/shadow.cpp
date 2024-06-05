@@ -135,7 +135,7 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
           * So a zero epoch means the cell is free.
         */
         if (!cell_l.gc_epoch) {
-            *cell_addr = *cell;
+            *(cell_addr + i) = *cell;
             return;
         }
     }
