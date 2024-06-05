@@ -318,6 +318,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public void acquire() throws InterruptedException {
         sync.acquireSharedInterruptibly(1);
+        System.jtsanLock(this);
     }
 
     /**
