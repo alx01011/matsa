@@ -79,6 +79,12 @@ void ShadowMemory::init(size_t bytes) {
         exit(1);
     }
 
+    // check for memory alignment
+    if ((uptr)shadow_base & 0x7) { // shadow_base % 8
+        fprintf(stderr, "JTSAN: Shadow memory is not aligned\n");
+        exit(1);
+    }
+
     ShadowMemory::shadow = new ShadowMemory(shadow_size, shadow_base, (uptr)shadow_base, base);
 }
 
