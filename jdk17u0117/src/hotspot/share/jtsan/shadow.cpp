@@ -169,7 +169,7 @@ void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
 
     ShadowCell *cell_addr = &((ShadowCell *)shadow_addr)[index];
 
-    if ((uptr)(cell_addr + i) & 0x7) {
+    if ((uptr)(cell_addr) & 0x7) {
             fprintf(stderr, "Shadow memory is not aligned for store at\n");
             exit(1);
     }
