@@ -1007,6 +1007,7 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final boolean release(int arg) {
         if (tryRelease(arg)) {
+            // unlock before signal to ensure next thread sees updated state
             System.jtsanUnlock(this);
             signalNext(head);
             return true;
@@ -1095,8 +1096,9 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final boolean releaseShared(int arg) {
         if (tryReleaseShared(arg)) {
-            signalNext(head);
+            // unlock before signal to ensure next thread sees updated state
             System.jtsanUnlock(this);
+            signalNext(head);
             return true;
         }
         return false;
