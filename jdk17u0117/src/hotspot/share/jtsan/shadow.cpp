@@ -98,39 +98,9 @@ void* ShadowMemory::MemToShadow(uptr mem) {
     uptr index = ((uptr)mem - (uptr)this->heap_base) / 8; // index in heap
     uptr shadow_offset = index * 32; // Each metadata entry is 8 bytes 
 
-//     // size of a shadow cell is 8 bytes
-//     uptr kShadowCell = 8;
-//     // number of shadow cells per word
-//     uptr kShadowCnt = 4;
-
-//     /* (((x) & ~(kAppMemMsk | (kShadowCell - 1)))
-//       ^ kAppMemXor) * kShadowCnt;
-//     */
-//    uptr x = mem;
-
-//     return (void*)((((x) & ~(kAppMemMsk | (kShadowCell - 1)))
-//       ^ kAppMemXor) * kShadowCnt);
-
     return (void*)((uptr)this->shadow_base + shadow_offset);
 }
 
-ShadowCell cell_load_atomic(ShadowCell *cell) {
-    ShadowCell ret;
-    
-    uint64_t word = Atomic::load((uint64_t*)cell);
-    memcpy(&ret, &word, sizeof(uint64_t));
-
-    return ret;
-}
-
-void cell_store_atomic(ShadowCell *cell, ShadowCell *val) {
-    uint64_t word = 0;
-    word = *(uint64_t*)val;
-    //memcpy(&word, val, sizeof(uint64_t));
-    // memcpy might not be necessary
-
-    Atomic::store((uint64_t*)cell, word);
-}
 
 ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
     ShadowMemory *shadow = ShadowMemory::getInstance();
@@ -143,7 +113,7 @@ ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
         exit(1);
     }
 
-    return cell_load_atomic(cell_ref);
+    return *cell_ref;
 }
 
 void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
@@ -160,7 +130,7 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
           * So a zero epoch means the cell is free.
         */
         if (!cell_l.gc_epoch) {
-            cell_store_atomic(&cell_addr[i], cell);
+            *cell_addr = *cell;
             return;
         }
     }
@@ -170,7 +140,7 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
     uint8_t ci = os::random() % SHADOW_CELLS;
     cell_addr = &cell_addr[ci];
 
-    cell_store_atomic(cell_addr, cell);
+    *cell_addr = *cell;
 }
 
 void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
