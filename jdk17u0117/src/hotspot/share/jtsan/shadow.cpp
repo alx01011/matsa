@@ -118,6 +118,11 @@ ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
         exit(1);
     }
 
+    if ((cell_ref + i) & 0x7) {
+            fprintf(stderr, "Shadow memory is not aligned for load\n");
+            exit(1);
+    }
+
     return *cell_ref;
 }
 
@@ -135,6 +140,11 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
           * So a zero epoch means the cell is free.
         */
         if (!cell_l.gc_epoch) {
+            if ((cell_addr + i) & 0x7) {
+                fprintf(stderr, "Shadow memory is not aligned for store\n");
+                exit(1);
+            }
+
             *(cell_addr + i) = *cell;
             return;
         }
@@ -145,6 +155,11 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
     uint8_t ci = os::random() % SHADOW_CELLS;
     cell_addr = &cell_addr[ci];
 
+    if ((cell_addr + i) & 0x7) {
+            fprintf(stderr, "Shadow memory is not aligned for store\n");
+            exit(1);
+    }
+
     *cell_addr = *cell;
 }
 
@@ -153,6 +168,11 @@ void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
     void *shadow_addr = shadow->MemToShadow(mem);
 
     ShadowCell *cell_addr = &((ShadowCell *)shadow_addr)[index];
+
+    if ((cell_addr + i) & 0x7) {
+            fprintf(stderr, "Shadow memory is not aligned for store at\n");
+            exit(1);
+    }
 
     *cell_addr = *cell;
 }
