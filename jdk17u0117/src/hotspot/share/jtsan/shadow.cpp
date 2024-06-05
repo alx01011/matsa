@@ -62,10 +62,8 @@ void ShadowMemory::init(size_t bytes) {
         total_shadow = total number of locations * 32 (4 * sizeof(ShadowCell) = 32)
         so total_shadow = HeapSize * 4
     */
-    //size_t shadow_size  = end - beg;
     size_t shadow_size = bytes * 4;
 
-    //void *shadow_base  = os::attempt_reserve_memory_at((char*)beg, shadow_size);
     void *shadow_base = os::reserve_memory(shadow_size);
     
     /*
@@ -76,6 +74,12 @@ void ShadowMemory::init(size_t bytes) {
 
     if (shadow_base == nullptr || !protect) {
         fprintf(stderr, "JTSAN: Failed to allocate shadow memory\n");
+        exit(1);
+    }
+
+    // check for memory alignment
+    if ((uptr)shadow_base & 0x7) { // shadow_base % 8
+        fprintf(stderr, "JTSAN: Shadow memory is not aligned\n");
         exit(1);
     }
 
@@ -129,7 +133,7 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
           * So a zero epoch means the cell is free.
         */
         if (!cell_l.gc_epoch) {
-            *cell_addr = *cell;
+            *(cell_addr + i) = *cell;
             return;
         }
     }
@@ -147,7 +151,6 @@ void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
     void *shadow_addr = shadow->MemToShadow(mem);
 
     ShadowCell *cell_addr = &((ShadowCell *)shadow_addr)[index];
-
     *cell_addr = *cell;
 }
 

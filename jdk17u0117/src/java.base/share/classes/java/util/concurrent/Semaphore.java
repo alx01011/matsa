@@ -186,11 +186,6 @@ public class Semaphore implements java.io.Serializable {
                 int remaining = available - acquires;
                 if (remaining < 0 ||
                     compareAndSetState(available, remaining))
-
-                    if (remaining >= 0) {
-                        System.jtsanLock(this);
-                    }
-
                     return remaining;
             }
         }
@@ -260,10 +255,6 @@ public class Semaphore implements java.io.Serializable {
                 if (remaining < 0 ||
                     compareAndSetState(available, remaining)) {
 
-                        if (remaining >= 0) {
-                            System.jtsanLock(this);
-                        }
-
                         return remaining;
                     }
             }
@@ -327,6 +318,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public void acquire() throws InterruptedException {
         sync.acquireSharedInterruptibly(1);
+        System.jtsanLock(this);
     }
 
     /**
@@ -440,6 +432,7 @@ public class Semaphore implements java.io.Serializable {
      * in the application.
      */
     public void release() {
+        System.jtsanUnlock(this);
         sync.releaseShared(1);
     }
 
@@ -484,6 +477,7 @@ public class Semaphore implements java.io.Serializable {
     public void acquire(int permits) throws InterruptedException {
         if (permits < 0) throw new IllegalArgumentException();
         sync.acquireSharedInterruptibly(permits);
+        System.jtsanLock(this);
     }
 
     /**
@@ -544,7 +538,13 @@ public class Semaphore implements java.io.Serializable {
      */
     public boolean tryAcquire(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        return sync.nonfairTryAcquireShared(permits) >= 0;
+        boolean res = sync.nonfairTryAcquireShared(permits) >= 0;
+
+        if (res) {
+            System.jtsanLock(this);
+        }
+
+        return res;
     }
 
     /**
@@ -627,6 +627,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public void release(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
+        System.jtsanUnlock(this);
         sync.releaseShared(permits);
     }
 

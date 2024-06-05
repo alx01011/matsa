@@ -402,14 +402,12 @@ public class ReentrantReadWriteLock
                     throw new Error("Maximum lock count exceeded");
                 // Reentrant acquire
                 setState(c + acquires);
-                System.jtsanLock(this);
                 return true;
             }
             if (writerShouldBlock() ||
                 !compareAndSetState(c, c + acquires))
                 return false;
             setExclusiveOwnerThread(current);
-            System.jtsanLock(this);
             return true;
         }
 
@@ -738,6 +736,7 @@ public class ReentrantReadWriteLock
          */
         public void lock() {
             sync.acquireShared(1);
+            System.jtsanLock(this);
         }
 
         /**
@@ -809,7 +808,13 @@ public class ReentrantReadWriteLock
          * @return {@code true} if the read lock was acquired
          */
         public boolean tryLock() {
-            return sync.tryReadLock();
+            boolean res = sync.tryReadLock();
+
+            if (res) {
+                System.jtsanLock(this);
+            }
+
+            return res;
         }
 
         /**
@@ -896,6 +901,7 @@ public class ReentrantReadWriteLock
          * does not hold this lock
          */
         public void unlock() {
+            System.jtsanUnlock(this);
             sync.releaseShared(1);
         }
 
@@ -959,6 +965,7 @@ public class ReentrantReadWriteLock
          */
         public void lock() {
             sync.acquire(1);
+            System.jtsanLock(this);
         }
 
         /**
@@ -1014,6 +1021,7 @@ public class ReentrantReadWriteLock
          */
         public void lockInterruptibly() throws InterruptedException {
             sync.acquireInterruptibly(1);
+            System.jtsanLock(this);
         }
 
         /**
@@ -1046,7 +1054,13 @@ public class ReentrantReadWriteLock
          * by the current thread; and {@code false} otherwise.
          */
         public boolean tryLock() {
-            return sync.tryWriteLock();
+            boolean res = sync.tryWriteLock();
+
+            if (res) {
+                System.jtsanLock(this);
+            }
+            
+            return res;
         }
 
         /**
@@ -1130,7 +1144,13 @@ public class ReentrantReadWriteLock
          */
         public boolean tryLock(long timeout, TimeUnit unit)
                 throws InterruptedException {
-            return sync.tryAcquireNanos(1, unit.toNanos(timeout));
+            boolean res = sync.tryAcquireNanos(1, unit.toNanos(timeout));
+
+            if (res) {
+                System.jtsanLock(this);
+            }
+
+            return res;
         }
 
         /**
@@ -1146,6 +1166,7 @@ public class ReentrantReadWriteLock
          * hold this lock
          */
         public void unlock() {
+            System.jtsanUnlock(this);
             sync.release(1);
         }
 
