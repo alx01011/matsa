@@ -62,10 +62,8 @@ void ShadowMemory::init(size_t bytes) {
         total_shadow = total number of locations * 32 (4 * sizeof(ShadowCell) = 32)
         so total_shadow = HeapSize * 4
     */
-    //size_t shadow_size  = end - beg;
     size_t shadow_size = bytes * 4;
 
-    //void *shadow_base  = os::attempt_reserve_memory_at((char*)beg, shadow_size);
     void *shadow_base = os::reserve_memory(shadow_size);
     
     /*
@@ -118,11 +116,6 @@ ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
         exit(1);
     }
 
-    if (((uptr)cell_ref) & 0x7) {
-            fprintf(stderr, "Shadow memory is not aligned for load\n");
-            exit(1);
-    }
-
     return *cell_ref;
 }
 
@@ -140,11 +133,6 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
           * So a zero epoch means the cell is free.
         */
         if (!cell_l.gc_epoch) {
-            if ((uptr)(cell_addr + i) & 0x7) {
-                fprintf(stderr, "Shadow memory is not aligned for store\n");
-                exit(1);
-            }
-
             *(cell_addr + i) = *cell;
             return;
         }
@@ -155,11 +143,6 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
     uint8_t ci = os::random() % SHADOW_CELLS;
     cell_addr = &cell_addr[ci];
 
-    if ((uptr)(cell_addr) & 0x7) {
-            fprintf(stderr, "Shadow memory is not aligned for store\n");
-            exit(1);
-    }
-
     *cell_addr = *cell;
 }
 
@@ -168,12 +151,6 @@ void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
     void *shadow_addr = shadow->MemToShadow(mem);
 
     ShadowCell *cell_addr = &((ShadowCell *)shadow_addr)[index];
-
-    if ((uptr)(cell_addr) & 0x7) {
-            fprintf(stderr, "Shadow memory is not aligned for store at\n");
-            exit(1);
-    }
-
     *cell_addr = *cell;
 }
 
