@@ -118,7 +118,7 @@ ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
         exit(1);
     }
 
-    if ((cell_ref + i) & 0x7) {
+    if (((uptr)cell_ref) & 0x7) {
             fprintf(stderr, "Shadow memory is not aligned for load\n");
             exit(1);
     }
