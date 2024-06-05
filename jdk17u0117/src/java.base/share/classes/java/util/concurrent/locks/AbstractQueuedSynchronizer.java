@@ -675,8 +675,6 @@ public abstract class AbstractQueuedSynchronizer
                     throw ex;
                 }
                 if (acquired) {
-                    // lock success
-                    System.jtsanLock(this);
                     if (first) {
                         node.prev = null;
                         head = node;
@@ -1007,8 +1005,6 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final boolean release(int arg) {
         if (tryRelease(arg)) {
-            // unlock before signal to ensure next thread sees updated state
-            System.jtsanUnlock(this);
             signalNext(head);
             return true;
         }
