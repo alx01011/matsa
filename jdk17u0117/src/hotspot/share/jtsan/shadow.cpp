@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <cstring>
 
-#include "runtime/atomic.hpp"
 #include "memory/universe.hpp"
 #include "gc/parallel/parallelScavengeHeap.hpp"
 #include "gc/shared/collectedHeap.hpp"
@@ -124,7 +123,7 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
 
     // find the first free cell
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
-        ShadowCell cell_l = cell_load_atomic(&cell_addr[i]);
+        ShadowCell cell_l = cell_addr[i];
         /*
           * Technically, a gc epoch can never be zero, since the gc epoch starts from 1
           * So a zero epoch means the cell is free.
@@ -149,7 +148,7 @@ void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
 
     ShadowCell *cell_addr = &((ShadowCell *)shadow_addr)[index];
 
-    cell_store_atomic(cell_addr, cell);
+    *cell_addr = *cell;
 }
 
 bool ShadowMemory::try_lock_report(void) {
