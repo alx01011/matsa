@@ -127,6 +127,11 @@ class AccessFlags {
   bool is_interface   () const         { return (_flags & JVM_ACC_INTERFACE   ) != 0; }
   bool is_abstract    () const         { return (_flags & JVM_ACC_ABSTRACT    ) != 0; }
 
+#if INCLUDE_JTSAN
+  bool is_jtsan_ignore_field() const   { return (_flags & JVM_ACC_FIELD_JTSAN_IGNORE) != 0; }
+  bool is_jtsan_ignore_class() const   { return (_flags & JVM_ACC_CLASS_JTSAN_IGNORE) != 0; }
+#endif
+
   // Attribute flags
   bool is_synthetic   () const         { return (_flags & JVM_ACC_SYNTHETIC   ) != 0; }
 

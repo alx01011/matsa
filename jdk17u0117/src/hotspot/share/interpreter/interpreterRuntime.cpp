@@ -712,6 +712,12 @@ void InterpreterRuntime::resolve_get_put(JavaThread* current, Bytecodes::Code by
     }
   }
 
+  bool is_jtsan_ignore_field = false;
+
+#if INCLUDE_JTSAN
+  is_jtsan_ignore_field = info.access_flags().is_jtsan_ignore_field();
+#endif
+
   cp_cache_entry->set_field(
     get_code,
     put_code,
@@ -720,7 +726,8 @@ void InterpreterRuntime::resolve_get_put(JavaThread* current, Bytecodes::Code by
     info.offset(),
     state,
     info.access_flags().is_final(),
-    info.access_flags().is_volatile()
+    info.access_flags().is_volatile(),
+    is_jtsan_ignore_field
   );
 }
 
