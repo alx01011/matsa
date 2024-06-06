@@ -2062,6 +2062,11 @@ void ClassFileParser::FieldAnnotationCollector::apply_to(FieldInfo* f) {
     f->set_contended_group(contended_group());
   if (is_stable())
     f->set_stable(true);
+  JTSAN_ONLY(
+    if(is_jtsan_ignore_field()) {
+      f->set_jtsan_ignore_field(true);
+    }
+  )
 }
 
 ClassFileParser::FieldAnnotationCollector::~FieldAnnotationCollector() {
