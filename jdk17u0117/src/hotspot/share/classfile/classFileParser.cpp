@@ -2066,7 +2066,7 @@ void ClassFileParser::FieldAnnotationCollector::apply_to(FieldInfo* f) {
     if(is_jtsan_ignore_field()) {
       f->set_jtsan_ignore_field(true);
     }
-  )
+  );
 }
 
 ClassFileParser::FieldAnnotationCollector::~FieldAnnotationCollector() {
