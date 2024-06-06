@@ -70,6 +70,7 @@ enum {
   JVM_ACC_IS_HIDDEN_CLASS         = 0x04000000,     // True if klass is hidden
   JVM_ACC_IS_VALUE_BASED_CLASS    = 0x08000000,     // True if klass is marked as a ValueBased class
   JVM_ACC_IS_BEING_REDEFINED      = 0x00100000,     // True if the klass is being redefined.
+  JVM_ACC_CLASS_JTSAN_IGNORE      = 0x00008000,     // class is ignored by JTSan
 
   // Klass* and Method* flags
   JVM_ACC_HAS_LOCAL_VARIABLE_TABLE= 0x00200000,
@@ -87,6 +88,7 @@ enum {
   JVM_ACC_FIELD_MODIFICATION_WATCHED      = 0x00008000, // field modification is watched by JVMTI
   JVM_ACC_FIELD_INTERNAL                  = 0x00000400, // internal field, same as JVM_ACC_ABSTRACT
   JVM_ACC_FIELD_STABLE                    = 0x00000020, // @Stable field, same as JVM_ACC_SYNCHRONIZED and JVM_ACC_SUPER
+  JVM_ACC_FIELD_JTSAN_IGNORE              = 0x00000040, // field is ignored by JTSan
   JVM_ACC_FIELD_INITIALIZED_FINAL_UPDATE  = 0x00000100, // (static) final field updated outside (class) initializer, same as JVM_ACC_NATIVE
   JVM_ACC_FIELD_HAS_GENERIC_SIGNATURE     = 0x00000800, // field has generic signature
 

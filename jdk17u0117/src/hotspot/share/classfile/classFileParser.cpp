@@ -968,6 +968,8 @@ public:
     _method_IntrinsicCandidate,
     _jdk_internal_vm_annotation_Contended,
     _field_Stable,
+    _field_JTSanIgnore,
+    _class_JTsanIgnore,
     _jdk_internal_vm_annotation_ReservedStackAccess,
     _jdk_internal_ValueBased,
     _annotation_LIMIT
@@ -1005,6 +1007,15 @@ public:
 
   void set_stable(bool stable) { set_annotation(_field_Stable); }
   bool is_stable() const { return has_annotation(_field_Stable); }
+
+#ifdef INCLUDE_JTSAN
+  void set_jtsan_ignore_field(bool ignore) { set_annotation(_field_JTSanIgnore); }
+  void set_jtsan_ignore_class(bool ignore) { set_annotation(_class_JTsanIgnore); }
+
+  bool is_jtsan_ignore_field() const { return has_annotation(_field_JTSanIgnore); }
+  bool is_jtsan_ignore_class() const { return has_annotation(_class_JTsanIgnore); }
+#endif
+
 };
 
 // This class also doubles as a holder for metadata cleanup.
@@ -2010,6 +2021,16 @@ AnnotationCollector::annotation_index(const ClassLoaderData* loader_data,
       if (!privileged)              break;  // only allow in privileged code
       return _field_Stable;
     }
+    #ifdef INCLUDE_JTSAN
+     case VM_SYMBOL_ENUM_NAME(java_util_concurrent_annotation_JTSanIgnoreField): {
+       if (_location != _in_field)   break;  // only allow for fields
+       return _field_JTSanIgnore;
+     }
+     case VM_SYMBOL_ENUM_NAME(java_util_concurrent_annotation_JTSanIgnoreClass): {
+        if (_location != _in_class)   break;  // only allow for classes
+        return _class_JTsanIgnore;
+     }
+    #endif
     case VM_SYMBOL_ENUM_NAME(jdk_internal_vm_annotation_Contended_signature): {
       if (_location != _in_field && _location != _in_class) {
         break;  // only allow for fields and classes
