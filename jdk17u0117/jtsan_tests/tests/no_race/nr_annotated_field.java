@@ -1,7 +1,7 @@
 import java.util.concurrent.annotation.*;
 
 public class nr_annotated_field {
-    @JTsanIgnoreField
+    @JTSanIgnoreField
     public static int x;
 
     public static void main(String[] args) {
