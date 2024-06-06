@@ -247,8 +247,6 @@
   template(java_util_concurrent_atomic_AtomicLongFieldUpdater_CASUpdater,    "java/util/concurrent/atomic/AtomicLongFieldUpdater$CASUpdater") \
   template(java_util_concurrent_atomic_AtomicLongFieldUpdater_LockedUpdater, "java/util/concurrent/atomic/AtomicLongFieldUpdater$LockedUpdater") \
   template(java_util_concurrent_atomic_AtomicReferenceFieldUpdater_Impl,     "java/util/concurrent/atomic/AtomicReferenceFieldUpdater$AtomicReferenceFieldUpdaterImpl") \
-  template(java_util_concurrent_annotation_JTSanIgnoreField,                "java/util/concurrent/annotation/JTSanIgnoreField") \
-  template(java_util_concurrent_annotation_JTSanIgnoreClass,                "java/util/concurrent/annotation/JTSanIgnoreClass") \
   template(jdk_internal_vm_annotation_Contended_signature,                   "Ljdk/internal/vm/annotation/Contended;")    \
   template(jdk_internal_vm_annotation_ReservedStackAccess_signature,         "Ljdk/internal/vm/annotation/ReservedStackAccess;") \
   template(jdk_internal_ValueBased_signature,                                "Ljdk/internal/ValueBased;") \
@@ -709,6 +707,8 @@
   template(toFileURL_name,                                  "toFileURL")                                          \
   template(toFileURL_signature,                             "(Ljava/lang/String;)Ljava/net/URL;")                 \
   template(url_void_signature,                              "(Ljava/net/URL;)V")                                  \
+  template(java_util_concurrent_annotation_JTSanIgnoreField,                "Ljava/util/concurrent/annotation/JTSanIgnoreField;") \
+  template(java_util_concurrent_annotation_JTSanIgnoreClass,                "Ljava/util/concurrent/annotation/JTSanIgnoreClass;") \
                                                                                                                   \
   /*end*/
 
