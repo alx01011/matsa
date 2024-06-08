@@ -715,7 +715,8 @@ void InterpreterRuntime::resolve_get_put(JavaThread* current, Bytecodes::Code by
   bool is_jtsan_ignore_field = false;
 
 #if INCLUDE_JTSAN
-  is_jtsan_ignore_field = info.access_flags().is_jtsan_ignore_field();
+  // either ignore on field annotated ignored, or whole class the field is part is annotated ignored
+  is_jtsan_ignore_field = info.access_flags().is_jtsan_ignore_field() || klass->is_jtsan_ignore_class();
 #endif
 
   cp_cache_entry->set_field(

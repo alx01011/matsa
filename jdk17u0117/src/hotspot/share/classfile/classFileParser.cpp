@@ -2108,6 +2108,11 @@ void ClassFileParser::ClassAnnotationCollector::apply_to(InstanceKlass* ik) {
       ik->set_prototype_header(markWord::prototype());
     }
   }
+  JTSAN_ONLY(
+    if (has_annotation(is_jtsan_ignore_class)) {
+      ik->set_is_jtsan_ignore_class();
+    }
+  );
 }
 
 #define MAX_ARGS_SIZE 255
