@@ -135,14 +135,16 @@ void ConstantPoolCacheEntry::set_field(Bytecodes::Code get_code,
                                        int field_offset,
                                        TosState field_type,
                                        bool is_final,
-                                       bool is_volatile) {
+                                       bool is_volatile,
+                                       bool is_jtsan_ignore) {
   set_f1(field_holder);
   set_f2(field_offset);
   assert((field_index & field_index_mask) == field_index,
          "field index does not fit in low flag bits");
   set_field_flags(field_type,
                   ((is_volatile ? 1 : 0) << is_volatile_shift) |
-                  ((is_final    ? 1 : 0) << is_final_shift),
+                  ((is_final    ? 1 : 0) << is_final_shift) |
+                  ((is_jtsan_ignore ? 1 : 0) << is_jtsan_ignore_shift),
                   field_index);
   set_bytecode_1(get_code);
   set_bytecode_2(put_code);

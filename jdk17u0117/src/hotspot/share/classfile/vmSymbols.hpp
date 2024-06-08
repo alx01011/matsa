@@ -707,6 +707,8 @@
   template(toFileURL_name,                                  "toFileURL")                                          \
   template(toFileURL_signature,                             "(Ljava/lang/String;)Ljava/net/URL;")                 \
   template(url_void_signature,                              "(Ljava/net/URL;)V")                                  \
+  template(java_util_concurrent_annotation_JTSanIgnoreField,                "Ljava/util/concurrent/annotation/JTSanIgnoreField;") \
+  template(java_util_concurrent_annotation_JTSanIgnoreClass,                "Ljava/util/concurrent/annotation/JTSanIgnoreClass;") \
                                                                                                                   \
   /*end*/
 

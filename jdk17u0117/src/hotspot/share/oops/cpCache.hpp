@@ -181,6 +181,7 @@ class ConstantPoolCacheEntry {
     tos_state_mask             = right_n_bits(tos_state_bits),
     tos_state_shift            = BitsPerInt - tos_state_bits,  // see verify_tos_state_shift below
     // misc. option bits; can be any bit position in [16..27]
+    is_jtsan_ignore_shift      = 27,  // (jtsan_ignore) is the field ignored by jtsan?
     is_field_entry_shift       = 26,  // (F) is it a field or a method?
     has_local_signature_shift  = 25,  // (S) does the call site have a per-site signature (sig-poly methods)?
     has_appendix_shift         = 24,  // (A) does the call site have an appendix argument?
@@ -223,7 +224,8 @@ class ConstantPoolCacheEntry {
     int             field_offset,                // the field offset in words in the field holder
     TosState        field_type,                  // the (machine) field type
     bool            is_final,                    // the field is final
-    bool            is_volatile                  // the field is volatile
+    bool            is_volatile,                 // the field is volatile
+    bool            is_jtsan_ignore             // the field is ignored by jtsan
   );
 
  private:

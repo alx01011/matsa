@@ -2893,17 +2893,18 @@ void TemplateTable::pop_and_check_object(Register r) {
 }
 
 void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosState state) {
-  int32_t is_volatile = 1 << ConstantPoolCacheEntry::is_volatile_shift;
-  int32_t is_final    = 1 << ConstantPoolCacheEntry::is_final_shift;
+  int32_t is_volatile       = 1 << ConstantPoolCacheEntry::is_volatile_shift;
+  int32_t is_final          = 1 << ConstantPoolCacheEntry::is_final_shift;
+  int32_t is_jtsan_ignore   = 1 << ConstantPoolCacheEntry::is_jtsan_ignore_shift;
 
-  int32_t f_or_v      = is_volatile | is_final;
+  int32_t f_or_v_or_ignore  = is_volatile | is_final | is_jtsan_ignore;
 
   Label safe;
 
   __ pusha(); // save all registers
 
     // volatile and final check
-  __ testl(flags, f_or_v);
+  __ testl(flags, f_or_v_or_ignore);
   __ jcc(Assembler::notZero, safe);
 
   Register klass = c_rarg0;
@@ -3214,7 +3215,10 @@ void TemplateTable::jvmti_post_field_mod(Register cache, Register index, bool is
 }
 
 void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosState state) {
-  int32_t is_volatile = 1 << ConstantPoolCacheEntry::is_volatile_shift;
+  int32_t is_volatile     = 1 << ConstantPoolCacheEntry::is_volatile_shift;
+  int32_t is_jtsan_ignore = 1 << ConstantPoolCacheEntry::is_jtsan_ignore_shift;
+
+  int32_t v_or_ignore     = is_volatile | is_jtsan_ignore;
 
   Label safe;
 
@@ -3223,7 +3227,7 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   Register klass = c_rarg0;
 
   // volatile check
-  __ testl(flags, is_volatile);
+  __ testl(flags, v_or_ignore);
   __ jcc(Assembler::notZero, safe);
 
   __ get_method(c_rarg1); // get the method
