@@ -2109,7 +2109,7 @@ void ClassFileParser::ClassAnnotationCollector::apply_to(InstanceKlass* ik) {
     }
   }
   JTSAN_ONLY(
-    if (has_annotation(is_jtsan_ignore_class)) {
+    if (is_jtsan_ignore_class()) {
       ik->set_is_jtsan_ignore();
     }
   );
