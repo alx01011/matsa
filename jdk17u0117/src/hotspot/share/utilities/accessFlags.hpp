@@ -161,7 +161,6 @@ class AccessFlags {
   bool is_shared_class         () const { return (_flags & JVM_ACC_IS_SHARED_CLASS        ) != 0; }
   bool is_hidden_class         () const { return (_flags & JVM_ACC_IS_HIDDEN_CLASS        ) != 0; }
   bool is_value_based_class    () const { return (_flags & JVM_ACC_IS_VALUE_BASED_CLASS   ) != 0; }
-  bool is_jtsan_ignore_class   () const { return (_flags & JVM_ACC_CLASS_JTSAN_IGNORE     ) != 0; }
 
   // Klass* and Method* flags
   bool has_localvariable_table () const { return (_flags & JVM_ACC_HAS_LOCAL_VARIABLE_TABLE) != 0; }
@@ -240,8 +239,9 @@ class AccessFlags {
   void set_is_shared_class()           { atomic_set_bits(JVM_ACC_IS_SHARED_CLASS);         }
   void set_is_hidden_class()           { atomic_set_bits(JVM_ACC_IS_HIDDEN_CLASS);         }
   void set_is_value_based_class()      { atomic_set_bits(JVM_ACC_IS_VALUE_BASED_CLASS);    }
+#if INCLUDE_JTSAN
   void set_is_jtsan_ignore_class()     {atomic_set_bits(JVM_ACC_CLASS_JTSAN_IGNORE);       }
-
+#endif
  public:
   // field flags
   void set_is_field_access_watched(const bool value)
