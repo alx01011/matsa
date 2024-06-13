@@ -562,9 +562,7 @@ void Thread::start(Thread* thread) {
         int cur_tid = JavaThread::get_jtsan_tid(cur_thread);
 
         JavaThread::set_jtsan_tid(thread->as_Java_thread(), new_tid);
-
         JtsanThreadState::transferEpoch(cur_tid, new_tid);
-        //JtsanThreadState::incrementEpoch(cur_tid);
 
         oop thread_object   = thread->as_Java_thread()->threadObj();
 
@@ -574,6 +572,8 @@ void Thread::start(Thread* thread) {
 
         // increment epoch of the new thread - epochs start at 1
         JtsanThreadState::incrementEpoch(new_tid);
+        // increment epoch of the current thread
+        JtsanThreadState::incrementEpoch(cur_tid);
       }
   );
 
