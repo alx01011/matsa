@@ -3227,8 +3227,8 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   Register klass = c_rarg0;
 
   // volatile check
-  __ testl(flags, v_or_ignore);
-  __ jcc(Assembler::notZero, safe);
+  // __ testl(flags, v_or_ignore);
+  // __ jcc(Assembler::notZero, safe);
 
   __ get_method(c_rarg1); // get the method
   __ load_method_holder(klass, c_rarg1);
