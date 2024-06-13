@@ -3557,8 +3557,6 @@ void TemplateTable::fast_storefield(TosState state) {
   //                                              Assembler::StoreStore));
 
   Label notVolatile, Done;
-  // push rdx to stack to preserve flags
-  //JTSAN_ONLY(__ push(rdx));
 
   __ shrl(rdx, ConstantPoolCacheEntry::is_volatile_shift);
   __ andl(rdx, 0x1);
@@ -3579,6 +3577,13 @@ void TemplateTable::fast_storefield(TosState state) {
   __ jmp(Done);
   __ bind(notVolatile);
 
+  // get flags
+  JTSAN_ONLY(
+    __ movl(rdx, Address(rcx, rbx, Address::times_ptr,
+                  in_bytes(base +
+                              ConstantPoolCacheEntry::flags_offset())));
+  );
+
   fast_storefield_helper(field, rax);
 
   __ bind(Done);
@@ -3586,12 +3591,6 @@ void TemplateTable::fast_storefield(TosState state) {
 
 void TemplateTable::fast_storefield_helper(Address field, Register rax) {
   const Register flags = rdx;
-  // load flags
-  JTSAN_ONLY(
-  __ movl(flags, Address(rcx, rbx, Address::times_8,
-                       in_bytes(ConstantPoolCache::base_offset() +
-                                ConstantPoolCacheEntry::flags_offset())));
-  );
 
   // access field
   switch (bytecode()) {
