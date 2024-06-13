@@ -3558,7 +3558,7 @@ void TemplateTable::fast_storefield(TosState state) {
 
   Label notVolatile, Done;
   // push rdx to stack to preserve flags
-  JTSAN_ONLY(__ push(rdx));
+  //JTSAN_ONLY(__ push(rdx));
 
   __ shrl(rdx, ConstantPoolCacheEntry::is_volatile_shift);
   __ andl(rdx, 0x1);
@@ -3585,7 +3585,7 @@ void TemplateTable::fast_storefield(TosState state) {
 }
 
 void TemplateTable::fast_storefield_helper(Address field, Register rax) {
-  JTSAN_ONLY(__ pop(rdx));
+  //JTSAN_ONLY(__ pop(rdx));
   const Register flags = rdx;
 
   // access field
@@ -3656,7 +3656,7 @@ void TemplateTable::fast_accessfield(TosState state) {
   __ get_cache_and_index_at_bcp(rcx, rbx, 1);
 
   const Register flags = rdx;
-  JTSAN_ONLY(__ push(rdx));
+  //JTSAN_ONLY(__ push(rdx));
   // replace index with field offset from cache entry
   // [jk] not needed currently
   // __ movl(rdx, Address(rcx, rbx, Address::times_8,
@@ -3674,7 +3674,7 @@ void TemplateTable::fast_accessfield(TosState state) {
   __ null_check(rax);
   Address field(rax, rbx, Address::times_1);
 
-  JTSAN_ONLY(__ pop(rdx));
+  //JTSAN_ONLY(__ pop(rdx));
 
   // access field
   switch (bytecode()) {
