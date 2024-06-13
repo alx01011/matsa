@@ -27,7 +27,7 @@ JtsanThreadState::JtsanThreadState(void) {
   }
 
   // increment the epoch of the initial thread
-    incrementEpoch(0);
+    this->epoch[0].set(0, 1);
 }
 
 JtsanThreadState::~JtsanThreadState(void) {
