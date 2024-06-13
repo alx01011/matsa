@@ -2897,8 +2897,7 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   int32_t is_final          = 1 << ConstantPoolCacheEntry::is_final_shift;
   int32_t is_jtsan_ignore   = 1 << ConstantPoolCacheEntry::is_jtsan_ignore_shift;
 
-  //int32_t f_or_v_or_ignore  = is_volatile | is_final | is_jtsan_ignore;
-  int32_t f_or_v_or_ignore  = is_volatile;
+  int32_t f_or_v_or_ignore  = is_volatile | is_final | is_jtsan_ignore;
 
   Label safe;
 
@@ -3219,8 +3218,7 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   int32_t is_volatile     = 1 << ConstantPoolCacheEntry::is_volatile_shift;
   int32_t is_jtsan_ignore = 1 << ConstantPoolCacheEntry::is_jtsan_ignore_shift;
 
-  //int32_t v_or_ignore     = is_volatile | is_jtsan_ignore;
-  int32_t v_or_ignore     = is_volatile;
+  int32_t v_or_ignore     = is_volatile | is_jtsan_ignore;
 
   Label safe;
 
@@ -3236,8 +3234,8 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   __ load_method_holder(klass, c_rarg1);
 
   // check if class is initialized
-  // __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
-  // __ jcc(Assembler::notEqual, safe);
+  __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
+  __ jcc(Assembler::notEqual, safe);
 
   __ leaq(c_rarg0, field); // get field address
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);

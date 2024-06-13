@@ -92,13 +92,6 @@ bool JtsanRTL::CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell 
 }
 
 void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write) {
-    JavaThread *thread = JavaThread::current();
-    uint16_t tid       = JavaThread::get_jtsan_tid(thread);
-    
-    uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
-    // create a new shadow cell
-    ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write};
-
     int lineno = m->line_number_from_bci(m->bci_from(bcp));
 
     if (lineno == 6) {
@@ -106,16 +99,24 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
           is_write ? "write" : "read", access_size, tid, epoch, cur.offset);
     }
 
+
+    JavaThread *thread = JavaThread::current();
+    uint16_t tid       = JavaThread::get_jtsan_tid(thread);
+    
+    uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
+    // create a new shadow cell
+    ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write};
+
     // race
     ShadowCell prev;
     // try to lock the report lock
-    if (CheckRaces(tid, addr, cur, prev) && ShadowMemory::try_lock_report()) {
+    if (CheckRaces(tid, addr, cur, prev) /*&& ShadowMemory::try_lock_report()*/) {
       // we have found a race now see if we have recently reported it
-      if (JtsanReportMap::get_instance()->get(addr) != nullptr) {
-        // ignore
-        ShadowMemory::unlock_report();
-        return;
-      }
+      // if (JtsanReportMap::get_instance()->get(addr) != nullptr) {
+      //   // ignore
+      //   ShadowMemory::unlock_report();
+      //   return;
+      // }
 
         ResourceMark rm;
         int lineno = m->line_number_from_bci(m->bci_from(bcp));
@@ -146,10 +147,10 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
         fprintf(stderr, "\t\t===============================================\n");
 
         // store the bcp in the report map
-        JtsanReportMap::get_instance()->put(addr);
+        //JtsanReportMap::get_instance()->put(addr);
 
         // unlock report lock after printing the report
         // this is to avoid multiple reports for consecutive accesses
-        ShadowMemory::unlock_report();
+        //ShadowMemory::unlock_report();
     }
 }
