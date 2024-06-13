@@ -3557,6 +3557,9 @@ void TemplateTable::fast_storefield(TosState state) {
   //                                              Assembler::StoreStore));
 
   Label notVolatile, Done;
+  // push rdx to stack to preserve flags
+  JTSAN_ONLY(__ push(rdx));
+
   __ shrl(rdx, ConstantPoolCacheEntry::is_volatile_shift);
   __ andl(rdx, 0x1);
 
@@ -3582,6 +3585,9 @@ void TemplateTable::fast_storefield(TosState state) {
 }
 
 void TemplateTable::fast_storefield_helper(Address field, Register rax) {
+  const Register flags = rdx;
+
+  JTSAN_ONLY(__ pop(rdx));
 
   // access field
   switch (bytecode()) {
@@ -3597,6 +3603,7 @@ void TemplateTable::fast_storefield_helper(Address field, Register rax) {
     break;
   case Bytecodes::_fast_iputfield:
     __ access_store_at(T_INT, IN_HEAP, field, rax, noreg, noreg);
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, itos));
     break;
   case Bytecodes::_fast_zputfield:
     __ access_store_at(T_BOOLEAN, IN_HEAP, field, rax, noreg, noreg);
@@ -3648,6 +3655,8 @@ void TemplateTable::fast_accessfield(TosState state) {
 
   // access constant pool cache
   __ get_cache_and_index_at_bcp(rcx, rbx, 1);
+
+  const Register flags = rdx;
   // replace index with field offset from cache entry
   // [jk] not needed currently
   // __ movl(rdx, Address(rcx, rbx, Address::times_8,
@@ -3680,6 +3689,7 @@ void TemplateTable::fast_accessfield(TosState state) {
     break;
   case Bytecodes::_fast_igetfield:
     __ access_load_at(T_INT, IN_HEAP, rax, field, noreg, noreg);
+    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, itos));
     break;
   case Bytecodes::_fast_bgetfield:
     __ access_load_at(T_BYTE, IN_HEAP, rax, field, noreg, noreg);
