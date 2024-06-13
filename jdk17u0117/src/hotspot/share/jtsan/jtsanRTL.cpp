@@ -60,14 +60,14 @@ bool JtsanRTL::CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell 
         // same slot this is not a race
         // even if a tid was reused it can't be race because the previous thread has obviously finished
         // making the tid available
-        if (cell.tid == cur.tid) {
-          // if the access is stronger overwrite
-          if (cur.is_write && !cell.is_write) {
-              ShadowBlock::store_cell_at((uptr)addr, &cur, i);
-              stored = true;
-          }
-          continue;
-        }
+        // if (cell.tid == cur.tid) {
+        //   // if the access is stronger overwrite
+        //   if (cur.is_write && !cell.is_write) {
+        //       ShadowBlock::store_cell_at((uptr)addr, &cur, i);
+        //       stored = true;
+        //   }
+        //   continue;
+        // }
 
         // at least one of the accesses is a write
         if (cell.is_write || cur.is_write) {
