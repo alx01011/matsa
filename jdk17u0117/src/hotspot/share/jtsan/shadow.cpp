@@ -162,7 +162,7 @@ void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
     void *shadow_addr = shadow->MemToShadow(mem);
 
     ShadowCell *cell_addr = &((ShadowCell *)shadow_addr)[index];
-    *cell_addr = *cell;
+    atomic_store_cell(cell_addr, cell);
 }
 
 bool ShadowMemory::try_lock_report(void) {
