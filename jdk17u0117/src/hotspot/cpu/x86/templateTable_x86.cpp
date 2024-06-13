@@ -3602,8 +3602,8 @@ void TemplateTable::fast_storefield_helper(Address field, Register rax) {
 #endif
     break;
   case Bytecodes::_fast_iputfield:
-    __ access_store_at(T_INT, IN_HEAP, field, rax, noreg, noreg);
     JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, itos));
+    __ access_store_at(T_INT, IN_HEAP, field, rax, noreg, noreg);
     break;
   case Bytecodes::_fast_zputfield:
     __ access_store_at(T_BOOLEAN, IN_HEAP, field, rax, noreg, noreg);
@@ -3688,8 +3688,8 @@ void TemplateTable::fast_accessfield(TosState state) {
 #endif
     break;
   case Bytecodes::_fast_igetfield:
-    __ access_load_at(T_INT, IN_HEAP, rax, field, noreg, noreg);
     JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, itos));
+    __ access_load_at(T_INT, IN_HEAP, rax, field, noreg, noreg);
     break;
   case Bytecodes::_fast_bgetfield:
     __ access_load_at(T_BYTE, IN_HEAP, rax, field, noreg, noreg);
