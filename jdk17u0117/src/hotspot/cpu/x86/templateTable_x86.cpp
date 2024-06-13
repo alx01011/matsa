@@ -3596,11 +3596,12 @@ void TemplateTable::fast_storefield_helper(Address field, Register rax) {
   // access field
   switch (bytecode()) {
   case Bytecodes::_fast_aputfield:
-
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, atos));
     do_oop_store(_masm, field, rax);
     break;
   case Bytecodes::_fast_lputfield:
 #ifdef _LP64
+  JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, ltos));
     __ access_store_at(T_LONG, IN_HEAP, field, noreg /* ltos */, noreg, noreg);
 #else
   __ stop("should not be rewritten");
