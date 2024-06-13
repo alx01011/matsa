@@ -3585,12 +3585,18 @@ void TemplateTable::fast_storefield(TosState state) {
 }
 
 void TemplateTable::fast_storefield_helper(Address field, Register rax) {
-  //JTSAN_ONLY(__ pop(rdx));
   const Register flags = rdx;
+  // load flags
+  JTSAN_ONLY(
+  __ movl(flags, Address(rcx, rbx, Address::times_8,
+                       in_bytes(ConstantPoolCache::base_offset() +
+                                ConstantPoolCacheEntry::flags_offset())));
+  );
 
   // access field
   switch (bytecode()) {
   case Bytecodes::_fast_aputfield:
+
     do_oop_store(_masm, field, rax);
     break;
   case Bytecodes::_fast_lputfield:
@@ -3601,25 +3607,31 @@ void TemplateTable::fast_storefield_helper(Address field, Register rax) {
 #endif
     break;
   case Bytecodes::_fast_iputfield:
-    //JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, itos));
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, itos));
     __ access_store_at(T_INT, IN_HEAP, field, rax, noreg, noreg);
     break;
   case Bytecodes::_fast_zputfield:
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, ztos));
     __ access_store_at(T_BOOLEAN, IN_HEAP, field, rax, noreg, noreg);
     break;
   case Bytecodes::_fast_bputfield:
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, btos));
     __ access_store_at(T_BYTE, IN_HEAP, field, rax, noreg, noreg);
     break;
   case Bytecodes::_fast_sputfield:
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, stos));
     __ access_store_at(T_SHORT, IN_HEAP, field, rax, noreg, noreg);
     break;
   case Bytecodes::_fast_cputfield:
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, ctos));
     __ access_store_at(T_CHAR, IN_HEAP, field, rax, noreg, noreg);
     break;
   case Bytecodes::_fast_fputfield:
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, ftos));
     __ access_store_at(T_FLOAT, IN_HEAP, field, noreg /* ftos*/, noreg, noreg);
     break;
   case Bytecodes::_fast_dputfield:
+    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, dtos));
     __ access_store_at(T_DOUBLE, IN_HEAP, field, noreg /* dtos*/, noreg, noreg);
     break;
   default:
@@ -3656,9 +3668,12 @@ void TemplateTable::fast_accessfield(TosState state) {
   __ get_cache_and_index_at_bcp(rcx, rbx, 1);
 
   const Register flags = rdx;
+  // load flags
+  JTSAN_ONLY(
   __ movl(flags, Address(rcx, rbx, Address::times_8,
                        in_bytes(ConstantPoolCache::base_offset() +
                                 ConstantPoolCacheEntry::flags_offset())));
+  );
 
   // replace index with field offset from cache entry
   // [jk] not needed currently
@@ -3677,16 +3692,16 @@ void TemplateTable::fast_accessfield(TosState state) {
   __ null_check(rax);
   Address field(rax, rbx, Address::times_1);
 
-  //JTSAN_ONLY(__ pop(rdx));
-
   // access field
   switch (bytecode()) {
   case Bytecodes::_fast_agetfield:
+    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, atos)); 
     do_oop_load(_masm, field, rax);
     __ verify_oop(rax);
     break;
   case Bytecodes::_fast_lgetfield:
 #ifdef _LP64
+    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, ltos)); 
     __ access_load_at(T_LONG, IN_HEAP, noreg /* ltos */, field, noreg, noreg);
 #else
   __ stop("should not be rewritten");
@@ -3697,18 +3712,23 @@ void TemplateTable::fast_accessfield(TosState state) {
     __ access_load_at(T_INT, IN_HEAP, rax, field, noreg, noreg);
     break;
   case Bytecodes::_fast_bgetfield:
+    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, btos));
     __ access_load_at(T_BYTE, IN_HEAP, rax, field, noreg, noreg);
     break;
   case Bytecodes::_fast_sgetfield:
+    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, stos));
     __ access_load_at(T_SHORT, IN_HEAP, rax, field, noreg, noreg);
     break;
   case Bytecodes::_fast_cgetfield:
+    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, ctos));
     __ access_load_at(T_CHAR, IN_HEAP, rax, field, noreg, noreg);
     break;
   case Bytecodes::_fast_fgetfield:
+    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, ftos));  
     __ access_load_at(T_FLOAT, IN_HEAP, noreg /* ftos */, field, noreg, noreg);
     break;
   case Bytecodes::_fast_dgetfield:
+    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, dtos)); 
     __ access_load_at(T_DOUBLE, IN_HEAP, noreg /* dtos */, field, noreg, noreg);
     break;
   default:
