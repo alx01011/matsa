@@ -3693,8 +3693,8 @@ void TemplateTable::fast_accessfield(TosState state) {
 #endif
     break;
   case Bytecodes::_fast_igetfield:
-    __ access_load_at(T_INT, IN_HEAP, rax, field, noreg, noreg);
     JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, itos));
+    __ access_load_at(T_INT, IN_HEAP, rax, field, noreg, noreg);
     break;
   case Bytecodes::_fast_bgetfield:
     __ access_load_at(T_BYTE, IN_HEAP, rax, field, noreg, noreg);
