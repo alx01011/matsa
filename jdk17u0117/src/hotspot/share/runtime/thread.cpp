@@ -563,15 +563,17 @@ void Thread::start(Thread* thread) {
 
         JavaThread::set_jtsan_tid(thread->as_Java_thread(), new_tid);
 
-        // before transferring the vector clock, we need to update the epoch of the current thread
-        JtsanThreadState::incrementEpoch(cur_tid);
         JtsanThreadState::transferEpoch(cur_tid, new_tid);
+        JtsanThreadState::incrementEpoch(cur_tid);
 
         oop thread_object   = thread->as_Java_thread()->threadObj();
 
         LockShadow *ls      = (LockShadow*)thread_object->lock_state();
         // transfer the vector clock of the current thread to the new thread object
         ls->transfer_vc(cur_tid);
+
+        // increment epoch of the new thread - epochs start at 1
+        JtsanThreadState::incrementEpoch(new_tid);
       }
   );
 

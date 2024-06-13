@@ -49,11 +49,11 @@ bool JtsanRTL::CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell 
 
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell = ShadowBlock::load_cell(addr_aligned, i);
-        // we can safely ignore if gc epoch is 0 it means cell is unassigned
+        // we can safely ignore if epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
         // previous access was by the same thread so we can skip
         // different offset means different memory location in case of 1,2 or 4 byte access
-        if (cur.gc_epoch != cell.gc_epoch || cell.offset != cur.offset) {
+        if (cell.epoch == 0 || cur.gc_epoch != cell.gc_epoch || cell.offset != cur.offset) {
             continue;
         }
 
@@ -73,7 +73,7 @@ bool JtsanRTL::CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell 
         if (cell.is_write || cur.is_write) {
             uint32_t thr = JtsanThreadState::getEpoch(cur.tid, cell.tid);
 
-            if (thr > cell.epoch) {
+            if (thr >= cell.epoch) {
                 continue;
             }
     
