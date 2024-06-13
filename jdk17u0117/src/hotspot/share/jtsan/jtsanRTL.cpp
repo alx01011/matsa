@@ -102,7 +102,7 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     int lineno = m->line_number_from_bci(m->bci_from(bcp));
 
     if (lineno == 6) {
-      fprintf(stderr, "%s access of size %d, by thread %d, epoch %lu, offset %d\n",
+      fprintf(stderr, "%s access of size %d, by thread %d, epoch %d, offset %d\n",
           is_write ? "write" : "read", access_size, tid, epoch, cur.offset);
     }
 
