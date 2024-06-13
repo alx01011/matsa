@@ -78,8 +78,8 @@ class ShadowBlock : AllStatic {
         static void       store_cell(uptr mem, ShadowCell* cell); 
         static void       store_cell_at(uptr mem, ShadowCell* cell, uint8_t index);
     private:
-        ShadowCell atomic_load_cell(ShadowCell *cell);
-        void       atomic_store_cell(ShadowCell *cell, ShadowCell *val);
+        static ShadowCell atomic_load_cell(ShadowCell *cell);
+        static void       atomic_store_cell(ShadowCell *cell, ShadowCell *val);
 };
 
 #endif
