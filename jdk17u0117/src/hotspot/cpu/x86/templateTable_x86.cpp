@@ -3572,11 +3572,11 @@ void TemplateTable::fast_storefield(TosState state) {
   __ jcc(Assembler::zero, notVolatile);
 
     // get flags
-  JTSAN_ONLY(
-    __ movl(rdx, Address(rcx, rbx, Address::times_ptr,
-                  in_bytes(base +
-                              ConstantPoolCacheEntry::flags_offset())));
-  );
+  // JTSAN_ONLY(
+  //   __ movl(rdx, Address(rcx, rbx, Address::times_ptr,
+  //                 in_bytes(base +
+  //                             ConstantPoolCacheEntry::flags_offset())));
+  // );
 
   fast_storefield_helper(field, rax);
   volatile_barrier(Assembler::Membar_mask_bits(Assembler::StoreLoad |
