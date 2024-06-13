@@ -104,6 +104,17 @@ void* ShadowMemory::MemToShadow(uptr mem) {
     return (void*)((uptr)this->shadow_base + shadow_offset);
 }
 
+ShadowCell ShadowBlock::atomic_load_cell(ShadowCell *cell) {
+    ShadowCell ret;
+    uint64_t word = Atomic::load((uint64_t*)cell);
+
+    return ret = *(ShadowCell*)&word;
+}
+
+void ShadowBlock::atomic_store_cell(ShadowCell *cell, ShadowCell *val) {
+    uint64_t word = *(uint64_t*)val;
+    Atomic::store((uint64_t*)cell, word);
+}
 
 ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
     ShadowMemory *shadow = ShadowMemory::getInstance();
@@ -116,7 +127,7 @@ ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
         exit(1);
     }
 
-    return *cell_ref;
+    return atomic_load_cell(cell_ref);
 }
 
 void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
@@ -127,13 +138,13 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
 
     // find the first free cell
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
-        ShadowCell cell_l = cell_addr[i];
+        ShadowCell cell_l = atomic_load_cell(&cell_addr[i]);
         /*
           * Technically, an epoch can never be zero, since the gc epoch starts from 1
           * So a zero epoch means the cell is free.
         */
         if (!cell_l.epoch) {
-            *(cell_addr + i) = *cell;
+            atomic_store_cell(&cell_addr[i], cell);
             return;
         }
     }
@@ -143,7 +154,7 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
     uint8_t ci = os::random() % SHADOW_CELLS;
     cell_addr = &cell_addr[ci];
 
-    *cell_addr = *cell;
+    atomic_store_cell(cell_addr, cell);
 }
 
 void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
