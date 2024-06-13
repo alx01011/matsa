@@ -60,14 +60,14 @@ bool JtsanRTL::CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell 
         // same slot this is not a race
         // even if a tid was reused it can't be race because the previous thread has obviously finished
         // making the tid available
-        // if (cell.tid == cur.tid) {
-        //   // if the access is stronger overwrite
-        //   if (cur.is_write && !cell.is_write) {
-        //       ShadowBlock::store_cell_at((uptr)addr, &cur, i);
-        //       stored = true;
-        //   }
-        //   continue;
-        // }
+        if (cell.tid == cur.tid) {
+          // if the access is stronger overwrite
+          // if (cur.is_write && !cell.is_write) {
+          //     ShadowBlock::store_cell_at((uptr)addr, &cur, i);
+          //     stored = true;
+          // }
+          continue;
+        }
 
         // at least one of the accesses is a write
         if (cell.is_write || cur.is_write) {
@@ -98,6 +98,13 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write};
+
+    int lineno = m->line_number_from_bci(m->bci_from(bcp));
+
+    if (lineno == 6) {
+      fprintf(stderr, "%s access of size %d, by thread %d, epoch %lu, offset %d\n",
+          is_write ? "write" : "read", access_size, tid, epoch, cur.offset);
+    }
 
     // race
     ShadowCell prev;
