@@ -3656,7 +3656,10 @@ void TemplateTable::fast_accessfield(TosState state) {
   __ get_cache_and_index_at_bcp(rcx, rbx, 1);
 
   const Register flags = rdx;
-  //JTSAN_ONLY(__ push(rdx));
+  __ movl(flags, Address(rcx, rbx, Address::times_8,
+                       in_bytes(ConstantPoolCache::base_offset() +
+                                ConstantPoolCacheEntry::flags_offset())));
+
   // replace index with field offset from cache entry
   // [jk] not needed currently
   // __ movl(rdx, Address(rcx, rbx, Address::times_8,
@@ -3690,8 +3693,8 @@ void TemplateTable::fast_accessfield(TosState state) {
 #endif
     break;
   case Bytecodes::_fast_igetfield:
-    //JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, itos));
     __ access_load_at(T_INT, IN_HEAP, rax, field, noreg, noreg);
+    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, itos));
     break;
   case Bytecodes::_fast_bgetfield:
     __ access_load_at(T_BYTE, IN_HEAP, rax, field, noreg, noreg);
