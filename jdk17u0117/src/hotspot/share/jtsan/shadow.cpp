@@ -129,10 +129,10 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell_l = cell_addr[i];
         /*
-          * Technically, a gc epoch can never be zero, since the gc epoch starts from 1
+          * Technically, an epoch can never be zero, since the gc epoch starts from 1
           * So a zero epoch means the cell is free.
         */
-        if (!cell_l.gc_epoch) {
+        if (!cell_l.epoch) {
             *(cell_addr + i) = *cell;
             return;
         }
