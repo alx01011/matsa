@@ -2946,7 +2946,7 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
 
   // aantonak - jtsan
   // preserve flags on rdx, it gets clobbered by some calls below
-  __ movl(rdx, flags);
+  JTSAN_ONLY(__ movl(rdx, flags));
 
   Label Done, notByte, notBool, notInt, notShort, notChar, notLong, notFloat, notObj;
 
@@ -3014,9 +3014,9 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, itos));
 
   // Rewrite bytecode to be faster
-  if (!is_static && rc == may_rewrite) {
-    patch_bytecode(Bytecodes::_fast_igetfield, bc, rbx);
-  }
+  // if (!is_static && rc == may_rewrite) {
+  //   patch_bytecode(Bytecodes::_fast_igetfield, bc, rbx);
+  // }
   __ jmp(Done);
 
   __ bind(notInt);
@@ -3361,9 +3361,9 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
     if (!is_static) pop_and_check_object(obj);
     JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, itos));
     __ access_store_at(T_INT, IN_HEAP, field, rax, noreg, noreg);
-    if (!is_static && rc == may_rewrite) {
-      patch_bytecode(Bytecodes::_fast_iputfield, bc, rbx, true, byte_no);
-    }
+    // if (!is_static && rc == may_rewrite) {
+    //   patch_bytecode(Bytecodes::_fast_iputfield, bc, rbx, true, byte_no);
+    // }
     __ jmp(Done);
   }
 
