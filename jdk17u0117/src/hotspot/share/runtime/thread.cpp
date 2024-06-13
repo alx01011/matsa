@@ -572,6 +572,10 @@ void Thread::start(Thread* thread) {
         // transfer the vector clock of the current thread to the new thread object
         ls->transfer_vc(cur_tid);
 
+        if (new_tid == 0) {
+          fprintf(stderr, "shouldnt increment epoch of tid 0\n");
+        }
+
         // increment epoch of the new thread - epochs start at 1
         JtsanThreadState::incrementEpoch(new_tid);
       }

@@ -44,7 +44,7 @@ static frame next_frame(frame fr, Thread* t) {
 bool JtsanRTL::CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
 
-    bool stored = false;
+    bool stored   = false;
     bool isRace   = false;
 
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
