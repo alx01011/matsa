@@ -3227,8 +3227,8 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   Register klass = c_rarg0;
 
   // volatile check
-  // __ testl(flags, v_or_ignore);
-  // __ jcc(Assembler::notZero, safe);
+  __ testl(flags, v_or_ignore);
+  __ jcc(Assembler::notZero, safe);
 
   __ get_method(c_rarg1); // get the method
   __ load_method_holder(klass, c_rarg1);
@@ -3571,18 +3571,18 @@ void TemplateTable::fast_storefield(TosState state) {
   __ testl(rdx, rdx);
   __ jcc(Assembler::zero, notVolatile);
 
-  fast_storefield_helper(field, rax);
-  volatile_barrier(Assembler::Membar_mask_bits(Assembler::StoreLoad |
-                                               Assembler::StoreStore));
-  __ jmp(Done);
-  __ bind(notVolatile);
-
-  // get flags
+    // get flags
   JTSAN_ONLY(
     __ movl(rdx, Address(rcx, rbx, Address::times_ptr,
                   in_bytes(base +
                               ConstantPoolCacheEntry::flags_offset())));
   );
+
+  fast_storefield_helper(field, rax);
+  volatile_barrier(Assembler::Membar_mask_bits(Assembler::StoreLoad |
+                                               Assembler::StoreStore));
+  __ jmp(Done);
+  __ bind(notVolatile);
 
   fast_storefield_helper(field, rax);
 
