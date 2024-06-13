@@ -2897,7 +2897,8 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   int32_t is_final          = 1 << ConstantPoolCacheEntry::is_final_shift;
   int32_t is_jtsan_ignore   = 1 << ConstantPoolCacheEntry::is_jtsan_ignore_shift;
 
-  int32_t f_or_v_or_ignore  = is_volatile | is_final | is_jtsan_ignore;
+  //int32_t f_or_v_or_ignore  = is_volatile | is_final | is_jtsan_ignore;
+  int32_t f_or_v_or_ignore  = is_volatile;
 
   Label safe;
 
@@ -3218,7 +3219,8 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   int32_t is_volatile     = 1 << ConstantPoolCacheEntry::is_volatile_shift;
   int32_t is_jtsan_ignore = 1 << ConstantPoolCacheEntry::is_jtsan_ignore_shift;
 
-  int32_t v_or_ignore     = is_volatile | is_jtsan_ignore;
+  //int32_t v_or_ignore     = is_volatile | is_jtsan_ignore;
+  int32_t v_or_ignore     = is_volatile;
 
   Label safe;
 
