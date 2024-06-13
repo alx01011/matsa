@@ -2913,8 +2913,8 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   __ load_method_holder(klass, c_rarg1);
 
   // check if class is being initialized
-  // __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
-  // __ jcc(Assembler::notEqual, safe);
+  __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
+  __ jcc(Assembler::notEqual, safe);
 
   __ leaq(c_rarg0, field); // get address
 
@@ -3585,9 +3585,8 @@ void TemplateTable::fast_storefield(TosState state) {
 }
 
 void TemplateTable::fast_storefield_helper(Address field, Register rax) {
-  const Register flags = rdx;
-
   JTSAN_ONLY(__ pop(rdx));
+  const Register flags = rdx;
 
   // access field
   switch (bytecode()) {
@@ -3657,6 +3656,7 @@ void TemplateTable::fast_accessfield(TosState state) {
   __ get_cache_and_index_at_bcp(rcx, rbx, 1);
 
   const Register flags = rdx;
+  JTSAN_ONLY(__ push(rdx));
   // replace index with field offset from cache entry
   // [jk] not needed currently
   // __ movl(rdx, Address(rcx, rbx, Address::times_8,
@@ -3673,6 +3673,8 @@ void TemplateTable::fast_accessfield(TosState state) {
   __ verify_oop(rax);
   __ null_check(rax);
   Address field(rax, rbx, Address::times_1);
+
+  JTSAN_ONLY(__ pop(rdx));
 
   // access field
   switch (bytecode()) {
