@@ -3601,7 +3601,7 @@ void TemplateTable::fast_storefield_helper(Address field, Register rax) {
 #endif
     break;
   case Bytecodes::_fast_iputfield:
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, itos));
+    //JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, itos));
     __ access_store_at(T_INT, IN_HEAP, field, rax, noreg, noreg);
     break;
   case Bytecodes::_fast_zputfield:
