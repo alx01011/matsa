@@ -1452,8 +1452,8 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
 
     // ls->transferVectorclock(cur_tid, lock_index);
     // transfer the vector clock from the current thread to the thread object (Thread ...)
-    JtsanThreadState::incrementEpoch(cur_tid);
     ls->transfer_vc(cur_tid);
+    // no need to increment the vector clock, since the thread is exiting
 
     // clear the thread state
     // to be reused by another thread
