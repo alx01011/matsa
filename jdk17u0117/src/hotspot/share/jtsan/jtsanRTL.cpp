@@ -73,7 +73,7 @@ bool JtsanRTL::CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell 
         if (cell.is_write || cur.is_write) {
             uint32_t thr = JtsanThreadState::getEpoch(cur.tid, cell.tid);
 
-            if (thr >= cell.epoch) {
+            if (thr > cell.epoch) {
                 continue;
             }
     
