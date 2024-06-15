@@ -1,6 +1,10 @@
 #include "suppression.hpp"
 
 
+Trie::Trie() {
+    root = new TrieNode();
+}
+
 void Trie::insert(const char *name) {
     TrieNode* current = root;
 
