@@ -37,7 +37,7 @@ const char * def_frame_suppressions = {
     "java.util.concurrent.locks.*\n"
 };
 
-class JTSanSuppression : public AllStatic, public CHeapObj<mtInternal> {
+class JTSanSuppression : public CHeapObj<mtInternal> {
     public:
         static void init();
         static bool is_suppressed(JTSanStackTrace *stack_trace);
