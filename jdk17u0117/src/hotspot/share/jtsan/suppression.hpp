@@ -27,16 +27,6 @@ class Trie : public CHeapObj<mtInternal> {
         bool search(const char *name);
 };
 
-
-const char * def_top_frame_suppressions = {
-    ""
-};
-
-const char * def_frame_suppressions = {
-    "java.lang.invoke.*\n"
-    "java.util.concurrent.locks.*\n"
-};
-
 class JTSanSuppression : public CHeapObj<mtInternal> {
     public:
         static void init();

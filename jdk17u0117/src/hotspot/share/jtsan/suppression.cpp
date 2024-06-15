@@ -1,5 +1,13 @@
 #include "suppression.hpp"
 
+const char * def_top_frame_suppressions = {
+    ""
+};
+
+const char * def_frame_suppressions = {
+    "java.lang.invoke.*\n"
+    "java.util.concurrent.locks.*\n"
+};
 
 Trie::Trie() {
     root = new TrieNode();
