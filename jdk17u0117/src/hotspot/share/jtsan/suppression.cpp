@@ -60,6 +60,11 @@ static void add_suppressions(Trie *trie, const char *suppression_string) {
 
     for (size_t i = 0, j = 0; ; i++) {
         if (suppression_string[i] == '\n' || suppression_string[i] == '\0') {
+            if (j == 0) {
+                continue;
+            }
+
+
             buffer[j] = 0;
             fprintf(stderr, "Adding suppression: %s\n", buffer);
             trie->insert(buffer);
