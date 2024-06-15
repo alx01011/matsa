@@ -7,7 +7,7 @@
 
 #include <unordered_map>
 
-class TrieNode {
+class TrieNode : public CHeapObj<mtInternal> {
 public:
     std::unordered_map<char, TrieNode*> children;
     bool is_end_of_word;
@@ -16,7 +16,7 @@ public:
     TrieNode() : is_end_of_word(false), has_wildcard(false) {}
 };
 
-class Trie {
+class Trie : public CHeapObj<mtInternal> {
     private:
         TrieNode* root;
 
