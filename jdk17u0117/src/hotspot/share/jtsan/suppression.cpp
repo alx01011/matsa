@@ -41,7 +41,7 @@ bool Trie::search(const char *name) {
 
     const char *str = name;
     for (char c = *str; c != '\0'; c = *(++str)) {
-        not a children of the current node
+        //not a children of the current node
         if (current->children.find(c) == current->children.end()) {
             if (current->has_wildcard) {
                 return true;
