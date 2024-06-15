@@ -3667,7 +3667,6 @@ void TemplateTable::fast_accessfield(TosState state) {
   const Register flags = rsi;
   // load flags
   JTSAN_ONLY(
-  __ push_d(rsi);
   __ movl(flags, Address(rcx, rbx, Address::times_8,
                        in_bytes(ConstantPoolCache::base_offset() +
                                 ConstantPoolCacheEntry::flags_offset())));
