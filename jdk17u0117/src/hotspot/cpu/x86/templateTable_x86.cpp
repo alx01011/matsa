@@ -3547,7 +3547,11 @@ void TemplateTable::fast_storefield(TosState state) {
   __ movl(rdx, Address(rcx, rbx, Address::times_ptr,
                        in_bytes(base +
                                 ConstantPoolCacheEntry::flags_offset())));
-  JTSAN_ONLY(__ movl(rsi, rdx));
+  // rdx gets clobbered later on, but rsi is ok to use                                
+  JTSAN_ONLY(
+    __ push(rsi);
+    __ movl(rsi, rdx)
+    );
 
   // replace index with field offset from cache entry
   __ movptr(rbx, Address(rcx, rbx, Address::times_ptr,
@@ -3581,6 +3585,10 @@ void TemplateTable::fast_storefield(TosState state) {
   fast_storefield_helper(field, rax);
 
   __ bind(Done);
+
+  JTSAN_ONLY(
+    __ pop(rsi);
+  );
 }
 
 void TemplateTable::fast_storefield_helper(Address field, Register rax) {
@@ -3661,9 +3669,10 @@ void TemplateTable::fast_accessfield(TosState state) {
   // access constant pool cache
   __ get_cache_and_index_at_bcp(rcx, rbx, 1);
 
-  const Register flags = rdx;
+  const Register flags = rsi;
   // load flags
   JTSAN_ONLY(
+  __ push(rsi);
   __ movl(flags, Address(rcx, rbx, Address::times_8,
                        in_bytes(ConstantPoolCache::base_offset() +
                                 ConstantPoolCacheEntry::flags_offset())));
@@ -3734,6 +3743,10 @@ void TemplateTable::fast_accessfield(TosState state) {
   //   __ jcc(Assembler::zero, notVolatile);
   //   __ membar(Assembler::LoadLoad);
   //   __ bind(notVolatile);
+
+  JTSAN_ONLY(
+    __ pop(rsi);
+  );
 }
 
 void TemplateTable::fast_xaccess(TosState state) {
