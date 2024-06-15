@@ -2,6 +2,7 @@
 #include "threadState.hpp"
 #include "jtsanGlobals.hpp"
 #include "jtsanReportMap.hpp"
+#include "stacktrace.hpp"
 
 #include "runtime/thread.hpp"
 #include "runtime/frame.inline.hpp"
@@ -14,32 +15,32 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
 
-#define MAX_FRAMES (25)
+// #define MAX_FRAMES (25)
 
-static frame next_frame(frame fr, Thread* t) {
-  // Compiled code may use EBP register on x86 so it looks like
-  // non-walkable C frame. Use frame.sender() for java frames.
-  frame invalid;
-  if (t != nullptr && t->is_Java_thread()) {
-    // Catch very first native frame by using stack address.
-    // For JavaThread stack_base and stack_size should be set.
-    if (!t->is_in_full_stack((address)(fr.real_fp() + 1))) {
-      return invalid;
-    }
-    if (fr.is_java_frame() || fr.is_native_frame() || fr.is_runtime_frame()) {
-      RegisterMap map(t->as_Java_thread(), false); // No update
-      return fr.sender(&map);
-    } else {
-      // is_first_C_frame() does only simple checks for frame pointer,
-      // it will pass if java compiled code has a pointer in EBP.
-      if (os::is_first_C_frame(&fr)) return invalid;
-      return os::get_sender_for_C_frame(&fr);
-    }
-  } else {
-    if (os::is_first_C_frame(&fr)) return invalid;
-    return os::get_sender_for_C_frame(&fr);
-  }
-}
+// static frame next_frame(frame fr, Thread* t) {
+//   // Compiled code may use EBP register on x86 so it looks like
+//   // non-walkable C frame. Use frame.sender() for java frames.
+//   frame invalid;
+//   if (t != nullptr && t->is_Java_thread()) {
+//     // Catch very first native frame by using stack address.
+//     // For JavaThread stack_base and stack_size should be set.
+//     if (!t->is_in_full_stack((address)(fr.real_fp() + 1))) {
+//       return invalid;
+//     }
+//     if (fr.is_java_frame() || fr.is_native_frame() || fr.is_runtime_frame()) {
+//       RegisterMap map(t->as_Java_thread(), false); // No update
+//       return fr.sender(&map);
+//     } else {
+//       // is_first_C_frame() does only simple checks for frame pointer,
+//       // it will pass if java compiled code has a pointer in EBP.
+//       if (os::is_first_C_frame(&fr)) return invalid;
+//       return os::get_sender_for_C_frame(&fr);
+//     }
+//   } else {
+//     if (os::is_first_C_frame(&fr)) return invalid;
+//     return os::get_sender_for_C_frame(&fr);
+//   }
+// }
 
 bool JtsanRTL::CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
@@ -121,20 +122,27 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
 
         fprintf(stderr, "\t\t==================Stack trace==================\n");
 
-        frame fr = os::current_frame();
-        // ignore the first frame as it is the current frame and we have already printed it
-        fr = next_frame(fr, (Thread*)thread);
-        // print the stack trace
-        for (; fr.pc() != nullptr;) {
-            if (Interpreter::contains(fr.pc())) {
-                Method *bt_method = fr.interpreter_frame_method();
-                address bt_bcp = (fr.is_interpreted_frame()) ? fr.interpreter_frame_bcp() : fr.pc();
-
-                int lineno = bt_method->line_number_from_bci(bt_method->bci_from(bt_bcp));
-                fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
-            }
-            fr = next_frame(fr, (Thread*)thread);
+        JTSanStackTrace stack_trace(thread);
+        for (size_t i = 0; i < stack_trace.frame_count(); i++) {
+            JTSanStackFrame frame = stack_trace.get_frame(i);
+            int lineno = frame.method->line_number_from_bci(frame.method->bci_from(frame.pc));
+            fprintf(stderr, "\t\t\t%s : %d\n", frame.method->external_name_as_fully_qualified(), lineno);
         }
+
+        // frame fr = os::current_frame();
+        // // ignore the first frame as it is the current frame and we have already printed it
+        // fr = next_frame(fr, (Thread*)thread);
+        // // print the stack trace
+        // for (; fr.pc() != nullptr;) {
+        //     if (Interpreter::contains(fr.pc())) {
+        //         Method *bt_method = fr.interpreter_frame_method();
+        //         address bt_bcp = (fr.is_interpreted_frame()) ? fr.interpreter_frame_bcp() : fr.pc();
+
+        //         int lineno = bt_method->line_number_from_bci(bt_method->bci_from(bt_bcp));
+        //         fprintf(stderr, "\t\t\t%s : %d\n", bt_method->external_name_as_fully_qualified(), lineno);
+        //     }
+        //     fr = next_frame(fr, (Thread*)thread);
+        // }
 
         fprintf(stderr, "\t\t===============================================\n");
 
