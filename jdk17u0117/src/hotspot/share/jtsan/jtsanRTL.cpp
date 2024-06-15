@@ -100,13 +100,6 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write};
 
-    int lineno = m->line_number_from_bci(m->bci_from(bcp));
-
-    if (lineno == 77) {
-      fprintf(stderr, "%s of size %d, by thread %d, epoch %d, offset %d\n",
-          is_write ? "write" : "read", access_size, tid, epoch, cur.offset);
-    }
-
     // race
     ShadowCell prev;
     // try to lock the report lock

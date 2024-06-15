@@ -3547,6 +3547,7 @@ void TemplateTable::fast_storefield(TosState state) {
   __ movl(rdx, Address(rcx, rbx, Address::times_ptr,
                        in_bytes(base +
                                 ConstantPoolCacheEntry::flags_offset())));
+  JTSAN_ONLY(__ movl(rsi, rdx));
 
   // replace index with field offset from cache entry
   __ movptr(rbx, Address(rcx, rbx, Address::times_ptr,
@@ -3583,7 +3584,7 @@ void TemplateTable::fast_storefield(TosState state) {
 }
 
 void TemplateTable::fast_storefield_helper(Address field, Register rax) {
-  const Register flags = rdx;
+  const Register flags = rsi;
 
   // access field
   switch (bytecode()) {
