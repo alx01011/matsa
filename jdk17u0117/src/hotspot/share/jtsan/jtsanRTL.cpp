@@ -63,10 +63,10 @@ bool JtsanRTL::CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell 
         // making the tid available
         if (cell.tid == cur.tid) {
           // if the access is stronger overwrite
-          // if (cur.is_write && !cell.is_write) {
-          //     ShadowBlock::store_cell_at((uptr)addr, &cur, i);
-          //     stored = true;
-          // }
+          if (cur.is_write && !cell.is_write) {
+              ShadowBlock::store_cell_at((uptr)addr, &cur, i);
+              stored = true;
+          }
           continue;
         }
 
