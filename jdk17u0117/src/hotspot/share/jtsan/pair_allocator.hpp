@@ -17,14 +17,12 @@ public:
     [[nodiscard]] T* allocate(std::size_t n) {
         if (n > std::size_t(-1) / sizeof(T)) exit(1);
         if (auto p = static_cast<T*>(std::malloc(n * sizeof(T)))) {
-            printf("Allocating %zu bytes\n", n * sizeof(T));
             return p;
         }
         exit(1);
     }
 
     void deallocate(T* p, std::size_t n) noexcept {
-        printf("Deallocating %zu bytes\n", n * sizeof(T));
         std::free(p);
     }
 };
