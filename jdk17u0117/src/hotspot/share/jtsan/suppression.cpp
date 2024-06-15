@@ -23,10 +23,10 @@ void Trie::insert(const char *name) {
             break;
         }
 
-        // if (current->children.find(c) == current->children.end()) {
-        //     current->children[c] = new TrieNode();
-        // }
-        // current = current->children[c];
+        if (current->children.find(c) == current->children.end()) {
+            current->children[c] = new TrieNode();
+        }
+        current = current->children[c];
     }
     current->is_end_of_word = true;
 }
@@ -35,21 +35,21 @@ bool Trie::search(const char *name) {
     TrieNode* current = root;
 
     // if root has just a wildcard and no other children then it matches everything aka "*"
-    // if (current->has_wildcard && current->children.size() == 0) {
-    //     return true;
-    // }
+    if (current->has_wildcard && current->children.size() == 0) {
+        return true;
+    }
 
     const char *str = name;
     for (char c = *str; c != '\0'; c = *(++str)) {
-        // not a children of the current node
-        // if (current->children.find(c) == current->children.end()) {
-        //     if (current->has_wildcard) {
-        //         return true;
-        //     }
+        not a children of the current node
+        if (current->children.find(c) == current->children.end()) {
+            if (current->has_wildcard) {
+                return true;
+            }
             return false;
         }
-        // current = current->children[c];
-    //}
+        current = current->children[c];
+    }
 
     return current->is_end_of_word;
 }

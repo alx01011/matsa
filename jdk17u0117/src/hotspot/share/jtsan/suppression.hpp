@@ -2,7 +2,7 @@
 #define SUPPRESSION_HPP
 
 #include "stacktrace.hpp"
-
+#include "pair_allocator.hpp"
 #include "memory/allocation.hpp"
 
 #include <unordered_map>
@@ -10,6 +10,9 @@
 class TrieNode : public CHeapObj<mtInternal> {
 public:
     //std::unordered_map<char, TrieNode*> children;
+    // use the custom allocator
+    std::unordered_map<char, TrieNode*, std::hash<char>, std::equal_to<char>, 
+        CustomAllocator<std::pair<const char, TrieNode*>>> children;
     bool is_end_of_word;
     bool has_wildcard;
 
