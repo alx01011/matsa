@@ -9,7 +9,7 @@
 
 class TrieNode : public CHeapObj<mtInternal> {
 public:
-    std::unordered_map<char, TrieNode*> children;
+    //std::unordered_map<char, TrieNode*> children;
     bool is_end_of_word;
     bool has_wildcard;
 
