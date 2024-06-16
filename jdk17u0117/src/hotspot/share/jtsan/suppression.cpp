@@ -15,7 +15,7 @@ public:
 
     [[nodiscard]] T* allocate(std::size_t n) {
         if (n > std::size_t(-1) / sizeof(T)) exit(1);
-        if (auto p = static_cast<T*>(NEW_C_HEAP_ARRAY(char, n * sizeof(T), mtInternal)) {
+        if (auto p = static_cast<T*>(NEW_C_HEAP_ARRAY(char, n * sizeof(T), mtInternal))) {
             return p;
         }
         exit(1);
