@@ -78,6 +78,8 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     ShadowCell prev;
     // try to lock the report lock
     if (CheckRaces(tid, addr, cur, prev) && ShadowMemory::try_lock_report()) {
+      ResourceMark rm;
+
       // get stack trace
       JTSanStackTrace stack_trace(thread);
 
@@ -88,7 +90,6 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
         return;
       }
 
-        ResourceMark rm;
         int lineno = m->line_number_from_bci(m->bci_from(bcp));
         fprintf(stderr, "Data race detected in method %s, line %d\n",
             m->external_name_as_fully_qualified(),lineno);
