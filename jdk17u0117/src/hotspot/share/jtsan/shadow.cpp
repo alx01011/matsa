@@ -104,18 +104,6 @@ void* ShadowMemory::MemToShadow(uptr mem) {
     return (void*)((uptr)this->shadow_base + shadow_offset);
 }
 
-ShadowCell ShadowBlock::atomic_load_cell(ShadowCell *cell) {
-    ShadowCell ret;
-    uint64_t word = Atomic::load((uint64_t*)cell);
-
-    return ret = *(ShadowCell*)&word;
-}
-
-void ShadowBlock::atomic_store_cell(ShadowCell *cell, ShadowCell *val) {
-    uint64_t word = *(uint64_t*)val;
-    Atomic::store((uint64_t*)cell, word);
-}
-
 ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
     ShadowMemory *shadow = ShadowMemory::getInstance();
     void *shadow_addr = shadow->MemToShadow(mem);
@@ -145,7 +133,6 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
         */
         if (!cell_l.epoch) {
             *(cell_addr + i) = *cell;
-            //atomic_store_cell(&cell_addr[i], cell);
             return;
         }
     }
@@ -156,8 +143,6 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
     cell_addr = &cell_addr[ci];
 
     *cell_addr = *cell;
-
-    //atomic_store_cell(cell_addr, cell);
 }
 
 void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
@@ -165,7 +150,6 @@ void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
     void *shadow_addr = shadow->MemToShadow(mem);
 
     ShadowCell *cell_addr = &((ShadowCell *)shadow_addr)[index];
-    //atomic_store_cell(cell_addr, cell);
     *cell_addr = *cell;
 }
 

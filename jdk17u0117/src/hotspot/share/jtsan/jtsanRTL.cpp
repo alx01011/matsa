@@ -16,7 +16,7 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
 
-bool JtsanRTL::CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell &prev) {
+bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
 
     bool stored   = false;
@@ -24,6 +24,12 @@ bool JtsanRTL::CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell 
 
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell = ShadowBlock::load_cell(addr_aligned, i);
+
+       // if the cell is ignored then we can skip the whole block
+        if (UNLIKELY(cell.is_ignored)) {
+          return false;
+        }
+
         // we can safely ignore if epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
         // previous access was by the same thread so we can skip
@@ -54,6 +60,17 @@ bool JtsanRTL::CheckRaces(uint16_t tid, void *addr, ShadowCell &cur, ShadowCell 
     
             prev = cell;
             isRace = true;
+
+            // its a race, so check if it is a suppressed one
+            JTSanStackTrace stack_trace(thread);
+            trace = stack_trace;
+            if (JTSanSuppression::is_suppressed(&stack_trace)) {
+                // ignore
+                cur.is_ignored = 1;
+                ShadowBlock::store_cell_at((uptr)addr, &cur, 0);
+                return false;
+            }
+
             break;
         }
     }
@@ -72,17 +89,15 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     
     uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
     // create a new shadow cell
-    ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write};
+    ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write, 0};
 
     // race
     ShadowCell prev;
     // try to lock the report lock
+    JTSanStackTrace stack_trace;
     if (CheckRaces(tid, addr, cur, prev) && ShadowMemory::try_lock_report()) {
-      // get stack trace
-      JTSanStackTrace stack_trace(thread);
-
       // we have found a race now see if we have recently reported it or it is suppressed
-      if (JtsanReportMap::get_instance()->get(addr) != nullptr || JTSanSuppression::is_suppressed(&stack_trace)) {
+      if (JtsanReportMap::get_instance()->get(addr) != nullptr) {
         // ignore
         ShadowMemory::unlock_report();
         return;
