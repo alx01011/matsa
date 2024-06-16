@@ -1,5 +1,7 @@
 #include "stacktrace.hpp"
 
+#include <cstring>
+
 static frame next_frame(frame fr, Thread* t) {
   // Compiled code may use EBP register on x86 so it looks like
   // non-walkable C frame. Use frame.sender() for java frames.
@@ -39,11 +41,23 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
 
                 _frames[_frame_count].method = bt_method;
                 _frames[_frame_count].pc = bt_bcp;
+
+                ResourceMark rm;
+                const char *full_name = bt_method->external_name_as_fully_qualified();
+                _frames[_frame_count].full_name = new char[strlen(full_name) + 1];
+                strcpy((char*)_frames[_frame_count].full_name, full_name);
+
                 _frame_count++;
             }
             fr = next_frame(fr, (Thread*)thread);
         }
 
+    }
+}
+
+JTSanStackTrace::~JTSanStackTrace() {
+    for (size_t i = 0; i < _frame_count; i++) {
+        delete[] _frames[i].full_name;
     }
 }
 

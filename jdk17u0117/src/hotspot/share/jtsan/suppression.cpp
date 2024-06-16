@@ -97,7 +97,7 @@ bool JTSanSuppression::is_suppressed(JTSanStackTrace *stack_trace) {
     ResourceMark rm;
 
     // first check the top frame
-    const char *frame = stack_trace->get_frame(0).method->external_name_as_fully_qualified();
+    const char *frame = stack_trace->get_frame(0).full_name;
     fprintf(stderr, "Checking suppression for frame: %s -> ", frame);
     if (top_frame_suppressions->search(frame)) {
         fprintf(stderr, "suppressed\n");
@@ -108,7 +108,7 @@ bool JTSanSuppression::is_suppressed(JTSanStackTrace *stack_trace) {
     // now check the rest of the frames
     for (size_t i = 1; i < stack_trace->frame_count(); i++) {
         ResourceMark rm;
-        frame = stack_trace->get_frame(i).method->external_name_as_fully_qualified();
+        frame = stack_trace->get_frame(i).full_name;
         fprintf(stderr, "Checking suppression for frame: %s -> ", frame);
         if (frame_suppressions->search(frame)) {
             fprintf(stderr, "suppressed\n");
