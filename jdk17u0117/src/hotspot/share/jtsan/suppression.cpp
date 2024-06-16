@@ -8,10 +8,10 @@ class CustomPairAllocator {
 public:
     using value_type = T;
 
-    CustomAllocator() = default;
+    CustomPairAllocator() = default;
 
     template <typename U>
-    constexpr CustomAllocator(const CustomAllocator<U>&) noexcept {}
+    constexpr CustomPairAllocator(const CustomPairAllocator<U>&) noexcept {}
 
     [[nodiscard]] T* allocate(std::size_t n) {
         if (n > std::size_t(-1) / sizeof(T)) exit(1);
