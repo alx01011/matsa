@@ -56,9 +56,9 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
 }
 
 JTSanStackTrace::~JTSanStackTrace() {
-    for (size_t i = 0; i < _frame_count; i++) {
-        delete[] _frames[i].full_name;
-    }
+    // for (size_t i = 0; i < _frame_count; i++) {
+    //     delete[] _frames[i].full_name;
+    // }
 }
 
 size_t JTSanStackTrace::frame_count(void) const {
