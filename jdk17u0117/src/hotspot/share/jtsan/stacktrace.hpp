@@ -12,17 +12,15 @@
 // 256 frames maximum
 #define MAX_FRAMES (1 << 8)
 
-class JTSanStackFrame : public CHeapObj<mtInternal> {
+class JTSanStackFrame : public StackObj {
     public:
         Method *method;
-        const char *full_name;
         address pc;
 };
 
-class JTSanStackTrace : public CHeapObj<mtInternal> {
+class JTSanStackTrace : public StackObj {
     public:
         JTSanStackTrace(Thread *thread);
-        ~JTSanStackTrace();
 
         size_t          frame_count(void) const;
         JTSanStackFrame get_frame(size_t index) const;

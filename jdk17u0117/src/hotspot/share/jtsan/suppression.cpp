@@ -1,5 +1,4 @@
 #include "suppression.hpp"
-
 #include "memory/resourceArea.hpp"
 
 const char * def_top_frame_suppressions = "";
@@ -55,9 +54,7 @@ bool Trie::search(const char *name) {
 
 static void add_suppressions(Trie *trie, const char *suppression_string) {
     // assume each string can have up to 1023 characters
-    char buffer[1024] = {0};
-
-    fprintf(stderr, "Suppression string: %s\n", suppression_string);
+    char buffer[1024] = "";
 
     for (size_t i = 0, j = 0; ; i++) {
         if (suppression_string[i] == '\n' || suppression_string[i] == '\0') {
@@ -97,22 +94,17 @@ bool JTSanSuppression::is_suppressed(JTSanStackTrace *stack_trace) {
     ResourceMark rm;
 
     // first check the top frame
-    const char *frame = stack_trace->get_frame(0).full_name;
+    const char *frame = stack_trace->get_frame(0).method->external_name_as_fully_qualified();
     if (top_frame_suppressions->search(frame)) {
         return true;
     }
 
     // now check the rest of the frames
     for (size_t i = 0; i < stack_trace->frame_count(); i++) {
-        ResourceMark rm;
-        frame = stack_trace->get_frame(i).full_name;
-        fprintf(stderr, "Checking suppression for frame: %s -> ", frame);
+        frame = stack_trace->get_frame(i).method->external_name_as_fully_qualified();
         if (frame_suppressions->search(frame)) {
-            fprintf(stderr, "suppressed\n");
             return true;
         }
-
-        fprintf(stderr, "not suppressed\n");
     }
 
     return false;
