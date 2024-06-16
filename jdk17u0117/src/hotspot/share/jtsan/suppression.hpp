@@ -32,10 +32,10 @@ public:
 };
 
 template <typename T, typename U>
-bool operator==(const CustomAllocator<T>&, const CustomAllocator<U>&) { return true; }
+bool operator==(const CustomPairAllocator<T>&, const CustomPairAllocator<U>&) { return true; }
 
 template <typename T, typename U>
-bool operator!=(const CustomAllocator<T>&, const CustomAllocator<U>&) { return false; }
+bool operator!=(const CustomPairAllocator<T>&, const CustomPairAllocator<U>&) { return false; }
 
 
 
