@@ -6,7 +6,7 @@ const char * def_top_frame_suppressions = "";
 
 const char * def_frame_suppressions = 
     "java.lang.invoke.*\n"
-    "java.util.concurrent.locks.*\n";
+    "java.util.concurrent.*\n";
 
 Trie::Trie() {
     root = new TrieNode();

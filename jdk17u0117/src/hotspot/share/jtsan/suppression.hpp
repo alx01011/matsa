@@ -27,7 +27,7 @@ public:
     }
 
     void deallocate(T* p, std::size_t n) noexcept {
-        FREE_C_HEAP_ARRAY(char, p);
+        FREE_C_HEAP_ARRAY(T, p);
     }
 };
 
