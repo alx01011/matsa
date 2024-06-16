@@ -44,7 +44,7 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
 
                 ResourceMark rm;
                 const char *full_name = bt_method->external_name_as_fully_qualified();
-                _frames[_frame_count].full_name = NEW_C_HEAP_ARRAY2(char, strlen(full_name) + 1, mtInternal);
+                _frames[_frame_count].full_name = NEW_C_HEAP_ARRAY(char, strlen(full_name) + 1, mtInternal);
                 strcpy((char*)_frames[_frame_count].full_name, full_name);
 
                 _frame_count++;
