@@ -44,7 +44,7 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
 
                 ResourceMark rm;
                 const char *full_name = bt_method->external_name_as_fully_qualified();
-                _frames[_frame_count].full_name = new char[strlen(full_name) + 1];
+                _frames[_frame_count].full_name = NEW_C_HEAP_ARRAY2(char, strlen(full_name) + 1, mtInternal);
                 strcpy((char*)_frames[_frame_count].full_name, full_name);
 
                 _frame_count++;
@@ -56,9 +56,9 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
 }
 
 JTSanStackTrace::~JTSanStackTrace() {
-    // for (size_t i = 0; i < _frame_count; i++) {
-    //     delete[] _frames[i].full_name;
-    // }
+    for (size_t i = 0; i < _frame_count; i++) {
+        FREE_C_HEAP_ARRAY(char, (char*)_frames[i].full_name);
+    }
 }
 
 size_t JTSanStackTrace::frame_count(void) const {
