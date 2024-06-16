@@ -95,7 +95,7 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     ShadowCell prev;
     // try to lock the report lock
     JTSanStackTrace stack_trace(nullptr);
-    if (CheckRaces(thread, stack_trace, addr, cur, prev) && ShadowMemory::try_lock_report()) {
+    if (CheckRaces(thread, stack_trace, addr, cur, prev) && !JTSanSilent && ShadowMemory::try_lock_report()) {
       // we have found a race now see if we have recently reported it or it is suppressed
       if (JtsanReportMap::get_instance()->get(addr) != nullptr) {
         // ignore
