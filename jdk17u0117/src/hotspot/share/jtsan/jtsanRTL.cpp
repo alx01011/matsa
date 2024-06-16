@@ -107,9 +107,9 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
         int lineno = m->line_number_from_bci(m->bci_from(bcp));
         fprintf(stderr, "Data race detected in method %s, line %d\n",
             m->external_name_as_fully_qualified(),lineno);
-        fprintf(stderr, "\t\tPrevious access %s of size %d, by thread %d, epoch %lu, offset %d\n",
+        fprintf(stderr, "\t\tPrevious access %s of size %lu, by thread %lu, epoch %lu, offset %lu\n",
             prev.is_write ? "write" : "read", access_size, prev.tid, prev.epoch, prev.offset);
-        fprintf(stderr, "\t\tCurrent access %s of size %d, by thread %d, epoch %lu, offset %d\n",
+        fprintf(stderr, "\t\tCurrent access %s of size %lu, by thread %lu, epoch %lu, offset %lu\n",
             cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch, cur.offset);
 
         fprintf(stderr, "\t\t==================Stack trace==================\n");
