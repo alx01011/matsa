@@ -1,5 +1,37 @@
 #include "suppression.hpp"
 #include "memory/resourceArea.hpp"
+#include "memory/allocation.hpp"
+
+
+template <typename T>
+class CustomPairAllocator {
+public:
+    using value_type = T;
+
+    CustomAllocator() = default;
+
+    template <typename U>
+    constexpr CustomAllocator(const CustomAllocator<U>&) noexcept {}
+
+    [[nodiscard]] T* allocate(std::size_t n) {
+        if (n > std::size_t(-1) / sizeof(T)) exit(1);
+        if (auto p = static_cast<T*>(NEW_C_HEAP_ARRAY(char, n * sizeof(T), mtInternal)) {
+            return p;
+        }
+        exit(1);
+    }
+
+    void deallocate(T* p, std::size_t n) noexcept {
+        FREE_C_HEAP_ARRAY(char, p);
+    }
+};
+
+template <typename T, typename U>
+bool operator==(const CustomAllocator<T>&, const CustomAllocator<U>&) { return true; }
+
+template <typename T, typename U>
+bool operator!=(const CustomAllocator<T>&, const CustomAllocator<U>&) { return false; }
+
 
 const char * def_top_frame_suppressions = "";
 
@@ -60,7 +92,6 @@ static void add_suppressions(Trie *trie, const char *suppression_string) {
         if (suppression_string[i] == '\n' || suppression_string[i] == '\0') {
             if (j != 0) {
                 buffer[j] = 0;
-                fprintf(stderr, "Adding suppression: %s\n", buffer);
                 trie->insert(buffer);
                 buffer[j = 0] = 0;
             }

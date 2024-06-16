@@ -2,10 +2,12 @@
 #define SUPPRESSION_HPP
 
 #include "stacktrace.hpp"
-#include "pair_allocator.hpp"
 #include "memory/allocation.hpp"
 
 #include <unordered_map>
+
+template <typename T>
+class CustomPairAllocator;
 
 class TrieNode : public CHeapObj<mtInternal> {
 public:
