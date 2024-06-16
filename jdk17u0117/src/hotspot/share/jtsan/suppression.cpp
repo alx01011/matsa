@@ -53,21 +53,18 @@ bool Trie::search(const char *name) {
 
 static void add_suppressions(Trie *trie, const char *suppression_string) {
     // assume each string can have up to 1023 characters
-    char buffer[1024] = "";
+    char buffer[1024] = {0};
 
     fprintf(stderr, "Suppression string: %s\n", suppression_string);
 
     for (size_t i = 0, j = 0; ; i++) {
         if (suppression_string[i] == '\n' || suppression_string[i] == '\0') {
-            if (j == 0) {
-                continue;
+            if (j != 0) {
+                buffer[j] = 0;
+                fprintf(stderr, "Adding suppression: %s\n", buffer);
+                trie->insert(buffer);
+                buffer[j = 0] = 0;
             }
-
-
-            buffer[j] = 0;
-            fprintf(stderr, "Adding suppression: %s\n", buffer);
-            trie->insert(buffer);
-            buffer[j = 0] = 0;
 
             if (suppression_string[i] == '\0') {
                 break;
