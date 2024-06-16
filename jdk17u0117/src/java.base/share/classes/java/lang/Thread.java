@@ -45,6 +45,8 @@ import jdk.internal.vm.annotation.IntrinsicCandidate;
 import sun.nio.ch.Interruptible;
 import sun.security.util.SecurityConstants;
 
+import java.util.concurrent.annotation.*;
+
 /**
  * A <i>thread</i> is a thread of execution in a program. The Java
  * Virtual Machine allows an application to have multiple threads of
@@ -170,6 +172,7 @@ public class Thread implements Runnable {
     private Runnable target;
 
     /* The group of this thread */
+    @JTSanIgnoreField
     private ThreadGroup group;
 
     /* The context ClassLoader for this thread */
@@ -187,6 +190,7 @@ public class Thread implements Runnable {
 
     /* ThreadLocal values pertaining to this thread. This map is maintained
      * by the ThreadLocal class. */
+    @JTSanIgnoreField
     ThreadLocal.ThreadLocalMap threadLocals = null;
 
     /*

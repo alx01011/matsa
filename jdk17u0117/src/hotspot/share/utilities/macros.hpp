@@ -342,7 +342,7 @@
 #if INCLUDE_JTSAN
 #define JTSAN_ONLY(code) \
     do { \
-      if (JTSAN) { \
+      if (JTSan) { \
         code; \
       } \
     } while (0)

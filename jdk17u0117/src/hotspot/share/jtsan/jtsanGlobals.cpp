@@ -2,7 +2,7 @@
 #include "runtime/atomic.hpp"
 
 volatile bool    _is_jtsan_initialized = false;
-volatile unsigned char _gc_epoch = 1;
+volatile unsigned char _gc_epoch = 0;
 
 volatile bool   _is_klass_init = false;
 

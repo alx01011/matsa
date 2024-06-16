@@ -65,11 +65,12 @@ class ShadowMemory : public CHeapObj<mtInternal>{
 
 // 64bit shadow cell
 struct ShadowCell {
-    uint16_t tid      : 16;
-    uint64_t epoch    : 37;
-    uint8_t offset    : 3; // 0-7 in case of 1,2 or byte access
-    uint8_t  gc_epoch : 5;
-    uint8_t  is_write : 1;
+    uint64_t tid        : 8;
+    uint64_t epoch      : 40;
+    uint64_t offset     : 3; // 0-7 in case of 1,2 or byte access
+    uint64_t  gc_epoch  : 11;
+    uint64_t  is_write  : 1;
+    uint64_t is_ignored : 1; // in case of a suppressed race
 };
 
 class ShadowBlock : AllStatic {
@@ -77,6 +78,9 @@ class ShadowBlock : AllStatic {
         static ShadowCell  load_cell(uptr mem, uint8_t index);
         static void       store_cell(uptr mem, ShadowCell* cell); 
         static void       store_cell_at(uptr mem, ShadowCell* cell, uint8_t index);
+    private:
+        static ShadowCell atomic_load_cell(ShadowCell *cell);
+        static void       atomic_store_cell(ShadowCell *cell, ShadowCell *val);
 };
 
 #endif

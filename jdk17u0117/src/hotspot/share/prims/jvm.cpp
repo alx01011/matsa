@@ -3863,7 +3863,7 @@ JVM_END
 
 // aantonak - jtsan
 JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env, jobject x))
-    if (JTSAN && thread && thread->is_Java_thread()) {
+    if (JTSan && thread && thread->is_Java_thread()) {
       JavaThread *jt = (JavaThread *) thread;
       frame fr = jt->last_frame();
       // To get the actual sender frame, we need to skip Runtime and java.util.concurrent frames
@@ -3883,7 +3883,7 @@ JVM_END
 
 // aantonak - jtsan
 JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env, jobject x))
-    if (JTSAN && thread && thread->is_Java_thread()) {
+    if (JTSan && thread && thread->is_Java_thread()) {
         JavaThread *jt = (JavaThread *) thread;
         frame fr = jt->last_frame();
         // To get the actual sender frame, we need to skip Runtime and java.util.concurrent frames
@@ -3902,7 +3902,7 @@ JVM_END
 
 // aantonak - jtsan
 JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
-    if (JTSAN && thread && thread->is_Java_thread()) {
+    if (JTSan && thread && thread->is_Java_thread()) {
       JavaThread *jt = (JavaThread *) thread;
       frame fr = jt->last_frame();
       // get the actual frame
@@ -3922,7 +3922,7 @@ JVM_END
 
 // aantonak - jtsan
 JVM_ENTRY(void, JVM_jtsanReleaseAcquire(JNIEnv* env, jobject x))
-    if (JTSAN && thread && thread->is_Java_thread()) {
+    if (JTSan && thread && thread->is_Java_thread()) {
       JavaThread *jt = (JavaThread *) thread;
       frame fr = jt->last_frame();
       // get the actual frame
@@ -3950,7 +3950,7 @@ JVM_END
 
 // aantonak - jtsan
 JVM_ENTRY(void, JVM_jtsanAcquire(JNIEnv* env, jobject x))
-    if (JTSAN && thread && thread->is_Java_thread()) {
+    if (JTSan && thread && thread->is_Java_thread()) {
       JavaThread *jt = (JavaThread *) thread;
       frame fr = jt->last_frame();
       // get the actual frame
@@ -3976,7 +3976,7 @@ JVM_END
 
 // aantonak - jtsan
 JVM_ENTRY(void, JVM_jtsanRelease(JNIEnv* env, jobject x))
-    if (JTSAN && thread && thread->is_Java_thread()) {
+    if (JTSan && thread && thread->is_Java_thread()) {
       JavaThread *jt = (JavaThread *) thread;
       frame fr = jt->last_frame();
       // get the actual frame

@@ -2938,8 +2938,19 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
           return JNI_EINVAL;
         }
       }
-    } else if (match_option(option, "-XX:+JTSAN", &tail)) { // aantonak - jtsan
-        if (FLAG_SET_CMDLINE(JTSAN, true) != JVMFlag::SUCCESS) {
+    } else if (match_option(option, "-XX:+JTSan", &tail)) { // aantonak - jtsan
+        if (FLAG_SET_CMDLINE(JTSan, true) != JVMFlag::SUCCESS) {
+          return JNI_EINVAL;
+        }
+         // Unknown option
+      } else if (match_option(option, "-XX:+JTSanSilent", &tail)) { // aantonak - jtsan 
+        if (!JTSan) {
+          jio_fprintf(defaultStream::error_stream(),
+            "JTSanSilent can only be used with JTSan\n");
+          return JNI_EINVAL;
+        }
+
+        if (FLAG_SET_CMDLINE(JTSanSilent, true) != JVMFlag::SUCCESS) {
           return JNI_EINVAL;
         }
          // Unknown option

@@ -25,6 +25,9 @@ JtsanThreadState::JtsanThreadState(void) {
     fprintf(stderr, "JTSAN: Failed to protect thread state\n");
     exit(1);
   }
+
+  // increment the epoch of the initial thread
+    this->epoch[0].set(0, 1);
 }
 
 JtsanThreadState::~JtsanThreadState(void) {
