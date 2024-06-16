@@ -107,6 +107,7 @@ bool JTSanSuppression::is_suppressed(JTSanStackTrace *stack_trace) {
 
     // now check the rest of the frames
     for (size_t i = 1; i < stack_trace->frame_count(); i++) {
+        ResourceMark rm;
         frame = stack_trace->get_frame(i).method->external_name_as_fully_qualified();
         fprintf(stderr, "Checking suppression for frame: %s -> ", frame);
         if (frame_suppressions->search(frame)) {
