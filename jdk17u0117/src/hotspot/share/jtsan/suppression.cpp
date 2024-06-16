@@ -1,5 +1,7 @@
 #include "suppression.hpp"
 
+#include "memory/resourceArea.hpp"
+
 const char * def_top_frame_suppressions = "";
 
 const char * def_frame_suppressions = 
@@ -92,6 +94,8 @@ void JTSanSuppression::init(void) {
 }
 
 bool JTSanSuppression::is_suppressed(JTSanStackTrace *stack_trace) {
+    ResourceMark rm;
+
     // first check the top frame
     const char *frame = stack_trace->get_frame(0).method->external_name_as_fully_qualified();
     fprintf(stderr, "Checking suppression for frame: %s -> ", frame);
