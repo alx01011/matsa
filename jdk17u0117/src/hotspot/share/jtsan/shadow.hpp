@@ -28,8 +28,6 @@ class ShadowMemory : public CHeapObj<mtInternal>{
     private:
         static ShadowMemory *shadow; // singleton
 
-        Mutex *_report_lock;
-
         ShadowMemory(size_t size, void *shadow_base, uptr offset, uptr heap_start); // private constructor
         ~ShadowMemory();
 
@@ -46,9 +44,6 @@ class ShadowMemory : public CHeapObj<mtInternal>{
         static ShadowMemory* getInstance(void);
 
         void *MemToShadow(uptr mem);
-
-        static bool try_lock_report(void);
-        static void unlock_report(void);
 };
 
 /*
@@ -66,10 +61,10 @@ class ShadowMemory : public CHeapObj<mtInternal>{
 // 64bit shadow cell
 struct ShadowCell {
     uint64_t tid        : 8;
-    uint64_t epoch      : 40;
+    uint64_t epoch      : 32;
     uint64_t offset     : 3; // 0-7 in case of 1,2 or byte access
-    uint64_t  gc_epoch  : 11;
-    uint64_t  is_write  : 1;
+    uint64_t gc_epoch   : 19;
+    uint64_t is_write   : 1;
     uint64_t is_ignored : 1; // in case of a suppressed race
 };
 

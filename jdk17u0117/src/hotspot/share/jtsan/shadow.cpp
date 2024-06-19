@@ -26,8 +26,6 @@ ShadowMemory::ShadowMemory(size_t size, void *shadow_base, uptr offset, uptr hea
     this->shadow_base       = shadow_base;
     this->offset            = offset;
     this->heap_base         = heap_base;
-
-    this->_report_lock = new Mutex(Mutex::tty, "JTSAN Report Lock");
 }
 
 ShadowMemory::~ShadowMemory() {
@@ -130,8 +128,10 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
         /*
           * Technically, an epoch can never be zero, since the gc epoch starts from 1
           * So a zero epoch means the cell is free.
+          * Additionally, we prefer cells with smaller gc epochs, since they refer to different memory locations
+          * (prior to gc)
         */
-        if (!cell_l.epoch) {
+        if (!cell_l.epoch || (cell_l.gc_epoch != cell->gc_epoch)) {
             *(cell_addr + i) = *cell;
             return;
         }
@@ -152,17 +152,4 @@ void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
     ShadowCell *cell_addr = &((ShadowCell *)shadow_addr)[index];
     *cell_addr = *cell;
 }
-
-bool ShadowMemory::try_lock_report(void) {
-    ShadowMemory *shadow = ShadowMemory::getInstance();
-
-    return shadow->_report_lock->try_lock();
-}
-
-void ShadowMemory::unlock_report(void) {
-    ShadowMemory *shadow = ShadowMemory::getInstance();
-
-    shadow->_report_lock->unlock();
-}
-
 
