@@ -1,7 +1,6 @@
 #include "jtsanRTL.hpp"
 #include "threadState.hpp"
 #include "jtsanGlobals.hpp"
-#include "jtsanReportMap.hpp"
 #include "stacktrace.hpp"
 #include "suppression.hpp"
 
