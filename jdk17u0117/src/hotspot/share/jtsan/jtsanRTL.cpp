@@ -15,7 +15,7 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
 
-bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
+bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace *trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
 
     bool stored   = false;
@@ -61,9 +61,8 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace &trace, void *addr
             isRace = true;
 
             // its a race, so check if it is a suppressed one
-            JTSanStackTrace stack_trace(thread);
-            trace = stack_trace;
-            if (JTSanSuppression::is_suppressed(&stack_trace)) {
+            trace = new JTSanStackTrace(thread);
+            if (JTSanSuppression::is_suppressed(trace)) {
                 // ignore
                 isRace = false;
             }
@@ -96,7 +95,7 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     // race
     ShadowCell prev;
     // try to lock the report lock
-    JTSanStackTrace stack_trace(nullptr);
+    JTSanStackTrace *stack_trace = nullptr;
     if (CheckRaces(thread, stack_trace, addr, cur, prev) && !JTSanSilent) {
         ResourceMark rm;
         int lineno = m->line_number_from_bci(m->bci_from(bcp));
@@ -110,8 +109,8 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
         fprintf(stderr, "\t\t==================Stack trace==================\n");
 
         
-        for (size_t i = 0; i < stack_trace.frame_count(); i++) {
-            JTSanStackFrame frame = stack_trace.get_frame(i);
+        for (size_t i = 0; i < stack_trace->frame_count(); i++) {
+            JTSanStackFrame frame = stack_trace->get_frame(i);
             int lineno = frame.method->line_number_from_bci(frame.method->bci_from(frame.pc));
             fprintf(stderr, "\t\t\t%s : %d\n", frame.method->external_name_as_fully_qualified(), lineno);
         }
