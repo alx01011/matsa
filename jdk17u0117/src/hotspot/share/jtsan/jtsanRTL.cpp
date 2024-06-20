@@ -15,7 +15,7 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
 
-bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace *trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
+bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
 
     bool stored   = false;
