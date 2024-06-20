@@ -18,7 +18,7 @@ class JTSanStackFrame : public StackObj {
         address pc;
 };
 
-class JTSanStackTrace : public StackObj {
+class JTSanStackTrace : public CHeapObj<mtInternal> {
     public:
         JTSanStackTrace(Thread *thread);
 
