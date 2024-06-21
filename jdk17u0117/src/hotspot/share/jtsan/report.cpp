@@ -17,7 +17,14 @@ void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
         Method *method = frame.method;
         address pc = frame.pc;
 
-        const char *file_name   = method->method_holder()->source_file_name()->as_C_string();
+        const char    *file_name   = nullptr;
+        InstanceKlass *holder      = method->method_holder();
+        Symbol        *source_file = nullptr;
+
+        if (holder != nullptr && (source_file = holder->source_file_name()) != nullptr){
+            file_name = source_file->as_C_string();
+        }
+
         const char *method_name = method->external_name_as_fully_qualified();
         const int lineno        = method->line_number_from_bci(method->bci_from(pc));
 
