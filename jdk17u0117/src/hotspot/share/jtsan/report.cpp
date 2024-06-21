@@ -48,10 +48,11 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
     fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%lu:\n" RESET, prev.is_write ? "write" : "read", size, addr, prev.tid);
     // TODO: find previous stack trace
 
+    // null checks here are not necessary, at least thats what tests have shown so far
     const char *file_name   = m->method_holder()->source_file_name()->as_C_string();
     const char *method_name = m->external_name_as_fully_qualified();
     const int lineno        = m->line_number_from_bci(m->bci_from(bcp));
 
-    fprintf(stderr, "\nSUMMARY: ThreadSanitizer: data race %s:%d in %s\n", "file", 0, "method");
+    fprintf(stderr, "\nSUMMARY: ThreadSanitizer: data race %s:%d in %s\n", file_name, lineno, method_name);
     fprintf(stderr, "==================\n");
 }
