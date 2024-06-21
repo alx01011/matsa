@@ -1,7 +1,6 @@
 #include "jtsanRTL.hpp"
 #include "threadState.hpp"
 #include "jtsanGlobals.hpp"
-#include "jtsanReportMap.hpp"
 #include "stacktrace.hpp"
 #include "suppression.hpp"
 
@@ -16,7 +15,7 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
 
-bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
+bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
 
     bool stored   = false;
@@ -25,17 +24,17 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace &trace, void *addr
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell = ShadowBlock::load_cell(addr_aligned, i);
 
-       // if the cell is ignored then we can skip the whole block
-        if (UNLIKELY(cell.is_ignored)) {
-          return false;
-        }
-
         // we can safely ignore if epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
         // previous access was by the same thread so we can skip
         // different offset means different memory location in case of 1,2 or 4 byte access
         if (cell.epoch == 0 || cur.gc_epoch != cell.gc_epoch || cell.offset != cur.offset) {
             continue;
+        }
+
+        // if the cell is ignored then we can skip the whole block
+        if (UNLIKELY(cell.is_ignored)) {
+          return false;
         }
 
         // same slot this is not a race
@@ -62,14 +61,16 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace &trace, void *addr
             isRace = true;
 
             // its a race, so check if it is a suppressed one
-            JTSanStackTrace stack_trace(thread);
-            trace = stack_trace;
-            if (JTSanSuppression::is_suppressed(&stack_trace)) {
+            trace = new JTSanStackTrace(thread);
+            if (JTSanSuppression::is_suppressed(trace)) {
                 // ignore
-                cur.is_ignored = 1;
-                ShadowBlock::store_cell_at((uptr)addr, &cur, 0);
-                return false;
+                isRace = false;
             }
+
+            cur.is_ignored = 1;
+            ShadowBlock::store_cell_at((uptr)addr, &cur, 0);
+            stored = true;
+
 
             break;
         }
@@ -94,15 +95,8 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     // race
     ShadowCell prev;
     // try to lock the report lock
-    JTSanStackTrace stack_trace(nullptr);
-    if (CheckRaces(thread, stack_trace, addr, cur, prev) && !JTSanSilent && ShadowMemory::try_lock_report()) {
-      // we have found a race now see if we have recently reported it or it is suppressed
-      if (JtsanReportMap::get_instance()->get(addr) != nullptr) {
-        // ignore
-        ShadowMemory::unlock_report();
-        return;
-      }
-
+    JTSanStackTrace *stack_trace = nullptr;
+    if (CheckRaces(thread, stack_trace, addr, cur, prev) && !JTSanSilent) {
         ResourceMark rm;
         int lineno = m->line_number_from_bci(m->bci_from(bcp));
         fprintf(stderr, "Data race detected in method %s, line %d\n",
@@ -115,19 +109,12 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
         fprintf(stderr, "\t\t==================Stack trace==================\n");
 
         
-        for (size_t i = 0; i < stack_trace.frame_count(); i++) {
-            JTSanStackFrame frame = stack_trace.get_frame(i);
+        for (size_t i = 0; i < stack_trace->frame_count(); i++) {
+            JTSanStackFrame frame = stack_trace->get_frame(i);
             int lineno = frame.method->line_number_from_bci(frame.method->bci_from(frame.pc));
             fprintf(stderr, "\t\t\t%s : %d\n", frame.method->external_name_as_fully_qualified(), lineno);
         }
 
         fprintf(stderr, "\t\t===============================================\n");
-
-        // store the addr in the report map
-        JtsanReportMap::get_instance()->put(addr);
-
-        // unlock report lock after printing the report
-        // this is to avoid multiple reports for consecutive accesses
-        ShadowMemory::unlock_report();
     }
 }
