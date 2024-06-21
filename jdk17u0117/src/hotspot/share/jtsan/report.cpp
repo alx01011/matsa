@@ -19,7 +19,7 @@ void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
 
         const char    *file_name   = nullptr;
         InstanceKlass *holder      = method->method_holder();
-        Symbol        *source_file = nullptr;
+        Symbol        *source_file = "<null>";
 
         if (holder != nullptr && (source_file = holder->source_file_name()) != nullptr){
             file_name = source_file->as_C_string();
