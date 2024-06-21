@@ -97,7 +97,7 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     ShadowCell prev;
     JTSanStackTrace *stack_trace = nullptr;
     if (CheckRaces(thread, stack_trace, addr, cur, prev) && !JTSanSilent) {
-        JTSanReport::do_report_race(stack_trace, addrr, access_size, bcp, m, cur, prev);
+        JTSanReport::do_report_race(stack_trace, addr, access_size, bcp, m, cur, prev);
 
 
         // ResourceMark rm;

@@ -38,7 +38,7 @@ JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t size, ad
     fprintf(stderr, BLUE " %s of size %u at %p by thread T%lu:\n" RESET,  cur.is_write ? "Write" : "Read", size, addr, cur.tid);
     print_stack_trace(trace);
     
-    fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%d:\n" RESET, prev.is_write ? "write" : "read", size, addr, prev.tid);
+    fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%lu:\n" RESET, prev.is_write ? "write" : "read", size, addr, prev.tid);
     // TODO: find previous stack trace
 
     const char *file_name   = m->method_holder()->source_file_name()->as_C_string();
