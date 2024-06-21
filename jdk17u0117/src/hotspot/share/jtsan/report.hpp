@@ -9,7 +9,7 @@
 #include "utilities/globalDefinitions.hpp"
 
 namespace JTSanReport {
-    extern Mutex _report_lock;
+    extern Mutex *_report_lock;
 
     void do_report_race   (JTSanStackTrace *trace, void *addr, uint8_t size, address bcp, Method *m, 
                             ShadowCell &cur, ShadowCell &prev);

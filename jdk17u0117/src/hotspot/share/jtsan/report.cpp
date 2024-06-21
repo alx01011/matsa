@@ -8,7 +8,7 @@
 #define BLUE "\033[1;34m"
 #define RESET "\033[0m"
 
-Mutex JTSanReport::_report_lock(Mutex::leaf, "JTSanReport::_report_lock");
+Mutex *JTSanReport::_report_lock;
 
 // must hold lock else the output will be garbled
 void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
@@ -35,17 +35,19 @@ void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
 
 void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t size, address bcp, Method *m, 
                             ShadowCell &cur, ShadowCell &prev) {
-    JTSanReport::_report_lock.lock();
+    JTSanReport::_report_lock->lock();
     
     int pid = os::current_process_id();
 
     fprintf(stderr, "==================\n");
 
     fprintf(stderr, RED "WARNING: ThreadSanitizer: data race (pid=%d)\n", pid);
-    fprintf(stderr, BLUE " %s of size %u at %p by thread T%lu:\n" RESET,  cur.is_write ? "Write" : "Read", size, addr, cur.tid);
+    fprintf(stderr, BLUE " %s of size %u at %p by thread T%lu:\n" RESET,  cur.is_write ? "Write" : "Read", 
+            size, addr, cur.tid);
     print_stack_trace(trace);
     
-    fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%lu:\n" RESET, prev.is_write ? "write" : "read", size, addr, prev.tid);
+    fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%lu:\n" RESET, prev.is_write ? "write" : "read", 
+            size, addr, prev.tid);
     // TODO: find previous stack trace
 
     // null checks here are not necessary, at least thats what tests have shown so far
@@ -55,4 +57,6 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
 
     fprintf(stderr, "\nSUMMARY: ThreadSanitizer: data race %s:%d in %s\n", file_name, lineno, method_name);
     fprintf(stderr, "==================\n");
+
+    JTSanReport::_report_lock->unlock();
 }
