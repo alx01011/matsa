@@ -34,6 +34,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         // previous access was by the same thread so we can skip
         // different offset means different memory location in case of 1,2 or 4 byte access
         if (cell.epoch == 0 || cur.gc_epoch != cell.gc_epoch || cell.offset != cur.offset) {
+            i++;
             continue;
         }
 
@@ -46,6 +47,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
               ShadowBlock::store_cell_at((uptr)addr, &cur, i);
               stored = true;
           }
+          i++;
           continue;
         }
 
@@ -54,6 +56,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
             uint32_t thr = JtsanThreadState::getEpoch(cur.tid, cell.tid);
 
             if (thr >= cell.epoch) {
+                i++;
                 continue;
             }
     
