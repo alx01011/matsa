@@ -28,7 +28,7 @@ void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
         const char *method_name = method->external_name_as_fully_qualified();
         const int lineno        = method->line_number_from_bci(method->bci_from(pc));
 
-        fprintf(stderr, "  #%zu %s %s:%d\n", i, method_name, file_name, lineno);
+        fprintf(stderr, "  #%zu %s() %s:%d\n", i, method_name, file_name, lineno);
     }
 
 }
@@ -55,7 +55,7 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
     const char *method_name = m->external_name_as_fully_qualified();
     const int lineno        = m->line_number_from_bci(m->bci_from(bcp));
 
-    fprintf(stderr, "\nSUMMARY: ThreadSanitizer: data race %s:%d in %s\n", file_name, lineno, method_name);
+    fprintf(stderr, "\nSUMMARY: ThreadSanitizer: data race %s:%d in %s()\n", file_name, lineno, method_name);
     fprintf(stderr, "==================\n");
 
     JTSanReport::_report_lock->unlock();
