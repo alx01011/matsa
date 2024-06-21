@@ -8,7 +8,7 @@
 #define BLUE "\033[1;34m"
 #define RESET "\033[0m"
 
-Mutex JTSanReport::_report_lock;
+Mutex JTSanReport::_report_lock(Mutex::leaf, "JTSanReport::_report_lock");
 
 // must hold lock else the output will be garbled
 void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
@@ -21,12 +21,12 @@ void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
         const char *method_name = method->external_name_as_fully_qualified();
         const int lineno        = method->line_number_from_bci(method->bci_from(pc));
 
-        fprintf(stderr, "  #%d %s %s:%d\n", i, method_name, file_name, lineno);
+        fprintf(stderr, "  #%zu %s %s:%d\n", i, method_name, file_name, lineno);
     }
 
 }
 
-JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t size, address bcp, Method *m, 
+void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t size, address bcp, Method *m, 
                             ShadowCell &cur, ShadowCell &prev) {
     JTSanReport::_report_lock.lock();
     
