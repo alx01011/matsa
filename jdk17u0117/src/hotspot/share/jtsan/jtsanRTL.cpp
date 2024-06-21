@@ -21,20 +21,20 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     bool stored   = false;
     bool isRace   = false;
 
-    for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
-        ShadowCell cell = ShadowBlock::load_cell(addr_aligned, i);
+    ShadowCell cell = ShadowBlock::load_cell(addr_aligned, 0);
 
+    // this can only be on the first cell
+    if (UNLIKELY(cell.is_ignored)) {
+        return false;
+    }
+
+    for (uint8_t i = 0; i < SHADOW_CELLS;) {
         // we can safely ignore if epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
         // previous access was by the same thread so we can skip
         // different offset means different memory location in case of 1,2 or 4 byte access
         if (cell.epoch == 0 || cur.gc_epoch != cell.gc_epoch || cell.offset != cur.offset) {
             continue;
-        }
-
-        // if the cell is ignored then we can skip the whole block
-        if (UNLIKELY(cell.is_ignored)) {
-          return false;
         }
 
         // same slot this is not a race
@@ -74,6 +74,8 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
             break;
         }
+        // load next cell
+        cell = ShadowBlock::load_cell(addr_aligned, ++i);
     }
 
     if (!stored) {
@@ -94,7 +96,6 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
 
     // race
     ShadowCell prev;
-    // try to lock the report lock
     JTSanStackTrace *stack_trace = nullptr;
     if (CheckRaces(thread, stack_trace, addr, cur, prev) && !JTSanSilent) {
         ResourceMark rm;
