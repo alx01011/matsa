@@ -54,6 +54,7 @@ for i in `ls ./no_race/*.java`; do
     # Compile Java file to the class_files directory
     $BUILD/javac -d ./class_files $i
 done
+echo ""
 
 # run em
 for i in `ls ./no_race/*.java`; do
@@ -80,6 +81,7 @@ for i in `ls ./race/*.java`; do
     # Compile Java file to the class_files directory
     $BUILD/javac -d ./class_files $i
 done
+echo ""
 
 for i in `ls ./race/*.java`; do
     # get basename
