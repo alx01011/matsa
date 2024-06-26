@@ -36,7 +36,7 @@ JtsanThreadState::JtsanThreadState(void) {
         exit(1);
     }
 
-    protect = os::protect_memory((ThreadHistory (*)[MAX_THREADS])this->history, sizeof(ThreadHistory[MAX_THREADS]), os::MEM_PROT_RW);
+    protect = os::protect_memory((char*)this->history, sizeof(ThreadHistory[MAX_THREADS]), os::MEM_PROT_RW);
 
     if (!protect) {
         fprintf(stderr, "JTSAN: Failed to protect thread history\n");
