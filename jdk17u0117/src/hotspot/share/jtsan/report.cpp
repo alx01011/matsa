@@ -40,28 +40,15 @@ void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
 
 }
 
+bool try_print_event_trace(void *addr, int tid) {
+    JTSanEventTrace trace;
+    bool has_trace = false;
 
-void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t size, address bcp, Method *m, 
-                            ShadowCell &cur, ShadowCell &prev) {
-    JTSanReport::_report_lock->lock();
-    
-    int pid = os::current_process_id();
+    has_trace = Symbolizer::TraceUpToAddress(tace, addr, tid);
 
-    fprintf(stderr, "==================\n");
-
-    fprintf(stderr, RED "WARNING: ThreadSanitizer: data race (pid=%d)\n", pid);
-    fprintf(stderr, BLUE " %s of size %u at %p by thread T%lu:\n" RESET,  cur.is_write ? "Write" : "Read", 
-            size, addr, cur.tid);
-    print_stack_trace(trace);
-    
-    fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%lu:\n" RESET, prev.is_write ? "write" : "read", 
-            size, addr, prev.tid);
-    JTSanEventTrace prev_trace;
-    bool has_prev_trace = Symbolizer::TraceUpToAddress(prev_trace, (void *)addr, prev.tid);
-
-    if (has_prev_trace) {
-        for (int i = 0; i < prev_trace.size; i++) {
-            JTSanEvent e = prev_trace.events[i];
+    if (has_trace) {
+        for (int i = 0; i < trace.size; i++) {
+            JTSanEvent e = trace.events[i];
             // cast back to uintptr to zero extend, then cast back to method
             jmethodID mid = (jmethodID)((uintptr_t)e.pc);
             Method   *m   = Method::resolve_jmethod_id(mid);
@@ -69,7 +56,32 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
 
             print_method_info(m, bci, i);
         }
-    } else {
+    }
+
+    return has_trace;
+}
+
+void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t size, address bcp, Method *m, 
+                            ShadowCell &cur, ShadowCell &prev) {
+    JTSanReport::_report_lock->lock();
+    
+    int pid = os::current_process_id();
+
+    bool has_prev_trace = false;
+
+    fprintf(stderr, "==================\n");
+
+    fprintf(stderr, RED "WARNING: ThreadSanitizer: data race (pid=%d)\n", pid);
+    fprintf(stderr, BLUE " %s of size %u at %p by thread T%lu:\n" RESET,  cur.is_write ? "Write" : "Read", 
+            size, addr, cur.tid);
+    if (!try_print_event_trace(addr, cur.tid)) {
+        // less accurate line numbers
+        print_stack_trace(trace);
+    }
+    
+    fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%lu:\n" RESET, prev.is_write ? "write" : "read", 
+            size, addr, prev.tid);
+    if (!try_print_event_trace(addr, prev.tid)) {
         fprintf(stderr, "  <no stack trace available>\n");
     }
 
