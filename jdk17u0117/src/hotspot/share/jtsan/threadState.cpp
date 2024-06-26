@@ -29,19 +29,7 @@ JtsanThreadState::JtsanThreadState(void) {
   // increment the epoch of the initial thread
     this->epoch[0].set(0, 1);
 
-    this->history = (ThreadHistory (*)[MAX_THREADS])os::reserve_memory(sizeof(ThreadHistory[MAX_THREADS]));
-
-    if (this->history == nullptr) {
-        fprintf(stderr, "JTSAN: Failed to allocate thread history memory\n");
-        exit(1);
-    }
-
-    protect = os::protect_memory((char*)this->history, sizeof(ThreadHistory[MAX_THREADS]), os::MEM_PROT_RW);
-
-    if (!protect) {
-        fprintf(stderr, "JTSAN: Failed to protect thread history\n");
-        exit(1);
-    }
+    this->history = new ThreadHistory[MAX_THREADS];
 }
 
 JtsanThreadState::~JtsanThreadState(void) {
@@ -51,10 +39,6 @@ JtsanThreadState::~JtsanThreadState(void) {
 
     this->epoch = nullptr;
     this->size = 0;
-
-    if (this->history != nullptr) {
-        os::release_memory((char*)this->history, sizeof(ThreadHistory[MAX_THREADS]));
-    }
 
     JtsanThreadState::instance = nullptr;
 }

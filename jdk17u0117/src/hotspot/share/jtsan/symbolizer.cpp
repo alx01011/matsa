@@ -8,12 +8,13 @@
 
 ThreadHistory::ThreadHistory() {
     index = 0;
+    lock = new Mutex(Mutex::access, "JTSanThreadHistory::_history_lock");
 
     memset(events, 0, sizeof(JTSanEvent) * EVENT_BUFFER_SIZE);
 }
 
 void ThreadHistory::add_event(JTSanEvent event) {
-    JTSanScopedLock scopedLock(&lock);
+    JTSanScopedLock scopedLock(lock);
 
     events[index] = event;
     index = (index + 1) % EVENT_BUFFER_SIZE;
@@ -28,7 +29,7 @@ JTSanEvent ThreadHistory::get_event(int i) {
         return e;
     }
 
-    JTSanScopedLock scopedLock(&lock);
+    JTSanScopedLock scopedLock(lock);
 
     return events[i];
 }
