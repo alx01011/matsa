@@ -66,6 +66,13 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
 
         if (e.pc == (uintptr_t)addr) {
             found = true; // we don't want to include the access event
+
+            // change the bci of the previous event to the bci of the access
+            // this will give the actual line of the access instead of the line of the method
+            if (sp > 0) {
+                func_stack[sp - 1].bci = e.bci;
+            }
+
             break;
         }
 
