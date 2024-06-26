@@ -965,7 +965,8 @@ JRT_ENTRY(void, InterpreterRuntime::jtsan_method_enter(JavaThread *current, Meth
   jmethodID m_id     = method->find_jmethod_id_or_null();
 
   if (tid == 8) {
-    fprintf(stderr, "Method entry %s\n", method->name()->as_C_string());
+    int line = method->line_number_from_bci(bci);
+    fprintf(stderr, "Method entry %s:%d\n", method->name()->as_C_string(), line);
   }
 
   Symbolizer::Symbolize(METHOD_ENTRY, m_id, bci, tid);
@@ -978,7 +979,8 @@ JRT_ENTRY(void, InterpreterRuntime::jtsan_method_exit(JavaThread *current, Metho
   jmethodID m_id     = method->find_jmethod_id_or_null();
 
   if (tid == 8) {
-    fprintf(stderr, "Method exit %s\n", method->name()->as_C_string());
+    int line = method->line_number_from_bci(bci);
+    fprintf(stderr, "Method exit %s:%d\n", method->name()->as_C_string(), line);
   }
 
   Symbolizer::Symbolize(METHOD_EXIT, m_id, bci, tid);
