@@ -93,7 +93,7 @@ class InterpreterRuntime: AllStatic {
 
   // aantonak - jtsan
   // for method entry/exit
-  static void jtsan_method_enter(JavaThread *current, Method *method, address bcp);
+  static void jtsan_method_enter(JavaThread *current, Method *method, int bci);
   static void jtsan_method_exit (JavaThread *current, Method *method, address bcp);
 
   // Allocation
