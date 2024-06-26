@@ -50,8 +50,9 @@ bool try_print_event_trace(void *addr, int tid) {
         for (int i = 0; i < trace.size; i++) {
             JTSanEvent e = trace.events[i];
             // cast back to uintptr to zero extend, then cast back to method
-            jmethodID mid = (jmethodID)((uintptr_t)e.pc);
-            Method   *m   = Method::resolve_jmethod_id(mid);
+            //jmethodID mid = (jmethodID)((uintptr_t)e.pc);
+            //Method   *m   = Method::resolve_jmethod_id(mid);
+            Method *m = (Method *)((uintptr_t)e.pc);
             int bci       = e.bci;
 
             print_method_info(m, bci, i);
