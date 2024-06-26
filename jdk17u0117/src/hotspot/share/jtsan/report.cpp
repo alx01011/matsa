@@ -60,14 +60,14 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
     bool has_prev_trace = Symbolizer::TraceUpToAddress(prev_trace, (void *)addr, prev.tid);
 
     if (has_prev_trace) {
-        for (int i = 0; i < prev_trace.size; i++) {
+        for (int i = prev_trace.size - 1; i >= 0; i--) {
             JTSanEvent e = prev_trace.events[i];
             // cast back to uintptr to zero extend, then cast back to method
             jmethodID mid = (jmethodID)((uintptr_t)e.pc);
             Method   *m   = Method::resolve_jmethod_id(mid);
             int bci       = e.bci;
 
-            print_method_info(m, bci, i);
+            print_method_info(m, bci, prev_trace.size - 1 - i);
         }
     } else {
         fprintf(stderr, "  <no stack trace available>\n");
