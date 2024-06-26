@@ -971,6 +971,8 @@ JRT_ENTRY(void, InterpreterRuntime::jtsan_method_enter(JavaThread *current, Meth
     if (!sender.is_interpreted_frame()) {
       return;
     }
+    sender = sender.sender(&reg_map);
+    
 
 
     int line = method->line_number_from_bci(sender.interpreter_frame_bci());
