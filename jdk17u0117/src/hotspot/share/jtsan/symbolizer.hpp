@@ -9,8 +9,6 @@
 #include "runtime/thread.hpp"
 #include "memory/allocation.hpp"
 
-#include "stacktrace.hpp"
-
 // we don't need to keep track the if the access was a read or write
 // we already have that information in the shadow cell
 enum Event {
