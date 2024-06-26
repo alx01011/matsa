@@ -2,6 +2,7 @@
 #define SYMBOLIZER_HPP
 
 #define EVENT_BUFFER_SIZE (1 << 9) // 512 (2^9)
+#define EVENT_BUFFER_WIDTH (9)
 
 #include <cstdint>
 
@@ -34,7 +35,7 @@ class JTSanEventTrace {
 class ThreadHistory : public CHeapObj<mtInternal>{
     private:
         JTSanEvent events[256];
-        int        index;
+        uint16_t   index : EVENT_BUFFER_WIDTH; // 512 (2^9)
         Mutex     *lock;
     public:
         ThreadHistory();
