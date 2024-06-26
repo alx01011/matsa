@@ -2097,7 +2097,8 @@ void InterpreterMacroAssembler::notify_method_entry() {
     JTSAN_ONLY(
       get_thread(rthread);
       get_method(rarg);
-      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), rthread, rarg);
+      movptr    (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
+      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), rthread, rarg, c_rarg2);
     );
   }
 
@@ -2144,7 +2145,8 @@ void InterpreterMacroAssembler::notify_method_exit(
       push(state);
       get_thread(rthread);
       get_method(rarg);
-      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), rthread, rarg);
+      movptr    (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
+      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), rthread, rarg, c_rarg2);
       pop(state);
     );
   }

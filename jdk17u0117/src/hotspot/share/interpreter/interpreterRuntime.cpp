@@ -958,30 +958,19 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   JtsanThreadState::incrementEpoch(tid);
 }
 
-JRT_ENTRY(void, InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method))
+JRT_ENTRY(void, InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method, address bcp))
   int tid = JavaThread::get_jtsan_tid(current);
 
-  
-  RegisterMap reg_map(current, false);
-  const frame sender = current->last_frame().real_sender(&reg_map);
-
-  if (tid == -1 || !sender.is_interpreted_frame()) return;
-
-  const int bci      = sender.interpreter_frame_bci();
+  const int bci      = method->bci_from(bcp);
   jmethodID m_id     = method->find_jmethod_id_or_null();
 
-  Symbolizer::Symbolize(METHOD_EXIT, m_id, bci, tid);
+  Symbolizer::Symbolize(METHOD_ENTRY, m_id, bci, tid);
 JRT_END
 
-JRT_ENTRY(void, InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method))
+JRT_ENTRY(void, InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp))
   int tid = JavaThread::get_jtsan_tid(current);
   
-  RegisterMap reg_map(current, false);
-  const frame sender = current->last_frame().real_sender(&reg_map);
-
-  if (tid == -1 || !sender.is_interpreted_frame()) return;
-
-  const int bci      = sender.interpreter_frame_bci();
+  const int bci      = method->bci_from(bcp);
   jmethodID m_id     = method->find_jmethod_id_or_null();
 
   Symbolizer::Symbolize(METHOD_EXIT, m_id, bci, tid);
