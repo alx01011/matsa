@@ -78,7 +78,8 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
 
     trace.size = sp;
     for (int j = 0; j < sp; j++) {
-        trace.events[j] = func_stack[j];
+        // store in reverse order
+        trace.events[j] = func_stack[sp - j - 1];
     }
 
 
