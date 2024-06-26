@@ -2141,9 +2141,11 @@ void InterpreterMacroAssembler::notify_method_exit(
   // jtsan
   {
     JTSAN_ONLY(
+      push(state);
       get_thread(rthread);
       get_method(rarg);
       call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), rthread, rarg);
+      pop(state);
     );
   }
 
