@@ -7,6 +7,7 @@
 
 #include "runtime/mutex.hpp"
 #include "runtime/thread.hpp"
+#include "memory/allocation.hpp"
 
 #include "stacktrace.hpp"
 
@@ -32,7 +33,7 @@ class JTSanEventTrace {
 };
 
 // for each thread we keep a cyclic buffer of the last 256 events
-class ThreadHistory {
+class ThreadHistory : public CHeapObj<mtInternal>{
     private:
         JTSanEvent events[256];
         int        index;
