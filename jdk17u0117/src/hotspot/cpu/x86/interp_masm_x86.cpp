@@ -2098,10 +2098,8 @@ void InterpreterMacroAssembler::notify_method_entry() {
       get_thread  (rthread);
       get_method  (rarg);
 
-      // calculate bci
+      // calculate bcp
       movptr      (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
-      subptr      (c_rarg2, Address(rarg, Method::code_base()));
-
       
       call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), rthread, rarg, c_rarg2);
     );
@@ -2150,10 +2148,8 @@ void InterpreterMacroAssembler::notify_method_exit(
       push(state);
       get_thread(rthread);
       get_method  (rarg);
-      // calculate bci
+      // calculate bcp
       movptr      (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
-      // bci is bcp - code_base
-      subptr      (c_rarg2, Address(rarg, Method::code_base()));
 
       call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), rthread, rarg, c_rarg2);
       pop(state);
