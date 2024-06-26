@@ -958,7 +958,7 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   JtsanThreadState::incrementEpoch(tid);
 }
 
-JRT_ENTRY(void, InterpreterRuntime::tsan_method_enter(JavaThread *current, Method *method))
+JRT_ENTRY(void, InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method))
   int tid = JavaThread::get_jtsan_tid(current);
   
   RegisterMap reg_map(current, false);
@@ -968,7 +968,7 @@ JRT_ENTRY(void, InterpreterRuntime::tsan_method_enter(JavaThread *current, Metho
   Symbolizer::Symbolize(METHOD_ENTRY, method, bci, tid);
 JRT_END
 
-JRT_ENTRY(void, InterpreterRuntime::tsan_method_exit(JavaThread *current, Method *method))
+JRT_ENTRY(void, InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method))
   int tid = JavaThread::get_jtsan_tid(current);
   
   RegisterMap reg_map(current, false);
