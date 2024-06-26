@@ -961,20 +961,13 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
 JRT_ENTRY(void, InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method, address bcp))
   int tid = JavaThread::get_jtsan_tid(current);
 
-  const int bci      = method->bci_from(bcp);
+  RegisterMap reg_map(current, false, false);
+  const frame sender = current->last_frame().real_sender(&reg_map);
+
+  const int bci      = sender.interpreter_frame_bci()
   jmethodID m_id     = method->find_jmethod_id_or_null();
 
   if (tid == 8) {
-    RegisterMap reg_map(current);
-    frame sender = current->last_frame();
-
-    if (!sender.is_interpreted_frame()) {
-      return;
-    }
-    sender = sender.sender(&reg_map);
-    
-
-
     int line = method->line_number_from_bci(sender.interpreter_frame_bci());
     fprintf(stderr, "Method entry %s:%d\n", method->name()->as_C_string(), line);
   }
@@ -985,7 +978,10 @@ JRT_END
 JRT_ENTRY(void, InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp))
   int tid = JavaThread::get_jtsan_tid(current);
   
-  const int bci      = method->bci_from(bcp);
+  RegisterMap reg_map(current, false, false);
+  const frame sender = current->last_frame().real_sender(&reg_map);
+
+  const int bci      = sender.interpreter_frame_bci()
   jmethodID m_id     = method->find_jmethod_id_or_null();
 
   if (tid == 8) {
