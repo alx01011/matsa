@@ -964,7 +964,7 @@ JRT_ENTRY(void, InterpreterRuntime::jtsan_method_enter(JavaThread *current, Meth
   RegisterMap reg_map(current, false, false);
   const frame sender = current->last_frame().real_sender(&reg_map);
 
-  const int bci      = sender.interpreter_frame_bci()
+  const int bci      = sender.interpreter_frame_bci();
   jmethodID m_id     = method->find_jmethod_id_or_null();
 
   if (tid == 8) {
@@ -977,11 +977,11 @@ JRT_END
 
 JRT_ENTRY(void, InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp))
   int tid = JavaThread::get_jtsan_tid(current);
-  
+
   RegisterMap reg_map(current, false, false);
   const frame sender = current->last_frame().real_sender(&reg_map);
 
-  const int bci      = sender.interpreter_frame_bci()
+  const int bci      = sender.interpreter_frame_bci();
   jmethodID m_id     = method->find_jmethod_id_or_null();
 
   if (tid == 8) {
