@@ -16,12 +16,19 @@ ThreadHistory::ThreadHistory() {
 void ThreadHistory::add_event(JTSanEvent event) {
     JTSanScopedLock scopedLock(lock);
 
-    events[index] = event;
-    index = (index + 1) % EVENT_BUFFER_SIZE;
+    // if the buffer gets full, there is a small chance that we will report the wrong trace
+    // might happen if slots before the access get filled with method entry/exit events
+    // if it gets filled we invalidate
+
+    if (index >= EVENT_BUFFER_SIZE) {
+        index = 0;
+    }
+
+    events[index++] = event;
 }
 
 JTSanEvent ThreadHistory::get_event(int i) {
-    if (i < 0 || i >= EVENT_BUFFER_SIZE) {
+    if (i < 0 || i >= EVENT_BUFFER_SIZE || i >= index) {
         JTSanEvent e;
         e.event = ACCESS;
         e.bci = 0;

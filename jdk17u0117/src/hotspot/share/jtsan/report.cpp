@@ -20,6 +20,9 @@ void print_method_info(Method *m, int bci, int index) {
         file_name = source_file->as_C_string();
     }
 
+    char buff[256] = {0};
+    m->external_name_as_fully_qualified()
+
     const char *method_name = m->external_name_as_fully_qualified();
     const int lineno        = m->line_number_from_bci(bci);
 
@@ -66,7 +69,7 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
             jmethodID mid = (jmethodID)((uintptr_t)e.pc);
             Method   *m   = Method::resolve_jmethod_id(mid);
             int bci       = e.bci;
-            
+
             print_method_info(m, bci, i);
         }
     } else {
