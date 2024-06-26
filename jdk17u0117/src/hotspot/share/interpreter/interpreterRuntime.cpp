@@ -965,7 +965,7 @@ JRT_ENTRY(void, InterpreterRuntime::jtsan_method_enter(JavaThread *current, Meth
   jmethodID m_id     = method->find_jmethod_id_or_null();
 
   if (tid == 8) {
-    RegisterMap reg_map(current, false);
+    RegisterMap reg_map(current);
     const frame sender = current->last_frame().sender(&reg_map);
 
 
