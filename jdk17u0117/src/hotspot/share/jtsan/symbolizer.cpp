@@ -37,12 +37,12 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
     e.bci   = bci;
     e.pc    = (uintptr_t)addr;
 
-    ThreadHistory *history = JtsanThreadState::getInstance()->getThreadState(tid)->getHistory();
+    ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
     history->add_event(e);
 }
 
 bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
-    ThreadHistory *history = JtsanThreadState::getInstance()->getThreadState(tid)->getHistory();
+    ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
     bool found = false;
 
     int i;

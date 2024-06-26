@@ -49,7 +49,7 @@ class JtsanThreadState : public CHeapObj<mtInternal> {
         static void     clearEpoch(size_t threadId);
         
 
-        static ThreadHistory *     getHistory(int threadId);
+        static ThreadHistory *getHistory(int threadId);
 };
 
 #endif
