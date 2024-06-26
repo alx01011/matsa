@@ -1,5 +1,6 @@
 #include "symbolizer.hpp"
 #include "jtsanGlobals.hpp"
+#include "threadState.hpp"
 
 #include "memory/allocation.hpp"
 
