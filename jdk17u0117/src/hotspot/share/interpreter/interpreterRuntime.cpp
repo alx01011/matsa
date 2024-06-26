@@ -963,9 +963,12 @@ JRT_ENTRY(void, InterpreterRuntime::jtsan_method_enter(JavaThread *current, Meth
   
   RegisterMap reg_map(current, false);
 
-  int bci = current->last_frame().real_sender(&reg_map).interpreter_frame_bci();
+  const frame sender = current->last_frame().real_sender(&reg_map);
+  const int bci      = sender.interpreter_frame_bci();
 
-  Symbolizer::Symbolize(METHOD_ENTRY, method, bci, tid);
+  jmethodID m_id     = method->find_jmethod_id_or_null();
+
+  Symbolizer::Symbolize(METHOD_EXIT, m_id, bci, tid);
 JRT_END
 
 JRT_ENTRY(void, InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method))
