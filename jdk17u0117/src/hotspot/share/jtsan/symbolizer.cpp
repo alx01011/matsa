@@ -63,3 +63,8 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
 
     return found;
 }
+
+void Symbolizer::ClearThreadHistory(int tid) {
+    ThreadHistory *history = JtsanThreadState::getInstance()->getThreadState(tid)->getHistory();
+    history->clear();
+}

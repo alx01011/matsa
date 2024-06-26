@@ -40,13 +40,22 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         Mutex     *lock;
     public:
         ThreadHistory();
+
         void add_event(JTSanEvent event);
         JTSanEvent get_event(int i);
+
+        void clear(void) {
+            lock->lock();
+            index = 0;
+            lock->unlock();
+        }
 };
 
 namespace Symbolizer {
     void Symbolize       (Event event, void *addr, int bci, int tid);
     bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid);
+
+    void ClearThreadHistory(int tid);
 };
 
 #endif
