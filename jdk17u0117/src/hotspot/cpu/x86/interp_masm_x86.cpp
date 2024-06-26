@@ -2092,6 +2092,14 @@ void InterpreterMacroAssembler::notify_method_entry() {
                  rthread, rarg);
   }
 
+  // jtsan
+  {
+    JTSAN_ONLY(
+      get_method(c_rarg0);
+      call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), c_rarg0);
+    )
+  }
+
   // RedefineClasses() tracing support for obsolete method entry
   if (log_is_enabled(Trace, redefine, class, obsolete)) {
     NOT_LP64(get_thread(rthread);)
@@ -2127,6 +2135,14 @@ void InterpreterMacroAssembler::notify_method_exit(
             CAST_FROM_FN_PTR(address, InterpreterRuntime::post_method_exit));
     bind(L);
     pop(state);
+  }
+
+  // jtsan
+  {
+    JTSAN_ONLY(
+      get_method(c_rarg0);
+      call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), c_rarg0);
+    )
   }
 
   {

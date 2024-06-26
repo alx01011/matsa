@@ -5,6 +5,7 @@
 #include "runtime/mutex.hpp"
 
 #include "vectorclock.hpp"
+#include "symbolizer.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -20,6 +21,8 @@ class JtsanThreadState : public CHeapObj<mtInternal> {
 
         Vectorclock *epoch;
         size_t   size;
+
+        ThreadHistory *history[MAX_THREADS];
 
         JtsanThreadState(void);
         ~JtsanThreadState(void);
@@ -44,6 +47,9 @@ class JtsanThreadState : public CHeapObj<mtInternal> {
 
         static void     transferEpoch(size_t from_tid, size_t to_tid);
         static void     clearEpoch(size_t threadId);
+        
+
+        static ThreadHistory *     getHistory(int threadId);
 };
 
 #endif

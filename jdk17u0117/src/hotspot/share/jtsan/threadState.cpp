@@ -28,6 +28,10 @@ JtsanThreadState::JtsanThreadState(void) {
 
   // increment the epoch of the initial thread
     this->epoch[0].set(0, 1);
+
+    for (size_t i = 0; i < MAX_THREADS; i++) {
+        this->history[i] = new ThreadHistory();
+    }
 }
 
 JtsanThreadState::~JtsanThreadState(void) {

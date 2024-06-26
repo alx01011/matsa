@@ -1,4 +1,5 @@
 #include "report.hpp"
+#include "symbolizer.hpp"
 
 #include "runtime/os.hpp"
 
@@ -10,6 +11,22 @@
 
 Mutex *JTSanReport::_report_lock;
 
+void print_method_info(Method *m, int bci, int index) {
+    const char *file_name = "<null>";
+    InstanceKlass *holder = m->method_holder();
+    Symbol *source_file   = nullptr;
+
+    if (holder != nullptr && (source_file = holder->source_file_name()) != nullptr) {
+        file_name = source_file->as_C_string();
+    }
+
+    const char *method_name = m->external_name_as_fully_qualified();
+    const int lineno        = m->line_number_from_bci(bci);
+
+    fprintf(stderr, "  #%d %s() %s:%d\n", index, method_name, file_name, lineno);
+}
+
+
 // must hold lock else the output will be garbled
 void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
     for (size_t i = 0; i < trace->frame_count(); i++) {
@@ -17,21 +34,12 @@ void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
         Method *method = frame.method;
         address pc = frame.pc;
 
-        const char    *file_name   = "<null>";
-        InstanceKlass *holder      = method->method_holder();
-        Symbol        *source_file = nullptr;
-
-        if (holder != nullptr && (source_file = holder->source_file_name()) != nullptr){
-            file_name = source_file->as_C_string();
-        }
-
-        const char *method_name = method->external_name_as_fully_qualified();
-        const int lineno        = method->line_number_from_bci(method->bci_from(pc));
-
-        fprintf(stderr, "  #%zu %s() %s:%d\n", i, method_name, file_name, lineno);
+        int bci = method->bci_from(pc);
+        print_method_info(method, bci, i);
     }
 
 }
+
 
 void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t size, address bcp, Method *m, 
                             ShadowCell &cur, ShadowCell &prev) {
@@ -48,7 +56,20 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
     
     fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%lu:\n" RESET, prev.is_write ? "write" : "read", 
             size, addr, prev.tid);
-    // TODO: find previous stack trace
+    JTSanEventTrace prev_trace;
+    bool has_prev_trace = Symbolizer::TraceUpToAddress(prev_trace, (void *)addr, prev.tid);
+
+    if (has_prev_trace) {
+        for (int i = 0; i < prev_trace.size; i++) {
+            JTSanEvent e = prev_trace.events[i];
+            Method *m    = (Method *)e.pc;
+            int bci      = e.bci;
+
+            print_method_info(m, bci, i);
+        }
+    } else {
+        fprintf(stderr, "  <no stack trace available>\n");
+    }
 
     // null checks here are not necessary, at least thats what tests have shown so far
     const char *file_name   = m->method_holder()->source_file_name()->as_C_string();

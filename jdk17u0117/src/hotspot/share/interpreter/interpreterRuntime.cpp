@@ -84,6 +84,7 @@
 #include "jtsan/jtsanRTL.hpp"
 #include "jtsan/jtsanGlobals.hpp"
 #include "jtsan/vectorclock.hpp"
+#include "jtsan/symbolizer.hpp"
 #endif
 
 // Helper class to access current interpreter state
@@ -956,6 +957,26 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   // increment the epoch of the current thread after the transfer
   JtsanThreadState::incrementEpoch(tid);
 }
+
+JRT_ENTRY(void, InterpreterRuntime::tsan_method_enter(JavaThread *current, Method *method))
+  int tid = JavaThread::get_jtsan_tid(current);
+  
+  RegisterMap reg_map(current, false);
+
+  int bci = method->bci_from(current->last_frame().real_sender(&reg_map).interpreter_frame_bci());
+
+  Symbolizer::Symbolize(METHOD_ENTRY, method, bci, tid);
+JRT_END
+
+JRT_ENTRY(void, InterpreterRuntime::tsan_method_exit(JavaThread *current, Method *method))
+  int tid = JavaThread::get_jtsan_tid(current);
+  
+  RegisterMap reg_map(current, false);
+
+  int bci = method->bci_from(current->last_frame().real_sender(&reg_map).interpreter_frame_bci());
+
+  Symbolizer::Symbolize(METHOD_EXIT, method, bci, tid);
+JRT_END
 
 //------------------------------------------------------------------------------------------------------------------------
 // Synchronization

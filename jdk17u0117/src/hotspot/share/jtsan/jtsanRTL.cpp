@@ -4,6 +4,7 @@
 #include "stacktrace.hpp"
 #include "suppression.hpp"
 #include "report.hpp"
+#include "symbolizer.hpp"
 
 #include "runtime/thread.hpp"
 #include "runtime/frame.inline.hpp"
@@ -92,32 +93,13 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write, 0};
+    // symbolize the access
+    Symbolizer::Symbolize(ACCESS, addr, m->bci_from(bcp), tid);
 
     // race
     ShadowCell prev;
     JTSanStackTrace *stack_trace = nullptr;
     if (CheckRaces(thread, stack_trace, addr, cur, prev) && !JTSanSilent) {
         JTSanReport::do_report_race(stack_trace, addr, access_size, bcp, m, cur, prev);
-
-
-        // ResourceMark rm;
-        // int lineno = m->line_number_from_bci(m->bci_from(bcp));
-        // fprintf(stderr, "Data race detected in method %s, line %d\n",
-        //     m->external_name_as_fully_qualified(),lineno);
-        // fprintf(stderr, "\t\tPrevious access %s of size %u, by thread %lu, epoch %lu, offset %lu\n",
-        //     prev.is_write ? "write" : "read", access_size, prev.tid, prev.epoch, prev.offset);
-        // fprintf(stderr, "\t\tCurrent access %s of size %u, by thread %lu, epoch %lu, offset %lu\n",
-        //     cur.is_write ? "write" : "read", access_size, cur.tid, cur.epoch, cur.offset);
-
-        // fprintf(stderr, "\t\t==================Stack trace==================\n");
-
-        
-        // for (size_t i = 0; i < stack_trace->frame_count(); i++) {
-        //     JTSanStackFrame frame = stack_trace->get_frame(i);
-        //     int lineno = frame.method->line_number_from_bci(frame.method->bci_from(frame.pc));
-        //     fprintf(stderr, "\t\t\t%s : %d\n", frame.method->external_name_as_fully_qualified(), lineno);
-        // }
-
-        // fprintf(stderr, "\t\t===============================================\n");
     }
 }
