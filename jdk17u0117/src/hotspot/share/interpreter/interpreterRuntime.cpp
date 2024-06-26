@@ -965,7 +965,7 @@ JRT_ENTRY(void, InterpreterRuntime::jtsan_method_enter(JavaThread *current, Meth
   const frame sender = current->last_frame().real_sender(&reg_map);
 
   const int bci      = sender.interpreter_frame_bci();
-  jmethodID m_id     = sender.interpreter_frame_method()->find_jmethod_id_or_null();
+  jmethodID m_id     = method->jmethod_id();
 
   if (tid == 8) {
     int line = method->line_number_from_bci(sender.interpreter_frame_bci());
