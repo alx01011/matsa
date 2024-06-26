@@ -30,7 +30,7 @@ JtsanThreadState::JtsanThreadState(void) {
     this->epoch[0].set(0, 1);
 
     // ThreadHistory (*history)[MAX_THREADS];
-    this->history = new ThreadHistory*[MAX_THREADS];
+    this->history = new ThreadHistory[MAX_THREADS][MAX_THREADS];
 }
 
 JtsanThreadState::~JtsanThreadState(void) {
