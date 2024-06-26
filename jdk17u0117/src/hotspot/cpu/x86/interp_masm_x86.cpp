@@ -2097,7 +2097,7 @@ void InterpreterMacroAssembler::notify_method_entry() {
     JTSAN_ONLY(
       get_method(rarg);
       movptr    (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
-      call_VM   (noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_entry), rarg, c_rarg2);
+      call_VM   (noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), rarg, c_rarg2);
     );
   }
 
