@@ -20,9 +20,6 @@ void print_method_info(Method *m, int bci, int index) {
         file_name = source_file->as_C_string();
     }
 
-    char buff[256] = {0};
-    m->external_name_as_fully_qualified()
-
     const char *method_name = m->external_name_as_fully_qualified();
     const int lineno        = m->line_number_from_bci(bci);
 
