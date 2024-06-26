@@ -14,7 +14,7 @@ ThreadHistory::ThreadHistory() {
 }
 
 void ThreadHistory::add_event(JTSanEvent event) {
-    JTSanScopedLock scopedLock(lock);
+    JTSanScopedLock scopedLock(&lock);
 
     events[index] = event;
     index = (index + 1) % EVENT_BUFFER_SIZE;
@@ -29,7 +29,7 @@ JTSanEvent ThreadHistory::get_event(int i) {
         return e;
     }
 
-    JTSanScopedLock scopedLock(lock);
+    JTSanScopedLock scopedLock(&lock);
 
     return events[i];
 }

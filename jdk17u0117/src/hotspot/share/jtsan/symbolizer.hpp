@@ -43,9 +43,9 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         JTSanEvent get_event(int i);
 
         void clear(void) {
-            lock->lock();
+            lock.lock();
             index = 0;
-            lock->unlock();
+            lock.unlock();
         }
 };
 
