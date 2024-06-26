@@ -62,8 +62,10 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
     if (has_prev_trace) {
         for (int i = 0; i < prev_trace.size; i++) {
             JTSanEvent e = prev_trace.events[i];
-            Method *m    = (Method *)e.pc;
-            int bci      = e.bci;
+            // cast back to uintptr to zero extend, then cast back to method
+            jmethodID mid = (jmethodID)((uintptr_t)e.pc);
+            Method   *m   = Method::resolve_jmethod_id(mid);
+            int bci       = e.bci;
 
             print_method_info(m, bci, i);
         }
