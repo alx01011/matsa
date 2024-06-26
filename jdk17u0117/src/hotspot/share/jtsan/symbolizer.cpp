@@ -45,6 +45,9 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
     ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
     bool found = false;
 
+    JTSanEvent func_stack[EVENT_BUFFER_SIZE];
+    int sp = 0;
+
     int i;
     for (i = 0; i < EVENT_BUFFER_SIZE; i++) {
         JTSanEvent e = history->get_event(i);
@@ -57,9 +60,22 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
             break;
         }
 
-        trace.events[i] = e;
+        if (e.event == METHOD_ENTRY) {
+            func_stack[sp++] = e;
+        } else if (e.event == METHOD_EXIT) {
+            if (sp > 0) {
+                sp--;
+            }
+        } else {
+            // ignore access events
+            continue;
+        }
     }
-    trace.size = i;
+
+    trace.size = sp;
+    for (int j = 0; j < sp; j++) {
+        trace.events[j] = func_stack[j];
+    }
 
 
     return found;
