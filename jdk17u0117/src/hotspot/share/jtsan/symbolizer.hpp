@@ -34,7 +34,7 @@ class JTSanEventTrace {
 // for each thread we keep a cyclic buffer of the last 256 events
 class ThreadHistory : public CHeapObj<mtInternal>{
     private:
-        JTSanEvent events[256];
+        JTSanEvent events[EVENT_BUFFER_SIZE];
         uint16_t   index : EVENT_BUFFER_WIDTH; // 512 (2^9)
         Mutex     *lock;
     public:
