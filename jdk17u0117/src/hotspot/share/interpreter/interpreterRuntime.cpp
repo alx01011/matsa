@@ -964,7 +964,7 @@ JRT_ENTRY(void, InterpreterRuntime::jtsan_method_enter(JavaThread *current, Meth
   RegisterMap reg_map(current, false, false);
   const frame sender = current->last_frame().real_sender(&reg_map);
 
-  const int bci      = sender.interpreter_frame_bci();
+  const int bci      = method->bci_from(bcp);
   jmethodID m_id     = method->jmethod_id();
 
   Symbolizer::Symbolize(METHOD_ENTRY, m_id, bci, tid);
@@ -976,7 +976,7 @@ JRT_ENTRY(void, InterpreterRuntime::jtsan_method_exit(JavaThread *current, Metho
   RegisterMap reg_map(current, false, false);
   const frame sender = current->last_frame().real_sender(&reg_map);
 
-  const int bci      = sender.interpreter_frame_bci();
+  const int bci      = method->bci_from(bcp);
   jmethodID m_id     = method->jmethod_id();
 
   Symbolizer::Symbolize(METHOD_EXIT, m_id, bci, tid);
