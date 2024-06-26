@@ -4,9 +4,13 @@
 
 #include "memory/allocation.hpp"
 
+#include <cstring>
+
 ThreadHistory::ThreadHistory() {
     index = 0;
     lock = new Mutex(Mutex::access, "JTSanThreadHistory::_history_lock");
+
+    memset(events, 0, sizeof(JTSanEvent) * EVENT_BUFFER_SIZE);
 }
 
 void ThreadHistory::add_event(JTSanEvent event) {
