@@ -969,7 +969,7 @@ JRT_ENTRY(void, InterpreterRuntime::jtsan_method_enter(JavaThread *current, Meth
 
   if (tid == 8) {
     int line = method->line_number_from_bci(sender.interpreter_frame_bci());
-    fprintf(stderr, "Method entry %s:%d\n", method->name()->as_C_string(), line);
+    fprintf(stderr, "Method entry %s:%d, id %p\n", method->name()->as_C_string(), line, (void*)m_id);
   }
 
   Symbolizer::Symbolize(METHOD_ENTRY, m_id, bci, tid);

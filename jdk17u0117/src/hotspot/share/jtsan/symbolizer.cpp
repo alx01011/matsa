@@ -55,9 +55,9 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
     int i;
     for (i = 0; i < EVENT_BUFFER_SIZE; i++) {
         JTSanEvent e = history->get_event(i);
-        // if (e.pc == 0) {
-        //     break; // no more events
-        // }
+        if (e.pc == 0) {
+            break; // no more events
+        }
 
         if (e.pc == (uintptr_t)addr) {
             found = true; // we don't want to include the access event
