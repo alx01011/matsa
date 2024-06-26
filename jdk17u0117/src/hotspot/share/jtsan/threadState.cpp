@@ -142,3 +142,11 @@ void JtsanThreadState::clearEpoch(size_t threadId) {
 
     assert(threadId < state->size, "JTSAN: Thread id out of bounds");
 }
+
+ThreadHistory* JtsanThreadState::getHistory(int threadId) {
+    JtsanThreadState *state = JtsanThreadState::getInstance();
+
+    assert(threadId < MAX_THREADS, "JTSAN: Thread id out of bounds");
+
+    return state->history[threadId];
+}
