@@ -44,7 +44,7 @@ bool try_print_event_trace(void *addr, int tid) {
     JTSanEventTrace trace;
     bool has_trace = false;
 
-    has_trace = Symbolizer::TraceUpToAddress(tace, addr, tid);
+    has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid);
 
     if (has_trace) {
         for (int i = 0; i < trace.size; i++) {
@@ -66,8 +66,6 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
     JTSanReport::_report_lock->lock();
     
     int pid = os::current_process_id();
-
-    bool has_prev_trace = false;
 
     fprintf(stderr, "==================\n");
 
