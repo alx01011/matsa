@@ -961,16 +961,14 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
 void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method, int bci) {
   int tid = JavaThread::get_jtsan_tid(current);
 
-  //const int bci      = method->bci_from(bcp);
   jmethodID m_id     = method->jmethod_id();
 
   Symbolizer::Symbolize(METHOD_ENTRY, m_id, bci, tid);
 }
 
-void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp) {
+void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, int) {
   int tid = JavaThread::get_jtsan_tid(current);
 
-  const int bci      = method->bci_from(bcp);
   jmethodID m_id     = method->jmethod_id();
 
   Symbolizer::Symbolize(METHOD_EXIT, m_id, bci, tid);

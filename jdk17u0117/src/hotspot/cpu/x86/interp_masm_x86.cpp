@@ -2150,7 +2150,10 @@ void InterpreterMacroAssembler::notify_method_exit(
       push(state);
       get_thread(rthread);
       get_method  (rarg);
+      // calculate bci
       movptr      (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
+      subptr      (c_rarg2, Address(rarg, Method::const_offset()));
+      
       call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), rthread, rarg, c_rarg2);
       pop(state);
     );
