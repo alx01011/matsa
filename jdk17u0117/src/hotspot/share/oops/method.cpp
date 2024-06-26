@@ -205,6 +205,7 @@ char* Method::name_and_sig_as_C_string(Klass* klass, Symbol* method_name, Symbol
 }
 
 // aantonak -jtsan
+// TODO: this method is expensive and it might trigger a gc, can we do better?
 const char* Method::external_name_as_fully_qualified() const {
   return external_name(constants()->pool_holder(), name());
 }

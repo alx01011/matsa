@@ -22,7 +22,7 @@ class JtsanThreadState : public CHeapObj<mtInternal> {
         Vectorclock *epoch;
         size_t   size;
 
-        ThreadHistory *history[MAX_THREADS];
+        ThreadHistory (*history)[MAX_THREADS];
 
         JtsanThreadState(void);
         ~JtsanThreadState(void);
