@@ -961,38 +961,20 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
 void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method, address bcp) {
   int tid = JavaThread::get_jtsan_tid(current);
 
-  const jmethodID m_id     = method->find_jmethod_id_or_null();
+  //const jmethodID m_id     = method->find_jmethod_id_or_null();
   const int       bci      = method->bci_from(bcp);
 
-  if (!m_id) return;
-  else {
-    fprintf(stderr, "enter_method: %s, tid: %d\n", Method::resolve_jmethod_id(m_id)->external_name_as_fully_qualified(), tid);
-  }
-
-
-  Symbolizer::Symbolize(METHOD_ENTRY, m_id, bci, tid);
+  Symbolizer::Symbolize(METHOD_ENTRY, method, bci, tid);
 }
 
 void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp) {
   int tid = JavaThread::get_jtsan_tid(current);
 
   // can the Method * change during gc? is it ever freed? do we need jmethodid?
-  const jmethodID m_id     = method->find_jmethod_id_or_null();
+  //const jmethodID m_id     = method->find_jmethod_id_or_null();
   const int       bci      = method->bci_from(bcp);
 
-  // if (m_id == NULL) {
-  //   //puts("Method id is null");
-  // } else {
-  //   puts("Method id is not null");
-  // }
-
-    if (!m_id) return;
-  else {
-    fprintf(stderr, "exit_method: %s, tid: %d\n", Method::resolve_jmethod_id(m_id)->external_name_as_fully_qualified(), tid);
-  }
-
-
-  Symbolizer::Symbolize(METHOD_EXIT, m_id, bci, tid);
+  Symbolizer::Symbolize(METHOD_EXIT, method, bci, tid);
 }
 
 //------------------------------------------------------------------------------------------------------------------------
