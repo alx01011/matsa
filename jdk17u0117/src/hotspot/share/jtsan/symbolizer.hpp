@@ -48,7 +48,7 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         JTSanEvent get_event(int i);
 
         void clear(void) {
-            Atomic::store(&index, 0);
+            Atomic::store(&index, (uint8_t)0);
             // lock->lock();
             // index = 0;
             // lock->unlock();
