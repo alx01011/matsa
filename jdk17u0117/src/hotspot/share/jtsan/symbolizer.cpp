@@ -14,7 +14,7 @@ ThreadHistory::ThreadHistory() {
 }
 
 void ThreadHistory::add_event(JTSanEvent &event) {
-    // JTSanScopedLock scopedLock(lock);
+    JTSanScopedLock scopedLock(lock);
 
     // if the buffer gets full, there is a small chance that we will report the wrong trace
     // might happen if slots before the access get filled with method entry/exit events
@@ -26,17 +26,13 @@ void ThreadHistory::add_event(JTSanEvent &event) {
 }
 
 JTSanEvent ThreadHistory::get_event(int i) {
-    // JTSanScopedLock scopedLock(lock);
+    JTSanScopedLock scopedLock(lock);
 
     return events[i];
 }
 
 void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
-    JTSanEvent e;
-
-    e.event = event;
-    e.bci   = bci;
-    e.pc    = (uintptr_t)addr;
+    JTSanEvent e = {event, bci, (uintptr_t)addr};
 
     ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
     history->add_event(e);
