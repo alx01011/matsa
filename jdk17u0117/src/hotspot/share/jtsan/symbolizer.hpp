@@ -40,7 +40,7 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         // instead of locking, is it faster to do an atomic increment on index and just load whatever is on events?
         // a single event is 8 bytes and the memory is dword aligned, so we are safe
         // maybe 8 events could share a cache line too?
-        //Mutex     *lock;
+        Mutex     *lock;
     public:
         ThreadHistory();
 
