@@ -21,10 +21,6 @@ void ThreadHistory::add_event(JTSanEvent &event) {
     // if it gets filled we invalidate
     // because index is unsinged and has a width of 9 bits, it will wrap around
     // effectively invalidating the buffer by setting the index to 0
-
-    if (event.pc == 0) {
-        return;
-    }
     
     events[index.fetch_add(1, std::memory_order_seq_cst)] = event;
 }

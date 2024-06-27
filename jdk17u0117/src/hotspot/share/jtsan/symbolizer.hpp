@@ -1,8 +1,8 @@
 #ifndef SYMBOLIZER_HPP
 #define SYMBOLIZER_HPP
 
-#define EVENT_BUFFER_SIZE (1 << 8) // 256 events
-#define EVENT_BUFFER_WIDTH (8)
+#define EVENT_BUFFER_SIZE (1 << 16) // 65536
+#define EVENT_BUFFER_WIDTH (16)
 
 #include <cstdint>
 #include <atomic>
@@ -37,7 +37,7 @@ class JTSanEventTrace {
 class ThreadHistory : public CHeapObj<mtInternal>{
     private:
         JTSanEvent events[EVENT_BUFFER_SIZE];
-        std::atomic<uint8_t> index;
+        std::atomic<uint16_t> index;
         //uint8_t   index; // 256 events at most
         // instead of locking, is it faster to do an atomic increment on index and just load whatever is on events?
         // a single event is 8 bytes and the memory is dword aligned, so we are safe
