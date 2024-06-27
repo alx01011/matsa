@@ -964,7 +964,7 @@ void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method,
   const jmethodID m_id     = method->find_jmethod_id_or_null();
   const int       bci      = method->bci_from(bcp);
 
-  if (!m_mid) return;
+  if (!m_id) return;
 
 
   Symbolizer::Symbolize(METHOD_ENTRY, m_id, bci, tid);
@@ -983,7 +983,7 @@ void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, 
   //   puts("Method id is not null");
   // }
 
-  if (!m_mid) return;
+  if (!m_id) return;
 
 
   Symbolizer::Symbolize(METHOD_EXIT, m_id, bci, tid);
