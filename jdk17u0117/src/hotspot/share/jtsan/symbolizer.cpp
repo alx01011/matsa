@@ -21,18 +21,21 @@ void ThreadHistory::add_event(JTSanEvent event) {
     // if it gets filled we invalidate
     // because index is unsinged and has a width of 9 bits, it will wrap around
     // effectively invalidating the buffer by setting the index to 0
-
-    events[__atomic_add_fetch(&index, 1, __ATOMIC_SEQ_CST)] = event;
+    
+    events[Atomic::load(&_index)] = event;
+    Atomic::inc(&_index);
 }
 
 JTSanEvent ThreadHistory::get_event(int i) {
-    if (i < 0 || i >= EVENT_BUFFER_SIZE || i >= __atomic_load_n(&index, __ATOMIC_SEQ_CST)) {
-        JTSanEvent e;
-        e.event = ACCESS;
-        e.bci = 0;
-        e.pc = 0;
-        return e;
-    }
+    // this might be redundant, since i is always in range
+    // even if we return an empty event, pc will be zero
+    // if (i < 0 || i >= EVENT_BUFFER_SIZE) {
+    //     JTSanEvent e;
+    //     e.event = ACCESS;
+    //     e.bci = 0;
+    //     e.pc = 0;
+    //     return e;
+    // }
 
     // JTSanScopedLock scopedLock(lock);
 
