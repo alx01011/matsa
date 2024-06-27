@@ -37,6 +37,7 @@ class JTSanEventTrace {
 class ThreadHistory : public CHeapObj<mtInternal>{
     private:
         JTSanEvent events[EVENT_BUFFER_SIZE];
+        // are 65k events too many?
         std::atomic<uint16_t> index;
         //uint8_t   index; // 256 events at most
         // instead of locking, is it faster to do an atomic increment on index and just load whatever is on events?

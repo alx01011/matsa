@@ -75,7 +75,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
     }
     trace.size = sp;
 
-    return true;
+    return found;
 }
 
 void Symbolizer::ClearThreadHistory(int tid) {
