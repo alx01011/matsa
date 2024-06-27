@@ -965,6 +965,9 @@ void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method,
   const int       bci      = method->bci_from(bcp);
 
   if (!m_id) return;
+  else {
+    fprintf(stderr, "enter_method: %s, tid: %d\n", Method::resolve_jmethod_id(m_id)->external_name_as_fully_qualified(), tid);
+  }
 
 
   Symbolizer::Symbolize(METHOD_ENTRY, m_id, bci, tid);
@@ -983,7 +986,10 @@ void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, 
   //   puts("Method id is not null");
   // }
 
-  if (!m_id) return;
+    if (!m_id) return;
+  else {
+    fprintf(stderr, "exit_method: %s, tid: %d\n", Method::resolve_jmethod_id(m_id)->external_name_as_fully_qualified(), tid);
+  }
 
 
   Symbolizer::Symbolize(METHOD_EXIT, m_id, bci, tid);
