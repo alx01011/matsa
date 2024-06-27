@@ -37,7 +37,7 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
 
     
     if (_thread != nullptr) {
-        frame fr = _thread->as_Java_thread()->last_frame();
+        frame fr = os::current_frame();
         for (; fr.pc() != nullptr;) {
             if (Interpreter::contains(fr.pc())) {
                 Method *bt_method = fr.interpreter_frame_method();
