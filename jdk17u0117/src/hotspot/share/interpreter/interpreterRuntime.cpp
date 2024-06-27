@@ -971,11 +971,8 @@ void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method,
 void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp) {
   int tid = JavaThread::get_jtsan_tid(current);
 
-  RegisterMap reg_map(current, false, false);
-  const frame sender = JavaThread::current()->last_frame().sender(&reg_map);
-
   // can the Method * change during gc? is it ever freed? do we need jmethodid?
-  const jmethodID m_id     = (sender.is_interpreted_frame() ? sender.interpreter_frame_method()->find_jmethod_id_or_null() : NULL);
+  const jmethodID m_id     = method->find_jmethod_id_or_null();
   const int       bci      = method->bci_from(bcp);
 
   if (m_id == NULL) {
