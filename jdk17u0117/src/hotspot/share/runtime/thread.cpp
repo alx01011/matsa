@@ -577,7 +577,7 @@ void Thread::start(Thread* thread) {
         JtsanThreadState::incrementEpoch(cur_tid);
 
         // we might as well clear the event trace
-        // Symbolizer::ClearThreadHistory(new_tid);
+        Symbolizer::ClearThreadHistory(new_tid);
       }
   );
 
