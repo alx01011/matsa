@@ -961,11 +961,11 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
 void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method, address bcp) {
   int tid = JavaThread::get_jtsan_tid(current);
 
-  //const jmethodID m_id     = method->jmethod_id();
+  const jmethodID m_id     = method->find_jmethod_id_or_null();
   const int       bci      = method->bci_from(bcp);
 
 
-  Symbolizer::Symbolize(METHOD_ENTRY, method, bci, tid);
+  Symbolizer::Symbolize(METHOD_ENTRY, m_id, bci, tid);
 }
 
 void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp) {
@@ -975,14 +975,14 @@ void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, 
   const jmethodID m_id     = method->find_jmethod_id_or_null();
   const int       bci      = method->bci_from(bcp);
 
-  if (m_id == NULL) {
-    //puts("Method id is null");
-  } else {
-    puts("Method id is not null");
-  }
+  // if (m_id == NULL) {
+  //   //puts("Method id is null");
+  // } else {
+  //   puts("Method id is not null");
+  // }
 
 
-  Symbolizer::Symbolize(METHOD_EXIT, method, bci, tid);
+  Symbolizer::Symbolize(METHOD_EXIT, m_id, bci, tid);
 }
 
 //------------------------------------------------------------------------------------------------------------------------
