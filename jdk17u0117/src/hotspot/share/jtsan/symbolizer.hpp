@@ -1,7 +1,7 @@
 #ifndef SYMBOLIZER_HPP
 #define SYMBOLIZER_HPP
 
-#define EVENT_BUFFER_SIZE (1 << 8) // 65536 (2^16)
+#define EVENT_BUFFER_SIZE (1 << 8) // 256 events
 #define EVENT_BUFFER_WIDTH (8)
 
 #include <cstdint>

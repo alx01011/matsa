@@ -55,7 +55,7 @@ bool try_print_event_trace(void *addr, int tid) {
             Method *m = (Method *)((uintptr_t)e.pc);
             int bci       = e.bci;
 
-            print_method_info(m, bci, i - (trace.size - 1));
+            print_method_info(m, bci, (trace.size - 1) - 1);
         }
     }
 
