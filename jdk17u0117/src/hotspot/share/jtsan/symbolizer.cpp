@@ -14,7 +14,7 @@ ThreadHistory::ThreadHistory() {
 }
 
 void ThreadHistory::add_event(JTSanEvent event) {
-    JTSanScopedLock scopedLock(lock);
+    // JTSanScopedLock scopedLock(lock);
 
     // if the buffer gets full, there is a small chance that we will report the wrong trace
     // might happen if slots before the access get filled with method entry/exit events
@@ -22,11 +22,11 @@ void ThreadHistory::add_event(JTSanEvent event) {
     // because index is unsinged and has a width of 9 bits, it will wrap around
     // effectively invalidating the buffer by setting the index to 0
 
-    events[index++] = event;
+    events[Atomic::fetch_and_add(&index, 1)] = event;
 }
 
 JTSanEvent ThreadHistory::get_event(int i) {
-    if (i < 0 || i >= EVENT_BUFFER_SIZE || i >= index) {
+    if (i < 0 || i >= EVENT_BUFFER_SIZE || i >= Atomic::load(&index)) {
         JTSanEvent e;
         e.event = ACCESS;
         e.bci = 0;
@@ -34,7 +34,7 @@ JTSanEvent ThreadHistory::get_event(int i) {
         return e;
     }
 
-    JTSanScopedLock scopedLock(lock);
+    // JTSanScopedLock scopedLock(lock);
 
     return events[i];
 }
@@ -50,6 +50,7 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
     history->add_event(e);
 }
 
+// TODO: For faster lookups we could use a hash table and hash on the address
 bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
     ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
     bool found = false;
@@ -65,11 +66,9 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
         }
 
         if (e.pc == (uintptr_t)addr) {
-            found = true; // we don't want to include the access event
-
             // change the bci of the previous event to the bci of the access
             // this will give the actual line of the access instead of the line of the method
-            if (sp > 0) {
+            if (found = sp > 0) { // if only one frame, then we don't really have anything useful to report, mark as not found
                 func_stack[sp - 1].bci = e.bci;
             }
 

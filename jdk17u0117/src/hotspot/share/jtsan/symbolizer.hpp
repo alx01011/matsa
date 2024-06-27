@@ -8,6 +8,7 @@
 
 #include "runtime/mutex.hpp"
 #include "runtime/thread.hpp"
+#include "runtime/atomic.hpp"
 #include "memory/allocation.hpp"
 
 // we don't need to keep track the if the access was a read or write
@@ -36,7 +37,10 @@ class ThreadHistory : public CHeapObj<mtInternal>{
     private:
         JTSanEvent events[EVENT_BUFFER_SIZE];
         uint16_t   index : EVENT_BUFFER_WIDTH; // 512 (2^9)
-        Mutex     *lock;
+        // instead of locking, is it faster to do an atomic increment on index and just load whatever is on events?
+        // a single event is 8 bytes and the memory is dword aligned, so we are safe
+        // maybe 8 events could share a cache line too?
+        //Mutex     *lock;
     public:
         ThreadHistory();
 
@@ -44,9 +48,10 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         JTSanEvent get_event(int i);
 
         void clear(void) {
-            lock->lock();
-            index = 0;
-            lock->unlock();
+            Atomic::store(&index, 0);
+            // lock->lock();
+            // index = 0;
+            // lock->unlock();
         }
 };
 
