@@ -5,6 +5,7 @@
 #define EVENT_BUFFER_WIDTH (8)
 
 #include <cstdint>
+#include <atomic>
 
 #include "runtime/mutex.hpp"
 #include "runtime/thread.hpp"
@@ -36,7 +37,8 @@ class JTSanEventTrace {
 class ThreadHistory : public CHeapObj<mtInternal>{
     private:
         JTSanEvent events[EVENT_BUFFER_SIZE];
-        uint8_t   index; // 256 events at most
+        std::atomic<uint8_t> index;
+        //uint8_t   index; // 256 events at most
         // instead of locking, is it faster to do an atomic increment on index and just load whatever is on events?
         // a single event is 8 bytes and the memory is dword aligned, so we are safe
         // maybe 8 events could share a cache line too?
@@ -48,7 +50,7 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         JTSanEvent get_event(int i);
 
         void clear(void) {
-            Atomic::store(&index, (uint8_t)0);
+            index.store(0, std::memory_order_seq_cst);
             // lock->lock();
             // index = 0;
             // lock->unlock();

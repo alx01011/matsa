@@ -22,8 +22,7 @@ void ThreadHistory::add_event(JTSanEvent event) {
     // because index is unsinged and has a width of 9 bits, it will wrap around
     // effectively invalidating the buffer by setting the index to 0
     
-    events[Atomic::load(&index)] = event;
-    Atomic::inc(&index);
+    events[index.fetch_add(1, std::memory_order_seq_cst)] = event;
 }
 
 JTSanEvent ThreadHistory::get_event(int i) {
