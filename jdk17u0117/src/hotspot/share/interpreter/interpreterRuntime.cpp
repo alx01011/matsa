@@ -972,8 +972,13 @@ void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, 
   int tid = JavaThread::get_jtsan_tid(current);
 
   // can the Method * change during gc? is it ever freed? do we need jmethodid?
-  //const jmethodID m_id     = method->jmethod_id();
+  const jmethodID m_id     = method->find_jmethod_id_or_null();
   const int       bci      = method->bci_from(bcp);
+
+  if (m_id == NULL) {
+    puts("Method id is null");
+  }
+
 
   Symbolizer::Symbolize(METHOD_EXIT, method, bci, tid);
 }
