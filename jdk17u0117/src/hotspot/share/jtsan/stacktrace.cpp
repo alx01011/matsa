@@ -33,9 +33,11 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
     _thread = thread;
     _frame_count = 0;
 
+  RegisterMap reg_map(thread, false, false);
+
     
     if (_thread != nullptr) {
-        frame fr = os::current_frame();
+        frame fr = _thread->as_Java_thread()->last_frame();
         for (; fr.pc() != nullptr;) {
             if (Interpreter::contains(fr.pc())) {
                 Method *bt_method = fr.interpreter_frame_method();
@@ -45,7 +47,8 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
                 _frames[_frame_count].pc = bt_bcp;
                 _frame_count++;
             }
-            fr = next_frame(fr, (Thread*)thread);
+            fr = fr.sender(&reg_map);
+            //fr = next_frame(fr, (Thread*)thread);
         }
 
     }
