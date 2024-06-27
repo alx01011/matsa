@@ -1,8 +1,8 @@
 #ifndef SYMBOLIZER_HPP
 #define SYMBOLIZER_HPP
 
-#define EVENT_BUFFER_SIZE (1 << 9) // 512 (2^9)
-#define EVENT_BUFFER_WIDTH (9)
+#define EVENT_BUFFER_SIZE (1 << 8) // 65536 (2^16)
+#define EVENT_BUFFER_WIDTH (8)
 
 #include <cstdint>
 
@@ -36,7 +36,7 @@ class JTSanEventTrace {
 class ThreadHistory : public CHeapObj<mtInternal>{
     private:
         JTSanEvent events[EVENT_BUFFER_SIZE];
-        uint16_t   index : EVENT_BUFFER_WIDTH; // 512 (2^9)
+        uint8_t   index; // 256 events at most
         // instead of locking, is it faster to do an atomic increment on index and just load whatever is on events?
         // a single event is 8 bytes and the memory is dword aligned, so we are safe
         // maybe 8 events could share a cache line too?
