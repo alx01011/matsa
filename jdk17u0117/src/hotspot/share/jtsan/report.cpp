@@ -73,11 +73,10 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
     fprintf(stderr, RED "WARNING: ThreadSanitizer: data race (pid=%d)\n", pid);
     fprintf(stderr, BLUE " %s of size %u at %p by thread T%lu:\n" RESET,  cur.is_write ? "Write" : "Read", 
             size, addr, cur.tid);
-    print_stack_trace(trace);
-    // if (!try_print_event_trace(addr, cur.tid)) {
-    //     // less accurate line numbers
-    //     print_stack_trace(trace);
-    // }
+    if (!try_print_event_trace(addr, cur.tid)) {
+        // less accurate line numbers
+        print_stack_trace(trace);
+    }
     
     fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%lu:\n" RESET, prev.is_write ? "write" : "read", 
             size, addr, prev.tid);
