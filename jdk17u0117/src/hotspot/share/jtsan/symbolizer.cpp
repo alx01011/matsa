@@ -26,16 +26,6 @@ void ThreadHistory::add_event(JTSanEvent event) {
 }
 
 JTSanEvent ThreadHistory::get_event(int i) {
-    // this might be redundant, since i is always in range
-    // even if we return an empty event, pc will be zero
-    // if (i < 0 || i >= EVENT_BUFFER_SIZE) {
-    //     JTSanEvent e;
-    //     e.event = ACCESS;
-    //     e.bci = 0;
-    //     e.pc = 0;
-    //     return e;
-    // }
-
     // JTSanScopedLock scopedLock(lock);
 
     return events[i];
@@ -57,10 +47,9 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
     ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
     bool found = false;
 
-    JTSanEvent func_stack[EVENT_BUFFER_SIZE];
     int sp = 0;
-
     int i;
+    
     for (i = 0; i < EVENT_BUFFER_SIZE; i++) {
         JTSanEvent e = history->get_event(i);
         if (e.pc == 0) {
@@ -71,14 +60,14 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
             // change the bci of the previous event to the bci of the access
             // this will give the actual line of the access instead of the line of the method
             if (found = sp > 0) { // if only one frame, then we don't really have anything useful to report, mark as not found
-                func_stack[sp - 1].bci = e.bci;
+                trace.events[sp - 1].bci = e.bci;
             }
 
             break;
         }
 
         if (e.event == METHOD_ENTRY) {
-            func_stack[sp++] = e;
+            trace.events[sp++] = e;
         } else if (e.event == METHOD_EXIT) {
             if (sp > 0) {
                 sp--;
@@ -88,13 +77,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
             continue;
         }
     }
-
     trace.size = sp;
-    for (int j = 0; j < sp; j++) {
-        // store in reverse order
-        trace.events[j] = func_stack[sp - j - 1];
-    }
-
 
     return found;
 }

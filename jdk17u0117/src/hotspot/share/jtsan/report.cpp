@@ -47,7 +47,7 @@ bool try_print_event_trace(void *addr, int tid) {
     has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid);
 
     if (has_trace) {
-        for (int i = 0; i < trace.size; i++) {
+        for (int i = trace.size - 1; i >= 0; i--) {
             JTSanEvent e = trace.events[i];
             // cast back to uintptr to zero extend, then cast back to method
             //jmethodID mid = (jmethodID)((uintptr_t)e.pc);
@@ -55,7 +55,7 @@ bool try_print_event_trace(void *addr, int tid) {
             Method *m = (Method *)((uintptr_t)e.pc);
             int bci       = e.bci;
 
-            print_method_info(m, bci, i);
+            print_method_info(m, bci, i - (trace.size - 1));
         }
     }
 
