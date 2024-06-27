@@ -25,7 +25,7 @@ class JTSanEvent {
         Event     event : 2; // 3 events
         int       bci   : 14; // this limits the number of bytecodes to 16384
         uintptr_t pc    : 48; // 48 bits on most systems
-};
+} __attribute__((aligned(64))); // will a cache line make it faster?
 
 class JTSanEventTrace {
     public:
