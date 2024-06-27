@@ -46,7 +46,7 @@ class ThreadHistory : public CHeapObj<mtInternal>{
     public:
         ThreadHistory();
 
-        void add_event(JTSanEvent event);
+        void add_event(JTSanEvent &event);
         JTSanEvent get_event(int i);
 
         void clear(void) {

@@ -13,7 +13,7 @@ ThreadHistory::ThreadHistory() {
     memset(events, 0, sizeof(JTSanEvent) * EVENT_BUFFER_SIZE);
 }
 
-void ThreadHistory::add_event(JTSanEvent event) {
+void ThreadHistory::add_event(JTSanEvent &event) {
     // JTSanScopedLock scopedLock(lock);
 
     // if the buffer gets full, there is a small chance that we will report the wrong trace
@@ -49,7 +49,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
 
     int sp = 0;
     int i;
-    
+
     for (i = 0; i < EVENT_BUFFER_SIZE; i++) {
         JTSanEvent e = history->get_event(i);
         if (e.pc == 0) {
