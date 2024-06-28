@@ -8,7 +8,7 @@
 #   -s, Adds additional switches to java command
 
 # Parse options
-JAVA_OPTS="-XX:-UseCompressedOops -XX:-UseCompressedClassPointers -Xint -XX:+UseParallelGC -XX:+JTSAN"
+JAVA_OPTS="-XX:-UseCompressedOops -XX:-UseCompressedClassPointers -Xint -XX:+UseParallelGC -XX:+JTSan"
 # Set up environment
 BUILD=../../build/linux-x86_64-server-release/jdk/bin/
 
@@ -45,14 +45,24 @@ mkdir -p ./class_files
 # Run non racy tests (in no_race dir)
 echo -e "\e[33mRunning non racy tests\e[0m"
 
+# compile everything
+for i in `ls ./no_race/*.java`; do
+    # get basename
+    base_name=$(basename $i .java)
+    echo -e "\e[32mCompiling $base_name\e[0m"
+
+    # Compile Java file to the class_files directory
+    $BUILD/javac -d ./class_files $i
+done
+echo ""
+
+# run em
 for i in `ls ./no_race/*.java`; do
     # get basename
     base_name=$(basename $i .java)
     echo -e "\e[32mRunning $base_name\e[0m"
 
-    # Compile Java file to the class_files directory
-    $BUILD/javac -d ./class_files $i
-    $BUILD/java -cp ./class_files $base_name $JAVA_OPTS
+    $BUILD/java -cp ./class_files $JAVA_OPTS $base_name
 
     # Some spacing
     echo ""
@@ -62,14 +72,24 @@ done
 # Run racy
 echo -e "\e[33mRunning racy tests\e[0m"
 
+# compile everything
+for i in `ls ./race/*.java`; do
+    # get basename
+    base_name=$(basename $i .java)
+    echo -e "\e[32mCompiling $base_name\e[0m"
+
+    # Compile Java file to the class_files directory
+    $BUILD/javac -d ./class_files $i
+done
+echo ""
+
 for i in `ls ./race/*.java`; do
     # get basename
     base_name=$(basename $i .java)
     echo -e "\e[32mRunning $base_name\e[0m"
 
-    # Compile Java file to the class_files directory
-    $BUILD/javac -d ./class_files $i
-    $BUILD/java -cp ./class_files $base_name $JAVA_OPTS
+    # run
+    $BUILD/java -cp ./class_files $JAVA_OPTS $base_name
 
     # Some spacing
     echo ""

@@ -91,6 +91,11 @@ class InterpreterRuntime: AllStatic {
   static void jtsan_sync_enter(BasicObjectLock *lock, Method *m, address bcp);
   static void jtsan_sync_exit (BasicObjectLock *lock, Method *m, address bcp);
 
+  // aantonak - jtsan
+  // for method entry/exit
+  static void jtsan_method_enter(JavaThread *current, Method *method, address bcp);
+  static void jtsan_method_exit (JavaThread *current, Method *method, address bcp);
+
   // Allocation
   static void    _new          (JavaThread* current, ConstantPool* pool, int index);
   static void    newarray      (JavaThread* current, BasicType type, jint size);

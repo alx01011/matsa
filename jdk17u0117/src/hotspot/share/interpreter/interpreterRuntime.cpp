@@ -84,6 +84,7 @@
 #include "jtsan/jtsanRTL.hpp"
 #include "jtsan/jtsanGlobals.hpp"
 #include "jtsan/vectorclock.hpp"
+#include "jtsan/symbolizer.hpp"
 #endif
 
 // Helper class to access current interpreter state
@@ -955,6 +956,25 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
 
   // increment the epoch of the current thread after the transfer
   JtsanThreadState::incrementEpoch(tid);
+}
+
+void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method, address bcp) {
+  int tid = JavaThread::get_jtsan_tid(current);
+
+  //const jmethodID m_id     = method->find_jmethod_id_or_null();
+  const int       bci      = method->bci_from(bcp);
+
+  Symbolizer::Symbolize(METHOD_ENTRY, method, bci, tid);
+}
+
+void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp) {
+  int tid = JavaThread::get_jtsan_tid(current);
+
+  // can the Method * change during gc? is it ever freed? do we need jmethodid?
+  //const jmethodID m_id     = method->find_jmethod_id_or_null();
+  const int       bci      = method->bci_from(bcp);
+
+  Symbolizer::Symbolize(METHOD_EXIT, method, bci, tid);
 }
 
 //------------------------------------------------------------------------------------------------------------------------

@@ -28,6 +28,11 @@ JtsanThreadState::JtsanThreadState(void) {
 
   // increment the epoch of the initial thread
     this->epoch[0].set(0, 1);
+
+    for (size_t i = 0; i < MAX_THREADS; i++) {
+        this->history[i] = new ThreadHistory();
+    }
+    
 }
 
 JtsanThreadState::~JtsanThreadState(void) {
@@ -103,22 +108,6 @@ uint32_t JtsanThreadState::getEpoch(size_t threadId, size_t otherThreadId) {
     return state->epoch[threadId].get(otherThreadId);
 }
 
-void JtsanThreadState::maxEpoch(size_t threadId, size_t otherThreadId, uint32_t epoch) {
-    JtsanThreadState *state = JtsanThreadState::getInstance();
-
-    assert(threadId < MAX_THREADS, "JTSAN: Thread id out of bounds");
-    assert(otherThreadId < MAX_THREADS, "JTSAN: OtherThread id out of bounds");
-
-    // uint32_t current = Atomic::load(&(state->epoch[threadId][otherThreadId]));
-
-    // while (epoch > current) {
-    //     if (Atomic::cmpxchg(&(state->epoch[threadId][otherThreadId]), current, epoch) == current) {
-    //         break;
-    //     }
-    //     current = Atomic::load(&(state->epoch[threadId][otherThreadId]));
-    // }
-}
-
 void JtsanThreadState::transferEpoch(size_t from_tid, size_t to_tid) {
     JtsanThreadState *state = JtsanThreadState::getInstance();
 
@@ -126,15 +115,18 @@ void JtsanThreadState::transferEpoch(size_t from_tid, size_t to_tid) {
     assert(to_tid < state->size, "JTSAN: OtherThread id out of bounds");
     
     state->epoch[to_tid] = state->epoch[from_tid];
-
-
-    if (to_tid == 0 && from_tid == 5) {
-        fprintf(stderr, "JTSAN: Transferred epoch from %lu to %lu\n", from_tid, to_tid);
-    }
 }
 
 void JtsanThreadState::clearEpoch(size_t threadId) {
     JtsanThreadState *state = JtsanThreadState::getInstance();
 
     assert(threadId < state->size, "JTSAN: Thread id out of bounds");
+}
+
+ThreadHistory* JtsanThreadState::getHistory(int threadId) {
+    JtsanThreadState *state = JtsanThreadState::getInstance();
+
+    assert(threadId < MAX_THREADS, "JTSAN: Thread id out of bounds");
+
+    return state->history[threadId];
 }

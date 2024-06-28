@@ -134,6 +134,7 @@
 #include "utilities/vmError.hpp"
 #if INCLUDE_JTSAN
 #include "jtsan/shadow.hpp"
+#include "jtsan/symbolizer.hpp"
 #include "jtsan/threadState.hpp"
 #include "jtsan/lockState.hpp"
 #include "jtsan/jtsanGlobals.hpp"
@@ -574,6 +575,9 @@ void Thread::start(Thread* thread) {
         JtsanThreadState::incrementEpoch(new_tid);
         // increment epoch of the current thread
         JtsanThreadState::incrementEpoch(cur_tid);
+
+        // we might as well clear the event trace
+        Symbolizer::ClearThreadHistory(new_tid);
       }
   );
 

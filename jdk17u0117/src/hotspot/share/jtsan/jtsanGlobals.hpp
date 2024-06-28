@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+#include "runtime/mutex.hpp"
+
 bool is_jtsan_initialized(void);
 void set_jtsan_initialized(bool value);
 
@@ -16,5 +18,18 @@ bool is_klass_init(void);
 uint16_t get_tid(void);
 void     increment_tid(void);
 void     decrement_tid(void);
+
+class JTSanScopedLock {
+    public:
+        JTSanScopedLock(Mutex *lock) : _lock(lock) {
+            _lock->lock();
+        }
+
+        ~JTSanScopedLock() {
+            _lock->unlock();
+        }
+    private:
+        Mutex *_lock;
+};
 
 #endif
