@@ -428,6 +428,7 @@ AC_DEFUN_ONCE([JVM_FEATURES_PREPARE_PLATFORM],
   JVM_FEATURES_CHECK_SHENANDOAHGC
   JVM_FEATURES_CHECK_STATIC_BUILD
   JVM_FEATURES_CHECK_ZGC
+  JVM_FEATURES_CHECK_JTSAN
 
   # Filter out features by default for all variants on certain platforms.
   # Make sure to just add to JVM_FEATURES_PLATFORM_FILTER, since it could
