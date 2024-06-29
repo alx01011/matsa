@@ -18,7 +18,7 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
 
-if !JTSAN_VECTORIZE
+#if !JTSAN_VECTORIZE
 bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
 
