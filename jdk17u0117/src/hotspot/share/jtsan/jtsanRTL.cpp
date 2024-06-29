@@ -156,11 +156,11 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     int race_mask = _mm256_movemask_epi8(race);
 
     if (isRace = race_mask != 0) {
-        // trace = new JTSanStackTrace(thread);
-        // if (JTSanSuppression::is_suppressed(trace)) {
-        //     // ignore
-        //     isRace = false;
-        // }
+        trace = new JTSanStackTrace(thread);
+        if (JTSanSuppression::is_suppressed(trace)) {
+            // ignore
+            isRace = false;
+        }
         cur.is_ignored = 1;
         ShadowBlock::store_cell_at((uptr)addr, &cur, 0);
 
