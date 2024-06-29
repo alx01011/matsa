@@ -122,7 +122,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         Extract cells that meet the conditions:
         tid == cur.tid or both reads or cur.offset != offset or gc_epoch != cur.gc_epoch
     */
-    m256 safe_cells = _mm256_cmpeq(tid_vec, _mm256_set1_epi64x(cur.tid));
+    m256 safe_cells = _mm256_cmpeq_epi64(tid_vec, _mm256_set1_epi64x(cur.tid));
          safe_cells = _mm256_or_si256(safe_cells, _mm256_or_si256(is_write_vec, _mm256_set1_epi64x(cur.is_write)));
          safe_cells = _mm256_or_si256(safe_cells, _mm256_or_si256(_mm256_cmpgt_epi64(offset_vec, _mm256_set1_epi64x(cur.offset)),
                                                   _mm256_cmpgt_epi64(_mm256_set1_epi64x(cur.offset), offset_vec)));
