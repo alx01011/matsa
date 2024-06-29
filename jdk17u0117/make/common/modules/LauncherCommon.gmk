@@ -138,6 +138,12 @@ define SetupBuildLauncherBody
     $1_LIBS += -lz
   endif
 
+  ifeq ($$($1_INCLUDE_JTSAN), true)
+    $1_CFLAGS += -DINCLUDE_JTSAN
+    $1_CFLAGS += -mavx2
+  endif
+
+
   $1_WINDOWS_JLI_LIB := $(call FindStaticLib, java.base, jli, /libjli)
 
   $$(eval $$(call SetupJdkExecutable, BUILD_LAUNCHER_$1, \
