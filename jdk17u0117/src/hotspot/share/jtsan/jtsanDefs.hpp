@@ -6,7 +6,7 @@
 
 // TODO: this has to be done at compile time
 // because we have to check if avx is supported
-#define JTSAN_VECTORIZE 1
+#define JTSAN_VECTORIZE 0
 #if JTSAN_VECTORIZE
 #include <immintrin.h>
 typedef __m256i m256;
