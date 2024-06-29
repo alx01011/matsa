@@ -18,7 +18,7 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
 
-#if JTSAN_VECTORIZE
+#if !JTSAN_VECTORIZE
 bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
 
@@ -87,7 +87,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
     return isRace;
 }
-#elif 1// JTSAN_VECTORIZE
+#else // JTSAN_VECTORIZE
 bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     void *shadow_addr = ShadowBlock::mem_to_shadow((uptr)addr);
 
