@@ -153,3 +153,9 @@ void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
     *cell_addr = *cell;
 }
 
+
+void* ShadowBlock::mem_to_shadow(uptr mem) {
+    ShadowMemory *shadow = ShadowMemory::getInstance();
+    return shadow->MemToShadow(mem);
+}
+
