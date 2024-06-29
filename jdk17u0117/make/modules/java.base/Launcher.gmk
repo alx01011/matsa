@@ -39,7 +39,6 @@ $(eval $(call SetupBuildLauncher, java, \
     EXTRA_RCFLAGS := $(JAVA_RCFLAGS), \
     VERSION_INFO_RESOURCE := $(JAVA_VERSION_INFO_RESOURCE), \
     OPTIMIZATION := HIGH, \
-    INCLUDE_JTSAN := $(INCLUDE_JTSAN), \
 ))
 
 ifeq ($(call isTargetOs, windows), true)
