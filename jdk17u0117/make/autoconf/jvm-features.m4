@@ -582,6 +582,7 @@ AC_DEFUN_ONCE([JVM_FEATURES_SETUP],
   ENABLE_CDS="true"
   INCLUDE_JVMCI="true"
   INCLUDE_COMPILER2="false"
+  INCLUDE_JTSAN="true"
 
   for variant in $JVM_VARIANTS; do
     # Figure out if any features are unavailable, or should be filtered out
