@@ -122,12 +122,18 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         Extract cells that meet the conditions:
         tid == cur.tid or both reads or cur.offset != offset or gc_epoch != cur.gc_epoch
     */
-    m256 safe_cells = _mm256_cmpeq_epi64(tid_vec, _mm256_set1_epi64x(cur.tid));
-         safe_cells = _mm256_or_si256(safe_cells, _mm256_or_si256(is_write_vec, _mm256_set1_epi64x(cur.is_write)));
-         safe_cells = _mm256_or_si256(safe_cells, _mm256_or_si256(_mm256_cmpgt_epi64(offset_vec, _mm256_set1_epi64x(cur.offset)),
-                                                  _mm256_cmpgt_epi64(_mm256_set1_epi64x(cur.offset), offset_vec)));
-         safe_cells = _mm256_or_si256(safe_cells, _mm256_or_si256(_mm256_cmpgt_epi64(gc_epoch_vec, _mm256_set1_epi64x(cur.gc_epoch)),
-                                                  _mm256_cmpgt_epi64(_mm256_set1_epi64x(cur.gc_epoch), gc_epoch_vec)));
+
+   const m256 cur_tid      = _mm256_set1_epi64x(cur.tid);
+   const m256 cur_offset   = _mm256_set1_epi64x(cur.offset);
+   const m256 cur_gc_epoch = _mm256_set1_epi64x(cur.gc_epoch);
+   const m256 cur_is_write = _mm256_set1_epi64x(cur.is_write);
+
+    m256 safe_cells = _mm256_cmpeq_epi64(tid_vec, cur_tid);
+         safe_cells = _mm256_or_si256(safe_cells, _mm256_or_si256(is_write_vec, cur_is_write));
+         safe_cells = _mm256_or_si256(safe_cells, _mm256_or_si256(_mm256_cmpgt_epi64(offset_vec, cur_offset),
+                                                  _mm256_cmpgt_epi64(cur_offset, offset_vec)));
+         safe_cells = _mm256_or_si256(safe_cells, _mm256_or_si256(_mm256_cmpgt_epi64(gc_epoch_vec, cur_gc_epoch),
+                                                  _mm256_cmpgt_epi64(cur_gc_epoch, gc_epoch_vec)));
 
     // extract safe cells
     shadow_vec = _mm256_andnot_si256(safe_cells, shadow_vec);     
