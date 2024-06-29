@@ -97,12 +97,12 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     // load the shadow cells
     m256 shadow_vec  = _mm256_loadu_si256((m256 *)shadow_addr);
 
-    const m256 tid_mask        = _mm256_set1_epi64x(0xFF);
-    const m256 offset_mask     = _mm256_set1_epi64x(0x7);
-    const m256 epoch_mask      = _mm256_set1_epi64x(0xFFFFFFFF);
-    const m256 gc_epoch_mask   = _mm256_set1_epi64x(0x7FFFF);
-    const m256 is_write_mask   = _mm256_set1_epi64x(0x1);
-    const m256 is_ignored_mask = _mm256_set1_epi64x(0x1);
+    m256 tid_mask        = _mm256_set1_epi64x(0xFF);
+    m256 offset_mask     = _mm256_set1_epi64x(0x7);
+    m256 epoch_mask      = _mm256_set1_epi64x(0xFFFFFFFF);
+    m256 gc_epoch_mask   = _mm256_set1_epi64x(0x7FFFF);
+    m256 is_write_mask   = _mm256_set1_epi64x(0x1);
+    m256 is_ignored_mask = _mm256_set1_epi64x(0x1);
 
     m256 tid_vec               = _mm256_and_si256(shadow_vec, tid_mask);
     m256 epoch_vec             = _mm256_and_si256(shadow_vec, epoch_mask);
@@ -123,10 +123,10 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         tid == cur.tid or both reads or cur.offset != offset or gc_epoch != cur.gc_epoch
     */
 
-   const m256 cur_tid      = _mm256_set1_epi64x(cur.tid);
-   const m256 cur_offset   = _mm256_set1_epi64x(cur.offset);
-   const m256 cur_gc_epoch = _mm256_set1_epi64x(cur.gc_epoch);
-   const m256 cur_is_write = _mm256_set1_epi64x(cur.is_write);
+   m256 cur_tid      = _mm256_set1_epi64x(cur.tid);
+   m256 cur_offset   = _mm256_set1_epi64x(cur.offset);
+   m256 cur_gc_epoch = _mm256_set1_epi64x(cur.gc_epoch);
+   m256 cur_is_write = _mm256_set1_epi64x(cur.is_write);
 
     m256 safe_cells = _mm256_cmpeq_epi64(tid_vec, cur_tid);
          safe_cells = _mm256_or_si256(safe_cells, _mm256_or_si256(is_write_vec, cur_is_write));
