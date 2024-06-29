@@ -97,7 +97,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     // load the shadow cells
     m256 shadow_vec  = _mm256_loadu_si256((m256 *)shadow_addr);
 
-    const m256 tid_mask        = _mm256_set_epi64x (0xFF);
+    const m256 tid_mask        = _mm256_set1_epi64x(0xFF);
     const m256 offset_mask     = _mm256_set1_epi64x(0x7);
     const m256 epoch_mask      = _mm256_set1_epi64x(0xFFFFFFFF);
     const m256 gc_epoch_mask   = _mm256_set1_epi64x(0x7FFFF);
@@ -149,7 +149,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     // race check
     // if cell is not zero and current.epoch < thread_epoch then is a race
     const m256 cmp  = _mm256_cmpgt_epi64(epoch_vec, thread_epochs);
-    const m256 race = _m256_andnot_si256(_mm256_cmpeq(zero, shadow_vec), cmp);
+    const m256 race = _mm256_andnot_si256(_mm256_cmpeq(zero, shadow_vec), cmp);
 
     int race_mask = _mm256_movemask_epi8(race);
 
