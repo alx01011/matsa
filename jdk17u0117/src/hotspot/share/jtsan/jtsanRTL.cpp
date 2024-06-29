@@ -151,7 +151,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     // race check
     // if cell is not zero and current.epoch < thread_epoch then is a race
     const m256 cmp  = _mm256_cmpgt_epi64(epoch_vec, thread_epochs);
-    const m256 race = _mm256_andnot_si256(_mm256_cmpeq(zero, shadow_vec), cmp);
+    const m256 race = _mm256_andnot_si256(_mm256_cmpeq_epi64(zero, shadow_vec), cmp);
 
     int race_mask = _mm256_movemask_epi8(race);
 
