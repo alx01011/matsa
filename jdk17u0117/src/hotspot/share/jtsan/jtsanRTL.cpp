@@ -136,7 +136,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 #define LOAD_EPOCH(i)\
     {\
         uint8_t  tid   = (uint8_t)_mm256_extract_epi64(tid_vec, i);\
-        uint32_t epoch = JtsanThreadState::getEpoch(cur.tid, cell.tid);\
+        uint32_t epoch = JtsanThreadState::getEpoch(cur.tid, tid);\
         thread_epochs  = _mm256_insert_epi64(thread_epochs, epoch, i);\
     }
 
