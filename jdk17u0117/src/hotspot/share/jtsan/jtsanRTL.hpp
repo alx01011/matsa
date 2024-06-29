@@ -13,7 +13,7 @@ typedef uintptr_t uptr;
 
 namespace JtsanRTL {
     void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write);
-    bool CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, m256 , uint16_t tid);
+    bool CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev);
 };
 
 #endif
