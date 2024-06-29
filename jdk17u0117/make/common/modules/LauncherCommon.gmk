@@ -140,7 +140,7 @@ define SetupBuildLauncherBody
 
   ifeq ($$($1_INCLUDE_JTSAN), true)
     $1_CFLAGS += -DINCLUDE_JTSAN
-    $1_CFLAGS += -mavx2
+    $1_LDFLAGS += -mavx2
   endif
 
 
