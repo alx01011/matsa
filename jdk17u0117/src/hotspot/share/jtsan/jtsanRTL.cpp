@@ -18,7 +18,7 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
 
-#if !JTSAN_VECTORIZE
+#if JTSAN_VECTORIZE
 bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
 
@@ -87,7 +87,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
     return isRace;
 }
-#else // JTSAN_VECTORIZE
+#elif 1// JTSAN_VECTORIZE
 bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     void *shadow_addr = ShadowBlock::mem_to_shadow((uptr)addr);
 
@@ -168,11 +168,11 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
         int index = __builtin_ffs(race_mask) / 8;
 
-        prev.tid      = (uint8_t) _mm256_extract_epi64(tid_vec, index);
-        prev.epoch    = (uint32_t)_mm256_extract_epi64(epoch_vec, index);
-        prev.offset   = (uint8_t) _mm256_extract_epi64(offset_vec, index);
-        prev.gc_epoch = (uint16_t)_mm256_extract_epi64(gc_epoch_vec, index);
-        prev.is_write = (uint8_t) _mm256_extract_epi64(is_write_vec, index);
+        prev.tid      = (uint8_t)((uint64_t*)&tid_vec)[index];
+        prev.epoch    = (uint32_t)((uint64_t*)&epoch_vec)[index];
+        prev.offset   = (uint8_t)((uint64_t*)&offset_vec)[index];
+        prev.gc_epoch = (uint16_t)((uint64_t*)&gc_epoch_vec)[index];
+        prev.is_write = (uint8_t)((uint64_t*)&is_write_vec)[index];
     }
 
     if (!isStored) {
