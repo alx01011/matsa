@@ -37,6 +37,7 @@ class ShadowMemory : public CHeapObj<mtInternal>{
         size_t size; // size in bytes
 
         uptr heap_base; // base address of the heap
+        size_t heap_size; // size of the heap
 
         static void init(size_t bytes);
         static void destroy(void);

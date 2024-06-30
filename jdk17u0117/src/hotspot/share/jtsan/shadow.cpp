@@ -21,11 +21,12 @@ const uptr kAppMemXor     = 0x020000000000ull;
 
 ShadowMemory* ShadowMemory::shadow = nullptr;
 
-ShadowMemory::ShadowMemory(size_t size, void *shadow_base, uptr offset, uptr heap_base) {
+ShadowMemory::ShadowMemory(size_t size, void *shadow_base, uptr offset, uptr heap_base, size_t heap_size) {
     this->size              = size;
     this->shadow_base       = shadow_base;
     this->offset            = offset;
     this->heap_base         = heap_base;
+    this->heap_size         = heap_size;
 }
 
 ShadowMemory::~ShadowMemory() {
@@ -81,7 +82,7 @@ void ShadowMemory::init(size_t bytes) {
         exit(1);
     }
 
-    ShadowMemory::shadow = new ShadowMemory(shadow_size, shadow_base, (uptr)shadow_base, base);
+    ShadowMemory::shadow = new ShadowMemory(shadow_size, shadow_base, (uptr)shadow_base, base, bytes);
 }
 
 void ShadowMemory::destroy(void) {

@@ -94,8 +94,6 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     bool isRace    = false;
     bool isStored  = false;
 
-    printf("checking...\n");
-
     // load the shadow cells
     m256 shadow_vec  = _mm256_loadu_si256((m256 *)shadow_addr);
 
