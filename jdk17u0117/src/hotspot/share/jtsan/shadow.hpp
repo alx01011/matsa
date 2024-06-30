@@ -36,7 +36,7 @@ class ShadowMemory : public CHeapObj<mtInternal>{
         uptr offset;
         size_t size; // size in bytes
 
-        uptr heap_base; // base address of the heap
+        static uptr heap_base; // base address of the heap
 
         static void init(size_t bytes);
         static void destroy(void);
@@ -73,6 +73,7 @@ class ShadowBlock : AllStatic {
         static ShadowCell  load_cell(uptr mem, uint8_t index);
         static void       store_cell(uptr mem, ShadowCell* cell); 
         static void       store_cell_at(uptr mem, ShadowCell* cell, uint8_t index);
+        static void       *mem_to_shadow(uptr mem);
     private:
         static ShadowCell atomic_load_cell(ShadowCell *cell);
         static void       atomic_store_cell(ShadowCell *cell, ShadowCell *val);

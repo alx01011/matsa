@@ -12,20 +12,15 @@
 #define MAX_CAS_ATTEMPTS (100)
 #define GB_TO_BYTES(x) ((x) * 1024UL * 1024UL * 1024UL)
 
-static const uptr beg = 0x020000000000ull;
-static const uptr end = 0x100000000000ull;
-
-const uptr kAppMemMsk     = 0x7c0000000000ull;
-const uptr kAppMemXor     = 0x020000000000ull;
-
-
-ShadowMemory* ShadowMemory::shadow = nullptr;
+ShadowMemory* ShadowMemory::shadow    = nullptr;
+uptr          ShadowMemory::heap_base = 0ull;
 
 ShadowMemory::ShadowMemory(size_t size, void *shadow_base, uptr offset, uptr heap_base) {
     this->size              = size;
     this->shadow_base       = shadow_base;
     this->offset            = offset;
-    this->heap_base         = heap_base;
+
+    ShadowMemory::heap_base = heap_base;
 }
 
 ShadowMemory::~ShadowMemory() {
@@ -96,7 +91,7 @@ ShadowMemory* ShadowMemory::getInstance(void) {
 }
 
 void* ShadowMemory::MemToShadow(uptr mem) {
-    uptr index = ((uptr)mem - (uptr)this->heap_base) / 8; // index in heap
+    uptr index = ((uptr)mem - (uptr)ShadowMemory::heap_base) / 8; // index in heap
     uptr shadow_offset = index * 32; // Each metadata entry is 8 bytes 
 
     return (void*)((uptr)this->shadow_base + shadow_offset);
@@ -108,10 +103,14 @@ ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
 
     ShadowCell *cell_ref = &((ShadowCell *)shadow_addr)[index];
 
-    if ((uptr)cell_ref < (uptr)shadow->shadow_base || (uptr)cell_ref >= (uptr)shadow->shadow_base + shadow->size) {
-        fprintf(stderr, "Shadow memory (%p) out of bounds in load_cell with index %d\n", shadow_addr, index);
-        exit(1);
-    }
+    /*
+        For now this if is not needed since the heap is contiguous
+    */
+
+    // if ((uptr)cell_ref >= (uptr)shadow->shadow_base + shadow->size) {
+    //     fprintf(stderr, "Shadow memory (%p) out of bounds in load_cell with index %d\n", shadow_addr, index);
+    //     exit(1);
+    // }
 
     return *cell_ref;
 }
@@ -151,5 +150,11 @@ void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
 
     ShadowCell *cell_addr = &((ShadowCell *)shadow_addr)[index];
     *cell_addr = *cell;
+}
+
+
+void* ShadowBlock::mem_to_shadow(uptr mem) {
+    ShadowMemory *shadow = ShadowMemory::getInstance();
+    return shadow->MemToShadow(mem);
 }
 

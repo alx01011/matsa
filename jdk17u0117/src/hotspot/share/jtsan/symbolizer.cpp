@@ -1,6 +1,7 @@
 #include "symbolizer.hpp"
 #include "jtsanGlobals.hpp"
 #include "threadState.hpp"
+#include "shadow.hpp"
 
 #include "memory/allocation.hpp"
 
@@ -14,8 +15,6 @@ ThreadHistory::ThreadHistory() {
 }
 
 void ThreadHistory::add_event(JTSanEvent &event) {
-    // JTSanScopedLock scopedLock(lock);
-
     // if the buffer gets full, there is a small chance that we will report the wrong trace
     // might happen if slots before the access get filled with method entry/exit events
     // if it gets filled we invalidate
@@ -26,9 +25,19 @@ void ThreadHistory::add_event(JTSanEvent &event) {
 }
 
 JTSanEvent ThreadHistory::get_event(int i) {
-    // JTSanScopedLock scopedLock(lock);
+    if (i >= index.load(std::memory_order_seq_cst)) {
+        return {INVALID, 0, 0};
+    }
 
     return events[i];
+}
+
+uintptr_t Symbolizer::CompressAddr(uintptr_t addr) {
+    return addr & ((1ull << COMPRESSED_ADDR_BITS) - 1); // see jtsanDefs
+}
+
+uintptr_t Symbolizer::RestoreAddr(uintptr_t addr) {
+    return addr | (ShadowMemory::heap_base & ~((1ull << COMPRESSED_ADDR_BITS) - 1));
 }
 
 void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
@@ -38,44 +47,44 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
     history->add_event(e);
 }
 
-// TODO: For faster lookups we could use a hash table and hash on the address
 bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
     ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
     bool found = false;
 
     int sp = 0;
-    int i;
 
-    for (i = 0; i < EVENT_BUFFER_SIZE; i++) {
+    for (int i = 0; i < EVENT_BUFFER_SIZE; i++) {
         JTSanEvent e = history->get_event(i);
-        if (e.pc == 0) {
-            return false; // no more events and not found
-        }
 
-        if (e.pc == (uintptr_t)addr) {
-            // change the bci of the previous event to the bci of the access
-            // this will give the actual line of the access instead of the line of the method
-            if (found = sp > 0) { // if only one frame, then we don't really have anything useful to report, mark as not found
-                trace.events[sp - 1].bci = e.bci;
+        switch(e.event) {
+            case METHOD_ENTRY:
+                trace.events[sp++] = e;
+                break;
+            case METHOD_EXIT:
+                if (sp > 0) {
+                    sp--;
+                }
+                break;
+            case ACCESS: {
+                uintptr_t raw_address = Symbolizer::RestoreAddr(e.pc);
+                if (raw_address == (uintptr_t)addr) {
+                    if (sp > 0) {
+                        trace.events[sp - 1].bci = e.bci;
+
+                        trace.size = sp;
+                        found = true;
+                    }
+                    return found;
+                }
+                break;
             }
-
-            break;
-        }
-
-        if (e.event == METHOD_ENTRY) {
-            trace.events[sp++] = e;
-        } else if (e.event == METHOD_EXIT) {
-            if (sp > 0) {
-                sp--;
-            }
-        } else {
-            // ignore access events
-            continue;
+            case INVALID:
+            default:
+                return false;
         }
     }
-    trace.size = sp;
 
-    return found;
+    return false;
 }
 
 void Symbolizer::ClearThreadHistory(int tid) {

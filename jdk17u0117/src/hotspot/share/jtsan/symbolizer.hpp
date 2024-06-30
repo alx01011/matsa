@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <atomic>
 
+#include "jtsanDefs.hpp"
+
 #include "runtime/mutex.hpp"
 #include "runtime/thread.hpp"
 #include "runtime/atomic.hpp"
@@ -15,6 +17,7 @@
 // we don't need to keep track the if the access was a read or write
 // we already have that information in the shadow cell
 enum Event {
+    INVALID,
     ACCESS,
     METHOD_ENTRY,
     METHOD_EXIT
@@ -23,8 +26,8 @@ enum Event {
 class JTSanEvent {
     public:
         Event     event : 2; // 3 events
-        int       bci   : 14; // this limits the number of bytecodes to 16384
-        uintptr_t pc    : 48; // 48 bits on most systems
+        int       bci   : 64 - COMPRESSED_ADDR_BITS - 2;
+        uintptr_t pc    : COMPRESSED_ADDR_BITS; // see jtsanDefs
 };
 
 class JTSanEventTrace {
@@ -37,8 +40,6 @@ class JTSanEventTrace {
 class ThreadHistory : public CHeapObj<mtInternal>{
     private:
         JTSanEvent events[EVENT_BUFFER_SIZE];
-        // are 65k events too many?
-        std::atomic<uint16_t> index;
         //uint8_t   index; // 256 events at most
         // instead of locking, is it faster to do an atomic increment on index and just load whatever is on events?
         // a single event is 8 bytes and the memory is dword aligned, so we are safe
@@ -46,6 +47,9 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         Mutex     *lock;
     public:
         ThreadHistory();
+
+        // are 65k events enough?
+        std::atomic<uint16_t> index;
 
         void add_event(JTSanEvent &event);
         JTSanEvent get_event(int i);
@@ -59,6 +63,9 @@ class ThreadHistory : public CHeapObj<mtInternal>{
 };
 
 namespace Symbolizer {
+    uintptr_t CompressAddr(uintptr_t addr);
+    uintptr_t RestoreAddr(uintptr_t addr);
+
     void Symbolize       (Event event, void *addr, int bci, int tid);
     bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid);
 

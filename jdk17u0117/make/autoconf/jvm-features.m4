@@ -322,6 +322,24 @@ AC_DEFUN_ONCE([JVM_FEATURES_CHECK_SHENANDOAHGC],
 ])
 
 ###############################################################################
+# Check if this platform supports avx for jtsan
+#
+AC_DEFUN_ONCE([JVM_FEATURES_CHECK_JTSAN],
+[
+  JVM_FEATURES_CHECK_AVAILABILITY(jtsan, [
+    AC_MSG_CHECKING([if platform supports AVX for JTSan])
+    if test "x$OPENJDK_TARGET_CPU_ARCH" = "xx86" || \
+        test "x$OPENJDK_TARGET_CPU" = "xriscv64"; then
+      AC_MSG_RESULT([yes])
+    else
+      AC_MSG_RESULT([no, $OPENJDK_TARGET_CPU])
+      AVAILABLE=false
+    fi
+  ])
+])
+
+
+###############################################################################
 # Check if the feature 'static-build' is available on this platform.
 #
 AC_DEFUN_ONCE([JVM_FEATURES_CHECK_STATIC_BUILD],
@@ -410,6 +428,7 @@ AC_DEFUN_ONCE([JVM_FEATURES_PREPARE_PLATFORM],
   JVM_FEATURES_CHECK_SHENANDOAHGC
   JVM_FEATURES_CHECK_STATIC_BUILD
   JVM_FEATURES_CHECK_ZGC
+  JVM_FEATURES_CHECK_JTSAN
 
   # Filter out features by default for all variants on certain platforms.
   # Make sure to just add to JVM_FEATURES_PLATFORM_FILTER, since it could

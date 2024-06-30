@@ -336,7 +336,7 @@
 
 // aantonak - jtsan
 #ifndef INCLUDE_JTSAN
-#define INCLUDE_JTSAN 1
+#define INCLUDE_JTSAN 0
 #endif
 
 #if INCLUDE_JTSAN
