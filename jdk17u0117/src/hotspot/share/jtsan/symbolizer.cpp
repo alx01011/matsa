@@ -28,9 +28,9 @@ void ThreadHistory::add_event(JTSanEvent &event) {
 
 JTSanEvent ThreadHistory::get_event(int i) {
     // JTSanScopedLock scopedLock(lock);
-    if (i >= index.load(std::memory_order_seq_cst)) {
-        return {ACCESS, 0, 0};
-    }
+    // if (i >= index.load(std::memory_order_seq_cst)) {
+    //     return {ACCESS, 0, 0};
+    // }
 
     return events[i];
 }
