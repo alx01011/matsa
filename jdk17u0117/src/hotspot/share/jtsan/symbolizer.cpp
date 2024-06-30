@@ -75,6 +75,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
                     goto FOUND;
                 }
                 break;
+            case INVALID:
             default:
                 return false;
         }
