@@ -2100,7 +2100,7 @@ void InterpreterMacroAssembler::notify_method_entry() {
       // calculate bcp
       movptr      (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
       // call vm
-      call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_entry), rarg, c_rarg2);
+      call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), rarg, c_rarg2);
     );
   }
 
@@ -2109,7 +2109,7 @@ void InterpreterMacroAssembler::notify_method_entry() {
     NOT_LP64(get_thread(rthread);)
     get_method(rarg);
     call_VM_leaf(
-      CAST_FROM_FN_PTR(address, SharedRuntime::rc_trace_method_enter),
+      CAST_FROM_FN_PTR(address, SharedRuntime::rc_trace_method_entry),
       rthread, rarg);
   }
 }
