@@ -99,8 +99,11 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
     // we can perform a single load into a 256-bit register
     // and then compare the values
+    
+    uint64_t *s  = ShadowBlock::mem_to_shadow(addr_aligned);
 
-    m256 shadow       = _mm256_load_si256((const __m256i *)ShadowBlock::mem_to_shadow(addr_aligned));
+    m128 shadow0 = _mm_load_si128((m128 *)s);
+    m128 shadow1 = _mm_load_si128((m128 *)(s + 2));
 
 /*
     // // Print the shadow vector
@@ -117,12 +120,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     // }
 */
 
-    uint64_t *cell = (uint64_t *)&shadow;
-
-    if (UNLIKELY(cell[0] == 0 && cell[1] == 0 && cell[2] == 0 && cell[3] == 0)) {
-        // all cells are unassigned
-        goto DONE;
-    }
+    uint64_t *cell = (uint64_t *)&shadow0;
 
     // is the cell ignored?
     if ((cell[0] >> 63) & 0x1) {
@@ -159,6 +157,8 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
     CHECK_CELL(0);
     CHECK_CELL(1);
+
+    cell = (uint64_t *)&shadow1;
     CHECK_CELL(2);
     CHECK_CELL(3);
 
