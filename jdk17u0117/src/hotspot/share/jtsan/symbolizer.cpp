@@ -41,7 +41,7 @@ uintptr_t Symbolizer::RestoreAddr(uintptr_t addr) {
 }
 
 void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
-    JTSanEvent e = {event, bci, (uintptr_t)addr};
+    JTSanEvent e = {event, bci, CompressAddr((uintptr_t)addr)};
 
     ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
     history->add_event(e);
