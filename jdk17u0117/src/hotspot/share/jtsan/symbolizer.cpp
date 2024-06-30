@@ -15,8 +15,6 @@ ThreadHistory::ThreadHistory() {
 }
 
 void ThreadHistory::add_event(JTSanEvent &event) {
-    // JTSanScopedLock scopedLock(lock);
-
     // if the buffer gets full, there is a small chance that we will report the wrong trace
     // might happen if slots before the access get filled with method entry/exit events
     // if it gets filled we invalidate
@@ -27,10 +25,9 @@ void ThreadHistory::add_event(JTSanEvent &event) {
 }
 
 JTSanEvent ThreadHistory::get_event(int i) {
-    // JTSanScopedLock scopedLock(lock);
-    // if (i >= index.load(std::memory_order_seq_cst)) {
-    //     return {ACCESS, 0, 0};
-    // }
+    if (i >= index.load(std::memory_order_seq_cst)) {
+        return {INVALID, 0, 0};
+    }
 
     return events[i];
 }
@@ -59,30 +56,30 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
 
     for (i = 0; i < EVENT_BUFFER_SIZE; i++) {
         JTSanEvent e = history->get_event(i);
-        if (e.pc == 0) {
-            return false; // no more events and not found
+
+        switch(e.event) {
+            case METHOD_ENTRY:
+                trace.events[sp++] = e;
+                break;
+            case METHOD_EXIT:
+                if (sp > 0) {
+                    sp--;
+                }
+                break;
+            case ACCESS:
+                uintptr_t raw_addres = Symbolizer::RestoreAddr(e.pc);
+                if (raw_addres == (uintptr_t)addr) {
+                    if (found = sp > 0) {
+                        trace.events[sp - 1].bci = e.bci;
+                    }
+                    goto FOUND;
+                }
+                break;
+            default:
+                return false;
         }
 
-        if (e.event == METHOD_ENTRY) {
-            trace.events[sp++] = e;
-        } else if (e.event == METHOD_EXIT) {
-            if (sp > 0) {
-                sp--;
-            }
-        } else {
-            uintptr_t raw_addres = Symbolizer::RestoreAddr(e.pc);
-            if (raw_addres == (uintptr_t)addr) {
-            // change the bci of the previous event to the bci of the access
-            // this will give the actual line of the access instead of the line of the method
-            if (found = sp > 0) { // if only one frame, then we don't really have anything useful to report, mark as not found
-                trace.events[sp - 1].bci = e.bci;
-            }
-            break;
-        }
-            // other accesses can be ignored
-            continue;
-        }
-    }
+FOUND:
     trace.size = sp;
 
     return found;

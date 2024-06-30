@@ -17,6 +17,7 @@
 // we don't need to keep track the if the access was a read or write
 // we already have that information in the shadow cell
 enum Event {
+    INVALID,
     ACCESS,
     METHOD_ENTRY,
     METHOD_EXIT
