@@ -50,7 +50,7 @@ bool try_print_event_trace(void *addr, int tid) {
         for (int i = trace.size - 1; i >= 0; i--) {
             JTSanEvent e = trace.events[i];
             // cast back to uintptr to zero extend, then cast back to method
-            uintptr_t pc    =  Symbolizer::RestoreAddr((uintptr_t)e.pc);
+            uintptr_t pc    =  (uintptr_t)e.pc;
 
             jmethodID mid = (jmethodID)((uintptr_t)pc);
             Method *m       = Method::resolve_jmethod_id(mid);
