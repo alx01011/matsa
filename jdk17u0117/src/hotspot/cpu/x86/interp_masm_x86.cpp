@@ -2097,7 +2097,6 @@ void InterpreterMacroAssembler::notify_method_entry() {
     JTSAN_ONLY(
       get_thread  (rthread);
       get_method  (rarg);
-
       // calculate bcp
       movptr      (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
       
