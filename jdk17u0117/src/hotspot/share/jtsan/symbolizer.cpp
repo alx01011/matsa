@@ -41,7 +41,7 @@ uintptr_t Symbolizer::RestoreAddr(uintptr_t addr) {
 }
 
 void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
-    JTSanEvent e = {event, bci, CompressAddr((uintptr_t)addr)};
+    JTSanEvent e = {event, bci, (uintptr_t)addr};
 
     ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
     history->add_event(e);
@@ -66,7 +66,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
                 }
                 break;
             case ACCESS: {
-                uintptr_t raw_address = Symbolizer::RestoreAddr(e.pc);
+                uintptr_t raw_address = e.pc;
                 if (raw_address == (uintptr_t)addr) {
                     if (sp > 0) {
                         trace.events[sp - 1].bci = e.bci;

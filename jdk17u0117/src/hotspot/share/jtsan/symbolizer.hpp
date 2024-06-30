@@ -26,8 +26,8 @@ enum Event {
 class JTSanEvent {
     public:
         Event     event : 2; // 3 events
-        int       bci   : 64 - COMPRESSED_ADDR_BITS - 2;
-        uintptr_t pc    : COMPRESSED_ADDR_BITS; // see jtsanDefs
+        int       bci   : 64 - 48 - 2;
+        uintptr_t pc    : 48; // can't easily compress this
 };
 
 class JTSanEventTrace {
