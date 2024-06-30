@@ -123,10 +123,8 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         if (((cell[idx] >> 8 ) & 0xFFFFFFFF) && ((cell[idx] >> 43) & 0x7FFFF) == cur.gc_epoch && ((cell[idx] >> 40) & 0x7) == cur.offset) {\
             if ((cell[idx] & 0xFF) != cur.tid) {\
                 uint32_t thr = JtsanThreadState::getEpoch(cur.tid, (cell[idx] >> 8) & 0xFFFFFFFF);\
-
                 if (thr < ((cell[idx] >> 8) & 0xFFFFFFFF)) {\
                     prev = *(ShadowCell *)&cell[idx];\
-                    
                     isRace = true;\
                     trace = new JTSanStackTrace(thread);\
                     if (LIKELY(JTSanSuppression::is_suppressed(trace))) {\
@@ -140,7 +138,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
             }\
             else {\
                 if (cur.is_write && !(cell[idx] >> 62 & 0x1)) {\
-                    ShadowBlock::store_cell_at((uptr)addr, &cur, idx);
+                    ShadowBlock::store_cell_at((uptr)addr, &cur, idx);\
                     stored = true;\
                 }\
             }\
