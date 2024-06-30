@@ -79,6 +79,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
             default:
                 return false;
         }
+    }
 
 FOUND:
     trace.size = sp;
