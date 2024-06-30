@@ -4,6 +4,14 @@
 // 256 threads
 #define MAX_THREADS (1 << 8)
 
+/*
+    Fallback to 38 bits if not defined.
+    This allows for heaps up to 2^38 bytes -> 256GiB
+*/
+#ifndef COMPRESSED_ADDR_BITS
+#define COMPRESSED_ADDR_BITS 38
+#endif
+
 // TODO: this has to be done at compile time
 // because we have to check if avx is supported
 

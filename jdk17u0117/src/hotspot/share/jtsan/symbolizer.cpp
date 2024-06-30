@@ -1,6 +1,7 @@
 #include "symbolizer.hpp"
 #include "jtsanGlobals.hpp"
 #include "threadState.hpp"
+#include "shadow.hpp"
 
 #include "memory/allocation.hpp"
 
@@ -27,8 +28,19 @@ void ThreadHistory::add_event(JTSanEvent &event) {
 
 JTSanEvent ThreadHistory::get_event(int i) {
     // JTSanScopedLock scopedLock(lock);
+    if (i >= index.load(std::memory_order_seq_cst)) {
+        return {0, 0, 0};
+    }
 
     return events[i];
+}
+
+uintptr_t Symbolizer::CompressAddr(uintptr_t addr) {
+    return addr & ((1ull << COMPRESSED_ADDR_BITS) - 1);
+}
+
+uintptr_t Symbolizer::RestoreAddr(uintptr_t addr) {
+    return addr | (ShadowMemory::heap_base & ~((1ull << COMPRESSED_ADDR_BITS) - 1));
 }
 
 void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
@@ -38,7 +50,6 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
     history->add_event(e);
 }
 
-// TODO: For faster lookups we could use a hash table and hash on the address
 bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
     ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
     bool found = false;
@@ -52,16 +63,6 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
             return false; // no more events and not found
         }
 
-        if (e.pc == (uintptr_t)addr) {
-            // change the bci of the previous event to the bci of the access
-            // this will give the actual line of the access instead of the line of the method
-            if (found = sp > 0) { // if only one frame, then we don't really have anything useful to report, mark as not found
-                trace.events[sp - 1].bci = e.bci;
-            }
-
-            break;
-        }
-
         if (e.event == METHOD_ENTRY) {
             trace.events[sp++] = e;
         } else if (e.event == METHOD_EXIT) {
@@ -69,7 +70,16 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
                 sp--;
             }
         } else {
-            // ignore access events
+            uintptr_t raw_addres = Symbolizer::RestoreAddr(e.pc);
+            if (raw_addres == (uintptr_t)addr) {
+            // change the bci of the previous event to the bci of the access
+            // this will give the actual line of the access instead of the line of the method
+            if (found = sp > 0) { // if only one frame, then we don't really have anything useful to report, mark as not found
+                trace.events[sp - 1].bci = e.bci;
+            }
+            break;
+        }
+            // other accesses can be ignored
             continue;
         }
     }
