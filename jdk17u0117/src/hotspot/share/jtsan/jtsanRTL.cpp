@@ -92,100 +92,72 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 }
 #else // JTSAN_VECTORIZE
 bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
-    void *shadow_addr = ShadowBlock::mem_to_shadow((uptr)addr);
+    uptr addr_aligned = ((uptr)addr);
 
-    bool isRace    = false;
-    bool isStored  = false;
+    bool stored   = false;
+    bool isRace   = false;
 
-    // load the shadow cells
-    m256 shadow_vec  = _mm256_loadu_si256((m256 *)shadow_addr);
+    // we can perform a single load into a 256-bit register
+    // and then compare the values
 
-    m256 tid_mask        = _mm256_set1_epi64x(0xFF);
-    m256 offset_mask     = _mm256_set1_epi64x(0x7);
-    m256 epoch_mask      = _mm256_set1_epi64x(0xFFFFFFFF);
-    m256 gc_epoch_mask   = _mm256_set1_epi64x(0x7FFFF);
-    m256 is_write_mask   = _mm256_set1_epi64x(0x1);
-    m256 is_ignored_mask = _mm256_set1_epi64x(0x1);
+    m256 shadow       = _mm256_load_si256((const __m256i *)addr_aligned);
 
-    m256 tid_vec               = _mm256_and_si256(shadow_vec, tid_mask);
-    m256 epoch_vec             = _mm256_and_si256(shadow_vec, epoch_mask);
-    m256 offset_vec            = _mm256_and_si256(shadow_vec, offset_mask);
-    m256 gc_epoch_vec          = _mm256_and_si256(shadow_vec, gc_epoch_mask);
-    m256 is_write_vec          = _mm256_and_si256(shadow_vec, is_write_mask);
-    m256 is_ignored_vec        = _mm256_and_si256(shadow_vec, is_ignored_mask);
+/*
+    // // Print the shadow vector
+    // uint64_t shadow_ptr = (uint64_t)&shadow_vec;
+    // for (int i = 0; i < 4; i++) {
+    //     printf("Shadow[%d]: tid=%d, epoch=%d, offset=%d, gc_epoch=%d, is_write=%d, is_ignored=%d\n",
+    //         i, 
+    (tid) shadow_ptr[i] & 0xFF, 
+    (epoch) (shadow_ptr[i] >> 8 & 0xFFFFFFFF,
+     (offset) (shadow_ptr[i] >> 40) & 0x7,
+    (gc_epoch) (shadow_ptr[i] >> 43) & 0x7FFFF,
+     (is_write) (shadow_ptr[i] >> 62) & 0x1,
+     (is_ignored) (shadow_ptr[i] >> 63) & 0x1);
+    // }
+*/
 
-    /*
-        If any of the cells in shadow is marked ignored, then we can skip the whole block
-    */
-    if (_mm256_movemask_epi8(is_ignored_vec) != 0) {
-        return false;
-    }
-
-    /*
-        Extract cells that meet the conditions:
-        tid == cur.tid or both reads or cur.offset != offset or gc_epoch != cur.gc_epoch
-    */
-
-   m256 cur_tid      = _mm256_set1_epi64x(cur.tid);
-   m256 cur_offset   = _mm256_set1_epi64x(cur.offset);
-   m256 cur_gc_epoch = _mm256_set1_epi64x(cur.gc_epoch);
-   m256 cur_is_write = _mm256_set1_epi64x(cur.is_write);
-
-    m256 safe_cells = _mm256_cmpeq_epi64(tid_vec, cur_tid);
-         safe_cells = _mm256_or_si256(safe_cells, _mm256_or_si256(is_write_vec, cur_is_write));
-         safe_cells = _mm256_or_si256(safe_cells, _mm256_or_si256(_mm256_cmpgt_epi64(offset_vec, cur_offset),
-                                                  _mm256_cmpgt_epi64(cur_offset, offset_vec)));
-         safe_cells = _mm256_or_si256(safe_cells, _mm256_or_si256(_mm256_cmpgt_epi64(gc_epoch_vec, cur_gc_epoch),
-                                                  _mm256_cmpgt_epi64(cur_gc_epoch, gc_epoch_vec)));
-
-    // extract safe cells
-    shadow_vec = _mm256_andnot_si256(safe_cells, shadow_vec);     
-
-    m256 thread_epochs = _mm256_set1_epi64x(0);
-#define LOAD_EPOCH(i)\
+    uint64_t *cell = (uint64_t *)&shadow;
+#define CHECK_CELL(idx)\
     {\
-        uint8_t  tid   = (uint8_t)_mm256_extract_epi64(tid_vec, i);\
-        uint32_t epoch = JtsanThreadState::getEpoch(cur.tid, tid);\
-        thread_epochs  = _mm256_insert_epi64(thread_epochs, epoch, i);\
+        if (((cell[idx] >> 8 ) & 0xFFFFFFFF) && ((cell[idx] >> 43) & 0x7FFFF) == cur.gc_epoch && ((cell[idx] >> 40) & 0x7) == cur.offset) {\
+            if ((cell[idx] & 0xFF) != cur.tid) {\
+                uint32_t thr = JtsanThreadState::getEpoch(cur.tid, (cell[idx] >> 8) & 0xFFFFFFFF);\
+
+                if (thr < ((cell[idx] >> 8) & 0xFFFFFFFF)) {\
+                    prev = *(ShadowCell *)&cell[idx];\
+                    
+                    isRace = true;\
+                    trace = new JTSanStackTrace(thread);\
+                    if (LIKELY(JTSanSuppression::is_suppressed(trace))) {\
+                        isRace = false;\
+                    }\
+                    cur.is_ignored = 1;\
+                    stored = true;\
+                    ShadowBlock::store_cell_at((uptr)addr, &cur, 0);\
+                    goto DONE;\
+                }\
+            }\
+            else {\
+                if (cur.is_write && !(cell[idx] >> 62 & 0x1)) {\
+                    ShadowBlock::store_cell_at((uptr)addr, &cur, idx);
+                    stored = true;\
+                }\
+            }\
+        }\
     }
 
-    LOAD_EPOCH(0)
-    LOAD_EPOCH(1)
-    LOAD_EPOCH(2)
-    LOAD_EPOCH(3)
-#undef LOAD_EPOCH
+    CHECK_CELL(0);
+    CHECK_CELL(1);
+    CHECK_CELL(2);
+    CHECK_CELL(3);
 
-    const m256 zero = _mm256_set1_epi64x(0);
+DONE:
 
-    // race check
-    // if cell is not zero and current.epoch < thread_epoch then is a race
-    const m256 cmp  = _mm256_cmpgt_epi64(epoch_vec, thread_epochs);
-    const m256 race = _mm256_andnot_si256(_mm256_cmpeq_epi64(zero, shadow_vec), cmp);
-
-    int race_mask = _mm256_movemask_epi8(race);
-
-    if (isRace = race_mask != 0) {
-        trace = new JTSanStackTrace(thread);
-        if (JTSanSuppression::is_suppressed(trace)) {
-            // ignore
-            isRace = false;
-        }
-        cur.is_ignored = 1;
-        ShadowBlock::store_cell_at((uptr)addr, &cur, 0);
-
-        isStored = true;
-
-        int index = __builtin_ffs(race_mask) / 8;
-
-        prev.tid      = (uint8_t)((uint64_t*)&tid_vec)[index];
-        prev.epoch    = (uint32_t)((uint64_t*)&epoch_vec)[index];
-        prev.offset   = (uint8_t)((uint64_t*)&offset_vec)[index];
-        prev.gc_epoch = (uint16_t)((uint64_t*)&gc_epoch_vec)[index];
-        prev.is_write = (uint8_t)((uint64_t*)&is_write_vec)[index];
-    }
-
-    if (!isStored) {
-        ShadowBlock::store_cell((uptr)addr, &cur);
+    if (UNLIKELY(!stored)) {
+    // store the shadow cell
+      uint8_t index = JtsanThreadState::getHistory(cur.tid)->index.load(std::memory_order_relaxed) % SHADOW_CELLS;
+      ShadowBlock::store_cell_at((uptr)addr, &cur, index);
     }
 
     return isRace;
