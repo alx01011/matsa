@@ -100,7 +100,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     // we can perform a single load into a 256-bit register
     // and then compare the values
     
-    uint64_t *s  = ShadowBlock::mem_to_shadow(addr);
+    uint64_t *s  = ShadowBlock::mem_to_shadow((uptr)addr);
 
     m128 shadow0 = _mm_load_si128((m128 *)s);
     m128 shadow1 = _mm_load_si128((m128 *)(s + 2));
