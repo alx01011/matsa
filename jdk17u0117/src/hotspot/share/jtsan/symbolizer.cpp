@@ -73,7 +73,8 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
                         trace.events[sp - 1].bci = e.bci;
                         found = true;
                     }
-                    goto FOUND;
+                    trace.size = sp;
+                    return found;
                 }
                 break;
             }
@@ -83,10 +84,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
         }
     }
 
-FOUND:
-    trace.size = sp;
-
-    return found;
+    return false;
 }
 
 void Symbolizer::ClearThreadHistory(int tid) {
