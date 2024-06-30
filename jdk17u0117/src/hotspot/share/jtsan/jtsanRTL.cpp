@@ -32,7 +32,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         // or if the thread id is the same as the current thread 
         // previous access was by the same thread so we can skip
         // different offset means different memory location in case of 1,2 or 4 byte access
-        if (cell.epoch == 0 || cur.gc_epoch != cell.gc_epoch || cell.offset != cur.offset) {
+        if (LIEKLY(cell.epoch == 0 || cur.gc_epoch != cell.gc_epoch || cell.offset != cur.offset)) {
             continue;
         }
 
