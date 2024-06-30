@@ -2109,7 +2109,7 @@ void InterpreterMacroAssembler::notify_method_entry() {
     NOT_LP64(get_thread(rthread);)
     get_method(rarg);
     call_VM_leaf(
-      CAST_FROM_FN_PTR(address, SharedRuntime::rc_trace_method_entry),
+      CAST_FROM_FN_PTR(address, SharedRuntime::rc_trace_method_enter),
       rthread, rarg);
   }
 }
