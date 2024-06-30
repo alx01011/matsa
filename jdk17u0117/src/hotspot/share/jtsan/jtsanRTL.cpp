@@ -100,7 +100,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     // we can perform a single load into a 256-bit register
     // and then compare the values
 
-    m256 shadow       = _mm256_load_si256((const __m256i *)addr_aligned);
+    m256 shadow       = _mm256_load_si256((const __m256i *)ShadowBlock::mem_to_shadow(addr_aligned));
 
 /*
     // // Print the shadow vector
