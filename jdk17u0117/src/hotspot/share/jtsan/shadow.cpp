@@ -103,7 +103,7 @@ ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
 
     ShadowCell *cell_ref = &((ShadowCell *)shadow_addr)[index];
 
-    if ((uptr)cell_ref < (uptr)shadow->shadow_base || (uptr)cell_ref >= (uptr)shadow->shadow_base + shadow->size) {
+    if ((uptr)cell_ref >= (uptr)shadow->shadow_base + shadow->size) {
         fprintf(stderr, "Shadow memory (%p) out of bounds in load_cell with index %d\n", shadow_addr, index);
         exit(1);
     }
