@@ -118,13 +118,25 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 */
 
     uint64_t *cell = (uint64_t *)&shadow;
+
+    if (UNLIKELY(cell[0] == 0 && cell[1] == 0 && cell[2] == 0 && cell[3] == 0)) {
+        // all cells are unassigned
+        goto DONE;
+    }
+
+    // is the cell ignored?
+    if ((cell[0] >> 63) & 0x1) {
+        return false;
+    }
+
 #define CHECK_CELL(idx)\
     {\
-        if (((cell[idx] >> 8 ) & 0xFFFFFFFF) && ((cell[idx] >> 43) & 0x7FFFF) == cur.gc_epoch && ((cell[idx] >> 40) & 0x7) == cur.offset) {\
-            if ((cell[idx] & 0xFF) != cur.tid) {\
-                uint32_t thr = JtsanThreadState::getEpoch(cur.tid, (cell[idx] >> 8) & 0xFFFFFFFF);\
-                if (thr < ((cell[idx] >> 8) & 0xFFFFFFFF)) {\
-                    prev = *(ShadowCell *)&cell[idx];\
+    ShadowCell tmp = *(ShadowCell *)&cell[idx];\
+        if (LIKELY(tmp.epoch != 0 && cur.gc_epoch == tmp.gc_epoch && cur.offset == tmp.offset)) {\
+            if (tmp.tid != cur.tid) {\
+                uint32_t thr = JtsanThreadState::getEpoch(cur.tid, tmp.tid);\
+                if (thr < tmp.epoch) {\
+                    prev = tmp;\
                     isRace = true;\
                     trace = new JTSanStackTrace(thread);\
                     if (LIKELY(JTSanSuppression::is_suppressed(trace))) {\
@@ -137,7 +149,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
                 }\
             }\
             else {\
-                if (cur.is_write && !(cell[idx] >> 62 & 0x1)) {\
+                if (cur.is_write && !tmp.is_write) {\
                     ShadowBlock::store_cell_at((uptr)addr, &cur, idx);\
                     stored = true;\
                 }\
