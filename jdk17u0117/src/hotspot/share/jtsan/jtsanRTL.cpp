@@ -82,7 +82,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         break;
     }
 
-    if (LIKELY(!stored)) {
+    if (UNLIKELY(!stored)) {
     // store the shadow cell
       ShadowBlock::store_cell((uptr)addr, &cur);
     }

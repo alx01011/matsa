@@ -7,6 +7,8 @@
 /*
     Fallback to 38 bits if not defined.
     This allows for heaps up to 2^38 bytes -> 256GiB
+    We can compress the address to 38 bits and restore it later
+    since the heap is contiguous and we know the base address its easy to restore
 */
 #ifndef COMPRESSED_ADDR_BITS
 #define COMPRESSED_ADDR_BITS 38
@@ -14,7 +16,6 @@
 
 // TODO: this has to be done at compile time
 // because we have to check if avx is supported
-
 #ifndef JTSAN_VECTORIZE
 #define JTSAN_VECTORIZE 0
 #endif

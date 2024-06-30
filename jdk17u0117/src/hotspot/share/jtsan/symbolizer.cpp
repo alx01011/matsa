@@ -33,7 +33,7 @@ JTSanEvent ThreadHistory::get_event(int i) {
 }
 
 uintptr_t Symbolizer::CompressAddr(uintptr_t addr) {
-    return addr & ((1ull << COMPRESSED_ADDR_BITS) - 1);
+    return addr & ((1ull << COMPRESSED_ADDR_BITS) - 1); // see jtsanDefs
 }
 
 uintptr_t Symbolizer::RestoreAddr(uintptr_t addr) {
@@ -70,7 +70,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
                 if (raw_address == (uintptr_t)addr) {
                     if (sp > 0) {
                         trace.events[sp - 1].bci = e.bci;
-                        
+
                         trace.size = sp;
                         found = true;
                     }
