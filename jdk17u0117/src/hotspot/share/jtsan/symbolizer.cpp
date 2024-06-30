@@ -67,10 +67,11 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
                 }
                 break;
             case ACCESS: {
-                uintptr_t raw_addres = Symbolizer::RestoreAddr(e.pc);
-                if (raw_addres == (uintptr_t)addr) {
-                    if (found = sp > 0) {
+                uintptr_t raw_address = Symbolizer::RestoreAddr(e.pc);
+                if (raw_address == (uintptr_t)addr) {
+                    if (sp > 0) {
                         trace.events[sp - 1].bci = e.bci;
+                        found = true;
                     }
                     goto FOUND;
                 }
