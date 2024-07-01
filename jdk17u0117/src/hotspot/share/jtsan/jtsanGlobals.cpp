@@ -4,22 +4,21 @@
 #include <cstdio>
 
 volatile bool    _is_jtsan_initialized = false;
-volatile unsigned char _gc_epoch = 0;
+volatile uint32_t _gc_epoch = 0;
 
 volatile bool   _is_klass_init = false;
 
 // start from 1 since 0 is reserved for the initial java thread
-volatile uint16_t _cur_tid = 1;
+volatile uint32_t _cur_tid = 1;
 
-unsigned char get_gc_epoch(void) {
+uint32_t get_gc_epoch(void) {
     return Atomic::load(&_gc_epoch);
 }
 
 void increment_gc_epoch(void) {
-    uint8_t epoch = Atomic::load(&_gc_epoch);
-    Atomic::store(&_gc_epoch, (unsigned char)(epoch + 1));
+    uint32_t epoch = Atomic::load(&_gc_epoch);
+    Atomic::store(&_gc_epoch, (uint32_t)(epoch + 1));
 
-    printf("GC Epoch incremented to %d\n", epoch + 1);
 }
 
 bool is_jtsan_initialized(void) {
