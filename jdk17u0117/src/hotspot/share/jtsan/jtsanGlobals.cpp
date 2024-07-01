@@ -4,20 +4,20 @@
 #include <cstdio>
 
 volatile bool    _is_jtsan_initialized = false;
-volatile size_t  _gc_epoch = 0;
+volatile uint32_t _gc_epoch = 0;
 
 volatile bool   _is_klass_init = false;
 
 // start from 1 since 0 is reserved for the initial java thread
-volatile uint32_t _cur_tid = 1;
+volatile uint16_t _cur_tid = 1;
 
 uint32_t get_gc_epoch(void) {
     return Atomic::load(&_gc_epoch);
 }
 
 void increment_gc_epoch(void) {
-    size_t epoch = Atomic::load(&_gc_epoch);
-    Atomic::store(&_gc_epoch, (size_t)(epoch + 1));
+    uint32_t epoch = Atomic::load(&_gc_epoch);
+    Atomic::store(&_gc_epoch, (uint32_t)(epoch + 1));
 
 }
 
