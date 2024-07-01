@@ -1,6 +1,8 @@
 #include "jtsanGlobals.hpp"
 #include "runtime/atomic.hpp"
 
+#include <cstdio>
+
 volatile bool    _is_jtsan_initialized = false;
 volatile unsigned char _gc_epoch = 0;
 
@@ -16,6 +18,8 @@ unsigned char get_gc_epoch(void) {
 void increment_gc_epoch(void) {
     uint8_t epoch = Atomic::load(&_gc_epoch);
     Atomic::store(&_gc_epoch, (unsigned char)(epoch + 1));
+
+    printf("GC Epoch incremented to %d\n", epoch + 1);
 }
 
 bool is_jtsan_initialized(void) {
