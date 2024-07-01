@@ -4,7 +4,7 @@
 #include <cstdio>
 
 volatile bool    _is_jtsan_initialized = false;
-volatile uint32_t _gc_epoch = 0;
+volatile size_t  _gc_epoch = 0;
 
 volatile bool   _is_klass_init = false;
 
@@ -16,8 +16,8 @@ uint32_t get_gc_epoch(void) {
 }
 
 void increment_gc_epoch(void) {
-    uint32_t epoch = Atomic::load(&_gc_epoch);
-    Atomic::store(&_gc_epoch, (uint32_t)(epoch + 1));
+    size_t epoch = Atomic::load(&_gc_epoch);
+    Atomic::store(&_gc_epoch, (size_t)(epoch + 1));
 
 }
 
