@@ -37,6 +37,13 @@
 # include <mach/mach_time.h>
 #endif
 
+#if INCLUDE_JTSAN
+
+#define BASE_ADDRESS()
+
+#ifdef __APPLE__
+#if defined(__aarch64__)
+
 class AgentLibrary;
 class frame;
 

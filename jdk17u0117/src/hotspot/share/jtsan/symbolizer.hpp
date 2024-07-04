@@ -18,14 +18,14 @@
 // we already have that information in the shadow cell
 enum Event {
     INVALID,
-    ACCESS,
-    METHOD_ENTRY,
-    METHOD_EXIT
+    ACCESS_READ,
+    ACCES_WRITE,
+    FUNC
 };
 
 class JTSanEvent {
     public:
-        Event     event : 2; // 3 events
+        Event     event : 2; // 4 events
         int       bci   : 64 - 48 - 2;
         uintptr_t pc    : 48; // can't easily compress this
 };
@@ -67,7 +67,7 @@ namespace Symbolizer {
     uintptr_t RestoreAddr(uintptr_t addr);
 
     void Symbolize       (Event event, void *addr, int bci, int tid);
-    bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid);
+    bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev);
 
     void ClearThreadHistory(int tid);
 };

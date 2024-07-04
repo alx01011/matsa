@@ -47,7 +47,7 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
     history->add_event(e);
 }
 
-bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
+bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
     ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
     bool found = false;
 
@@ -57,27 +57,25 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
         JTSanEvent e = history->get_event(i);
 
         switch(e.event) {
-            case METHOD_ENTRY:
-                trace.events[sp++] = e;
-                break;
-            case METHOD_EXIT:
-                if (sp > 0) {
-                    sp--;
+            case FUNC:
+                switch(e.pc) {
+                    case 0: // method exit
+                        if (sp > 0) {
+                            sp--;
+                        }
+                        break;
+                    default: // method entry
+                        if (sp < EVENT_BUFFER_SIZE) {
+                            trace.events[sp++] = e;
+                        }
+                        break;
                 }
                 break;
-            case ACCESS: {
-                uintptr_t raw_address = e.pc;
-                if (raw_address == (uintptr_t)addr) {
-                    if (sp > 0) {
-                        trace.events[sp - 1].bci = e.bci;
-
-                        trace.size = sp;
-                        found = true;
-                    }
-                    return found;
+            case prev.is_write + 1:
+                if (e.pc == (uintptr_t)addr) {
+                    found = true;
                 }
                 break;
-            }
             case INVALID:
             default:
                 return false;

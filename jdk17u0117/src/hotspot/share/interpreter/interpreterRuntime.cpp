@@ -964,16 +964,13 @@ void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method,
   const jmethodID m_id     = method->jmethod_id();
   const int       bci      = method->bci_from(bcp);
 
-  Symbolizer::Symbolize(METHOD_ENTRY, m_id, bci, tid);
+  Symbolizer::Symbolize(FUNC, m_id, bci, tid);
 }
 
 void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp) {
   int tid = JavaThread::get_jtsan_tid(current);
 
-  const jmethodID m_id     = method->jmethod_id();
-  const int       bci      = method->bci_from(bcp);
-
-  Symbolizer::Symbolize(METHOD_EXIT, m_id, bci, tid);
+  Symbolizer::Symbolize(FUNC, 0, 0, tid);
 }
 
 //------------------------------------------------------------------------------------------------------------------------

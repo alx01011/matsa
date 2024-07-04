@@ -40,11 +40,11 @@ void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
 
 }
 
-bool try_print_event_trace(void *addr, int tid) {
+bool try_print_event_trace(void *addr, int tid, ShadowCell &prev) {
     JTSanEventTrace trace;
     bool has_trace = false;
 
-    has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid);
+    has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, prev);
 
     if (has_trace) {
         for (int i = trace.size - 1; i >= 0; i--) {
@@ -79,7 +79,7 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
     fprintf(stderr, RED "WARNING: ThreadSanitizer: data race (pid=%d)\n", pid);
     fprintf(stderr, BLUE " %s of size %u at %p by thread T%lu:\n" RESET,  cur.is_write ? "Write" : "Read", 
             size, addr, cur.tid);
-    if (!try_print_event_trace(addr, cur.tid)) {
+    if (!try_print_event_trace(addr, cur.tid, prev)) {
         // less accurate line numbers
         print_stack_trace(trace);
     }
