@@ -18,8 +18,8 @@
 // we already have that information in the shadow cell
 enum Event {
     INVALID,
-    ACCESS_READ,
-    ACCES_WRITE,
+    MEM_READ,
+    MEM_WRITE,
     FUNC
 };
 
