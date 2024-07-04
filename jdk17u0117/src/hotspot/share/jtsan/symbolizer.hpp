@@ -8,6 +8,7 @@
 #include <atomic>
 
 #include "jtsanDefs.hpp"
+#include "shadow.hpp"
 
 #include "runtime/mutex.hpp"
 #include "runtime/thread.hpp"
