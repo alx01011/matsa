@@ -50,7 +50,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
     ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
     bool found = false;
 
-    int sp = 0;
+    uint16_t sp = 0;
 
     for (int i = 0; i < EVENT_BUFFER_SIZE; i++) {
         JTSanEvent e = history->get_event(i);
@@ -64,9 +64,11 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                         }
                         break;
                     default: // method entry
-                        if (sp < EVENT_BUFFER_SIZE) {
-                            trace.events[sp++] = e;
-                        }
+                        trace.events[sp++] = e;
+                        // in case sp gets out of bounds it wraps around
+                        // start overwriting the oldest events
+                        // stack trace doesn't have to be complete
+                        // the last events are the most important
                         break;
                 }
                 break;
