@@ -99,7 +99,7 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write, 0};
     // symbolize the access
     // 1 is read, 2 is write
-    Symbolizer::Symbolize((JTSanEvent)(is_write + 1), addr, m->bci_from(bcp), tid);
+    Symbolizer::Symbolize((Event)(is_write + 1), addr, m->bci_from(bcp), tid);
 
     // race
     ShadowCell prev;
