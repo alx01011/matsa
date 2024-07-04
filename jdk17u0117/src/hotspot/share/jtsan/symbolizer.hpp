@@ -18,10 +18,10 @@
 // we don't need to keep track the if the access was a read or write
 // we already have that information in the shadow cell
 enum Event {
-    INVALID,
-    MEM_READ,
-    MEM_WRITE,
-    FUNC
+    INVALID   = 0,
+    MEM_READ  = 1,
+    MEM_WRITE = 2,
+    FUNC      = 3
 };
 
 class JTSanEvent {

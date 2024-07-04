@@ -52,7 +52,7 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &prev) {
             // cast back to uintptr to zero extend, then cast back to method
             uintptr_t pc    =  (uintptr_t)e.pc;
 
-            jmethodID mid = (jmethodID)((uintptr_t)pc);
+            jmethodID mid   = (jmethodID)((uintptr_t)pc);
             Method *m       = Method::resolve_jmethod_id(mid);
             int bci         = e.bci;
 
