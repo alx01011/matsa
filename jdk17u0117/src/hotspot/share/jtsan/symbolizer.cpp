@@ -1,7 +1,6 @@
 #include "symbolizer.hpp"
 #include "jtsanGlobals.hpp"
 #include "threadState.hpp"
-#include "shadow.hpp"
 
 #include "memory/allocation.hpp"
 
@@ -47,33 +46,44 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
     history->add_event(e);
 }
 
-bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid) {
+bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
     ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
     bool found = false;
 
-    int sp = 0;
+    uint16_t sp = 0;
 
     for (int i = 0; i < EVENT_BUFFER_SIZE; i++) {
         JTSanEvent e = history->get_event(i);
 
         switch(e.event) {
-            case METHOD_ENTRY:
-                trace.events[sp++] = e;
-                break;
-            case METHOD_EXIT:
-                if (sp > 0) {
-                    sp--;
+            case FUNC:
+                switch(e.pc) {
+                    case 0: // method exit
+                        if (sp > 0) {
+                            sp--;
+                        }
+                        break;
+                    default: // method entry
+                        trace.events[sp++] = e;
+                        // in case sp gets out of bounds it wraps around
+                        // start overwriting the oldest events
+                        // stack trace doesn't have to be complete
+                        // the last events are the most important
+                        break;
                 }
                 break;
-            case ACCESS: {
-                uintptr_t raw_address = e.pc;
-                if (raw_address == (uintptr_t)addr) {
+            case MEM_READ:
+            case MEM_WRITE: {
+                uintptr_t pc = e.pc;
+
+                if (e.event == (Event)(prev.is_write + 1) && pc == (uintptr_t)addr) {
                     if (sp > 0) {
                         trace.events[sp - 1].bci = e.bci;
-
                         trace.size = sp;
+
                         found = true;
                     }
+
                     return found;
                 }
                 break;
