@@ -71,8 +71,10 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                 }
                 break;
             case MEM_READ:
-            case MEM_WRITE:
-                if (e.event == (Event)(prev.is_write + 1) && (void*)e.pc == addr) {
+            case MEM_WRITE: {
+                uintptr_t pc = e.pc;
+
+                if (e.event == (Event)(prev.is_write + 1) && pc == (uintptr_t)addr) {
                     if (sp > 0) {
                         trace.events[sp - 1].bci = e.bci;
                         trace.size = sp;
@@ -82,6 +84,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
 
                     return found;
                 }
+            }
             case INVALID:
             default:
                 return false;
