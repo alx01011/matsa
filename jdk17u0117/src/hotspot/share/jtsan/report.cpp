@@ -56,11 +56,6 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &prev) {
             Method *m       = Method::resolve_jmethod_id(mid);
             int bci         = e.bci;
 
-            if (!Method::is_valid_method(m)) {
-                // we have an invalid method
-                continue;
-            }
-
             print_method_info(m, bci, (trace.size - 1) - i);
         }
     }

@@ -23,10 +23,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     uptr addr_aligned = ((uptr)addr);
 
     bool stored   = false;
-    bool isRace   = false;
-
-    void *shadow_address = ShadowMemory::MemToShadow(addr_aligned);
-    
+    bool isRace   = false;    
 
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell = ShadowBlock::load_cell(addr_aligned, i);

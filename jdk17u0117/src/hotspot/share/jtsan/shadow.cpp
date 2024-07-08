@@ -112,7 +112,7 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
           * Additionally, we prefer cells with smaller gc epochs, since they refer to different memory locations
           * (prior to gc)
         */
-        if (!cell_l.epoch || (cell_l.gc_epoch != cell->gc_epoch)) {
+        if (LIKELY(!cell_l.epoch) || UNLIKELY((cell_l.gc_epoch != cell->gc_epoch))) {
             *(cell_addr + i) = *cell;
             return;
         }
