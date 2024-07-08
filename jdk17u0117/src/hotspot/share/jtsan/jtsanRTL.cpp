@@ -96,11 +96,13 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     void *shadow_addr = ShadowMemory::MemToShadow((uptr)addr);
 
-    m256 block = _mm256_load_si256((m256 *)shadow_addr);
+    m128 left = _mm_load_si128((__m128i*)shadow_addr);
+    m128 right = _mm_load_si128((__m128i*)shadow_addr + 2);
     ShadowCell cells[SHADOW_CELLS];
 
 #define LOAD_CELL(i)\
-    cells[i] = _mm256_extract_epi64(block, i);
+    (i < SHADOW_CELLS / 2 ? cells[i] = _mm_extract_epi64(left, i) \
+    : cells[i] = _mm_extract_epi64(right, i - SHADOW_CELLS / 2)
 
     LOAD_CELL(0);
     LOAD_CELL(1);
