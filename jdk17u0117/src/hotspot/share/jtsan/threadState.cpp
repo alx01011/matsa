@@ -41,7 +41,7 @@ void JTSanThreadState::destroy(void) {
     }
 
     JTSanThreadState::epoch = nullptr;
-    JTSanThreadState::>size = 0;
+    JTSanThreadState::size = 0;
 }
 
 Vectorclock* JTSanThreadState::getThreadState(size_t threadId) {
