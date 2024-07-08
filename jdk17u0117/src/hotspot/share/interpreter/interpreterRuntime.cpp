@@ -847,7 +847,7 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
   LockShadow *obs = (LockShadow*)p->lock_state();
   Vectorclock* ts = obs->get_vectorclock();
 
-  Vectorclock* cur = JTSanThreadState::getThreadState(tid);
+  Vectorclock* cur = JtsanThreadState::getThreadState(tid);
 
   *cur = *ts;
 }
@@ -876,12 +876,12 @@ void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bc
   LockShadow *obs = (LockShadow*)p->lock_state();
 
   Vectorclock* ls = obs->get_vectorclock();
-  Vectorclock* cur = JTSanThreadState::getThreadState(tid);
+  Vectorclock* cur = JtsanThreadState::getThreadState(tid);
 
   *ls = *cur;
 
   // increment the epoch of the current thread after the transfer
-  JTSanThreadState::incrementEpoch(tid);
+  JtsanThreadState::incrementEpoch(tid);
 }
 
 void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, address bcp) {
@@ -921,7 +921,7 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   LockShadow *sls = (LockShadow*)p->lock_state();
   Vectorclock* ts = sls->get_vectorclock();
 
-  Vectorclock* cur = JTSanThreadState::getThreadState(tid);
+  Vectorclock* cur = JtsanThreadState::getThreadState(tid);
 
   *cur = *ts;
 }
@@ -950,44 +950,28 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
 
   LockShadow* sls =  (LockShadow*)p->lock_state();
   Vectorclock* ls = sls->get_vectorclock();
-  Vectorclock* cur = JTSanThreadState::getThreadState(tid);
+  Vectorclock* cur = JtsanThreadState::getThreadState(tid);
 
   *ls = *cur;
 
   // increment the epoch of the current thread after the transfer
-  JTSanThreadState::incrementEpoch(tid);
+  JtsanThreadState::incrementEpoch(tid);
 }
 
-JRT_ENTRY(void, InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method, address bcp))
-  RegisterMap unused_reg_map(current, false, false);
-
-  const frame sender = current->last_frame().real_sender(&unused_reg_map);
-
-  if (!sender.is_interpreted_frame()) {
-    return;
-  }
-
+void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method, address bcp) {
   int tid = JavaThread::get_jtsan_tid(current);
 
-  const jmethodID m_id     = sender.interpreter_frame_method()->find_jmethod_id_or_null();
+  const jmethodID m_id     = method->jmethod_id();
   const int       bci      = method->bci_from(bcp);
 
   Symbolizer::Symbolize(FUNC, m_id, bci, tid);
-JRT_END
+}
 
-JRT_ENTRY(void, InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp))
-  RegisterMap unused_reg_map(current, false, false);
-
-  const frame sender = current->last_frame().real_sender(&unused_reg_map);
-
-  if (!sender.is_interpreted_frame()) {
-    return;
-  }
-
+void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp) {
   int tid = JavaThread::get_jtsan_tid(current);
 
   Symbolizer::Symbolize(FUNC, 0, 0, tid);
-JRT_END
+}
 
 //------------------------------------------------------------------------------------------------------------------------
 // Synchronization
