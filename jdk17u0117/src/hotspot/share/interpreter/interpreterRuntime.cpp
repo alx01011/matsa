@@ -736,42 +736,20 @@ void InterpreterRuntime::resolve_get_put(JavaThread* current, Bytecodes::Code by
 //------------------------------------------------------------------------------------------------------------------------
 // jtsan instrumentation
 
-// void MemoryAccess(void *addr, Method *m, address &bcp, int size, bool is_store) {
-//   int bci = m->bci_from(bcp);
-//   int line_no = m->line_number_from_bci(bci);
-
-//   if (line_no < 30 || line_no > 40) return;
-
-//   JavaThread *thread = JavaThread::current();
-
-//   ResourceMark rm;
-//   const char *mname = m->external_name_as_fully_qualified();
-
-//   int tid = JavaThread::get_thread_obj_id(thread);
-
-//   fprintf(stderr, "Access %s at method %s , line %d : %p\n", is_store ? "store" : "load", mname, line_no, addr);
-
-// }
-
-
 void InterpreterRuntime::jtsan_load1(void *addr, Method *m, address bcp) {
   JtsanRTL::MemoryAccess(addr, m, bcp, 1, false);
-  //load_store_where((char*)"jtsan_load1:", m, addr, bcp);
 }
 
 void InterpreterRuntime::jtsan_load2(void *addr, Method *m, address bcp) {
   JtsanRTL::MemoryAccess(addr, m, bcp, 2, false);
-  //load_store_where((char*)"jtsan_load2:", m, addr, bcp);
 }
 
 void InterpreterRuntime::jtsan_load4(void *addr, Method *m, address bcp) {
   JtsanRTL::MemoryAccess(addr, m, bcp, 4, false);
-  //load_store_where((char*)"jtsan_load4:", m, addr, bcp);
 }
 
 void InterpreterRuntime::jtsan_load8(void *addr, Method *m, address bcp) {
   JtsanRTL::MemoryAccess(addr, m, bcp, 8, false);
- // load_store_where((char*)"jtsan_load8:", m, addr, bcp);
 }
 
 void jtsan_vtos(void *addr, Method *m, address bcp) {

@@ -4002,6 +4002,18 @@ jint Arguments::parse(const JavaVMInitArgs* initial_cmd_args) {
 
   apply_debugger_ergo();
 
+  JTSAN_ONLY(
+    // no jit until masters
+    set_mode_flags(_int);
+
+    // no rewrite bytecodes optimization
+    FLAG_SET_ERGO(RewriteBytecodes, false);
+    // no compressed oops yet
+    // can't use it because we modify oop header
+    FLAG_SET_ERGO(UseCompressedOops, false);
+    FLAG_SET_ERGO(UseCompressedClassPointers, false);
+  );
+
   return JNI_OK;
 }
 
