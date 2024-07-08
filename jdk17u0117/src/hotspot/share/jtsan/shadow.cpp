@@ -1,4 +1,5 @@
 #include "shadow.hpp"
+#include "jtsanDefs.hpp"
 
 #include <cstdlib>
 #include <cstdio>
