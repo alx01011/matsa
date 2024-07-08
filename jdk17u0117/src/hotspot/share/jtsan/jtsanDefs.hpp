@@ -23,13 +23,14 @@
 
 // For now vectorization performs worse than scalar
 // so we disable it
-#ifdef JTSAN_VECTORIZE
-#undef JTSAN_VECTORIZE
-#define JTSAN_VECTORIZE 0
-#endif
+// #ifdef JTSAN_VECTORIZE
+// #undef JTSAN_VECTORIZE
+// #define JTSAN_VECTORIZE 0
+// #endif
 
 #if JTSAN_VECTORIZE
-#include <immintrin.h>
+#include <emmintrin.h>
+#include <smmintrin.h>
 typedef __m256i m256;
 typedef __m128i m128;
 #endif
