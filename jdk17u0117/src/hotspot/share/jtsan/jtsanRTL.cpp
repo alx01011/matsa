@@ -99,11 +99,11 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     m256 shadow        = _mm256_load_si256((__m256i*)shadow_addr);
     m256 thread_epochs = _mm256_setzero_si256();
 
-    // load cur
-    const m256 cur_cell = _mm256_insert_epi64(zero, *(uint64_t)&cur, 0);
-
     const m256 zero = _mm256_setzero_si256();
     const m256 one  = _mm256_set1_epi64x(1);
+
+    // load cur
+    const m256 cur_cell = _mm256_insert_epi64(zero, *(uint64_t)&cur, 0);
 
     const m256 tid        = _mm256_and_si256(shadow, _mm256_set1_epi64x(0xFF));
     const m256 offset     = _mm256_and_si256(_mm256_srli_epi64(shadow, 40), _mm256_set1_epi64x(0x7));
