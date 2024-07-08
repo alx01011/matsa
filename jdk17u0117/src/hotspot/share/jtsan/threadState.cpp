@@ -74,7 +74,7 @@ void JTSanThreadState::transferEpoch(size_t from_tid, size_t to_tid) {
     assert(from_tid < JTSanThreadState::size, "JTSAN: Thread id out of bounds");
     assert(to_tid < JTSanThreadState::size, "JTSAN: OtherThread id out of bounds");
     
-    JTSanThreadState::epoch[to_tid] = state->epoch[from_tid];
+    JTSanThreadState::epoch[to_tid] = JTSanThreadState::epoch[from_tid];
 }
 
 
