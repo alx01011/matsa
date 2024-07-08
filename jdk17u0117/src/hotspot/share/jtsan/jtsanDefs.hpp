@@ -16,7 +16,12 @@
 
 // TODO: this has to be done at compile time
 // because we have to check if avx is supported
+#ifdef JTSAN_VECTORIZE
+#undef JTSAN_VECTORIZE
 #define JTSAN_VECTORIZE 1
+#else
+#define JTSAN_VECTORIZE 1
+#endif
 
 
 // #if JTSAN_VECTORIZE
