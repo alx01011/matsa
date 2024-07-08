@@ -771,6 +771,9 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
 
   // push all registers, in the future we might want to push only the ones that are used
   __ pusha();
+#if JTSAN_VECTORIZE
+  __ push_d(xmm0);
+#endif
 
   Register klass = c_rarg0;
 
@@ -792,6 +795,9 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
 
   __ bind(skip);
   __ popa();
+#if JTSAN_VECTORIZE
+  __ pop_d(xmm0);
+#endif
 }
 
 void TemplateTable::iaload() {
@@ -1106,6 +1112,11 @@ void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
   // push all registers, in the future we might want to push only the ones that are used
   Label safe;
   __ pusha();
+#if JTSAN_VECTORIZE
+  __ push_d(xmm0);
+#endif
+
+
   Register klass = c_rarg0;
 
   __ get_method(c_rarg1); // get the method
@@ -1125,6 +1136,9 @@ void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
 
   __ bind(safe);
   __ popa();
+#if JTSAN_VECTORIZE
+  __ pop_d(xmm0);
+#endif
 
 }
 
@@ -2902,6 +2916,9 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   Label safe;
 
   __ pusha(); // save all registers
+#if JTSAN_VECTORIZE
+  __ push_d(xmm0);
+#endif
 
     // volatile and final check
   __ testl(flags, f_or_v_or_ignore);
@@ -2924,6 +2941,9 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   __ bind(safe);
 
   __ popa(); // restore all registers
+#if JTSAN_VECTORIZE
+  __ pop_d(xmm0);
+#endif
 }
 
 void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteControl rc) {
@@ -3223,6 +3243,9 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   Label safe;
 
   __ pusha(); // save all registers, some don't need to be saved, will be optimized later
+#if JTSAN_VECTORIZE
+  __ push_d(xmm0);
+#endif
 
   Register klass = c_rarg0;
 
@@ -3243,6 +3266,9 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   __ bind(safe);
 
   __ popa(); // restore all registers
+#if JTSAN_VECTORIZE
+  __ pop_d(xmm0);
+#endif
 }
 
 void TemplateTable::putfield_or_static(int byte_no, bool is_static, RewriteControl rc) {
