@@ -93,6 +93,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
 #else
 
+/*
 bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     void *shadow_addr = ShadowMemory::MemToShadow((uptr)addr);
 
@@ -171,15 +172,16 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
 
     return false;
-
 }
+*/
 
 
-/*
 bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     void *shadow_addr = ShadowMemory::MemToShadow((uptr)addr);
 
     m256 block = _mm256_load_si256((__m256i*)shadow_addr);
+    
+    m256 thread_epochs = _mm256_setzero_si256();
 
     ShadowCell cells[SHADOW_CELLS];
 
@@ -194,6 +196,8 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     LOAD_CELL(1);
     LOAD_CELL(2);
     LOAD_CELL(3);
+
+#undef LOAD_CELL
     
     bool stored = false;
     bool isRace = false;
@@ -246,7 +250,6 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
     return isRace;
 }
-*/
 
 #endif
 
