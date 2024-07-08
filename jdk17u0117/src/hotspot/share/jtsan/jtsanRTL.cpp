@@ -21,7 +21,7 @@
 struct jtsan_cache_line {
     ShadowCell cur;
     ShadowCell cells[SHADOW_CELLS];
-} __attribute__((aligned(64)));
+} __attribute__((aligned(32)));
 
 bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
