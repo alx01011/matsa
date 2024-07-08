@@ -18,52 +18,60 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
 
+struct jtsan_cache_line {
+    ShadowCell cells[SHADOW_CELLS];
+} __attribute__((aligned(64)));
+
 bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
 
     bool stored   = false;
     bool isRace   = false;
 
-    for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
-        ShadowCell cell = ShadowBlock::load_cell(addr_aligned, i);
+    void *shadow_address = ShadowMemory::MemToShadow(addr_aligned);
 
+    jtsan_cache_line block;
+    memcpy(&block.cells, shadow_address, SHADOW_CELLS * sizeof(ShadowCell));
+    
+
+    for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         // we can safely ignore if epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
         // previous access was by the same thread so we can skip
         // different offset means different memory location in case of 1,2 or 4 byte access
-        if (LIKELY(cell.epoch == 0 || cur.gc_epoch != cell.gc_epoch || cell.offset != cur.offset)) {
+        if (LIKELY(block.cells[i]epoch == 0 || cur.gc_epoch != block.cells[i]gc_epoch || block.cells[i]offset != cur.offset)) {
             continue;
         }
 
         // if the cell is ignored then we can skip the whole block
-        if (UNLIKELY(cell.is_ignored)) {
+        if (UNLIKELY(block.cells[i]is_ignored)) {
           return false;
         }
 
         // same slot this is not a race
         // even if a tid was reused it can't be race because the previous thread has obviously finished
         // making the tid available
-        if (LIKELY(cell.tid == cur.tid)) {
+        if (LIKELY(block.cells[i]tid == cur.tid)) {
           // if the access is stronger overwrite
-          if (LIKELY(cur.is_write && !cell.is_write)) {
+          if (LIKELY(cur.is_write && !block.cells[i]is_write)) {
               ShadowBlock::store_cell_at((uptr)addr, &cur, i);
               stored = true;
           }
           continue;
         }
 
-        if (LIKELY(!(cell.is_write || cur.is_write))) {
+        if (LIKELY(!(block.cells[i]is_write || cur.is_write))) {
             continue;
         }
 
         // at least one of the accesses is a write
-        uint32_t thr = JTSanThreadState::getEpoch(cur.tid, cell.tid);
+        uint32_t thr = JTSanThreadState::getEpoch(cur.tid, block.cells[i]tid);
 
-        if (LIKELY(thr >= cell.epoch)) {
+        if (LIKELY(thr >= block.cells[i]epoch)) {
             continue;
         }
 
-        prev = cell;
+        prev = block.cells[i];
         isRace = true;
 
         // its a race, so check if it is a suppressed one
