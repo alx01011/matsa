@@ -829,11 +829,7 @@ void (*InterpreterRuntime::jtsan_store[]) (void *addr, Method *m, address bcp) =
 
 // for object locks
 void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp) {
-  if (!is_jtsan_initialized()) return;
-
   JavaThread *thread = JavaThread::current();
-
-  if (thread == NULL || method == NULL || bcp == NULL) return;
 
   int tid = JavaThread::get_jtsan_tid(thread);
 
@@ -853,16 +849,9 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
 }
 
 void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bcp) {
-  if (!is_jtsan_initialized()) return;
-
   JavaThread *thread = JavaThread::current();
 
-  if (thread == NULL || method == NULL || bcp == NULL) return; // ignore null threads
-  if (!thread->is_Java_thread()) return; // ignore non-Java threads
-
   oop thread_oop = thread->threadObj();
-
-  if (thread_oop == NULL) return; // ignore null thread objects
 
   int tid = JavaThread::get_jtsan_tid(thread);
 
@@ -885,15 +874,7 @@ void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bc
 }
 
 void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, address bcp) {
-  if (!is_jtsan_initialized()) return;
-
   JavaThread *thread = JavaThread::current();
-
-  if (thread == NULL || m == NULL || bcp == NULL) return; // ignore null threads
-
-  oop thread_oop = thread->threadObj();
-  
-  if (thread_oop == NULL) return; // ignore null thread objects
 
   int tid = JavaThread::get_jtsan_tid(thread);
 
@@ -908,8 +889,6 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   */
 
   oop p = lock->obj();
-
-  if (p == NULL) return;
 
   assert(oopDesc::is_oop(p), "must be a valid oop");
 
@@ -927,21 +906,13 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
 }
 
 void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, address bcp) {
-  if (!is_jtsan_initialized()) return;
-
   JavaThread *thread = JavaThread::current();
 
   if (thread == NULL || m == NULL || bcp == NULL) return; // ignore null threads
 
-  oop thread_oop = thread->threadObj();
-  
-  if (thread_oop == NULL) return; // ignore null thread objects
-
   int tid = JavaThread::get_jtsan_tid(thread);
 
   oop p = lock->obj();
-
-  if (p == NULL) return;
 
   /*
     On lock release we have to max the thread state with the lock state.
