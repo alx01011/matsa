@@ -34,9 +34,7 @@ class ShadowMemory : AllStatic {
         static void init(size_t bytes);
         static void destroy(void);
 
-        static ShadowMemory* getInstance(void);
-
-        void *MemToShadow(uptr mem);
+        static void *MemToShadow(uptr mem);
 };
 
 /*
