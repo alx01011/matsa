@@ -958,20 +958,20 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   JTSanThreadState::incrementEpoch(tid);
 }
 
-void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method, address bcp) {
+JRT_ENTRY(void, InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method, address bcp))
   int tid = JavaThread::get_jtsan_tid(current);
 
-  const jmethodID m_id     = method->jmethod_id();
+  const jmethodID m_id     = method->find_jmethod_id_or_null();
   const int       bci      = method->bci_from(bcp);
 
   Symbolizer::Symbolize(FUNC, m_id, bci, tid);
-}
+JRT_END
 
-void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp) {
+JRT_ENTRY(void, InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp))
   int tid = JavaThread::get_jtsan_tid(current);
 
   Symbolizer::Symbolize(FUNC, 0, 0, tid);
-}
+JRT_END
 
 //------------------------------------------------------------------------------------------------------------------------
 // Synchronization

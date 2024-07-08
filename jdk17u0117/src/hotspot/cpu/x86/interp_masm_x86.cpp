@@ -2095,12 +2095,13 @@ void InterpreterMacroAssembler::notify_method_entry() {
   // jtsan
   {
     JTSAN_ONLY(
-      get_thread  (rthread);
+      //get_thread  (rthread);
       get_method  (rarg);
       // calculate bcp
       movptr      (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
-      
-      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), rthread, rarg, c_rarg2);
+
+      call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), rarg, c_rarg2);
+      //call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), rthread, rarg, c_rarg2);
     );
   }
 
@@ -2145,12 +2146,14 @@ void InterpreterMacroAssembler::notify_method_exit(
   {
     JTSAN_ONLY(
       push(state);
-      get_thread(rthread);
+      //get_thread(rthread);
       get_method  (rarg);
       // calculate bcp
       movptr      (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
 
-      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), rthread, rarg, c_rarg2);
+      call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), rarg, c_rarg2);
+
+      //call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), rthread, rarg, c_rarg2);
       pop(state);
     );
   }
