@@ -103,7 +103,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     const m256 one  = _mm256_set1_epi64x(1);
 
     // load cur
-    const m256 cur_cell = _mm256_insert_epi64(zero, *(uint64_t)&cur, 0);
+    const m256 cur_cell = _mm256_insert_epi64(zero, *(uint64_t*)&cur, 0);
 
     const m256 tid        = _mm256_and_si256(shadow, _mm256_set1_epi64x(0xFF));
     const m256 offset     = _mm256_and_si256(_mm256_srli_epi64(shadow, 40), _mm256_set1_epi64x(0x7));
@@ -111,9 +111,9 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     const m256 is_write   = _mm256_and_si256(_mm256_srli_epi64(shadow, 62), _mm256_set1_epi64x(0x1));
     const m256 is_ignored = _mm256_and_si256(_mm256_srli_epi64(shadow, 63), _mm256_set1_epi64x(0x1));
 
-    const m256 is_ignored = _mm256_cmpeq_epi64(is_ignored, one);
+    const m256 block_ignored = _mm256_cmpeq_epi64(is_ignored, one);
     // ignored bit set in one of the cells
-    if (_mm256_movemask_epi8(is_ignored)) {
+    if (_mm256_movemask_epi8(block_ignored)) {
         return false;
     }
 
