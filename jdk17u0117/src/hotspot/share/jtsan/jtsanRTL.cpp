@@ -57,7 +57,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         }
 
         // at least one of the accesses is a write
-        uint32_t thr = JtsanThreadState::getEpoch(cur.tid, cell.tid);
+        uint32_t thr = JTSanThreadState::getEpoch(cur.tid, cell.tid);
 
         if (LIKELY(thr >= cell.epoch)) {
             continue;
@@ -83,7 +83,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
     if (UNLIKELY(!stored)) {
     // store the shadow cell
-      uint8_t index = JtsanThreadState::getHistory(cur.tid)->index.load(std::memory_order_relaxed) % SHADOW_CELLS;
+      uint8_t index = JTSanThreadState::getHistory(cur.tid)->index.load(std::memory_order_relaxed) % SHADOW_CELLS;
       ShadowBlock::store_cell_at((uptr)addr, &cur, index);
     }
 
@@ -94,7 +94,7 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_jtsan_tid(thread);
     
-    uint32_t epoch = JtsanThreadState::getEpoch(tid, tid);
+    uint32_t epoch = JTSanThreadState::getEpoch(tid, tid);
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write, 0};
     // symbolize the access

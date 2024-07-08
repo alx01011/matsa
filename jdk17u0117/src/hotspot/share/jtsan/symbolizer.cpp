@@ -42,12 +42,12 @@ uintptr_t Symbolizer::RestoreAddr(uintptr_t addr) {
 void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
     JTSanEvent e = {event, bci, (uintptr_t)addr};
 
-    ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
+    ThreadHistory *history = JTSanThreadState::getInstance()->getHistory(tid);
     history->add_event(e);
 }
 
 bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
-    ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
+    ThreadHistory *history = JTSanThreadState::getInstance()->getHistory(tid);
     bool found = false;
 
     uint16_t sp = 0;
@@ -98,6 +98,6 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
 }
 
 void Symbolizer::ClearThreadHistory(int tid) {
-    ThreadHistory *history = JtsanThreadState::getInstance()->getHistory(tid);
+    ThreadHistory *history = JTSanThreadState::getInstance()->getHistory(tid);
     history->clear();
 }

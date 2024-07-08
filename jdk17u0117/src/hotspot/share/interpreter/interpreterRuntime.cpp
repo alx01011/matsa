@@ -847,7 +847,7 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
   LockShadow *obs = (LockShadow*)p->lock_state();
   Vectorclock* ts = obs->get_vectorclock();
 
-  Vectorclock* cur = JtsanThreadState::getThreadState(tid);
+  Vectorclock* cur = JTSanThreadState::getThreadState(tid);
 
   *cur = *ts;
 }
@@ -876,12 +876,12 @@ void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bc
   LockShadow *obs = (LockShadow*)p->lock_state();
 
   Vectorclock* ls = obs->get_vectorclock();
-  Vectorclock* cur = JtsanThreadState::getThreadState(tid);
+  Vectorclock* cur = JTSanThreadState::getThreadState(tid);
 
   *ls = *cur;
 
   // increment the epoch of the current thread after the transfer
-  JtsanThreadState::incrementEpoch(tid);
+  JTSanThreadState::incrementEpoch(tid);
 }
 
 void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, address bcp) {
@@ -921,7 +921,7 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   LockShadow *sls = (LockShadow*)p->lock_state();
   Vectorclock* ts = sls->get_vectorclock();
 
-  Vectorclock* cur = JtsanThreadState::getThreadState(tid);
+  Vectorclock* cur = JTSanThreadState::getThreadState(tid);
 
   *cur = *ts;
 }
@@ -950,12 +950,12 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
 
   LockShadow* sls =  (LockShadow*)p->lock_state();
   Vectorclock* ls = sls->get_vectorclock();
-  Vectorclock* cur = JtsanThreadState::getThreadState(tid);
+  Vectorclock* cur = JTSanThreadState::getThreadState(tid);
 
   *ls = *cur;
 
   // increment the epoch of the current thread after the transfer
-  JtsanThreadState::incrementEpoch(tid);
+  JTSanThreadState::incrementEpoch(tid);
 }
 
 void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method, address bcp) {

@@ -563,7 +563,7 @@ void Thread::start(Thread* thread) {
         int cur_tid = JavaThread::get_jtsan_tid(cur_thread);
 
         JavaThread::set_jtsan_tid(thread->as_Java_thread(), new_tid);
-        JtsanThreadState::transferEpoch(cur_tid, new_tid);
+        JTSanThreadState::transferEpoch(cur_tid, new_tid);
 
         oop thread_object   = thread->as_Java_thread()->threadObj();
 
@@ -572,9 +572,9 @@ void Thread::start(Thread* thread) {
         ls->transfer_vc(cur_tid);
 
         // increment epoch of the new thread - epochs start at 1
-        JtsanThreadState::incrementEpoch(new_tid);
+        JTSanThreadState::incrementEpoch(new_tid);
         // increment epoch of the current thread
-        JtsanThreadState::incrementEpoch(cur_tid);
+        JTSanThreadState::incrementEpoch(cur_tid);
 
         // we might as well clear the event trace
         Symbolizer::ClearThreadHistory(new_tid);
@@ -1461,7 +1461,7 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
 
     // clear the thread state
     // to be reused by another thread
-    JtsanThreadState::getThreadState(cur_tid)->clear();
+    JTSanThreadState::getThreadState(cur_tid)->clear();
     // pop the thread from the stack (make it available to be reused)
     // cast is always safe because on start of the thread we have set the thread id
     JtsanThreadPool::get_queue()->enqueue(cur_tid);

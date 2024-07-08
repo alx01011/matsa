@@ -3942,8 +3942,8 @@ JVM_ENTRY(void, JVM_jtsanReleaseAcquire(JNIEnv* env, jobject x))
 
         LockShadow *ls      = (LockShadow*)obj->lock_state();
         // transfer the vector clock of the current thread to the new thread object
-        ls->get_vectorclock()->release_acquire(JtsanThreadState::getThreadState(cur_tid));
-        JtsanThreadState::incrementEpoch(cur_tid);
+        ls->get_vectorclock()->release_acquire(JTSanThreadState::getThreadState(cur_tid));
+        JTSanThreadState::incrementEpoch(cur_tid);
       }
     }
 JVM_END
@@ -3969,7 +3969,7 @@ JVM_ENTRY(void, JVM_jtsanAcquire(JNIEnv* env, jobject x))
         oop obj = JNIHandles::resolve(x);
 
         LockShadow *ls      = (LockShadow*)obj->lock_state();
-        JtsanThreadState::getThreadState(cur_tid)->acquire(ls->get_vectorclock());
+        JTSanThreadState::getThreadState(cur_tid)->acquire(ls->get_vectorclock());
       }
     }
 JVM_END
@@ -3995,7 +3995,7 @@ JVM_ENTRY(void, JVM_jtsanRelease(JNIEnv* env, jobject x))
         oop obj = JNIHandles::resolve(x);
 
         LockShadow *ls      = (LockShadow*)obj->lock_state();
-        JtsanThreadState::getThreadState(cur_tid)->release(ls->get_vectorclock());
+        JTSanThreadState::getThreadState(cur_tid)->release(ls->get_vectorclock());
       }
     }
 JVM_END

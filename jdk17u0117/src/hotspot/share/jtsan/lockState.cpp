@@ -33,7 +33,7 @@ Vectorclock* LockShadow::get_vectorclock(void) {
 
 void LockShadow::transfer_vc(size_t tid) {
     Vectorclock *vc = this->get_vectorclock();
-    Vectorclock *threadState = JtsanThreadState::getThreadState(tid);
+    Vectorclock *threadState = JTSanThreadState::getThreadState(tid);
 
     *vc = *threadState;
 }
