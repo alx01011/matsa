@@ -7,9 +7,9 @@
 
 #include <string.h>
 
-JTSanThreadState::epoch   = nullptr;
-JTSanThreadState::size    = 0;
-JTSanThreadState::history = {nullptr};
+Vectorclock*   JTSanThreadState::epoch                = nullptr;
+size_t         JTSanThreadState::size                 = 0;
+ThreadHistory* JTSanThreadState::history[MAX_THREADS] = {nullptr};
 
 void JTSanThreadState::init(void) {
   JTSanThreadState::size = MAX_THREADS * sizeof(Vectorclock);
