@@ -21,10 +21,10 @@
 #endif
 
 
-#if JTSAN_VECTORIZE
-#undef JTSAN_VECTORIZE
-#define JTSAN_VECTORIZE __SSE4_2__
-#endif
+// #if JTSAN_VECTORIZE
+// #undef JTSAN_VECTORIZE
+// #define JTSAN_VECTORIZE __SSE4_2__
+// #endif
 
 #if JTSAN_VECTORIZE
 #include <emmintrin.h>
