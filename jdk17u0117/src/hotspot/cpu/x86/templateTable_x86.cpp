@@ -794,10 +794,10 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_load[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(skip);
-  __ popa();
-#if JTSAN_VECTORIZE
+  #if JTSAN_VECTORIZE
   __ pop_d(xmm0);
 #endif
+  __ popa();
 }
 
 void TemplateTable::iaload() {
@@ -1135,11 +1135,10 @@ void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(safe);
-  __ popa();
-#if JTSAN_VECTORIZE
+  #if JTSAN_VECTORIZE
   __ pop_d(xmm0);
 #endif
-
+  __ popa();
 }
 
 void TemplateTable::iastore() {
@@ -2940,10 +2939,10 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
 
   __ bind(safe);
 
-  __ popa(); // restore all registers
 #if JTSAN_VECTORIZE
   __ pop_d(xmm0);
 #endif
+  __ popa(); // restore all registers
 }
 
 void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteControl rc) {
@@ -3265,10 +3264,10 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
 
   __ bind(safe);
 
-  __ popa(); // restore all registers
 #if JTSAN_VECTORIZE
   __ pop_d(xmm0);
 #endif
+  __ popa(); // restore all registers
 }
 
 void TemplateTable::putfield_or_static(int byte_no, bool is_static, RewriteControl rc) {
