@@ -181,6 +181,8 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
     ShadowCell cells[SHADOW_CELLS];
 
+    printf("vectors:)\n");
+
 #define LOAD_CELL(i)\
     {\
         uint64_t cell;\
