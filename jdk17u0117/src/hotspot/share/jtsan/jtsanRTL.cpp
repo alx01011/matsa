@@ -19,6 +19,7 @@
 #include "utilities/decoder.hpp"
 
 struct jtsan_cache_line {
+    ShadowCell cur;
     ShadowCell cells[SHADOW_CELLS];
 } __attribute__((aligned(64)));
 
@@ -31,6 +32,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     void *shadow_address = ShadowMemory::MemToShadow(addr_aligned);
 
     jtsan_cache_line block;
+    block.cur = cur;
     memcpy(&block.cells, shadow_address, SHADOW_CELLS * sizeof(ShadowCell));
     
 
@@ -39,35 +41,35 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         // or if the thread id is the same as the current thread 
         // previous access was by the same thread so we can skip
         // different offset means different memory location in case of 1,2 or 4 byte access
-        if (LIKELY(block.cells[i]epoch == 0 || cur.gc_epoch != block.cells[i]gc_epoch || block.cells[i]offset != cur.offset)) {
+        if (LIKELY(block.cells[i].epoch == 0 || block.cur.gc_epoch != block.cells[i].gc_epoch || block.cells[i].offset != block.cur.offset)) {
             continue;
         }
 
         // if the cell is ignored then we can skip the whole block
-        if (UNLIKELY(block.cells[i]is_ignored)) {
+        if (UNLIKELY(block.cells[i].is_ignored)) {
           return false;
         }
 
         // same slot this is not a race
         // even if a tid was reused it can't be race because the previous thread has obviously finished
         // making the tid available
-        if (LIKELY(block.cells[i]tid == cur.tid)) {
+        if (LIKELY(block.cells[i].tid == block.cur.tid)) {
           // if the access is stronger overwrite
-          if (LIKELY(cur.is_write && !block.cells[i]is_write)) {
-              ShadowBlock::store_cell_at((uptr)addr, &cur, i);
+          if (LIKELY(block.cur.is_write && !block.cells[i].is_write)) {
+              ShadowBlock::store_cell_at((uptr)addr, &block.cur, i);
               stored = true;
           }
           continue;
         }
 
-        if (LIKELY(!(block.cells[i]is_write || cur.is_write))) {
+        if (LIKELY(!(block.cells[i].is_write || block.cur.is_write))) {
             continue;
         }
 
         // at least one of the accesses is a write
-        uint32_t thr = JTSanThreadState::getEpoch(cur.tid, block.cells[i]tid);
+        uint32_t thr = JTSanThreadState::getEpoch(block.cur.tid, block.cells[i].tid);
 
-        if (LIKELY(thr >= block.cells[i]epoch)) {
+        if (LIKELY(thr >= block.cells[i].epoch)) {
             continue;
         }
 
@@ -81,8 +83,8 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
             isRace = false;
         }
 
-        cur.is_ignored = 1;
-        ShadowBlock::store_cell_at((uptr)addr, &cur, 0);
+        block.cur.is_ignored = 1;
+        ShadowBlock::store_cell_at((uptr)addr, &block.cur, 0);
         stored = true;
 
 
@@ -91,8 +93,8 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
     if (UNLIKELY(!stored)) {
     // store the shadow cell
-      uint8_t index = JTSanThreadState::getHistory(cur.tid)->index.load(std::memory_order_relaxed) % SHADOW_CELLS;
-      ShadowBlock::store_cell_at((uptr)addr, &cur, index);
+      uint8_t index = JTSanThreadState::getHistory(block.cur.tid)->index.load(std::memory_order_relaxed) % SHADOW_CELLS;
+      ShadowBlock::store_cell_at((uptr)addr, &block.cur, index);
     }
 
     return isRace;
@@ -107,7 +109,7 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write, 0};
     // symbolize the access
     // 1 is read, 2 is write
-    Symbolizer::Symbolize((Event)(cur.is_write + 1), addr, m->bci_from(bcp), tid);
+    Symbolizer::Symbolize((Event)(block.cur.is_write + 1), addr, m->bci_from(bcp), tid);
 
     // race
     ShadowCell prev;
