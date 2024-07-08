@@ -114,6 +114,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     const m256 block_ignored = _mm256_cmpeq_epi64(is_ignored, one);
     // ignored bit set in one of the cells
     if (_mm256_movemask_epi8(block_ignored)) {
+        printf("ignored\n");
         return false;
     }
 
