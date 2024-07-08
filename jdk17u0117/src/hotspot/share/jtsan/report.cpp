@@ -1,12 +1,13 @@
 #include "report.hpp"
+#include "jtsanGlobals.hpp"
 #include "symbolizer.hpp"
 
 #include "runtime/os.hpp"
 
 #include <cstdint>
 
-#define RED "\033[1;31m"
-#define BLUE "\033[1;34m"
+#define RED   "\033[1;31m"
+#define BLUE  "\033[1;34m"
 #define RESET "\033[0m"
 
 Mutex *JTSanReport::_report_lock;
@@ -65,7 +66,8 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &prev) {
 
 void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t size, address bcp, Method *m, 
                             ShadowCell &cur, ShadowCell &prev) {
-    JTSanReport::_report_lock->lock();
+    JTSanScopedLock lock(JTSanReport::_report_lock);
+
     
     int pid = os::current_process_id();
 
@@ -92,6 +94,4 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
 
     fprintf(stderr, "\nSUMMARY: ThreadSanitizer: data race %s:%d in %s()\n", file_name, lineno, method_name);
     fprintf(stderr, "==================\n");
-
-    JTSanReport::_report_lock->unlock();
 }

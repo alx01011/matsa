@@ -21,7 +21,7 @@
 #endif
 
 
-#ifdef JTSAN_VECTORIZE
+#if JTSAN_VECTORIZE
 #undef JTSAN_VECTORIZE
 #define JTSAN_VECTORIZE __SSE4_2__
 #endif
