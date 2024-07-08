@@ -132,7 +132,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
 #define LOAD_EPOCH(idx)\
     {\
-        uint8_t cell_tid    = _mm256_extract_epi8(tid, idx * 8);\
+        uint8_t cell_tid    = _mm256_extract_epi8(tid, idx);\
         uint32_t epoch = JTSanThreadState::getEpoch(cur.tid, cell_tid);\
         thread_epochs = _mm256_insert_epi32(thread_epochs, epoch, idx);\
     }
@@ -155,11 +155,11 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     if (report) {
         int idx = __builtin_ffs(report) / 8;
 
-        prev.tid      = _mm256_extract_epi8(tid, idx * 8);
-        prev.epoch    = _mm256_extract_epi32(epoch, idx);
-        prev.offset   = _mm256_extract_epi8(offset, idx * 8);
-        prev.gc_epoch = _mm256_extract_epi32(gc_epoch, idx);
-        prev.is_write = _mm256_extract_epi8(is_write, idx * 8);
+        // prev.tid      = _mm256_extract_epi8(tid, idx * 8);
+        // prev.epoch    = _mm256_extract_epi32(epoch, idx);
+        // prev.offset   = _mm256_extract_epi8(offset, idx * 8);
+        // prev.gc_epoch = _mm256_extract_epi32(gc_epoch, idx);
+        // prev.is_write = _mm256_extract_epi8(is_write, idx * 8);
 
         fprintf(stderr, "data race!");
 
