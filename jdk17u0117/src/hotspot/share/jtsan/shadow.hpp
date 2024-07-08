@@ -24,17 +24,10 @@ currently we only tested on linux x86_64
 */
 typedef uintptr_t uptr;
 
-class ShadowMemory : public CHeapObj<mtInternal>{
-    private:
-        static ShadowMemory *shadow; // singleton
-
-        ShadowMemory(size_t size, void *shadow_base, uptr offset, uptr heap_start); // private constructor
-        ~ShadowMemory();
-
+class ShadowMemory : AllStatic {
     public:
-        void *shadow_base; // starting address
-        uptr offset;
-        size_t size; // size in bytes
+        static void *shadow_base; // starting address
+        static size_t size; // size in bytes
 
         static uptr heap_base; // base address of the heap
 
@@ -70,10 +63,9 @@ struct ShadowCell {
 
 class ShadowBlock : AllStatic {
     public:
-        static ShadowCell  load_cell(uptr mem, uint8_t index);
+        static ShadowCell load_cell(uptr mem, uint8_t index);
         static void       store_cell(uptr mem, ShadowCell* cell); 
         static void       store_cell_at(uptr mem, ShadowCell* cell, uint8_t index);
-        static void       *mem_to_shadow(uptr mem);
     private:
         static ShadowCell atomic_load_cell(ShadowCell *cell);
         static void       atomic_store_cell(ShadowCell *cell, ShadowCell *val);
