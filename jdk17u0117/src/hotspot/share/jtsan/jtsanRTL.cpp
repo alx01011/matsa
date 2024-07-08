@@ -173,7 +173,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
 #else
 
-/*
+
 bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     void *shadow_addr = ShadowMemory::MemToShadow((uptr)addr);
 
@@ -244,7 +244,6 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
     return isRace;
 }
-*/
 
 #endif
 
