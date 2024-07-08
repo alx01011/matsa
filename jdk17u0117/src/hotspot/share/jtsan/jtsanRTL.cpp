@@ -114,7 +114,6 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     const m256 block_ignored = _mm256_cmpeq_epi64(is_ignored, one);
     // ignored bit set in one of the cells
     if (_mm256_movemask_epi8(block_ignored)) {
-        printf("ignored\n");
         return false;
     }
 
@@ -125,9 +124,11 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
          // r/r
          skip_mask = _mm256_or_si256(skip_mask, _mm256_or_si256(is_write, _mm256_set1_epi64x(cur.is_write)));
          // offset != cur.offset
-         skip_mask = _mm256_or_si256(skip_mask, _mm256_cmpeq_epi64(offset, _mm256_set1_epi64x(cur.offset)));
+         skip_mask = _mm256_or_si256(skip_mask, _mm256_or_si256(_mm256_cmpgt_epi64(offset, _mm256_set1_epi64x(cur.offset)), 
+                                                                _mm256_cmpgt_epi64(_mm256_set1_epi64x(cur.offset), offset)));
          // gc_epoch != cur.gc_epoch
-         skip_mask = _mm256_or_si256(skip_mask, _mm256_cmpeq_epi64(gc_epoch, _mm256_set1_epi64x(cur.gc_epoch)));
+         skip_mask = _mm256_or_si256(skip_mask, _mm256_or_si256(_mm256_cmpgt_epi64(gc_epoch, _mm256_set1_epi64x(cur.gc_epoch)), 
+                                                                _mm256_cmpgt_epi64(_mm256_set1_epi64x(cur.gc_epoch), gc_epoch)));
 
         shadow = _mm256_andnot_si256(skip_mask, shadow);
 
