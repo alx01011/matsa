@@ -101,8 +101,11 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     ShadowCell cells[SHADOW_CELLS];
 
 #define LOAD_CELL(i)\
-    (i < SHADOW_CELLS / 2 ? cells[i] = *(ShadowCell*)&_mm_extract_epi64(left, i) \
-    : cells[i] = *(ShadowCell*)&_mm_extract_epi64(right, i - SHADOW_CELLS / 2))
+    {\
+        uint64_t cell;\
+        cell = _mm_extract_epi64(i < SHADOW_CELLS / 2 ? left : right, i & 1);\
+        cells[i] = *((ShadowCell*)&cell);\
+    }
 
     LOAD_CELL(0);
     LOAD_CELL(1);
