@@ -29,7 +29,11 @@
 #if JTSAN_VECTORIZE
 #include <emmintrin.h>
 #include <smmintrin.h>
+#include <immintrin.h>
+
 typedef __m128i m128;
+typedef __m256i m256;
+
 #endif
 
 // branch prediction

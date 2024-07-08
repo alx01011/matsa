@@ -97,14 +97,14 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
     void *shadow_addr = ShadowMemory::MemToShadow((uptr)addr);
 
-    m128 left = _mm_load_si128((__m128i*)shadow_addr);
-    m128 right = _mm_load_si128((__m128i*)shadow_addr + 2);
+    m256 block = _mm256_load_si256((__m256i*)shadow_addr);
+
     ShadowCell cells[SHADOW_CELLS];
 
 #define LOAD_CELL(i)\
     {\
         uint64_t cell;\
-        cell = _mm_extract_epi64(i < SHADOW_CELLS / 2 ? left : right, i & 1);\
+        cell     = _mm256_extract_epi64(block, i);\
         cells[i] = *((ShadowCell*)&cell);\
     }
 
@@ -142,7 +142,9 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
             continue;
         }
 
-        prev = cells[i];
+        prev   = cells[i];
+        isRace = true;
+
         trace = new JTSanStackTrace(thread);
         if (LIKELY(JTSanSuppression::is_suppressed(trace))) {
             isRace = false;
