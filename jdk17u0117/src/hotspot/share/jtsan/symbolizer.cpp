@@ -42,7 +42,7 @@ uintptr_t Symbolizer::RestoreAddr(uintptr_t addr) {
 void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
     JTSanEvent e = {event, bci, (uintptr_t)addr};
 
-    ThreadHistory *history = JTSanThreadState::getInstance()->getHistory(tid);
+    ThreadHistory *history = JTSanThreadState::getHistory(tid);
     history->add_event(e);
 }
 
