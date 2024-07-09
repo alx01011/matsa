@@ -18,9 +18,9 @@
 // because we have to check if avx is supported
 #ifdef JTSAN_VECTORIZE
 #undef JTSAN_VECTORIZE
-#define JTSAN_VECTORIZE 1
+#define JTSAN_VECTORIZE 0
 #else
-#define JTSAN_VECTORIZE 1
+#define JTSAN_VECTORIZE 0
 #endif
 
 
