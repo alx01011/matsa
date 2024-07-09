@@ -29,10 +29,10 @@ void     decrement_tid(void);
     }
     
 #define COUNTER_INC(x)\
-    JTSanStats::increment_##x();
+    JTSanStats::increment_##x()
 
 #define COUNTER_GET(x)\
-    JTSanStats::get_##x();
+    JTSanStats::get_##x()
 
 class JTSanStats {
     public:
