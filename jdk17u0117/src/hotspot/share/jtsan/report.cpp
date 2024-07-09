@@ -94,4 +94,6 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
 
     fprintf(stderr, "\nSUMMARY: ThreadSanitizer: data race %s:%d in %s()\n", file_name, lineno, method_name);
     fprintf(stderr, "==================\n");
+
+    COUNTER_INC(race);
 }

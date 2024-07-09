@@ -198,6 +198,11 @@ void exit_globals() {
   static bool destructorsCalled = false;
   if (!destructorsCalled) {
     destructorsCalled = true;
+
+  JTSAN_ONLY(
+    fprintf(stderr, "Java ThreadSanitizer: reported %lu warnings\n", COUNTER_GET(race));
+  );
+
     perfMemory_exit();
     SafepointTracing::statistics_exit_log();
     if (PrintStringTableStatistics) {

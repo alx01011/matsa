@@ -53,3 +53,8 @@ void decrement_tid(void) {
     uint16_t tid = Atomic::load(&_cur_tid);
     Atomic::store(&_cur_tid, (uint16_t)(tid - 1));
 }
+
+#define COUNTER_DEF(x)\
+    uint64_t JTSanStats::x##_counter = 0;
+
+COUNTER_DEF(race);
