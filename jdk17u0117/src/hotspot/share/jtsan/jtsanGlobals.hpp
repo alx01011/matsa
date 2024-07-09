@@ -20,7 +20,7 @@ void     increment_tid(void);
 void     decrement_tid(void);
 
 #define COUNTER(x)\
-    static uint64_t x##_counter = 0;\
+    static uint64_t x##_counter;\
     static void increment_##x(void) {\
         x##_counter++;\
     }\
