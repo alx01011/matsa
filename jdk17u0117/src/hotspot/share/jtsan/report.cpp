@@ -49,13 +49,14 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &prev) {
 
     if (has_trace) {
         for (int i = trace.size - 1; i >= 0; i--) {
-            JTSanEvent e = trace.events[i];
-            // cast back to uintptr to zero extend, then cast back to method
-            uintptr_t pc    =  (uintptr_t)e.pc;
+            uint64_t e = trace.events[i];
+            
+            uintptr_t pc    =  e >> 16;
 
             jmethodID mid   = (jmethodID)((uintptr_t)pc);
             Method *m       = Method::resolve_jmethod_id(mid);
-            int bci         = e.bci;
+
+            int bci         = e & 0xFFFF;
 
             print_method_info(m, bci, (trace.size - 1) - i);
         }
