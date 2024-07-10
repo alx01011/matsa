@@ -13,7 +13,7 @@ ThreadHistory::ThreadHistory() {
     memset(events, 0, sizeof(JTSanEvent) * EVENT_BUFFER_SIZE);
 }
 
-void ThreadHistory::add_event(JTSanEvent &event) {
+void ThreadHistory:: add_event(uint64_t event) {
     // if the buffer gets full, there is a small chance that we will report the wrong trace
     // might happen if slots before the access get filled with method entry/exit events
     // if it gets filled we invalidate
@@ -23,9 +23,9 @@ void ThreadHistory::add_event(JTSanEvent &event) {
     events[index.fetch_add(1, std::memory_order_seq_cst)] = event;
 }
 
-JTSanEvent ThreadHistory::get_event(int i) {
+uint64_t ThreadHistory::get_event(int i) {
     if (i >= index.load(std::memory_order_seq_cst)) {
-        return {INVALID, 0, 0};
+        return 0;
     }
 
     return events[i];
@@ -40,7 +40,16 @@ uintptr_t Symbolizer::RestoreAddr(uintptr_t addr) {
 }
 
 void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
-    JTSanEvent e = {event, bci, (uintptr_t)addr};
+    /*
+        Layout of packed event uint64_t:
+        | event (2 bits) | addr (48 bits) | bci (14 bits) |
+        |  0...1         | 2...49         | 50...63       |
+
+        The only field that may not fit is bci, but it won't cause problems in unpacking
+        because it can only occupy the last 14 bits
+    */
+
+    uint64_t e = (uint64_t) event | (uint64_t)addr << 2 | (uint64_t)bci << 50;
 
     ThreadHistory *history = JTSanThreadState::getHistory(tid);
     history->add_event(e);
@@ -53,7 +62,10 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
     uint16_t sp = 0;
 
     for (int i = 0; i < EVENT_BUFFER_SIZE; i++) {
-        JTSanEvent e = history->get_event(i);
+        uint64_t   raw_event = history->get_event(i);
+        // type punning is the fastest way to convert the raw event to a JTSanEvent
+        // struct fields are in the correct order
+        JTSanEvent e = *(JTSanEvent*)&raw_event;
 
         switch(e.event) {
             case FUNC:

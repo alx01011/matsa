@@ -27,8 +27,8 @@ enum Event {
 class JTSanEvent {
     public:
         Event     event : 2; // 4 events
-        int       bci   : 64 - 48 - 2;
         uintptr_t pc    : 48; // can't easily compress this
+        int       bci   : 64 - 48 - 2;
 };
 
 class JTSanEventTrace {
@@ -40,7 +40,7 @@ class JTSanEventTrace {
 // for each thread we keep a cyclic buffer of the last 256 events
 class ThreadHistory : public CHeapObj<mtInternal>{
     private:
-        JTSanEvent events[EVENT_BUFFER_SIZE];
+        uint64_t events[EVENT_BUFFER_SIZE];
         //uint8_t   index; // 256 events at most
         // instead of locking, is it faster to do an atomic increment on index and just load whatever is on events?
         // a single event is 8 bytes and the memory is dword aligned, so we are safe
@@ -52,8 +52,8 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         // are 65k events enough?
         std::atomic<uint16_t> index;
 
-        void add_event(JTSanEvent &event);
-        JTSanEvent get_event(int i);
+        void add_event(uint64_t event);
+        uint64_t get_event(int i);
 
         void clear(void) {
             index.store(0, std::memory_order_seq_cst);
