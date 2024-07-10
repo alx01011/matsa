@@ -91,7 +91,8 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                 if (e.event == (Event)(prev.is_write + 1) && pc == (uintptr_t)addr) {
                     if (sp > 0) {
                         // first 48 bits 
-                        trace.events[sp - 1] = (trace.events[sp - 1] & 0xFFFF) | (e.pc << 16);
+                        uint64_t old_bci = trace.events[sp - 1] & 0x3FFF;
+                        trace.events[sp - 1] = e.pc | old_bci;
                         trace.size = sp;
 
                         found = true;
