@@ -76,7 +76,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                         }
                         break;
                     default: // method entry
-                        trace.events[sp++] = e.pc | e.bci;
+                        trace.events[sp++] = raw_event;
                         // in case sp gets out of bounds it wraps around
                         // start overwriting the oldest events
                         // stack trace doesn't have to be complete
@@ -90,9 +90,10 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
 
                 if (e.event == (Event)(prev.is_write + 1) && pc == (uintptr_t)addr) {
                     if (sp > 0) {
-                        // first 48 bits 
-                        uint64_t old_bci = trace.events[sp - 1] & 0x3FFF;
-                        trace.events[sp - 1] = e.pc | old_bci;
+                        JTSanEvent last = *(JTSanEvent*)&trace.events[sp - 1];
+                        last.bci = e.bci;
+
+                        trace.events[sp - 1] = *(uint64_t*)&last;
                         trace.size = sp;
 
                         found = true;
