@@ -57,7 +57,7 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         uint64_t get_event(int i);
 
         void clear(void) {
-            JTSanScopedLock(lock);
+            JTSanScopedLock l(lock);
             index = 0;
             //index.store(0, std::memory_order_seq_cst);
             // lock->lock();
