@@ -19,7 +19,7 @@ void ThreadHistory:: add_event(uint64_t event) {
     // if it gets filled we invalidate
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
-    JTSanScopedLock(this->lock);
+    JTSanScopedLock l(this->lock);
     events[index++] = event;
 }
 
@@ -58,12 +58,7 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
 
 bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
     ThreadHistory *history = JTSanThreadState::getHistory(tid);
-
-    JTSanScopedLock(history->lock);
-
-    bool found = false;
-
-    uint16_t sp = 0;
+    JTSanScopedLock l(history->lock);
 
     int last = -1;
 
@@ -118,6 +113,8 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
         // }
     }
 
+    uint16_t sp = 0;
+
     for (int i = 0; i < last; i++) {
         uint64_t raw_event = history->get_event(i);
         JTSanEvent e = *(JTSanEvent*)&raw_event;
@@ -142,10 +139,10 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                         trace.events[sp - 1].bci = e.bci;
                         trace.size = sp;
 
-                        found = true;
+                        return true;
                     }
 
-                    return found;
+                    return false;
                 }
                 break;
             }
@@ -157,7 +154,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
     
     }
 
-    return last != -1;
+    return false;
 }
 
 void Symbolizer::ClearThreadHistory(int tid) {
