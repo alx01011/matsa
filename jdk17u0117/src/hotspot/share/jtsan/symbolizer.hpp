@@ -1,13 +1,15 @@
 #ifndef SYMBOLIZER_HPP
 #define SYMBOLIZER_HPP
 
-#define EVENT_BUFFER_SIZE (1 << 16) // 65536
-#define EVENT_BUFFER_WIDTH (16)
+#define EVENT_BUFFER_WIDTH (30)
+#define EVENT_BUFFER_SIZE (1 << EVENT_BUFFER_WIDTH)
+
 
 #include <cstdint>
 #include <atomic>
 
 #include "jtsanDefs.hpp"
+#include "jtsanGlobals.hpp"
 #include "shadow.hpp"
 
 #include "runtime/mutex.hpp"
@@ -42,21 +44,22 @@ class ThreadHistory : public CHeapObj<mtInternal>{
     private:
         uint64_t events[EVENT_BUFFER_SIZE];
         //uint8_t   index; // 256 events at most
-        // instead of locking, is it faster to do an atomic increment on index and just load whatever is on events?
-        // a single event is 8 bytes and the memory is dword aligned, so we are safe
-        // maybe 8 events could share a cache line too?
-        Mutex     *lock;
     public:
         ThreadHistory();
 
-        // are 65k events enough?
-        std::atomic<uint16_t> index;
+        // lock because we try to find the last event
+        Mutex    *lock;
+        uint64_t index : EVENT_BUFFER_WIDTH;
+
+        // std::atomic<uint16_t> index;
 
         void add_event(uint64_t event);
         uint64_t get_event(int i);
 
         void clear(void) {
-            index.store(0, std::memory_order_seq_cst);
+            JTSanScopedLock(lock);
+            index = 0;
+            //index.store(0, std::memory_order_seq_cst);
             // lock->lock();
             // index = 0;
             // lock->unlock();

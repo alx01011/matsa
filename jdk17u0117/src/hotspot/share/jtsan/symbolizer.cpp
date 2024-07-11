@@ -19,15 +19,15 @@ void ThreadHistory:: add_event(uint64_t event) {
     // if it gets filled we invalidate
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
-    
-    events[index.fetch_add(1, std::memory_order_seq_cst)] = event;
+    JTSanScopedLock(this->lock);
+    events[index++] = event;
 }
 
 uint64_t ThreadHistory::get_event(int i) {
-    if (i >= index.load(std::memory_order_seq_cst)) {
-        return 0;
-    }
-
+    // if (i >= index.load(std::memory_order_seq_cst)) {
+    //     return 0;
+    // }
+    // must hold lock
     return events[i];
 }
 
@@ -58,9 +58,14 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
 
 bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
     ThreadHistory *history = JTSanThreadState::getHistory(tid);
+
+    JTSanScopedLock(history->lock);
+
     bool found = false;
 
     uint16_t sp = 0;
+
+    int last = -1;
 
     for (int i = 0; i < EVENT_BUFFER_SIZE; i++) {
         uint64_t   raw_event = history->get_event(i);
@@ -68,7 +73,56 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
         // struct fields are in the correct order
         JTSanEvent e = *(JTSanEvent*)&raw_event;
 
-        switch(e.event) {
+        if (e.event == INVALID) {
+            break;
+        }
+
+        if ((void*)e.pc == addr) {
+            last = i;
+        }
+
+        // switch(e.event) {
+        //     case FUNC:
+        //         switch(e.pc) {
+        //             case 0: // method exit
+        //                 if (sp > 0) {
+        //                     sp--;
+        //                 }
+        //                 break;
+        //             default: // method entry
+        //                 trace.events[sp++] = e;
+        //                 // in case sp gets out of bounds it wraps around
+        //                 // start overwriting the oldest events
+        //                 // stack trace doesn't have to be complete
+        //                 // the last events are the most important
+        //                 break;
+        //         }
+        //         break;
+        //     case MEM_READ:
+        //     case MEM_WRITE: {
+        //         if (e.event == (Event)(prev.is_write + 1) && (void*)e.pc == addr) {
+        //             if (sp > 0) {
+        //                 trace.events[sp - 1].bci = e.bci;
+        //                 trace.size = sp;
+
+        //                 found = true;
+        //             }
+
+        //             return found;
+        //         }
+        //         break;
+        //     }
+        //     case INVALID:
+        //     default:
+        //         return false;
+        // }
+    }
+
+    for (int i = 0; i < last; i++) {
+        uint64_t raw_event = history->get_event(i);
+        JTSanEvent e = *(JTSanEvent*)&raw_event;
+
+        switch (e.event) {
             case FUNC:
                 switch(e.pc) {
                     case 0: // method exit
@@ -78,16 +132,12 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                         break;
                     default: // method entry
                         trace.events[sp++] = e;
-                        // in case sp gets out of bounds it wraps around
-                        // start overwriting the oldest events
-                        // stack trace doesn't have to be complete
-                        // the last events are the most important
                         break;
                 }
                 break;
             case MEM_READ:
             case MEM_WRITE: {
-                if (e.event == (Event)(prev.is_write + 1) && (void*)e.pc == addr) {
+                if (i == last - 1) {
                     if (sp > 0) {
                         trace.events[sp - 1].bci = e.bci;
                         trace.size = sp;
@@ -99,13 +149,15 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                 }
                 break;
             }
+            // should never reach here
             case INVALID:
             default:
                 return false;
         }
+    
     }
 
-    return false;
+    return last != -1;
 }
 
 void Symbolizer::ClearThreadHistory(int tid) {
