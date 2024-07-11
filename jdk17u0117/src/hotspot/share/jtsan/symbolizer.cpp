@@ -17,7 +17,7 @@ void ThreadHistory:: add_event(uint64_t event) {
     // if the buffer gets full, there is a small chance that we will report the wrong trace
     // might happen if slots before the access get filled with method entry/exit events
     // if it gets filled we invalidate
-    // because index is unsinged and has a width of 9 bits, it will wrap around
+    // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
     
     events[index.fetch_add(1, std::memory_order_seq_cst)] = event;
@@ -49,6 +49,7 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
         because it can only occupy the last 14 bits
     */
 
+   // this actually produces better assembly than initializing a struct
     uint64_t e = (uint64_t) event | (uint64_t)addr << 2 | (uint64_t)bci << 50;
 
     ThreadHistory *history = JTSanThreadState::getHistory(tid);
@@ -86,9 +87,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                 break;
             case MEM_READ:
             case MEM_WRITE: {
-                uintptr_t pc = e.pc;
-
-                if (e.event == (Event)(prev.is_write + 1) && pc == (uintptr_t)addr) {
+                if (e.event == (Event)(prev.is_write + 1) && (void*)e.pc == addr) {
                     if (sp > 0) {
                         trace.events[sp - 1].bci = e.bci;
                         trace.size = sp;

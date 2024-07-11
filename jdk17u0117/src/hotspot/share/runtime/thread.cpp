@@ -868,18 +868,16 @@ int JavaThread::get_thread_obj_id(JavaThread *thread) {
 }
 
 int JavaThread::get_jtsan_tid(JavaThread *thread) {
-  if (thread == NULL || !thread->is_Java_thread()) {
-    return -1;
-  }
-
+  assert(thread != NULL, "null thread in jtsan get id");
+  assert(thread->is_Java_thread(), "thread not java thread in jtsan get id");
+  
   return thread->_jtsan_tid;
 }
 
 void JavaThread::set_jtsan_tid(JavaThread *thread, int tid) {
-  if (thread == NULL || !thread->is_Java_thread()) {
-    return;
-  }
-
+  assert(thread != NULL, "null thread in jtsan set id");
+  assert(thread->is_Java_thread(), "thread not java thread in jtsan set id");
+  
   thread->_jtsan_tid = tid;
 
 }
