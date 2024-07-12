@@ -24,9 +24,10 @@ void ThreadHistory:: add_event(uint64_t event) {
 }
 
 uint64_t ThreadHistory::get_event(int i) {
-    // if (i >= index.load(std::memory_order_seq_cst)) {
-    //     return 0;
-    // }
+    if (i >= index) {
+        return 0;
+    }
+
     // must hold lock
     return events[i];
 }
