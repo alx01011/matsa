@@ -85,7 +85,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace* &trace, void *addr, int tid, 
 
     uint16_t sp   = 0;
 
-    for (int i = 0; i < max; i++) {
+    for (uint32_t i = 0; i < max; i++) {
         uint64_t raw_event = history->get_event(i);
         JTSanEvent e = *(JTSanEvent*)&raw_event;
 
@@ -111,7 +111,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace* &trace, void *addr, int tid, 
                     }
 
                     if (sp > 0) {
-                        trace->events[sp - 1]->bci = e.bci;
+                        trace->events[sp - 1].bci = e.bci;
                         trace->size = sp;
 
                         return true;
