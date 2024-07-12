@@ -40,7 +40,7 @@ class JTSanEventTrace {
 // for each thread we keep a cyclic buffer of the last 256 events
 class ThreadHistory : public CHeapObj<mtInternal>{
     private:
-        uint64_t *events
+        uint64_t *events;
         // can we do better in terms of memory?
         uint64_t *event_epoch;
         //uint8_t   index; // 256 events at most
