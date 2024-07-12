@@ -86,7 +86,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     // store the shadow cell
       ThreadHistory *cur_history = JTSanThreadState::getHistory(cur.tid);
       JTSanScopedLock l(cur_history->lock);
-      
+
       uint8_t index = cur_history->index % SHADOW_CELLS;
       ShadowBlock::store_cell_at((uptr)addr, &cur, index);
     }
@@ -182,7 +182,7 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write, 0};
     // symbolize the access
     // 1 is read, 2 is write
-    Symbolizer::Symbolize((Event)(cur.is_write + 1), addr, m->bci_from(bcp), tid);
+    Symbolizer::Symbolize((Event)(cur.is_write + 1), addr, m->bci_from(bcp), tid, epoch);
 
     // race
     ShadowCell prev;
