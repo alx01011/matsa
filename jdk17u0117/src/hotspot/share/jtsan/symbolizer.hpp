@@ -1,8 +1,8 @@
 #ifndef SYMBOLIZER_HPP
 #define SYMBOLIZER_HPP
 
-#define EVENT_BUFFER_SIZE (1 << 16) // 65536
-#define EVENT_BUFFER_WIDTH (16)
+#define EVENT_BUFFER_WIDTH (32)
+#define EVENT_BUFFER_SIZE  (1 << EVENT_BUFFER_WIDTH)
 
 #include <cstdint>
 #include <atomic>
@@ -52,7 +52,7 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         ThreadHistory();
 
         // are 65k events enough?
-        std::atomic<uint16_t> index;
+        std::atomic<uint32_t> index;
 
         void add_event(uint64_t event, uint32_t epoch = 0);
 

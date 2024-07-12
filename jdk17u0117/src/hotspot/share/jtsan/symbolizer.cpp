@@ -33,7 +33,7 @@ void ThreadHistory::add_event(uint64_t event, uint32_t epoch) {
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
 
-    uint16_t i = index.fetch_add(1, std::memory_order_relaxed);
+    uint32_t i = index.fetch_add(1, std::memory_order_relaxed);
 
     events[i]      = event;
     event_epoch[i] = epoch;
@@ -41,7 +41,7 @@ void ThreadHistory::add_event(uint64_t event, uint32_t epoch) {
 }
 
 uint64_t ThreadHistory::get_event(int i) {
-    if (index.load(std::memory_order_relaxed) <= i) {
+    if (i >= index.load(std::memory_order_relaxed)) {
         return 0;
     }
 
@@ -118,7 +118,6 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                 }
                 break;
             }
-            // should never reach here
             case INVALID:
             default:
                 return false;

@@ -23,6 +23,9 @@
 #define JTSAN_VECTORIZE 0
 #endif
 
+#define GIB(x) ((x) * 1024ull * 1024ull * 1024ull)
+#define TIB(x) ((x) * 1024ull * 1024ull * 1024ull * 1024ull)
+
 
 // #if JTSAN_VECTORIZE
 // #undef JTSAN_VECTORIZE
