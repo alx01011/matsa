@@ -33,7 +33,7 @@ class JTSanEvent {
 
 class JTSanEventTrace {
     public:
-        JTSanEvent events[EVENT_BUFFER_SIZE];
+        JTSanEvent events[EVENT_BUFFER_SIZE / 2];
         int      size;
 };
 
