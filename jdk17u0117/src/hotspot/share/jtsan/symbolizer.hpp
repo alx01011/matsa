@@ -2,7 +2,7 @@
 #define SYMBOLIZER_HPP
 
 #define EVENT_BUFFER_WIDTH (32)
-#define EVENT_BUFFER_SIZE  (1 << 32)
+#define EVENT_BUFFER_SIZE  (1ull << 32ull)
 
 #include <cstdint>
 #include <atomic>
