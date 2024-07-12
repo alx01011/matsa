@@ -55,8 +55,8 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         std::atomic<uint16_t> index;
 
         void add_event(uint64_t event, uint32_t epoch = 0);
+        
         uint64_t get_event(int i);
-
         uint64_t get_epoch(int i);
 
         void clear(void) {

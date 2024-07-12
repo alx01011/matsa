@@ -11,6 +11,7 @@ ThreadHistory::ThreadHistory() {
     lock = new Mutex(Mutex::access, "JTSanThreadHistory::_history_lock");
 
     memset(events, 0, sizeof(JTSanEvent) * EVENT_BUFFER_SIZE);
+    memset(event_epoch, 0, sizeof(uint64_t) * EVENT_BUFFER_SIZE);
 }
 
 void ThreadHistory::add_event(uint64_t event, uint32_t epoch) {
@@ -19,8 +20,11 @@ void ThreadHistory::add_event(uint64_t event, uint32_t epoch) {
     // if it gets filled we invalidate
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
-    events[index] = event;
-    event_epoch[index++] = epoch;
+
+    uint16_t i = index.fetch_add(1, std::memory_order_relaxed);
+
+    events[i]      = event;
+    event_epoch[i] = epoch;
 
 }
 
