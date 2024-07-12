@@ -28,7 +28,11 @@ void ThreadHistory::add_event(uint64_t event, uint32_t epoch) {
 
 }
 
-uint64_t ThreadHistory::get_event(int i) {    
+uint64_t ThreadHistory::get_event(int i) {
+    if (index.load(std::memory_order_relaxed) <= i) {
+        return 0;
+    }
+
     return events[i];
 }
 
@@ -65,9 +69,8 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
     ThreadHistory *history = JTSanThreadState::getHistory(tid);
 
     uint16_t sp   = 0;
-    uint16_t last = history->index.load(std::memory_order_seq_cst);
 
-    for (int i = 0; i < last; i++) {
+    for (int i = 0; i < EVENT_BUFFER_SIZE; i++) {
         uint64_t raw_event = history->get_event(i);
         JTSanEvent e = *(JTSanEvent*)&raw_event;
 
