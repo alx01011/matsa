@@ -49,7 +49,7 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &prev) {
 
     if (has_trace) {
         for (int i = trace.size - 1; i >= 0; i--) {
-            JTSanEvent e = *(JTSanEvent*)&trace.events[i];
+            JTSanEvent e = trace.events[i];
 
             Method *m       = (Method*)e.pc;
             if (!Method::is_valid_method(m)) {
