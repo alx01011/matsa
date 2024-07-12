@@ -24,7 +24,7 @@ enum Event {
     FUNC      = 3
 };
 
-class JTSanEvent {
+class JTSanEvent : public CHeapObj<mtInternal>{
     public:
         Event     event : 2; // 4 events
         uintptr_t pc    : 48; // can't easily compress this
