@@ -1,8 +1,8 @@
 #ifndef SYMBOLIZER_HPP
 #define SYMBOLIZER_HPP
 
-#define EVENT_BUFFER_WIDTH (32)
-#define EVENT_BUFFER_SIZE  (250000)
+#define EVENT_BUFFER_SIZE (1 << 16) // 65536
+#define EVENT_BUFFER_WIDTH (16)
 
 #include <cstdint>
 #include <atomic>
@@ -24,28 +24,23 @@ enum Event {
     FUNC      = 3
 };
 
-class JTSanEvent : public CHeapObj<mtInternal>{
+class JTSanEvent {
     public:
         Event     event : 2; // 4 events
         uintptr_t pc    : 48; // can't easily compress this
         int       bci   : 64 - 48 - 2;
 };
 
-class JTSanEventTrace : public CHeapObj<mtInternal>{
+class JTSanEventTrace {
     public:
-        JTSanEvent *events;
-        uint32_t      size;
-
-        JTSanEventTrace(uint32_t size) {
-            events = new JTSanEvent[size];
-            size   = 0;
-        }
+        JTSanEvent events[EVENT_BUFFER_SIZE];
+        int      size;
 };
 
-// for each thread we keep a cyclic buffer of events
+// for each thread we keep a cyclic buffer of the last 256 events
 class ThreadHistory : public CHeapObj<mtInternal>{
     private:
-        uint64_t *events;
+        uint64_t *events
         // can we do better in terms of memory?
         uint64_t *event_epoch;
         //uint8_t   index; // 256 events at most
@@ -57,12 +52,12 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         ThreadHistory();
 
         // are 65k events enough?
-        std::atomic<uint32_t> index;
+        std::atomic<uint16_t> index;
 
         void add_event(uint64_t event, uint32_t epoch = 0);
 
-        uint64_t get_event(uint32_t i);
-        uint64_t get_epoch(uint32_t i);
+        uint64_t get_event(int i);
+        uint64_t get_epoch(int i);
 
         void clear(void) {
             index.store(0, std::memory_order_seq_cst);
@@ -77,7 +72,7 @@ namespace Symbolizer {
     uintptr_t RestoreAddr(uintptr_t addr);
 
     void Symbolize       (Event event, void *addr, int bci, int tid, uint32_t epoch = 0);
-    bool TraceUpToAddress(JTSanEventTrace* &trace, void *addr, int tid, ShadowCell &prev);
+    bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev);
 
     void ClearThreadHistory(int tid);
 };

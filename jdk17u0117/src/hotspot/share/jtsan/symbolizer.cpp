@@ -33,14 +33,14 @@ void ThreadHistory::add_event(uint64_t event, uint32_t epoch) {
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
 
-    uint32_t i = index.fetch_add(1, std::memory_order_relaxed) % EVENT_BUFFER_SIZE;
+    uint16_t i = index.fetch_add(1, std::memory_order_relaxed);
 
     events[i]      = event;
     event_epoch[i] = epoch;
 
 }
 
-uint64_t ThreadHistory::get_event(uint32_t i) {
+uint64_t ThreadHistory::get_event(int i) {
     if (i >= index.load(std::memory_order_relaxed)) {
         return 0;
     }
@@ -48,7 +48,7 @@ uint64_t ThreadHistory::get_event(uint32_t i) {
     return events[i];
 }
 
-uint64_t ThreadHistory::get_epoch(uint32_t i) {
+uint64_t ThreadHistory::get_epoch(int i) {
     return event_epoch[i];
 }
 
@@ -77,15 +77,12 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid, uint32_t e
     history->add_event(e, epoch);
 }
 
-bool Symbolizer::TraceUpToAddress(JTSanEventTrace* &trace, void *addr, int tid, ShadowCell &prev) {
+bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
     ThreadHistory *history = JTSanThreadState::getHistory(tid);
-
-    uint32_t max = history->index.load(std::memory_order_relaxed);
-    trace = new JTSanEventTrace(max);
 
     uint16_t sp   = 0;
 
-    for (uint32_t i = 0; i < max; i++) {
+    for (int i = 0; i < EVENT_BUFFER_SIZE; i++) {
         uint64_t raw_event = history->get_event(i);
         JTSanEvent e = *(JTSanEvent*)&raw_event;
 
@@ -98,7 +95,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace* &trace, void *addr, int tid, 
                         }
                         break;
                     default: // method entry
-                        trace->events[sp++] = e;
+                        trace.events[sp++] = e;
                         break;
                 }
                 break;
@@ -111,8 +108,8 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace* &trace, void *addr, int tid, 
                     }
 
                     if (sp > 0) {
-                        trace->events[sp - 1].bci = e.bci;
-                        trace->size = sp;
+                        trace.events[sp - 1].bci = e.bci;
+                        trace.size = sp;
 
                         return true;
                     }
