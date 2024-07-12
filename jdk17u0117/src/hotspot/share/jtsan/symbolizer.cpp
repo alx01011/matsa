@@ -3,6 +3,7 @@
 #include "threadState.hpp"
 
 #include "memory/allocation.hpp"
+#include "runtime/os.hpp"
 
 #include <cstring>
 
@@ -10,8 +11,19 @@ ThreadHistory::ThreadHistory() {
     index = 0;
     lock = new Mutex(Mutex::access, "JTSanThreadHistory::_history_lock");
 
-    memset(events, 0, sizeof(JTSanEvent) * EVENT_BUFFER_SIZE);
-    memset(event_epoch, 0, sizeof(uint64_t) * EVENT_BUFFER_SIZE);
+    events      = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
+    event_epoch = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
+
+    if (!events || !event_epoch) {
+        fatal("JTSan Symbolizer: Failed to mmap");
+    }
+
+    bool protect = os::protect_memory((char*)events, EVENT_BUFFER_SIZE * sizeof(uint64_t), os::MEM_PROT_RW)
+                   && os::protect_memory((char*)event_epoch, EVENT_BUFFER_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
+
+    if (!protect) {
+        fatal("JTSan Symbolizer: Failed to protect memory");
+    }
 }
 
 void ThreadHistory::add_event(uint64_t event, uint32_t epoch) {

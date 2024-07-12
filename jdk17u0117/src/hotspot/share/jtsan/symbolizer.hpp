@@ -40,9 +40,9 @@ class JTSanEventTrace {
 // for each thread we keep a cyclic buffer of the last 256 events
 class ThreadHistory : public CHeapObj<mtInternal>{
     private:
-        uint64_t events[EVENT_BUFFER_SIZE];
+        uint64_t *events;
         // can we do better in terms of memory?
-        uint64_t event_epoch[EVENT_BUFFER_SIZE];
+        uint64_t *event_epoch;
         //uint8_t   index; // 256 events at most
         // instead of locking, is it faster to do an atomic increment on index and just load whatever is on events?
         // a single event is 8 bytes and the memory is dword aligned, so we are safe
@@ -55,7 +55,7 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         std::atomic<uint16_t> index;
 
         void add_event(uint64_t event, uint32_t epoch = 0);
-        
+
         uint64_t get_event(int i);
         uint64_t get_epoch(int i);
 
