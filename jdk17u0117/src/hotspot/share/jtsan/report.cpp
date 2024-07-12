@@ -48,7 +48,7 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &prev) {
     has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, prev);
 
     if (has_trace) {
-        for (int i = trace.size - 1; i >= 0; i--) {
+        for (int i = trace->size - 1; i >= 0; i--) {
             JTSanEvent e = trace->events[i];
 
             Method *m       = (Method*)e.pc;
