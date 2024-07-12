@@ -86,8 +86,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                 break;
             case MEM_READ:
             case MEM_WRITE: {
-                if ((Event)(prev.is_write + 1) == e.event && (void*)e.pc == addr 
-                        && history->get_epoch(i) == prev.epoch) {
+                if ((Event)(prev.is_write + 1) == e.event && (void*)e.pc == addr) {
                     if (sp > 0) {
                         trace.events[sp - 1].bci = e.bci;
                         trace.size = sp;
