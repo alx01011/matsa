@@ -58,7 +58,7 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid, uint32_t e
     uint64_t e = (uint64_t) event | (uint64_t)addr << 2 | (uint64_t)bci << 50;
 
     ThreadHistory *history = JTSanThreadState::getHistory(tid);
-    history->add_event(e);
+    history->add_event(e, epoch);
 }
 
 bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
@@ -89,7 +89,6 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                 if ((Event)(prev.is_write + 1) == e.event && (void*)e.pc == addr) {
                     uint32_t epoch = history->get_epoch(i);
                     if (epoch != prev.epoch) {
-                        fprintf(stderr, "epoch %u != old %u\n", epoch, prev.epoch);
                         continue; // epoch mismatch probably a previous access
                     }
 
