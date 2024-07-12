@@ -84,10 +84,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
     if (UNLIKELY(!stored)) {
     // store the shadow cell
-      ThreadHistory *cur_history = JTSanThreadState::getHistory(cur.tid);
-      JTSanScopedLock l(cur_history->lock);
-
-      uint8_t index = cur_history->index % SHADOW_CELLS;
+      uint8_t index = JTSanThreadState::getHistory(cur.tid)->index.load(std::memory_order_relaxed) % SHADOW_CELLS;
       ShadowBlock::store_cell_at((uptr)addr, &cur, index);
     }
 
