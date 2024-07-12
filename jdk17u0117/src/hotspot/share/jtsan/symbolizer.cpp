@@ -13,13 +13,15 @@ ThreadHistory::ThreadHistory() {
     memset(events, 0, sizeof(JTSanEvent) * EVENT_BUFFER_SIZE);
 }
 
-void ThreadHistory:: add_event(uint64_t event) {
+void ThreadHistory:: add_event(uint64_t event, uint32_t epoch) {
     // if the buffer gets full, there is a small chance that we will report the wrong trace
     // might happen if slots before the access get filled with method entry/exit events
     // if it gets filled we invalidate
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
-    events[index++] = event;
+    events[index] = event;
+    event_epoch[index++] = epoch;
+
 }
 
 uint64_t ThreadHistory::get_event(int i) {    
