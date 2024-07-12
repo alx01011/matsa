@@ -33,7 +33,7 @@ void ThreadHistory::add_event(uint64_t event, uint32_t epoch) {
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
 
-    uint32_t i = index.fetch_add(1, std::memory_order_relaxed);
+    uint32_t i = index.fetch_add(1, std::memory_order_relaxed) % EVENT_BUFFER_SIZE;
 
     events[i]      = event;
     event_epoch[i] = epoch;
