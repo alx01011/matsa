@@ -42,7 +42,7 @@ void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
 }
 
 bool try_print_event_trace(void *addr, int tid, ShadowCell &prev) {
-    JTSanEventTrace trace;
+    JTSanEventTrace *trace = nullptr;
     bool has_trace = false;
 
     has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, prev);

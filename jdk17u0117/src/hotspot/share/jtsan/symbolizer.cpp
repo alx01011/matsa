@@ -77,12 +77,15 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid, uint32_t e
     history->add_event(e, epoch);
 }
 
-bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
+bool Symbolizer::TraceUpToAddress(JTSanEventTrace* &trace, void *addr, int tid, ShadowCell &prev) {
     ThreadHistory *history = JTSanThreadState::getHistory(tid);
+
+    uint32_t max = history->index.load(std::memory_order_relaxed);
+    trace = new JTSanEventTrace(max);
 
     uint16_t sp   = 0;
 
-    for (int i = 0; i < EVENT_BUFFER_SIZE; i++) {
+    for (int i = 0; i < max; i++) {
         uint64_t raw_event = history->get_event(i);
         JTSanEvent e = *(JTSanEvent*)&raw_event;
 

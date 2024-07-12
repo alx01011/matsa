@@ -31,13 +31,18 @@ class JTSanEvent {
         int       bci   : 64 - 48 - 2;
 };
 
-class JTSanEventTrace {
+class JTSanEventTrace : public CHeapObj<mtInternal>{
     public:
-        JTSanEvent events[EVENT_BUFFER_SIZE / 2];
-        int      size;
+        JTSanEvent *events;
+        uint32_t      size;
+
+        JTSanEventTrace(uint32_t size) {
+            events = new JTSanEvent[size];
+            size   = 0;
+        }
 };
 
-// for each thread we keep a cyclic buffer of the last 256 events
+// for each thread we keep a cyclic buffer of events
 class ThreadHistory : public CHeapObj<mtInternal>{
     private:
         uint64_t *events;
@@ -72,7 +77,7 @@ namespace Symbolizer {
     uintptr_t RestoreAddr(uintptr_t addr);
 
     void Symbolize       (Event event, void *addr, int bci, int tid, uint32_t epoch = 0);
-    bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev);
+    bool TraceUpToAddress(JTSanEventTrace* &trace, void *addr, int tid, ShadowCell &prev);
 
     void ClearThreadHistory(int tid);
 };
