@@ -98,7 +98,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace* &trace, void *addr, int tid, 
                         }
                         break;
                     default: // method entry
-                        trace.events[sp++] = e;
+                        trace->events[sp++] = e;
                         break;
                 }
                 break;
@@ -111,8 +111,8 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace* &trace, void *addr, int tid, 
                     }
 
                     if (sp > 0) {
-                        trace.events[sp - 1].bci = e.bci;
-                        trace.size = sp;
+                        trace->events[sp - 1]->bci = e.bci;
+                        trace->size = sp;
 
                         return true;
                     }
