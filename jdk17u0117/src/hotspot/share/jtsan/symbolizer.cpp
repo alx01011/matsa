@@ -101,7 +101,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                     }
 
                     last = i;
-                    i  = 0; // break out of the loop
+                    i    = 0; // break
                 }
                 break;
             }
@@ -109,6 +109,10 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
             default:
                 break;
         }
+    }
+
+    if (!last) {
+        return false;
     }
 
     for (int i = 0; i < last; i++) {
@@ -129,32 +133,24 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                 }
                 break;
             case MEM_READ:
-            case MEM_WRITE: {
-                if (i == last - 1) {
-                    uint32_t epoch = history->get_epoch(i);
-                    if (epoch != prev.epoch) {
-                        continue; // epoch mismatch probably a previous access
-                    }
-
-                    if (sp > 0) {
-                        trace.events[sp - 1].bci = e.bci;
-                        trace.size = sp;
-
-                        return true;
-                    }
-
-                    return false;
-                }
-                break;
-            }
+            case MEM_WRITE:
             case INVALID:
             default:
-                return false;
+                break;
         }
-    
     }
 
-    return last != 0;
+    uint64_t raw_event = history->get_event(last);
+    JTSanEvent e = *(JTSanEvent*)&raw_event;
+
+    if (sp > 0) {
+        trace.events[sp - 1] = e;
+        trace.size = sp;
+
+        return true;
+    }
+
+    return false;
 }
 
 void Symbolizer::ClearThreadHistory(int tid) {
