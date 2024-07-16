@@ -85,7 +85,9 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
     int last = 0;
 
     // find last occurrence of the address
-    for (int i = 0; i < EVENT_BUFFER_SIZE; i++) {
+    // we start traversing from the end of the buffer
+    // last access is more likely to be closer to the end
+    for (int i = history->index.load(std::memory_order_relaxed) - 1; i >= 0; i--) {
         uint64_t raw_event = history->get_event(i);
         JTSanEvent e = *(JTSanEvent*)&raw_event;
 
@@ -99,11 +101,11 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                     }
 
                     last = i;
+                    i  = 0; // break out of the loop
                 }
                 break;
             }
             case INVALID:
-                i = EVENT_BUFFER_SIZE; // break out of the loop
             default:
                 break;
         }
