@@ -128,7 +128,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                 break;
             case MEM_READ:
             case MEM_WRITE: {
-                if ((Event)(prev.is_write + 1) == e.event && (void*)e.pc == addr) {
+                if (i == last - 1) {
                     uint32_t epoch = history->get_epoch(i);
                     if (epoch != prev.epoch) {
                         continue; // epoch mismatch probably a previous access
