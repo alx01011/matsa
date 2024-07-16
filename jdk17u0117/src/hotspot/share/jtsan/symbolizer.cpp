@@ -80,7 +80,7 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid, uint32_t e
 bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
     ThreadHistory *history = JTSanThreadState::getHistory(tid);
 
-    uint16_t sp   = 0;
+    uint16_t sp = 0;
 
     int last = 0;
 
@@ -109,10 +109,6 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
             default:
                 break;
         }
-    }
-
-    if (!last) {
-        return false;
     }
 
     for (int i = 0; i < last; i++) {
