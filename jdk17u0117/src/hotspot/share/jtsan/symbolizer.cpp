@@ -128,9 +128,6 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                         break;
                 }
                 break;
-            case MEM_READ:
-            case MEM_WRITE:
-            case INVALID:
             default:
                 break;
         }
