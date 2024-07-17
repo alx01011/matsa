@@ -27,8 +27,8 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     bool isRace   = false;
 
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
-        ShadowCell cell = ShadowBlock::load_cell(addr_aligned, i);
-        pair.prev = (void*)((uptr)ShadowMemory::MemToShadow(addr_aligned) + i * sizeof(ShadowCell));
+        ShadowCell cell  = ShadowBlock::load_cell(addr_aligned, i);
+        pair.prev_shadow = (void*)((uptr)ShadowMemory::MemToShadow(addr_aligned) + i * sizeof(ShadowCell));
 
         // we can safely ignore if epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
