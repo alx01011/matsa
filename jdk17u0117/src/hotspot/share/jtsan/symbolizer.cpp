@@ -141,8 +141,6 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                         break;
                 }
                 break;
-            case INVALID:
-                return false;
             default:
                 break;
         }
