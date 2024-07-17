@@ -4,6 +4,8 @@
 #define EVENT_BUFFER_WIDTH (20)
 #define EVENT_BUFFER_SIZE  (1 << EVENT_BUFFER_WIDTH) // 1M
 
+#define MAX_TRACE_SIZE     (1 << 16) // 65k
+
 
 #include <cstdint>
 #include <atomic>
@@ -34,7 +36,7 @@ class JTSanEvent {
 
 class JTSanEventTrace {
     public:
-        JTSanEvent events[EVENT_BUFFER_SIZE];
+        JTSanEvent events[MAX_TRACE_SIZE];
         int      size;
 };
 
