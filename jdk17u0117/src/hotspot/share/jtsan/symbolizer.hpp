@@ -72,7 +72,7 @@ namespace Symbolizer {
     uintptr_t RestoreAddr(uintptr_t addr);
 
     void Symbolize       (Event event, void *addr, int bci, int tid, void *shadow_addr = nullptr);
-    bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev, ShadowPair &pair);
+    bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev, void *prev_shadow_addr);
 
     void ClearThreadHistory(int tid);
 };
