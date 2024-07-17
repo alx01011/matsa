@@ -90,10 +90,12 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
 
     int last = 0;
 
+    EventIndex index = { .idx = history->index };
+
     // find last occurrence of the address
     // we start traversing from the end of the buffer
     // last access is more likely to be closer to the end
-    for (int i = history->index; i >= 0; i--) {
+    for (int i = index.idx; i >= 0; i--) {
         uint64_t raw_event = history->get_event(i);
         JTSanEvent e = *(JTSanEvent*)&raw_event;
 
