@@ -112,7 +112,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
     }
 
     uint64_t raw_event;
-    JTSanEvent e
+    JTSanEvent e;
 
     // traverse up to last but not include last
     for (int i = 0; i < last; i++) {
