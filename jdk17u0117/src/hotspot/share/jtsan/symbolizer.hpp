@@ -57,8 +57,8 @@ class ThreadHistory : public CHeapObj<mtInternal>{
 
         void add_event(uint64_t event, void *shadow_addr = nullptr);
 
-        uint64_t get_event(int i);
-        void *get_old_shadow(int i);
+        uint64_t get_event(uint32_t i);
+        void *get_old_shadow(uint32_t i);
 
         void clear(void) {
             index.store(0, std::memory_order_seq_cst);

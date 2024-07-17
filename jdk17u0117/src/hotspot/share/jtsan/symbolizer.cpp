@@ -40,7 +40,7 @@ void ThreadHistory::add_event(uint64_t event, void* store_addr) {
 
 }
 
-uint64_t ThreadHistory::get_event(int i) {
+uint64_t ThreadHistory::get_event(uint32_t i) {
     if (i >= index.load(std::memory_order_relaxed)) {
         return 0;
     }
@@ -48,7 +48,7 @@ uint64_t ThreadHistory::get_event(int i) {
     return events[i];
 }
 
-void *ThreadHistory::get_old_shadow(int i) {
+void *ThreadHistory::get_old_shadow(uint32_t i) {
     return event_shadow_addr[i];
 }
 
