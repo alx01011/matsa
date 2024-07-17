@@ -33,7 +33,7 @@ void ThreadHistory::add_event(uint64_t event, void* store_addr) {
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
 
-    uint32_t i = index.fetch_add(1, std::memory_order_relaxed) % EVENT_BUFFER_SIZE;
+    uint32_t i = index.fetch_add(1, std::memory_order_relaxed) & (EVENT_BUFFER_SIZE - 1);
 
     events[i]            = event;
     event_shadow_addr[i] = store_addr;
@@ -106,6 +106,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                 break;
             }
             case INVALID:
+                return false;
             default:
                 break;
         }
@@ -132,6 +133,8 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
                         break;
                 }
                 break;
+            case INVALID:
+                return false;
             default:
                 break;
         }
