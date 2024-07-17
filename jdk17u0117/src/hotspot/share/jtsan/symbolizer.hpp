@@ -62,7 +62,7 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         void *get_old_shadow(uint32_t i);
 
         void clear(void) {
-            index.store(0, std::memory_order_seq_cst);
+            index = 0;
             // lock->lock();
             // index = 0;
             // lock->unlock();
