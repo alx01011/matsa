@@ -33,7 +33,7 @@ void ThreadHistory::add_event(uint64_t event, void* store_addr) {
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
 
-    uint16_t i = index.fetch_add(1, std::memory_order_relaxed);
+    uint32_t i = index.fetch_add(1, std::memory_order_relaxed) % EVENT_BUFFER_SIZE;
 
     events[i]            = event;
     event_shadow_addr[i] = store_addr;
