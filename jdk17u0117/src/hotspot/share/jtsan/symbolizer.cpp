@@ -90,7 +90,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
 
     int last = 0;
 
-    EventIndex index = { .idx = history->index };
+    EventIndex index = { .idx = history->index - 1 };
 
     // find last occurrence of the address
     // we start traversing from the end of the buffer
