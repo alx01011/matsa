@@ -25,9 +25,13 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     bool stored   = false;
     bool isRace   = false;
 
+    void *base_shadow = ShadowMemory::MemToShadow(addr_aligned);
+
+    pair.prev_shadow = base_shadow;
+
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell  = ShadowBlock::load_cell(addr_aligned, i);
-        pair.prev_shadow = (void*)((uptr)ShadowMemory::MemToShadow(addr_aligned) + i * sizeof(ShadowCell));
+        pair.prev_shadow = (void*)((uptr)pair.prev_shadow + sizeof(ShadowCell));
 
         // we can safely ignore if epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
@@ -48,7 +52,8 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         if (LIKELY(cell.tid == cur.tid)) {
           // if the access is stronger overwrite
           if (LIKELY(cur.is_write && !cell.is_write)) {
-              pair.cur_shadow = ShadowBlock::store_cell_at((uptr)addr, &cur, i);
+              ShadowBlock::store_cell_at((uptr)addr, &cur, i);
+              pair.cur_shadow = pair.prev_shadow;
               stored          = true;
           }
           continue;
@@ -86,7 +91,8 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
     if (UNLIKELY(!stored)) {
     // store the shadow cell
       uint8_t index   = JTSanThreadState::getHistory(cur.tid)->index.load(std::memory_order_relaxed) % SHADOW_CELLS;
-      pair.cur_shadow = ShadowBlock::store_cell_at((uptr)addr, &cur, index);
+      ShadowBlock::store_cell_at((uptr)addr, &cur, index);
+      pair.cur_shadow = (void*)((uptr)base_shadow + index * sizeof(ShadowCell));
     }
 
     return isRace;
