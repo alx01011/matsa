@@ -41,17 +41,17 @@ void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
 
 }
 
-bool try_print_event_trace(void *addr, int tid, ShadowCell &prev) {
+bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, void *cell_shadow_addr) {
     JTSanEventTrace trace;
     bool has_trace = false;
 
-    has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, prev);
+    has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, cell, cell_shadow_addr);
 
     if (has_trace) {
         for (int i = trace.size - 1; i >= 0; i--) {
             JTSanEvent e = trace.events[i];
-
-            Method *m       = (Method*)e.pc;
+            Method *m    = (Method*)e.pc;
+            
             if (!Method::is_valid_method(m)) {
                 continue;
             }
@@ -64,7 +64,7 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &prev) {
 }
 
 void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t size, address bcp, Method *m, 
-                            ShadowCell &cur, ShadowCell &prev) {
+                            ShadowCell &cur, ShadowCell &prev, ShadowPair &pair) {
     JTSanScopedLock lock(JTSanReport::_report_lock);
 
     
@@ -75,14 +75,14 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
     fprintf(stderr, RED "WARNING: ThreadSanitizer: data race (pid=%d)\n", pid);
     fprintf(stderr, BLUE " %s of size %u at %p by thread T%u:\n" RESET,  cur.is_write ? "Write" : "Read", 
             size, addr, (uint32_t)cur.tid);
-    if (!try_print_event_trace(addr, cur.tid, cur)) {
+    if (!try_print_event_trace(addr, cur.tid, cur, pair.cur_shadow)) {
         // less accurate line numbers
         print_stack_trace(trace);
     }
     
     fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%u:\n" RESET, prev.is_write ? "write" : "read", 
             size, addr, (uint32_t)prev.tid);
-    if (!try_print_event_trace(addr, prev.tid, prev)) {
+    if (!try_print_event_trace(addr, prev.tid, prev, pair.prev_shadow)) {
         fprintf(stderr, "  <no stack trace available>\n");
     }
 

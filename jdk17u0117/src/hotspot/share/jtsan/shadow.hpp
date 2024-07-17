@@ -62,11 +62,17 @@ struct ShadowCell {
 class ShadowBlock : AllStatic {
     public:
         static ShadowCell load_cell(uptr mem, uint8_t index);
-        static void       store_cell(uptr mem, ShadowCell* cell); 
+        static void      *store_cell(uptr mem, ShadowCell* cell); 
         static void       store_cell_at(uptr mem, ShadowCell* cell, uint8_t index);
     private:
         static ShadowCell atomic_load_cell(ShadowCell *cell);
         static void       atomic_store_cell(ShadowCell *cell, ShadowCell *val);
+};
+
+// a pair of shadow addresses
+struct ShadowPair {
+    void *prev_shadow;
+    void *cur_shadow;
 };
 
 #endif

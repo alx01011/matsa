@@ -11,22 +11,22 @@ ThreadHistory::ThreadHistory() {
     index = 0;
     lock = new Mutex(Mutex::access, "JTSanThreadHistory::_history_lock");
 
-    events      = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
-    event_epoch = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
+    events            = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
+    event_shadow_addr = (void*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(void*));
 
     if (!events || !event_epoch) {
         fatal("JTSan Symbolizer: Failed to mmap");
     }
 
     bool protect = os::protect_memory((char*)events, EVENT_BUFFER_SIZE * sizeof(uint64_t), os::MEM_PROT_RW)
-                   && os::protect_memory((char*)event_epoch, EVENT_BUFFER_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
+                   && os::protect_memory((char*)event_shadow_addr, EVENT_BUFFER_SIZE * sizeof(void*), os::MEM_PROT_RW);
 
     if (!protect) {
         fatal("JTSan Symbolizer: Failed to protect memory");
     }
 }
 
-void ThreadHistory::add_event(uint64_t event, uint32_t epoch) {
+void ThreadHistory::add_event(uint64_t event, void* store_addr) {
     // if the buffer gets full, there is a small chance that we will report the wrong trace
     // might happen if slots before the access get filled with method entry/exit events
     // if it gets filled we invalidate
@@ -35,8 +35,8 @@ void ThreadHistory::add_event(uint64_t event, uint32_t epoch) {
 
     uint16_t i = index.fetch_add(1, std::memory_order_relaxed);
 
-    events[i]      = event;
-    event_epoch[i] = epoch;
+    events[i]            = event;
+    event_shadow_addr[i] = store_addr;
 
 }
 
@@ -48,8 +48,8 @@ uint64_t ThreadHistory::get_event(int i) {
     return events[i];
 }
 
-uint64_t ThreadHistory::get_epoch(int i) {
-    return event_epoch[i];
+void *ThreadHistory::get_old_shadow(int i) {
+    return event_shadow_addr[i];
 }
 
 uintptr_t Symbolizer::CompressAddr(uintptr_t addr) {
@@ -60,7 +60,7 @@ uintptr_t Symbolizer::RestoreAddr(uintptr_t addr) {
     return addr | (ShadowMemory::heap_base & ~((1ull << COMPRESSED_ADDR_BITS) - 1));
 }
 
-void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid, uint32_t epoch) {
+void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid, void *store_addr) {
     /*
         Layout of packed event uint64_t:
         | event (2 bits) | addr (48 bits) | bci (14 bits) |
@@ -74,10 +74,10 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid, uint32_t e
     uint64_t e = (uint64_t) event | (uint64_t)addr << 2 | (uint64_t)bci << 50;
 
     ThreadHistory *history = JTSanThreadState::getHistory(tid);
-    history->add_event(e, epoch);
+    history->add_event(e, store_addr);
 }
 
-bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
+bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev, void *prev_shadow_addr) {
     ThreadHistory *history = JTSanThreadState::getHistory(tid);
 
     uint16_t sp = 0;
@@ -95,9 +95,9 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
             case MEM_READ:
             case MEM_WRITE: {
                 if ((Event)(prev.is_write + 1) == e.event && (void*)e.pc == addr) {
-                    uint32_t epoch = history->get_epoch(i);
-                    if (epoch != prev.epoch) {
-                        continue; // epoch mismatch probably a previous access
+                    void* shadow_old = history->get_old_shadow(i);
+                    if (shadow_old != prev_shadow_addr) {
+                        continue; // shadow address mismatch, probably a different access
                     }
 
                     last = i;
@@ -111,9 +111,13 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
         }
     }
 
+    uint64_t raw_event;
+    JTSanEvent e
+
+    // traverse up to last but not include last
     for (int i = 0; i < last; i++) {
-        uint64_t raw_event = history->get_event(i);
-        JTSanEvent e = *(JTSanEvent*)&raw_event;
+        raw_event = history->get_event(i);
+        e         = *(JTSanEvent*)&raw_event;
 
         switch (e.event) {
             case FUNC:
@@ -133,11 +137,17 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
         }
     }
 
-    uint64_t raw_event = history->get_event(last);
-    JTSanEvent e = *(JTSanEvent*)&raw_event;
-
     if (sp > 0) {
-        trace.events[sp - 1] = e;
+        // include the last event
+        raw_event = history->get_event(last);
+
+        if (!raw_event) {
+            return false;
+        }
+
+        e = *(JTSanEvent*)&raw_event;
+
+        trace.events[sp - 1].bci = e.bci;
         trace.size = sp;
 
         return true;
