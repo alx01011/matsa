@@ -26,6 +26,10 @@ ThreadHistory::ThreadHistory() {
     }
 }
 
+struct EventIndex {
+    uint64_t idx : EVENT_BUFFER_WIDTH;
+};
+
 void ThreadHistory::add_event(uint64_t event, void* store_addr) {
     // if the buffer gets full, there is a small chance that we will report the wrong trace
     // might happen if slots before the access get filled with method entry/exit events
@@ -33,15 +37,17 @@ void ThreadHistory::add_event(uint64_t event, void* store_addr) {
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
 
-    uint32_t i = ((index = (index + 1) & (EVENT_BUFFER_SIZE - 1)));
+    EventIndex index = { .idx = (this->index++)};
 
-    events[i]            = event;
-    event_shadow_addr[i] = store_addr;
+    events[index.idx]            = event;
+    event_shadow_addr[index.idx] = store_addr;
 
 }
 
 uint64_t ThreadHistory::get_event(uint32_t i) {
-    if (i >= index) {
+    EventIndex index = { .idx = this->index };
+
+    if (i >= index.idx) {
         return 0;
     }
 
