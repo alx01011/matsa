@@ -18,7 +18,6 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
 
-#if !JTSAN_VECTORIZE
 bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur,
                                                              ShadowCell &prev, ShadowPair &pair) {
     uptr addr_aligned = ((uptr)addr);
@@ -92,85 +91,6 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
     return isRace;
 }
-
-#else /* JTSAN_VECTORIZE */
-
-bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur, ShadowCell &prev) {
-    void *shadow_addr = ShadowMemory::MemToShadow((uptr)addr);
-
-    m256 block = _mm256_load_si256((__m256i*)shadow_addr);
-    
-    m256 thread_epochs = _mm256_setzero_si256();
-
-    ShadowCell cells[SHADOW_CELLS];
-
-#define LOAD_CELL(i)\
-    {\
-        uint64_t cell;\
-        cell     = _mm256_extract_epi64(block, i);\
-        cells[i] = *((ShadowCell*)&cell);\
-    }
-
-    LOAD_CELL(0);
-    LOAD_CELL(1);
-    LOAD_CELL(2);
-    LOAD_CELL(3);
-
-#undef LOAD_CELL
-    
-    bool stored = false;
-    bool isRace = false;
-
-    for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
-        if (LIKELY(cells[i].epoch == 0 || cur.gc_epoch != cells[i].gc_epoch || cells[i].offset != cur.offset)) {
-            continue;
-        }
-
-        if (UNLIKELY(cells[i].is_ignored)) {
-            return false;
-        }
-
-        if (LIKELY(cells[i].tid == cur.tid)) {
-            if (LIKELY(cur.is_write && !cells[i].is_write)) {
-                ShadowBlock::store_cell_at((uptr)addr, &cur, i);
-                stored = true;
-            }
-            continue;
-        }
-
-        if (LIKELY(!(cells[i].is_write || cur.is_write))) {
-            continue;
-        }
-
-        uint32_t thr = JTSanThreadState::getEpoch(cur.tid, cells[i].tid);
-        if (LIKELY(thr >= cells[i].epoch)) {
-            continue;
-        }
-
-        prev   = cells[i];
-        isRace = true;
-
-        trace = new JTSanStackTrace(thread);
-        if (LIKELY(JTSanSuppression::is_suppressed(trace))) {
-            isRace = false;
-        }
-
-        cur.is_ignored = 1;
-        ShadowBlock::store_cell_at((uptr)addr, &cur, 0);
-        stored = true;
-
-        break;
-    }
-
-    if (UNLIKELY(!stored)) {
-        uint8_t index = JTSanThreadState::getHistory(cur.tid)->index.load(std::memory_order_relaxed) % SHADOW_CELLS;
-        ShadowBlock::store_cell_at((uptr)addr, &cur, index);
-    }
-
-    return isRace;
-}
-
-#endif
 
 void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write) {
     JavaThread *thread = JavaThread::current();
