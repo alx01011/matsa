@@ -31,7 +31,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell  = ShadowBlock::load_cell(addr_aligned, i);
-        pair.prev_shadow = (void*)((uptr)pair.prev_shadow + sizeof(ShadowCell));
+        pair.prev_shadow = (void*)((uptr)pair.prev_shadow + (i * sizeof(ShadowCell)));
 
         // we can safely ignore if epoch is 0 it means cell is unassigned
         // or if the thread id is the same as the current thread 
@@ -43,7 +43,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
         // if the cell is ignored then we can skip the whole block
         if (UNLIKELY(cell.is_ignored)) {
-            break;
+            return false;
         }
 
         // same slot this is not a race
