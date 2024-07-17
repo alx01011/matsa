@@ -81,7 +81,8 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         }
 
         cur.is_ignored  = 1;
-        pair.cur_shadow = ShadowBlock::store_cell_at((uptr)addr, &cur, 0);
+        ShadowBlock::store_cell_at((uptr)addr, &cur, 0);
+        pair.cur_shadow = base_shadow;
         stored = true;
 
 
