@@ -1,8 +1,8 @@
 #ifndef SYMBOLIZER_HPP
 #define SYMBOLIZER_HPP
 
-#define EVENT_BUFFER_WIDTH (18)
-#define EVENT_BUFFER_SIZE  (1 << EVENT_BUFFER_WIDTH) // 256k
+#define EVENT_BUFFER_WIDTH (16)
+#define EVENT_BUFFER_SIZE  (1 << EVENT_BUFFER_WIDTH) // 65k
 
 #define MAX_TRACE_SIZE     (1 << 16) // 65k
 
