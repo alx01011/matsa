@@ -12,14 +12,14 @@ ThreadHistory::ThreadHistory() {
     lock = new Mutex(Mutex::access, "JTSanThreadHistory::_history_lock");
 
     events            = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
-    event_shadow_addr = (void*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(void*));
+    event_shadow_addr = (void**)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(void**));
 
     if (!events || !event_shadow_addr) {
         fatal("JTSan Symbolizer: Failed to mmap");
     }
 
     bool protect = os::protect_memory((char*)events, EVENT_BUFFER_SIZE * sizeof(uint64_t), os::MEM_PROT_RW)
-                   && os::protect_memory((char*)event_shadow_addr, EVENT_BUFFER_SIZE * sizeof(void*), os::MEM_PROT_RW);
+                   && os::protect_memory((char*)event_shadow_addr, EVENT_BUFFER_SIZE * sizeof(void**), os::MEM_PROT_RW);
 
     if (!protect) {
         fatal("JTSan Symbolizer: Failed to protect memory");

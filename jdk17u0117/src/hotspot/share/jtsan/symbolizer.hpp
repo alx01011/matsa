@@ -42,7 +42,7 @@ class ThreadHistory : public CHeapObj<mtInternal>{
     private:
         uint64_t *events;
         // can we do better in terms of memory?
-        void    *event_shadow_addr;
+        void    **event_shadow_addr;
         //uint8_t   index; // 256 events at most
         // instead of locking, is it faster to do an atomic increment on index and just load whatever is on events?
         // a single event is 8 bytes and the memory is dword aligned, so we are safe
