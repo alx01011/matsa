@@ -54,8 +54,7 @@ class ThreadHistory : public CHeapObj<mtInternal>{
     public:
         ThreadHistory();
 
-        // are 65k events enough?
-        std::atomic<uint32_t> index;
+        uint64_t index;
 
         void add_event(uint64_t event, void *shadow_addr = nullptr);
 

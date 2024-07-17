@@ -33,7 +33,7 @@ void ThreadHistory::add_event(uint64_t event, void* store_addr) {
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
 
-    uint32_t i = index.fetch_add(1, std::memory_order_relaxed) & (EVENT_BUFFER_SIZE - 1);
+    uint32_t i = ((index = (index + 1) & (EVENT_BUFFER_SIZE - 1)));
 
     events[i]            = event;
     event_shadow_addr[i] = store_addr;
@@ -41,7 +41,7 @@ void ThreadHistory::add_event(uint64_t event, void* store_addr) {
 }
 
 uint64_t ThreadHistory::get_event(uint32_t i) {
-    if (i >= index.load(std::memory_order_relaxed)) {
+    if (i >= index) {
         return 0;
     }
 
@@ -87,7 +87,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
     // find last occurrence of the address
     // we start traversing from the end of the buffer
     // last access is more likely to be closer to the end
-    for (int i = history->index.load(std::memory_order_relaxed) - 1; i >= 0; i--) {
+    for (int i = index; i >= 0; i--) {
         uint64_t raw_event = history->get_event(i);
         JTSanEvent e = *(JTSanEvent*)&raw_event;
 
