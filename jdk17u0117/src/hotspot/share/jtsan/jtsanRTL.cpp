@@ -42,9 +42,9 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         }
 
         // if the cell is ignored then we can skip the whole block
-        if (UNLIKELY(cell.is_ignored)) {
-            return false;
-        }
+        // if (UNLIKELY(cell.is_ignored)) {
+        //     return false;
+        // }
 
         // same slot this is not a race
         // even if a tid was reused it can't be race because the previous thread has obviously finished
