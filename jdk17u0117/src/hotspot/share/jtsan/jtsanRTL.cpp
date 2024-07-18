@@ -42,9 +42,9 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         }
 
         // if the cell is ignored then we can skip the whole block
-        // if (UNLIKELY(cell.is_ignored)) {
-        //     return false;
-        // }
+        if (UNLIKELY(cell.is_ignored)) {
+            return false;
+        }
 
         // same slot this is not a race
         // even if a tid was reused it can't be race because the previous thread has obviously finished
@@ -113,6 +113,12 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     JTSanStackTrace *stack_trace = nullptr;
 
     bool is_race = CheckRaces(thread, stack_trace, addr, cur, prev, pair);
+
+    int line = m->line_from_bci(m->bci_from(bcp));
+    if (line == 30 || line == 37 || line == 29 || line == 35) {
+        fprintf(stderr, "access at line %d ", line);
+        fprintf(stderr, "addr: %p, tid: %d, offset: %d\n", addr, tid, cur.offset);
+    }
 
     // symbolize the access
     // 1 is read, 2 is write
