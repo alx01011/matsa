@@ -114,7 +114,7 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
 
     bool is_race = CheckRaces(thread, stack_trace, addr, cur, prev, pair);
 
-    int line = m->line_from_bci(m->bci_from(bcp));
+    int line = m->line_number_from_bci(m->bci_from(bcp));
     if (line == 30 || line == 37 || line == 29 || line == 35) {
         fprintf(stderr, "access at line %d ", line);
         fprintf(stderr, "addr: %p, tid: %d, offset: %d\n", addr, tid, cur.offset);
