@@ -113,13 +113,6 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
 
     bool is_race = CheckRaces(thread, stack_trace, addr, cur, prev, pair);
 
-    int line = m->line_number_from_bci(m->bci_from(bcp));
-    if ((line >= 28 && line <= 31) || (line >= 35 && line <= 38)) {
-        fprintf(stderr, "access at line %d -> ", line);
-        fprintf(stderr, "addr: %p, tid: %d, offset: %d", addr, tid, cur.offset);
-        fprintf(stderr, "shadow: %p\n", ShadowMemory::MemToShadow((uptr)addr));
-    }
-
     // symbolize the access
     // 1 is read, 2 is write
     Symbolizer::Symbolize((Event)(cur.is_write + 1), addr, m->bci_from(bcp), tid, pair.cur_shadow);
