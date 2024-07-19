@@ -122,22 +122,19 @@ void *ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
         */
         if (LIKELY(!cell_l.epoch) || UNLIKELY((cell_l.gc_epoch != cell->gc_epoch))) {
             //*(cell_addr + i) = *cell;
-            std::atomic<ShadowCell> *cell_addr = (std::atomic<ShadowCell> *)((uptr)shadow_addr + (i * sizeof(ShadowCell)));
-            cell_addr->store(*cell, std::memory_order_relaxed);
-            return (void*)((uptr)shadow_addr + (i * sizeof(ShadowCell)));
+            void *store_addr = (void*)((uptr)shadow_addr + (i * sizeof(ShadowCell)));
+            __atomic_store_n((uint64_t*)store_addr, *(uint64_t*)cell, __ATOMIC_RELAXED);
+
+            return store_addr;
         }
     }
 
     // if we reach here, all the cells are occupied or locked
     // just pick one at random and overwrite it
     uint8_t ci = JTSanThreadState::getHistory(cell->tid)->index % SHADOW_CELLS;
-
     void *store_addr = (void*)((uptr)shadow_addr + (ci * sizeof(ShadowCell)));
 
     __atomic_store_n((uint64_t*)store_addr, *(uint64_t*)cell, __ATOMIC_RELAXED);
-
-    // std::atomic<ShadowCell> *cell_addr = (std::atomic<ShadowCell> *)((uptr)shadow_addr + (ci * sizeof(ShadowCell)));
-    // cell_addr->store(*cell, std::memory_order_relaxed);
     return store_addr;
 }
 
@@ -147,6 +144,6 @@ void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
     //ShadowCell *cell_addr = &((ShadowCell *)shadow_addr)[index];
     //*cell_addr = *cell;
 
-    std::atomic<ShadowCell> *cell_addr = (std::atomic<ShadowCell> *)((uptr)shadow_addr + (index * sizeof(ShadowCell)));
-    cell_addr->store(*cell, std::memory_order_relaxed);
+    void *store_addr = (void*)((uptr)shadow_addr + (index * sizeof(ShadowCell)));
+    __atomic_store_n((uint64_t*)store_addr, *(uint64_t*)cell, __ATOMIC_RELAXED);
 }
