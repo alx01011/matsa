@@ -1,4 +1,5 @@
 #include "shadow.hpp"
+#include "threadState.hpp"
 #include "jtsanDefs.hpp"
 
 #include <cstdlib>
@@ -9,6 +10,8 @@
 #include "gc/parallel/parallelScavengeHeap.hpp"
 #include "gc/shared/collectedHeap.hpp"
 #include "runtime/os.hpp"
+
+#include <atomic>
 
 #define MAX_CAS_ATTEMPTS (100)
 #define GB_TO_BYTES(x) ((x) * 1024UL * 1024UL * 1024UL)
@@ -85,7 +88,10 @@ void* ShadowMemory::MemToShadow(uptr mem) {
 ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
     void *shadow_addr = ShadowMemory::MemToShadow(mem);
 
-    ShadowCell *cell_ref = &((ShadowCell *)shadow_addr)[index];
+    //ShadowCell *cell_ref = &((ShadowCell *)shadow_addr)[index];
+    //return *cell_ref;
+
+    std::atomic<ShadowCell> *cell_ref = (std::atomic<ShadowCell> *)((uptr)shadow_addr + (index * sizeof(ShadowCell)));
 
     /*
         For now no further checks are needed
@@ -96,13 +102,14 @@ ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
    /*
     Lock free because it is 8 bytes aligned and the shadow cell is 8 bytes
    */
-    return *cell_ref;
+
+  return cell_ref->load(std::memory_order_relaxed);
 }
 
 void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
     void *shadow_addr = ShadowMemory::MemToShadow(mem);
 
-    ShadowCell *cell_addr = (ShadowCell *)((uptr)shadow_addr);
+    //ShadowCell *cell_addr = (ShadowCell *)((uptr)shadow_addr);
 
     // find the first free cell
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
@@ -114,22 +121,30 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
           * (prior to gc)
         */
         if (LIKELY(!cell_l.epoch) || UNLIKELY((cell_l.gc_epoch != cell->gc_epoch))) {
-            *(cell_addr + i) = *cell;
+            //*(cell_addr + i) = *cell;
+            std::atomic<ShadowCell> *cell_addr = (std::atomic<ShadowCell> *)((uptr)shadow_addr + (i * sizeof(ShadowCell)));
+            cell_addr->store(*cell, std::memory_order_relaxed);
             return;
         }
     }
 
     // if we reach here, all the cells are occupied or locked
     // just pick one at random and overwrite it
-    uint8_t ci = os::random() % SHADOW_CELLS;
+    //uint8_t ci = os::random() % SHADOW_CELLS;
+    uint8_t ci = JTSanThreadState::getHistory(cell->tid)->index % SHADOW_CELLS;
     cell_addr = &cell_addr[ci];
 
-    *cell_addr = *cell;
+    //*(cell_addr) = *cell;
+    std::atomic<ShadowCell> *cell_addr = (std::atomic<ShadowCell> *)((uptr)shadow_addr + (ci * sizeof(ShadowCell)));
+    cell_addr->store(*cell, std::memory_order_relaxed);
 }
 
 void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
     void *shadow_addr = ShadowMemory::MemToShadow(mem);
 
-    ShadowCell *cell_addr = &((ShadowCell *)shadow_addr)[index];
-    *cell_addr = *cell;
+    //ShadowCell *cell_addr = &((ShadowCell *)shadow_addr)[index];
+    //*cell_addr = *cell;
+
+    std::atomic<ShadowCell> *cell_addr = (std::atomic<ShadowCell> *)((uptr)shadow_addr + (index * sizeof(ShadowCell)));
+    cell_addr->store(*cell, std::memory_order_relaxed);
 }
