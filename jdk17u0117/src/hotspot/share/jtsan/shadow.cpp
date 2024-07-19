@@ -132,10 +132,13 @@ void *ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
     // just pick one at random and overwrite it
     uint8_t ci = JTSanThreadState::getHistory(cell->tid)->index % SHADOW_CELLS;
 
-    std::atomic<ShadowCell> *cell_addr = (std::atomic<ShadowCell> *)((uptr)shadow_addr + (ci * sizeof(ShadowCell)));
-    cell_addr->store(*cell, std::memory_order_relaxed);
+    void *store_addr = (void*)((uptr)shadow_addr + (ci * sizeof(ShadowCell)));
 
-    return (void*)((uptr)shadow_addr + (ci * sizeof(ShadowCell)));
+    __atomic_store_n((ShadowCell*)store_addr, cell, __ATOMIC_RELAXED);
+
+    // std::atomic<ShadowCell> *cell_addr = (std::atomic<ShadowCell> *)((uptr)shadow_addr + (ci * sizeof(ShadowCell)));
+    // cell_addr->store(*cell, std::memory_order_relaxed);
+    return store_addr;
 }
 
 void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
