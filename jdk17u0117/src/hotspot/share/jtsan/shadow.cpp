@@ -134,7 +134,7 @@ void *ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
 
     void *store_addr = (void*)((uptr)shadow_addr + (ci * sizeof(ShadowCell)));
 
-    __atomic_store_n((ShadowCell*)store_addr, cell, __ATOMIC_RELAXED);
+    __atomic_store_n((uint64_t*)store_addr, static_cast<uint64_t>(*cell), __ATOMIC_RELAXED);
 
     // std::atomic<ShadowCell> *cell_addr = (std::atomic<ShadowCell> *)((uptr)shadow_addr + (ci * sizeof(ShadowCell)));
     // cell_addr->store(*cell, std::memory_order_relaxed);
