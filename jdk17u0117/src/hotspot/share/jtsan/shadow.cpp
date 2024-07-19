@@ -91,19 +91,8 @@ ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
     //ShadowCell *cell_ref = &((ShadowCell *)shadow_addr)[index];
     //return *cell_ref;
 
-    std::atomic<ShadowCell> *cell_ref = (std::atomic<ShadowCell> *)((uptr)shadow_addr + (index * sizeof(ShadowCell)));
-
-    /*
-        For now no further checks are needed
-        The heap is contiguous.
-    */
-
-
-   /*
-    Lock free because it is 8 bytes aligned and the shadow cell is 8 bytes
-   */
-
-  return cell_ref->load(std::memory_order_relaxed);
+    uint64_t raw_cell = __atomic_load_n((uint64_t*)((uptr)shadow_addr + (index * sizeof(ShadowCell))), __ATOMIC_RELAXED);
+    return *(ShadowCell*)&raw_cell;
 }
 
 void *ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
