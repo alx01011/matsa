@@ -100,25 +100,7 @@ void *ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
 
     //ShadowCell *cell_addr = (ShadowCell *)((uptr)shadow_addr);
 
-    // find the first free cell
-    for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
-        ShadowCell cell_l = load_cell(mem, i);
-        /*
-          * Technically, an epoch can never be zero, since the gc epoch starts from 1
-          * So a zero epoch means the cell is free.
-          * Additionally, we prefer cells with smaller gc epochs, since they refer to different memory locations
-          * (prior to gc)
-        */
-        if (LIKELY(!cell_l.epoch) || UNLIKELY((cell_l.gc_epoch != cell->gc_epoch))) {
-            //*(cell_addr + i) = *cell;
-            void *store_addr = (void*)((uptr)shadow_addr + (i * sizeof(ShadowCell)));
-            __atomic_store_n((uint64_t*)store_addr, *(uint64_t*)cell, __ATOMIC_RELAXED);
-
-            return store_addr;
-        }
-    }
-
-    // if we reach here, all the cells are occupied or locked
+    // if we reach here, all the cells are occupied
     // just pick one at random and overwrite it
     uint8_t ci = JTSanThreadState::getHistory(cell->tid)->index % SHADOW_CELLS;
     void *store_addr = (void*)((uptr)shadow_addr + (ci * sizeof(ShadowCell)));

@@ -33,11 +33,29 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         ShadowCell cell  = ShadowBlock::load_cell(addr_aligned, i);
         pair.prev_shadow = (void*)((uptr)pair.prev_shadow + (i * sizeof(ShadowCell)));
 
-        // we can safely ignore if epoch is 0 it means cell is unassigned
-        // or if the thread id is the same as the current thread 
-        // previous access was by the same thread so we can skip
+        // empty cell
+        if (LIKELY(cell.epoch == 0)) {
+            // can store
+            if (!stored) {
+              ShadowBlock::store_cell_at((uptr)addr, &cur, i);
+              pair.cur_shadow = pair.prev_shadow;
+              stored          = true;
+            }
+            continue;
+        }
+
         // different offset means different memory location in case of 1,2 or 4 byte access
-        if (LIKELY(cell.epoch == 0 || cur.gc_epoch != cell.gc_epoch || cell.offset != cur.offset)) {
+        if (LIKELY(cell.offset != cur.offset)) {
+            continue;
+        }
+
+        // different gc epoch means different memory location
+        // so we can skip
+        if (UNLIKELY(cur.gc_epoch != cell.gc_epoch)) {
+            // we can replace the cell
+            ShadowBlock::store_cell_at((uptr)addr, &cur, i);
+            pair.cur_shadow = pair.prev_shadow;
+            stored          = true;
             continue;
         }
 
