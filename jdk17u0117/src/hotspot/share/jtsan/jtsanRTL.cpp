@@ -91,8 +91,8 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
 
     if (UNLIKELY(!stored)) {
     // store the shadow cell
-    ShadowBlock::store_cell((uptr)addr, &cur);
-    pair.cur_shadow = (void*)((uptr)base_shadow + index * sizeof(ShadowCell));
+    void *store_addr = ShadowBlock::store_cell((uptr)addr, &cur);
+    pair.cur_shadow = store_addr;
     }
 
     return isRace;

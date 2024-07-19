@@ -106,7 +106,7 @@ ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
   return cell_ref->load(std::memory_order_relaxed);
 }
 
-void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
+void *ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
     void *shadow_addr = ShadowMemory::MemToShadow(mem);
 
     //ShadowCell *cell_addr = (ShadowCell *)((uptr)shadow_addr);
@@ -124,16 +124,18 @@ void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
             //*(cell_addr + i) = *cell;
             std::atomic<ShadowCell> *cell_addr = (std::atomic<ShadowCell> *)((uptr)shadow_addr + (i * sizeof(ShadowCell)));
             cell_addr->store(*cell, std::memory_order_relaxed);
-            return;
+            return (void*)((uptr)shadow_addr + (i * sizeof(ShadowCell)));
         }
     }
 
     // if we reach here, all the cells are occupied or locked
     // just pick one at random and overwrite it
     uint8_t ci = JTSanThreadState::getHistory(cell->tid)->index % SHADOW_CELLS;
-    
+
     std::atomic<ShadowCell> *cell_addr = (std::atomic<ShadowCell> *)((uptr)shadow_addr + (ci * sizeof(ShadowCell)));
     cell_addr->store(*cell, std::memory_order_relaxed);
+
+    return (void*)((uptr)shadow_addr + (ci * sizeof(ShadowCell)));
 }
 
 void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
