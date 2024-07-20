@@ -53,6 +53,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         // so we can skip
         if (UNLIKELY(cur.gc_epoch != cell.gc_epoch)) {
             // we can replace the cell
+            // because the memory location it points to might have been freed or moved
             ShadowBlock::store_cell_at((uptr)addr, &cur, i);
             pair.cur_shadow = pair.prev_shadow;
             stored          = true;
@@ -77,6 +78,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
           continue;
         }
 
+        // if the access is not a write then we can skip
         if (LIKELY(!(cell.is_write || cur.is_write))) {
             continue;
         }
@@ -84,6 +86,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         // at least one of the accesses is a write
         uint32_t thr = JTSanThreadState::getEpoch(cur.tid, cell.tid);
 
+        // if the current thread has a higher epoch then we can skip
         if (LIKELY(thr >= cell.epoch)) {
             continue;
         }
@@ -98,7 +101,9 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
             isRace = false;
         }
 
-        cur.is_ignored  = 1;
+        // mark ignore flag and store at 0 index
+        // so we can skip the whole block faster
+        cur.is_ignored = 1;
         ShadowBlock::store_cell_at((uptr)addr, &cur, 0);
         pair.cur_shadow = base_shadow;
         stored = true;

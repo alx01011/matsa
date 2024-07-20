@@ -29,18 +29,25 @@ void ShadowMemory::init(size_t bytes) {
         For now it is equal to the number of shadow cells per word.
     */  
 
-    if (sizeof(ShadowCell) != sizeof(uint64_t)) {
+    if (sizeof(ShadowCell) != 8) {
         fprintf(stderr, "JTSAN: ShadowCell size is not 64bits\n");
         exit(1);
     }
 
-    if (Universe::heap()->kind() != CollectedHeap::Name::Parallel) {
-        fprintf(stderr, "JTASN: Only Parallel GC is supported\n");
+    if (sizeof(void*) != 8) {
+        fprintf(stderr, "JTSAN: Only 64bit systems are supported\n");
         exit(1);
     }
 
-    ParallelScavengeHeap *heap = ParallelScavengeHeap::heap();
-    uptr base = (uptr)heap->base();
+    if (Universe::heap()->kind() == CollectedHeap::Name::Z) {
+        fprintf(stderr, "JTSAN: ZGC is not supported\n");
+        exit(1);
+    }
+
+    // ParallelScavengeHeap *heap = ParallelScavengeHeap::heap();
+    // uptr base = (uptr)heap->base();
+
+    uptr base = (uptr)Universe::heap()->reserved_region().start();
 
     /*
         total number of locations = HeapSize / 8
