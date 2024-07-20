@@ -102,7 +102,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
         switch (e.event) {
             case MEM_READ:
             case MEM_WRITE: {
-                if ((Event)(prev.is_write + 1) == e.event && (void*)e.pc == addr) {
+                if ((Event)(prev.is_write + 1) == e.event && (void*)((uintptr_t)e.pc) == addr) {
                     void* shadow_old = history->get_old_shadow(i);
                     if (shadow_old != prev_shadow_addr) {
                         continue; // shadow address mismatch, probably a different access
