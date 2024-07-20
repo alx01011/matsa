@@ -50,7 +50,7 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, void *cell_sha
     if (has_trace) {
         for (int i = trace.size - 1; i >= 0; i--) {
             JTSanEvent e = trace.events[i];
-            Method *m    = (Method*)e.pc;
+            Method *m    = (Method*)((uintptr_t)e.pc);
             
             if (!Method::is_valid_method(m)) {
                 continue;
