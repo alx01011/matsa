@@ -2097,8 +2097,12 @@ void InterpreterMacroAssembler::notify_method_entry() {
     JTSAN_ONLY(
       get_thread  (rthread);
       get_method  (rarg);
-      // calculate bcp
-      movptr      (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
+      // calculate caller bcp
+      //movptr      (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
+      // caller bcp is previously saved in rscratch1
+      movptr      (c_rarg2, rscratch1);
+
+
 
       call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), rthread, rarg, c_rarg2);
     );
