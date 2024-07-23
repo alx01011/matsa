@@ -2099,8 +2099,8 @@ void InterpreterMacroAssembler::notify_method_entry() {
       get_method  (rarg);
       // calculate caller bcp
       //movptr      (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
-      // caller bcp is previously saved in rscratch1
-      movptr      (c_rarg2, rscratch1);
+      // caller bcp is previously saved in _bcp_register
+      movptr      (c_rarg2, _bcp_register);
 
 
 

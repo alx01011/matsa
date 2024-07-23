@@ -3826,13 +3826,6 @@ void TemplateTable::prepare_invoke(int byte_no,
   // save 'interpreter return address'
   __ save_bcp();
 
-  JTSAN_ONLY(
-    // save the bcp, before method entry, so we can produce a better stack trace
-    __ movptr(rscratch1, rbcp);
-    // this is unsafe, as rscratch1 can be used by the callee
-    // can't use push, as it would mess the rest of the push/pop sequence
-  );
-
   load_invoke_cp_cache_entry(byte_no, method, index, flags, is_invokevirtual, false, is_invokedynamic);
 
   // maybe push appendix to arguments (just before return address)
