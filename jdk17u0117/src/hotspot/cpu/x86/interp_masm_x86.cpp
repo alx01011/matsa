@@ -2068,6 +2068,18 @@ void InterpreterMacroAssembler::increment_mask_and_jump(Address counter_addr,
 }
 
 void InterpreterMacroAssembler::notify_method_entry() {
+  // jtsan
+  {
+    JTSAN_ONLY(
+      get_thread  (rthread);
+      get_method  (rarg);
+      // caller bcp is previously saved in _bcp_register by template interpreter
+      movptr      (c_rarg2, _bcp_register);
+
+      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), rthread, rarg, c_rarg2);
+    );
+  }
+
   // Whenever JVMTI is interp_only_mode, method entry/exit events are sent to
   // track stack depth.  If it is possible to enter interp_only_mode we add
   // the code to check if the event should be sent.
@@ -2092,19 +2104,6 @@ void InterpreterMacroAssembler::notify_method_entry() {
                  rthread, rarg);
   }
 
-  // jtsan
-  {
-    JTSAN_ONLY(
-      get_thread  (rthread);
-      get_method  (rarg);
-      // caller bcp is previously saved in _bcp_register by template interpreter
-      movptr      (c_rarg2, _bcp_register);
-
-
-
-      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), rthread, rarg, c_rarg2);
-    );
-  }
 
   // RedefineClasses() tracing support for obsolete method entry
   if (log_is_enabled(Trace, redefine, class, obsolete)) {
