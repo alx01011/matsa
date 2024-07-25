@@ -871,7 +871,9 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   const int lineno = m->line_number_from_bci(m->bci_from(bcp));
 
   if ((lineno >= 432 && lineno <= 435) || (lineno == 364)) {
-    printf("Sync ENTER, line : %d, obj : %p, lock_shadow: %p\n", lineno, (void*)p, (void*)sls);
+    ResourceMark rm;
+    const char *method_name = m->external_name_as_fully_qualified();
+    printf("Sync ENTER, line : %d, obj : %p, lock_shadow: %p, m: %s\n", lineno, (void*)p, (void*)sls, method_name);
   }
 
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
