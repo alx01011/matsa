@@ -911,10 +911,9 @@ void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method,
   int tid = JavaThread::get_jtsan_tid(current);
 
   //const jmethodID m_id     = method->jmethod_id();
-  const int bci  = method->bci_from(bcp);
-  const int line = method->line_number_from_bci(bci);     
+  const int bci = method->bci_from(bcp);
 
-  Symbolizer::Symbolize(FUNC, method, line, tid);
+  Symbolizer::Symbolize(FUNC, method, bci, tid);
 }
 
 void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp) {
