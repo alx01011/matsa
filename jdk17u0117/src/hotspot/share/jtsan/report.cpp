@@ -22,7 +22,7 @@ void print_method_info(Method *m, int bci, int index, bool calc_line = true) {
     }
 
     const char *method_name = m->external_name_as_fully_qualified();
-    const int lineno        = bci;
+    int lineno        = bci;
 
     if (calc_line) {
         lineno = m->line_number_from_bci(bci);
