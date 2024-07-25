@@ -12,7 +12,7 @@
 
 Mutex *JTSanReport::_report_lock;
 
-void print_method_info(Method *m, int bci, int index) {
+void print_method_info(Method *m, int bci, int index, bool calc_line = true) {
     const char *file_name = "<null>";
     InstanceKlass *holder = m->method_holder();
     Symbol *source_file   = nullptr;
@@ -22,7 +22,12 @@ void print_method_info(Method *m, int bci, int index) {
     }
 
     const char *method_name = m->external_name_as_fully_qualified();
-    const int lineno        = m->line_number_from_bci(bci);
+    const int lineno        = bci;
+
+    if (calc_line) {
+        lineno = m->line_number_from_bci(bci);
+    }
+
 
     fprintf(stderr, "  #%d %s() %s:%d\n", index, method_name, file_name, lineno);
 }
