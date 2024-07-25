@@ -856,16 +856,6 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
 
   int tid = JavaThread::get_jtsan_tid(thread);
 
-    /*
-    Unfortunately, synchronized methods and synchronized(this) blocks, are associated with a different lock.
-    That means, each time we enter a synchronized method/block the address of the lock differs.
-    This leaves no other choice, but to assume each object also has a lock.
-    This makes the virtual memory for locks a lot bigger. (MaxHeapSize / 8 * sizeof(SyncLockState)).
-    SyncLockState, now also has to contain a field for gc_epoch, in case an object has moved, we can discard previous info.
-
-    Overall these locks are expensive to track.
-  */
-
   oop p = lock->obj();
 
   assert(oopDesc::is_oop(p), "must be a valid oop");
@@ -877,6 +867,12 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
 
   LockShadow *sls = (LockShadow*)p->lock_state();
   Vectorclock* ts = sls->get_vectorclock();
+
+  const int lineno = m->line_number_from_bci(m->bci_from(bcp));
+
+  if (lineno >= 432 && lineno <= 435) {
+    printf("Sync ENTER, line : %d, obj : %p, lock_shadow: %p\n", lineno, (void*)p, (void*)sls);
+  }
 
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
 
