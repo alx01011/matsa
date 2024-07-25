@@ -2073,19 +2073,6 @@ void InterpreterMacroAssembler::notify_method_entry() {
   // the code to check if the event should be sent.
   Register rthread = LP64_ONLY(r15_thread) NOT_LP64(rcx);
   Register rarg = LP64_ONLY(c_rarg1) NOT_LP64(rbx);
-
-    // jtsan
-  {
-    JTSAN_ONLY(
-      get_thread  (rthread);
-      get_method  (rarg);
-      // caller bcp is previously saved in _bcp_register by template interpreter
-      movptr      (c_rarg2, _bcp_register);
-
-      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), rthread, rarg, c_rarg2);
-    );
-  }
-
   if (JvmtiExport::can_post_interpreter_events()) {
     Label L;
     NOT_LP64(get_thread(rthread);)
@@ -2105,6 +2092,17 @@ void InterpreterMacroAssembler::notify_method_entry() {
                  rthread, rarg);
   }
 
+  // jtsan
+  {
+    JTSAN_ONLY(
+      get_thread  (rthread);
+      get_method  (rarg);
+      // caller bcp is previously saved in _bcp_register by template interpreter
+      movptr      (c_rarg2, _bcp_register);
+
+      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), rthread, rarg, c_rarg2);
+    );
+  }
 
   // RedefineClasses() tracing support for obsolete method entry
   if (log_is_enabled(Trace, redefine, class, obsolete)) {
