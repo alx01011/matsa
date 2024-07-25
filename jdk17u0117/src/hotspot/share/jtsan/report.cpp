@@ -61,7 +61,7 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, void *cell_sha
                 continue;
             }
 
-            print_method_info(m, e.bci, (trace.size - 1) - i);
+            print_method_info(m, e.bci, (trace.size - 1) - i, false);
         }
     }
 
