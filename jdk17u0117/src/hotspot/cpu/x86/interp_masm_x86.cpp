@@ -2068,7 +2068,13 @@ void InterpreterMacroAssembler::increment_mask_and_jump(Address counter_addr,
 }
 
 void InterpreterMacroAssembler::notify_method_entry() {
-  // jtsan
+  // Whenever JVMTI is interp_only_mode, method entry/exit events are sent to
+  // track stack depth.  If it is possible to enter interp_only_mode we add
+  // the code to check if the event should be sent.
+  Register rthread = LP64_ONLY(r15_thread) NOT_LP64(rcx);
+  Register rarg = LP64_ONLY(c_rarg1) NOT_LP64(rbx);
+
+    // jtsan
   {
     JTSAN_ONLY(
       get_thread  (rthread);
@@ -2080,11 +2086,6 @@ void InterpreterMacroAssembler::notify_method_entry() {
     );
   }
 
-  // Whenever JVMTI is interp_only_mode, method entry/exit events are sent to
-  // track stack depth.  If it is possible to enter interp_only_mode we add
-  // the code to check if the event should be sent.
-  Register rthread = LP64_ONLY(r15_thread) NOT_LP64(rcx);
-  Register rarg = LP64_ONLY(c_rarg1) NOT_LP64(rbx);
   if (JvmtiExport::can_post_interpreter_events()) {
     Label L;
     NOT_LP64(get_thread(rthread);)
