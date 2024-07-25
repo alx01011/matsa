@@ -870,7 +870,7 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
 
   const int lineno = m->line_number_from_bci(m->bci_from(bcp));
 
-  if ((lineno == 33) || (lineno == 364)) {
+  if ((lineno == 433) || (lineno == 364)) {
     ResourceMark rm;
     const char *method_name = m->external_name_as_fully_qualified();
 
