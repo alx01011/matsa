@@ -875,7 +875,7 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
     const char *method_name = m->external_name_as_fully_qualified();
 
     if (strstr(method_name, "java.lang.ProcessImpl")) {
-      printf("Sync ENTER, line : %d, obj : %p, lock_shadow: %p, m: %s\n", lineno, (void*)p, (void*)sls, method_name);
+      printf("Sync ENTER, TID: %d, line : %d, obj : %p, lock_shadow: %p, m: %s\n", tid, lineno, (void*)p, (void*)sls, method_name);
     }
   }
 
@@ -886,8 +886,6 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
 
 void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, address bcp) {
   JavaThread *thread = JavaThread::current();
-
-  if (thread == NULL || m == NULL || bcp == NULL) return; // ignore null threads
 
   int tid = JavaThread::get_jtsan_tid(thread);
 
@@ -901,6 +899,17 @@ void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, addre
   LockShadow* sls =  (LockShadow*)p->lock_state();
   Vectorclock* ls = sls->get_vectorclock();
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
+
+  const int lineno = m->line_number_from_bci(m->bci_from(bcp));
+
+  if ((lineno == 433) || (lineno == 364)) {
+    ResourceMark rm;
+    const char *method_name = m->external_name_as_fully_qualified();
+
+    if (strstr(method_name, "java.lang.ProcessImpl")) {
+      printf("Sync EXIT, TID: %d, line : %d, obj : %p, lock_shadow: %p, m: %s\n", tid, lineno, (void*)p, (void*)sls, method_name);
+    }
+  }
 
   *ls = *cur;
 
