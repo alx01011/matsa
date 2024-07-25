@@ -870,7 +870,7 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
 
   const int lineno = m->line_number_from_bci(m->bci_from(bcp));
 
-  if (lineno >= 432 && lineno <= 435) {
+  if ((lineno >= 432 && lineno <= 435) || (lineno >= 364 && lineno <= 368)) {
     printf("Sync ENTER, line : %d, obj : %p, lock_shadow: %p\n", lineno, (void*)p, (void*)sls);
   }
 
