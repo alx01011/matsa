@@ -3902,21 +3902,21 @@ JVM_END
 
 // aantonak - jtsan
 JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
-    if (JTSan && thread && thread->is_Java_thread()) {
+    if (JTSan) {
       JavaThread *jt = (JavaThread *) thread;
-      frame fr = jt->last_frame();
-      // get the actual frame
-      RegisterMap map(thread);
-      fr = fr.sender(&map);
+      // frame fr = jt->last_frame();
+      // // get the actual frame
+      // RegisterMap map(thread);
+      // fr = fr.sender(&map);
 
       oop thread_object = JNIHandles::resolve(x);
 
-      if (fr.is_interpreted_frame()) {
-        Method *m      = fr.interpreter_frame_method();
-        address bcp    = fr.interpreter_frame_bcp();
+      // if (fr.is_interpreted_frame()) {
+      //   Method *m      = fr.interpreter_frame_method();
+      //   address bcp    = fr.interpreter_frame_bcp();
+      // }
 
-        InterpreterRuntime::jtsan_lock((void*)thread_object, m, bcp);
-      }
+      InterpreterRuntime::jtsan_lock(jt, (void*)thread_object);
     }
 JVM_END
 
