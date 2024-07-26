@@ -851,9 +851,7 @@ void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bc
   JTSanThreadState::incrementEpoch(tid);
 }
 
-void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, address bcp) {
-  JavaThread *thread = JavaThread::current();
-
+void InterpreterRuntime::jtsan_sync_enter(JavaThread *thread, BasicObjectLock *lock) {
   int tid = JavaThread::get_jtsan_tid(thread);
 
   oop p = lock->obj();
@@ -873,11 +871,7 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   *cur = *ts;
 }
 
-void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, address bcp) {
-  JavaThread *thread = JavaThread::current();
-
-  if (thread == NULL || m == NULL || bcp == NULL) return; // ignore null threads
-
+void InterpreterRuntime::jtsan_sync_exit(JavaThread *thread, BasicObjectLock *lock) {
   int tid = JavaThread::get_jtsan_tid(thread);
 
   oop p = lock->obj();
