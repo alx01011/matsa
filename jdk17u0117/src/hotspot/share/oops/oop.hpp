@@ -33,6 +33,10 @@
 #include "runtime/atomic.hpp"
 #include "utilities/macros.hpp"
 
+#if INCLUDE_JTSAN
+#include "jtsan/lockState.hpp"
+#endif
+
 // oopDesc is the top baseclass for objects classes. The {name}Desc classes describe
 // the format of Java objects so the fields can be accessed from C++.
 // oopDesc is abstract.
@@ -64,7 +68,7 @@ class oopDesc {
   // volatile uint32_t _obj_lock_index;
   // volatile uint32_t _sync_lock_index;
 
-    void* _lock_state;
+    LockShadow* _lock_state;
 #endif
 
  public:
@@ -125,7 +129,7 @@ class oopDesc {
   // jtsan - lock index
 #ifdef INCLUDE_JTSAN
   inline void  init_lock_state(void);
-  inline void* lock_state(void);
+  inline LockShadow* lock_state(void);
 #endif
 
  protected:

@@ -816,7 +816,7 @@ void InterpreterRuntime::jtsan_lock(JavaThread *thread, void *lock_obj)  {
     Store the result into the thread state.
   */
 
-  LockShadow *obs = (LockShadow*)p->lock_state();
+  LockShadow *obs = p->lock_state();
   Vectorclock* ts = obs->get_vectorclock();
 
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
@@ -834,7 +834,7 @@ void InterpreterRuntime::jtsan_unlock(JavaThread *thread, void *lock_obj) {
     Store the result into lock state.
   */
 
-  LockShadow *obs = (LockShadow*)p->lock_state();
+  LockShadow *obs = p->lock_state();
 
   Vectorclock* ls = obs->get_vectorclock();
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
@@ -857,7 +857,7 @@ void InterpreterRuntime::jtsan_sync_enter(JavaThread *thread, BasicObjectLock *l
     Store the result into the thread state.
   */
 
-  LockShadow *sls = (LockShadow*)p->lock_state();
+  LockShadow *sls = p->lock_state();
   Vectorclock* ts = sls->get_vectorclock();
 
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
@@ -875,7 +875,7 @@ void InterpreterRuntime::jtsan_sync_exit(JavaThread *thread, BasicObjectLock *lo
     Store the result into lock state.
   */
 
-  LockShadow* sls =  (LockShadow*)p->lock_state();
+  LockShadow* sls = p->lock_state();
   Vectorclock* ls = sls->get_vectorclock();
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
 
