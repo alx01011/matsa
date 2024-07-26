@@ -85,11 +85,11 @@ class InterpreterRuntime: AllStatic {
 
   // aantonak - jtsan
   // for all lock and unlock operations
-  static void jtsan_lock  (JavaThread *thread, oop lock_obj);
-  static void jtsan_unlock(JavaThread *thread, oop lock_obj);
+  static void jtsan_lock  (void *lock_obj, Method *m, address bcp);
+  static void jtsan_unlock(void *lock_obj, Method *m, address bcp);
 
-  static void jtsan_sync_enter(JavaThread *thread, BasicObjectLock *lock);
-  static void jtsan_sync_exit(JavaThread *thread, BasicObjectLock *lock);
+  static void jtsan_sync_enter(BasicObjectLock *lock, Method *m, address bcp);
+  static void jtsan_sync_exit (BasicObjectLock *lock, Method *m, address bcp);
 
   // aantonak - jtsan
   // for method entry/exit

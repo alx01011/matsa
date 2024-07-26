@@ -9,7 +9,8 @@
 
 ThreadHistory::ThreadHistory() {
     index = 0;
-    
+    lock = new Mutex(Mutex::access, "JTSanThreadHistory::_history_lock");
+
     events            = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
     event_shadow_addr = (void**)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(void**));
 

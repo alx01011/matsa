@@ -806,15 +806,19 @@ void (*InterpreterRuntime::jtsan_store[]) (void *addr, Method *m, address bcp) =
 };
 
 // for object locks
-void InterpreterRuntime::jtsan_lock(JavaThread *thread, oop lock_obj) {
+void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp) {
+  JavaThread *thread = JavaThread::current();
+
   int tid = JavaThread::get_jtsan_tid(thread);
+
+  oop p = (oopDesc*)lock_obj;
 
   /*
     On lock acquisition we have to perform a max operation between the thread state of current thread and the lock state.
     Store the result into the thread state.
   */
 
-  LockShadow *obs = lock_obj->lock_state();
+  LockShadow *obs = (LockShadow*)p->lock_state();
   Vectorclock* ts = obs->get_vectorclock();
 
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
@@ -822,15 +826,21 @@ void InterpreterRuntime::jtsan_lock(JavaThread *thread, oop lock_obj) {
   *cur = *ts;
 }
 
-void InterpreterRuntime::jtsan_unlock(JavaThread *thread, oop lock_obj) {
+void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bcp) {
+  JavaThread *thread = JavaThread::current();
+
+  oop thread_oop = thread->threadObj();
+
   int tid = JavaThread::get_jtsan_tid(thread);
+
+  oop p = (oopDesc*)lock_obj;
 
   /*
     On lock release we have to max the thread state with the lock state.
     Store the result into lock state.
   */
 
-  LockShadow *obs = lock_obj->lock_state();
+  LockShadow *obs = (LockShadow*)p->lock_state();
 
   Vectorclock* ls = obs->get_vectorclock();
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
@@ -841,38 +851,55 @@ void InterpreterRuntime::jtsan_unlock(JavaThread *thread, oop lock_obj) {
   JTSanThreadState::incrementEpoch(tid);
 }
 
-void InterpreterRuntime::jtsan_sync_enter(JavaThread *thread, BasicObjectLock *lock) {
+void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, address bcp) {
+  JavaThread *thread = JavaThread::current();
+
   int tid = JavaThread::get_jtsan_tid(thread);
 
-  oop obj = lock->obj();
+  oop p = lock->obj();
 
-  assert(oopDesc::is_oop(obj), "must be a valid oop");
+  assert(oopDesc::is_oop(p), "must be a valid oop");
 
   /*
     On lock acquisition we have to perform a max operation between the thread state of current thread and the lock state.
     Store the result into the thread state.
   */
 
-  LockShadow *sls = obj->lock_state();
+  LockShadow *sls = (LockShadow*)p->lock_state();
   Vectorclock* ts = sls->get_vectorclock();
+
+  const int lineno = m->line_number_from_bci(m->bci_from(bcp));
+
+  if ((lineno == 433) || (lineno == 364)) {
+    ResourceMark rm;
+    const char *method_name = m->external_name_as_fully_qualified();
+
+    if (strstr(method_name, "java.lang.ProcessImpl")) {
+      printf("Sync ENTER, line : %d, obj : %p, lock_shadow: %p, m: %s\n", lineno, (void*)p, (void*)sls, method_name);
+    }
+  }
 
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
 
   *cur = *ts;
 }
 
-void InterpreterRuntime::jtsan_sync_exit(JavaThread *thread, BasicObjectLock *lock) {
+void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, address bcp) {
+  JavaThread *thread = JavaThread::current();
+
+  if (thread == NULL || m == NULL || bcp == NULL) return; // ignore null threads
+
   int tid = JavaThread::get_jtsan_tid(thread);
 
-  oop obj = lock->obj();
+  oop p = lock->obj();
 
   /*
     On lock release we have to max the thread state with the lock state.
     Store the result into lock state.
   */
 
-  LockShadow* sls  = obj->lock_state();
-  Vectorclock* ls  = sls->get_vectorclock();
+  LockShadow* sls =  (LockShadow*)p->lock_state();
+  Vectorclock* ls = sls->get_vectorclock();
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
 
   *ls = *cur;
@@ -884,6 +911,7 @@ void InterpreterRuntime::jtsan_sync_exit(JavaThread *thread, BasicObjectLock *lo
 void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method, address bcp) {
   int tid = JavaThread::get_jtsan_tid(current);
 
+  //const jmethodID m_id     = method->jmethod_id();
   const int bci = method->bci_from(bcp);
 
   Symbolizer::Symbolize(FUNC, method, bci, tid);

@@ -405,7 +405,7 @@ bool oopDesc::mark_must_be_preserved_for_promotion_failure(markWord m) const {
 }
 
 // jtsan lock index
-#if INCLUDE_JTSAN
+#ifdef INCLUDE_JTSAN
 #include "jtsan/jtsanGlobals.hpp"
 #include "jtsan/lockState.hpp"
 #include "jtsan/jtsanGlobals.hpp"
@@ -414,9 +414,9 @@ void oopDesc::init_lock_state(void) {
   _lock_state = nullptr;
 }
 
-LockShadow* oopDesc::lock_state(void) {
+void* oopDesc::lock_state(void) {
   if (UNLIKELY(_lock_state == nullptr)){
-    _lock_state = new LockShadow();
+    _lock_state = (void*)(new LockShadow());
   }
 
   return _lock_state;

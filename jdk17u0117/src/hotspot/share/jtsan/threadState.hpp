@@ -2,6 +2,7 @@
 #define THREADSTATE_HPP
 
 #include "memory/allocation.hpp"
+#include "runtime/mutex.hpp"
 
 #include "vectorclock.hpp"
 #include "symbolizer.hpp"

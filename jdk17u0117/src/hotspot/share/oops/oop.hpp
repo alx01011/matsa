@@ -33,10 +33,6 @@
 #include "runtime/atomic.hpp"
 #include "utilities/macros.hpp"
 
-#if INCLUDE_JTSAN
-#include "jtsan/lockState.hpp"
-#endif
-
 // oopDesc is the top baseclass for objects classes. The {name}Desc classes describe
 // the format of Java objects so the fields can be accessed from C++.
 // oopDesc is abstract.
@@ -61,11 +57,14 @@ class oopDesc {
     narrowKlass _compressed_klass;
   } _metadata;
 
-#if INCLUDE_JTSAN
+#ifdef INCLUDE_JTSAN
   /*
-    JTSAN sync object
+    JTSAN obj and sync lock index
   */
-  LockShadow* _lock_state;
+  // volatile uint32_t _obj_lock_index;
+  // volatile uint32_t _sync_lock_index;
+
+    void* _lock_state;
 #endif
 
  public:
@@ -124,9 +123,9 @@ class oopDesc {
 
 
   // jtsan - lock index
-#if INCLUDE_JTSAN
+#ifdef INCLUDE_JTSAN
   inline void  init_lock_state(void);
-  inline LockShadow *lock_state(void);
+  inline void* lock_state(void);
 #endif
 
  protected:
@@ -324,13 +323,16 @@ class oopDesc {
   static int klass_offset_in_bytes()     { return offset_of(oopDesc, _metadata._klass); }
   static int klass_gap_offset_in_bytes() {
     assert(has_klass_gap(), "only applicable to compressed klass pointers");
-  #if INCLUDE_JTSAN
-    return klass_offset_in_bytes() + sizeof(narrowKlass) + sizeof(LockShadow*);
+  #ifdef INCLUDE_JTSAN
+    return klass_offset_in_bytes() + sizeof(narrowKlass) + sizeof(void*);
   #endif
     return klass_offset_in_bytes() + sizeof(narrowKlass);
   }
 
-#if INCLUDE_JTSAN
+#ifdef INCLUDE_JTSAN
+  // static int obj_lock_index_offset_in_bytes() { return (int)offset_of(oopDesc, _obj_lock_index); }
+  // static int sync_lock_index_offset_in_bytes() { return (int)offset_of(oopDesc, _sync_lock_index); }
+
   static int lock_state_offset_in_bytes() { return (int)offset_of(oopDesc, _lock_state); }
 #endif
 
