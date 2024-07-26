@@ -1,4 +1,5 @@
 #include "lockState.hpp"
+#include "threadState.hpp"
 #include "shadow.hpp"
 #include "vectorclock.hpp"
 
