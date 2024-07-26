@@ -58,11 +58,10 @@ class oopDesc {
   } _metadata;
 
 #if INCLUDE_JTSAN
-#include "jtsan/lockState.hpp"
   /*
-    JTSAN obj and sync lock index
+    JTSAN sync object
   */
-    LockShadow *_lock_state;
+    LockShadow* _lock_state;
 #endif
 
  public:
@@ -121,7 +120,7 @@ class oopDesc {
 
 
   // jtsan - lock index
-#ifdef INCLUDE_JTSAN
+#if INCLUDE_JTSAN
   inline void  init_lock_state(void);
   inline LockShadow *lock_state(void);
 #endif
