@@ -1,12 +1,13 @@
 #include "report.hpp"
+#include "jtsanGlobals.hpp"
 #include "symbolizer.hpp"
 
 #include "runtime/os.hpp"
 
 #include <cstdint>
 
-#define RED "\033[1;31m"
-#define BLUE "\033[1;34m"
+#define RED   "\033[1;31m"
+#define BLUE  "\033[1;34m"
 #define RESET "\033[0m"
 
 Mutex *JTSanReport::_report_lock;
@@ -21,7 +22,8 @@ void print_method_info(Method *m, int bci, int index) {
     }
 
     const char *method_name = m->external_name_as_fully_qualified();
-    const int lineno        = m->line_number_from_bci(bci);
+    const int  lineno       = m->line_number_from_bci(bci);
+
 
     fprintf(stderr, "  #%d %s() %s:%d\n", index, method_name, file_name, lineno);
 }
@@ -40,28 +42,22 @@ void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
 
 }
 
-bool try_print_event_trace(void *addr, int tid, ShadowCell &prev) {
+bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, void *cell_shadow_addr) {
     JTSanEventTrace trace;
     bool has_trace = false;
 
-    has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, prev);
+    has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, cell, cell_shadow_addr);
 
     if (has_trace) {
         for (int i = trace.size - 1; i >= 0; i--) {
             JTSanEvent e = trace.events[i];
-            // cast back to uintptr to zero extend, then cast back to method
-            uintptr_t pc    =  (uintptr_t)e.pc;
-
-            jmethodID mid   = (jmethodID)((uintptr_t)pc);
-            Method *m       = Method::resolve_jmethod_id(mid);
-            int bci         = e.bci;
-
+            Method *m    = (Method*)((uintptr_t)e.pc);
+            
             if (!Method::is_valid_method(m)) {
-                // we have an invalid method
                 continue;
             }
 
-            print_method_info(m, bci, (trace.size - 1) - i);
+            print_method_info(m, e.bci, (trace.size - 1) - i);
         }
     }
 
@@ -69,24 +65,25 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &prev) {
 }
 
 void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t size, address bcp, Method *m, 
-                            ShadowCell &cur, ShadowCell &prev) {
-    JTSanReport::_report_lock->lock();
+                            ShadowCell &cur, ShadowCell &prev, ShadowPair &pair) {
+    JTSanScopedLock lock(JTSanReport::_report_lock);
+
     
     int pid = os::current_process_id();
 
     fprintf(stderr, "==================\n");
 
     fprintf(stderr, RED "WARNING: ThreadSanitizer: data race (pid=%d)\n", pid);
-    fprintf(stderr, BLUE " %s of size %u at %p by thread T%lu:\n" RESET,  cur.is_write ? "Write" : "Read", 
-            size, addr, cur.tid);
-    if (!try_print_event_trace(addr, cur.tid, cur)) {
+    fprintf(stderr, BLUE " %s of size %u at %p by thread T%u:\n" RESET,  cur.is_write ? "Write" : "Read", 
+            size, addr, (uint32_t)cur.tid);
+    if (!try_print_event_trace(addr, cur.tid, cur, pair.cur_shadow)) {
         // less accurate line numbers
         print_stack_trace(trace);
     }
     
-    fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%lu:\n" RESET, prev.is_write ? "write" : "read", 
-            size, addr, prev.tid);
-    if (!try_print_event_trace(addr, prev.tid, prev)) {
+    fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%u:\n" RESET, prev.is_write ? "write" : "read", 
+            size, addr, (uint32_t)prev.tid);
+    if (!try_print_event_trace(addr, prev.tid, prev, pair.prev_shadow)) {
         fprintf(stderr, "  <no stack trace available>\n");
     }
 
@@ -98,5 +95,5 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
     fprintf(stderr, "\nSUMMARY: ThreadSanitizer: data race %s:%d in %s()\n", file_name, lineno, method_name);
     fprintf(stderr, "==================\n");
 
-    JTSanReport::_report_lock->unlock();
+    COUNTER_INC(race);
 }

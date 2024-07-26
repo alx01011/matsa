@@ -771,6 +771,7 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
 
   // push all registers, in the future we might want to push only the ones that are used
   __ pusha();
+  __ push_d(xmm0);
 
   Register klass = c_rarg0;
 
@@ -791,6 +792,8 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_load[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(skip);
+
+  __ pop_d(xmm0);
   __ popa();
 }
 
@@ -1106,6 +1109,9 @@ void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
   // push all registers, in the future we might want to push only the ones that are used
   Label safe;
   __ pusha();
+  __ push_d(xmm0);
+
+
   Register klass = c_rarg0;
 
   __ get_method(c_rarg1); // get the method
@@ -1124,8 +1130,9 @@ void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(safe);
-  __ popa();
 
+  __ pop_d(xmm0);
+  __ popa();
 }
 
 void TemplateTable::iastore() {
@@ -2902,6 +2909,7 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   Label safe;
 
   __ pusha(); // save all registers
+  __ push_d(xmm0);
 
     // volatile and final check
   __ testl(flags, f_or_v_or_ignore);
@@ -2923,6 +2931,7 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
 
   __ bind(safe);
 
+  __ pop_d(xmm0);
   __ popa(); // restore all registers
 }
 
@@ -3223,6 +3232,7 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   Label safe;
 
   __ pusha(); // save all registers, some don't need to be saved, will be optimized later
+  __ push_d(xmm0);
 
   Register klass = c_rarg0;
 
@@ -3242,6 +3252,7 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
 
   __ bind(safe);
 
+  __ pop_d(xmm0);
   __ popa(); // restore all registers
 }
 

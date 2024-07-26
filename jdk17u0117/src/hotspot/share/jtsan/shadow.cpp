@@ -1,4 +1,6 @@
 #include "shadow.hpp"
+#include "threadState.hpp"
+#include "jtsanDefs.hpp"
 
 #include <cstdlib>
 #include <cstdio>
@@ -9,25 +11,15 @@
 #include "gc/shared/collectedHeap.hpp"
 #include "runtime/os.hpp"
 
+#include <atomic>
+
 #define MAX_CAS_ATTEMPTS (100)
 #define GB_TO_BYTES(x) ((x) * 1024UL * 1024UL * 1024UL)
 
-ShadowMemory* ShadowMemory::shadow    = nullptr;
-uptr          ShadowMemory::heap_base = 0ull;
+uptr   ShadowMemory::heap_base   = 0ull;
+size_t ShadowMemory::size        = 0ull;
+void*  ShadowMemory::shadow_base = nullptr;
 
-ShadowMemory::ShadowMemory(size_t size, void *shadow_base, uptr offset, uptr heap_base) {
-    this->size              = size;
-    this->shadow_base       = shadow_base;
-    this->offset            = offset;
-
-    ShadowMemory::heap_base = heap_base;
-}
-
-ShadowMemory::~ShadowMemory() {
-    os::unmap_memory((char*)this->shadow_base, this->size);
-
-    ShadowMemory::shadow = nullptr;
-}
 
 void ShadowMemory::init(size_t bytes) {
     /*
@@ -37,18 +29,25 @@ void ShadowMemory::init(size_t bytes) {
         For now it is equal to the number of shadow cells per word.
     */  
 
-    if (sizeof(ShadowCell) != sizeof(uint64_t)) {
+    if (sizeof(ShadowCell) != 8) {
         fprintf(stderr, "JTSAN: ShadowCell size is not 64bits\n");
         exit(1);
     }
 
-    if (Universe::heap()->kind() != CollectedHeap::Name::Parallel) {
-        fprintf(stderr, "JTASN: Only Parallel GC is supported\n");
+    if (sizeof(void*) != 8) {
+        fprintf(stderr, "JTSAN: Only 64bit systems are supported\n");
         exit(1);
     }
 
-    ParallelScavengeHeap *heap = ParallelScavengeHeap::heap();
-    uptr base = (uptr)heap->base();
+    if (Universe::heap()->kind() == CollectedHeap::Name::Z) {
+        fprintf(stderr, "JTSAN: ZGC is not supported\n");
+        exit(1);
+    }
+
+    // ParallelScavengeHeap *heap = ParallelScavengeHeap::heap();
+    // uptr base = (uptr)heap->base();
+
+    uptr base = (uptr)Universe::heap()->reserved_region().start();
 
     /*
         total number of locations = HeapSize / 8
@@ -76,85 +75,53 @@ void ShadowMemory::init(size_t bytes) {
         exit(1);
     }
 
-    ShadowMemory::shadow = new ShadowMemory(shadow_size, shadow_base, (uptr)shadow_base, base);
+    ShadowMemory::size        = shadow_size;
+    ShadowMemory::shadow_base = shadow_base;
+    ShadowMemory::heap_base   = base;
 }
 
 void ShadowMemory::destroy(void) {
-    if (ShadowMemory::shadow != nullptr) {
-        delete ShadowMemory::shadow;
-    }
+    os::unmap_memory((char*)ShadowMemory::shadow_base, ShadowMemory::size);
 }
 
-
-ShadowMemory* ShadowMemory::getInstance(void) {
-    return ShadowMemory::shadow;
-}
 
 void* ShadowMemory::MemToShadow(uptr mem) {
     uptr index = ((uptr)mem - (uptr)ShadowMemory::heap_base) / 8; // index in heap
     uptr shadow_offset = index * 32; // Each metadata entry is 8 bytes 
 
-    return (void*)((uptr)this->shadow_base + shadow_offset);
+    return (void*)((uptr)ShadowMemory::shadow_base + shadow_offset);
 }
 
 ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
-    ShadowMemory *shadow = ShadowMemory::getInstance();
-    void *shadow_addr = shadow->MemToShadow(mem);
+    void *shadow_addr = ShadowMemory::MemToShadow(mem);
 
-    ShadowCell *cell_ref = &((ShadowCell *)shadow_addr)[index];
+    //ShadowCell *cell_ref = &((ShadowCell *)shadow_addr)[index];
+    //return *cell_ref;
 
-    /*
-        For now this if is not needed since the heap is contiguous
-    */
-
-    // if ((uptr)cell_ref >= (uptr)shadow->shadow_base + shadow->size) {
-    //     fprintf(stderr, "Shadow memory (%p) out of bounds in load_cell with index %d\n", shadow_addr, index);
-    //     exit(1);
-    // }
-
-    return *cell_ref;
+    uint64_t raw_cell = __atomic_load_n((uint64_t*)((uptr)shadow_addr + (index * sizeof(ShadowCell))), __ATOMIC_RELAXED);
+    return *(ShadowCell*)&raw_cell;
 }
 
-void ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
-    ShadowMemory *shadow = ShadowMemory::getInstance();
-    void *shadow_addr = shadow->MemToShadow(mem);
+void *ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
+    void *shadow_addr = ShadowMemory::MemToShadow(mem);
 
-    ShadowCell *cell_addr = (ShadowCell *)((uptr)shadow_addr);
+    //ShadowCell *cell_addr = (ShadowCell *)((uptr)shadow_addr);
 
-    // find the first free cell
-    for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
-        ShadowCell cell_l = load_cell(mem, i);
-        /*
-          * Technically, an epoch can never be zero, since the gc epoch starts from 1
-          * So a zero epoch means the cell is free.
-          * Additionally, we prefer cells with smaller gc epochs, since they refer to different memory locations
-          * (prior to gc)
-        */
-        if (!cell_l.epoch || (cell_l.gc_epoch != cell->gc_epoch)) {
-            *(cell_addr + i) = *cell;
-            return;
-        }
-    }
-
-    // if we reach here, all the cells are occupied or locked
+    // if we reach here, all the cells are occupied
     // just pick one at random and overwrite it
-    uint8_t ci = os::random() % SHADOW_CELLS;
-    cell_addr = &cell_addr[ci];
+    uint8_t ci = JTSanThreadState::getHistory(cell->tid)->index % SHADOW_CELLS;
+    void *store_addr = (void*)((uptr)shadow_addr + (ci * sizeof(ShadowCell)));
 
-    *cell_addr = *cell;
+    __atomic_store_n((uint64_t*)store_addr, *(uint64_t*)cell, __ATOMIC_RELAXED);
+    return store_addr;
 }
 
 void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, uint8_t index) {
-    ShadowMemory *shadow = ShadowMemory::getInstance();
-    void *shadow_addr = shadow->MemToShadow(mem);
+    void *shadow_addr = ShadowMemory::MemToShadow(mem);
 
-    ShadowCell *cell_addr = &((ShadowCell *)shadow_addr)[index];
-    *cell_addr = *cell;
+    //ShadowCell *cell_addr = &((ShadowCell *)shadow_addr)[index];
+    //*cell_addr = *cell;
+
+    void *store_addr = (void*)((uptr)shadow_addr + (index * sizeof(ShadowCell)));
+    __atomic_store_n((uint64_t*)store_addr, *(uint64_t*)cell, __ATOMIC_RELAXED);
 }
-
-
-void* ShadowBlock::mem_to_shadow(uptr mem) {
-    ShadowMemory *shadow = ShadowMemory::getInstance();
-    return shadow->MemToShadow(mem);
-}
-

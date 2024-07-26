@@ -7,126 +7,79 @@
 
 #include <string.h>
 
-JtsanThreadState* JtsanThreadState::instance = nullptr;
+Vectorclock*   JTSanThreadState::epoch                = nullptr;
+size_t         JTSanThreadState::size                 = 0;
+ThreadHistory* JTSanThreadState::history[MAX_THREADS] = {nullptr};
 
-JtsanThreadState::JtsanThreadState(void) {
-  this->size = MAX_THREADS * sizeof(Vectorclock);
+void JTSanThreadState::init(void) {
+  JTSanThreadState::size = MAX_THREADS * sizeof(Vectorclock);
 
-  //this->epoch = (uint32_t (*)[MAX_THREADS])os::attempt_reserve_memory_at((char*)kMetaShadowBeg, this->size * sizeof(uint32_t[MAX_THREADS]));
-  this->epoch = (Vectorclock*)os::reserve_memory(this->size);
+  JTSanThreadState::epoch = (Vectorclock*)os::reserve_memory(JTSanThreadState::size);
 
-  if (this->epoch == nullptr) {
+  if (JTSanThreadState::epoch == nullptr) {
     fprintf(stderr, "JTSAN: Failed to allocate thread state memory\n");
     exit(1);
   }
 
-  bool protect = os::protect_memory((char*)this->epoch, this->size, os::MEM_PROT_RW);
+  bool protect = os::protect_memory((char*)JTSanThreadState::epoch, JTSanThreadState::size, os::MEM_PROT_RW);
   if (!protect) {
     fprintf(stderr, "JTSAN: Failed to protect thread state\n");
     exit(1);
   }
 
   // increment the epoch of the initial thread
-    this->epoch[0].set(0, 1);
+    JTSanThreadState::epoch[0].set(0, 1);
 
     for (size_t i = 0; i < MAX_THREADS; i++) {
-        this->history[i] = new ThreadHistory();
+        JTSanThreadState::history[i] = new ThreadHistory();
     }
-    
 }
 
-JtsanThreadState::~JtsanThreadState(void) {
-    if (this->epoch != nullptr) {
-        os::release_memory((char*)this->epoch, this->size);
+void JTSanThreadState::destroy(void) {
+    if (JTSanThreadState::epoch != nullptr) {
+        os::release_memory((char*)JTSanThreadState::epoch, JTSanThreadState::size);
     }
 
-    this->epoch = nullptr;
-    this->size = 0;
-
-    JtsanThreadState::instance = nullptr;
+    JTSanThreadState::epoch = nullptr;
+    JTSanThreadState::size = 0;
 }
 
-JtsanThreadState* JtsanThreadState::getInstance(void) {
-    if (instance == nullptr) {
-        instance = new JtsanThreadState();
-    }
-    return instance;
-}
-
-Vectorclock* JtsanThreadState::getThreadState(size_t threadId) {
-    JtsanThreadState *state = JtsanThreadState::getInstance();
-
+Vectorclock* JTSanThreadState::getThreadState(size_t threadId) {
     assert(threadId < MAX_THREADS, "JTSAN: Thread id out of bounds");
 
-    if (threadId >= MAX_THREADS) {
-        fprintf(stderr, "JTSAN: Thread id %lu out of bounds\n", threadId);
-    }
-
-    return &(state->epoch[threadId]);
+    return &(JTSanThreadState::epoch[threadId]);
 }
 
-void JtsanThreadState::init(void) {
-    if (instance == nullptr) {
-        instance = new JtsanThreadState();
-    }
-}
-
-void JtsanThreadState::destroy(void) {
-    if (instance != nullptr) {
-        delete instance;
-        instance = nullptr;
-    }
-}
-
-void JtsanThreadState::incrementEpoch(size_t threadId) {
-    JtsanThreadState *state = JtsanThreadState::getInstance();
-
+void JTSanThreadState::incrementEpoch(size_t threadId) {
     assert(threadId < MAX_THREADS, "JTSAN: Thread id out of bounds");
     
-    state->epoch[threadId].set(threadId, state->epoch[threadId].get(threadId) + 1);
+    JTSanThreadState::epoch[threadId].set(threadId, JTSanThreadState::epoch[threadId].get(threadId) + 1);
 }
 
-void JtsanThreadState::setEpoch(size_t threadId, size_t otherThreadId, uint32_t epoch) {
-    JtsanThreadState *state = JtsanThreadState::getInstance();
-
+void JTSanThreadState::setEpoch(size_t threadId, size_t otherThreadId, uint32_t epoch) {
     assert(threadId < MAX_THREADS, "JTSAN: Thread id out of bounds");
     assert(otherThreadId < MAX_THREADS, "JTSAN: OtherThread id out of bounds");
 
-    state->epoch[threadId].set(otherThreadId, epoch);
-
-    //Atomic::store(&(state->epoch[threadId][otherThreadId]), epoch);
+    JTSanThreadState::epoch[threadId].set(otherThreadId, epoch);
 }
 
-uint32_t JtsanThreadState::getEpoch(size_t threadId, size_t otherThreadId) {
-    JtsanThreadState *state = JtsanThreadState::getInstance();
+uint32_t JTSanThreadState::getEpoch(size_t threadId, size_t otherThreadId) {
+    assert(threadId < JTSanThreadState::size, "JTSAN: Thread id out of bounds");
+    assert(otherThreadId < JTSanThreadState::size, "JTSAN: Thread id out of bounds");
 
-    assert(threadId < state->size, "JTSAN: Thread id out of bounds");
-    assert(otherThreadId < state->size, "JTSAN: Thread id out of bounds");
-
-    //uint32_t res = Atomic::load(&(state->epoch[threadId][otherThreadId]));
-
-    return state->epoch[threadId].get(otherThreadId);
+    return JTSanThreadState::epoch[threadId].get(otherThreadId);
 }
 
-void JtsanThreadState::transferEpoch(size_t from_tid, size_t to_tid) {
-    JtsanThreadState *state = JtsanThreadState::getInstance();
-
-    assert(from_tid < state->size, "JTSAN: Thread id out of bounds");
-    assert(to_tid < state->size, "JTSAN: OtherThread id out of bounds");
+void JTSanThreadState::transferEpoch(size_t from_tid, size_t to_tid) {
+    assert(from_tid < JTSanThreadState::size, "JTSAN: Thread id out of bounds");
+    assert(to_tid < JTSanThreadState::size, "JTSAN: OtherThread id out of bounds");
     
-    state->epoch[to_tid] = state->epoch[from_tid];
+    JTSanThreadState::epoch[to_tid] = JTSanThreadState::epoch[from_tid];
 }
 
-void JtsanThreadState::clearEpoch(size_t threadId) {
-    JtsanThreadState *state = JtsanThreadState::getInstance();
 
-    assert(threadId < state->size, "JTSAN: Thread id out of bounds");
-}
-
-ThreadHistory* JtsanThreadState::getHistory(int threadId) {
-    JtsanThreadState *state = JtsanThreadState::getInstance();
-
+ThreadHistory* JTSanThreadState::getHistory(int threadId) {
     assert(threadId < MAX_THREADS, "JTSAN: Thread id out of bounds");
 
-    return state->history[threadId];
+    return JTSanThreadState::history[threadId];
 }

@@ -414,9 +414,9 @@ void oopDesc::init_lock_state(void) {
   _lock_state = nullptr;
 }
 
-void* oopDesc::lock_state(void) {
+LockShadow* oopDesc::lock_state(void) {
   if (UNLIKELY(_lock_state == nullptr)){
-    _lock_state = (void*)(new LockShadow());
+    _lock_state = (new LockShadow());
   }
 
   return _lock_state;

@@ -19,6 +19,26 @@ uint16_t get_tid(void);
 void     increment_tid(void);
 void     decrement_tid(void);
 
+#define COUNTER(x)\
+    static uint64_t x##_counter;\
+    static void increment_##x(void) {\
+        x##_counter++;\
+    }\
+    static uint64_t get_##x(void) {\
+        return x##_counter;\
+    }
+    
+#define COUNTER_INC(x)\
+    JTSanStats::increment_##x()
+
+#define COUNTER_GET(x)\
+    JTSanStats::get_##x()
+
+class JTSanStats {
+    public:
+        COUNTER(race);
+};
+
 class JTSanScopedLock {
     public:
         JTSanScopedLock(Mutex *lock) : _lock(lock) {

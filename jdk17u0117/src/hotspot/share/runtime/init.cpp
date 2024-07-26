@@ -182,7 +182,7 @@ jint init_globals() {
   // we want to delay jtsan init as much as possible
   JTSAN_ONLY(set_jtsan_initialized(false));
   JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
-  JTSAN_ONLY(JtsanThreadState::init());
+  JTSAN_ONLY(JTSanThreadState::init());
   JTSAN_ONLY(JtsanThreadPool::jtsan_threadpool_init());
   JTSAN_ONLY(JTSanSuppression::init());
   JTSAN_ONLY(JTSanReport::_report_lock = new Mutex(Mutex::access, "JTSanReport::_report_lock"));
@@ -198,6 +198,11 @@ void exit_globals() {
   static bool destructorsCalled = false;
   if (!destructorsCalled) {
     destructorsCalled = true;
+
+  JTSAN_ONLY(
+    fprintf(stderr, "Java ThreadSanitizer: reported %lu warnings\n", COUNTER_GET(race));
+  );
+
     perfMemory_exit();
     SafepointTracing::statistics_exit_log();
     if (PrintStringTableStatistics) {

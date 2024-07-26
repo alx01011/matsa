@@ -1210,13 +1210,14 @@ void InterpreterMacroAssembler::jtsan_monitor_enter(Register lock_reg) {
   pusha();
 
   // get lock_obj and method pointers
-  movptr    (c_rarg0, lock_reg);
-  get_method(c_rarg1);
+  movptr    (c_rarg1, lock_reg);
+  //get_method(c_rarg1);
+  get_thread(c_rarg0);
   // gets bcp
   // if we have a synchronized method, the line number will be the first line of the method
-  movptr    (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
+  //movptr    (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
 
-  call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_sync_enter), c_rarg0, c_rarg1, c_rarg2);
+  call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_sync_enter), c_rarg0, c_rarg1);
 
   popa();
 }
@@ -1350,12 +1351,13 @@ void InterpreterMacroAssembler::jtsan_monitor_exit(Register lock_reg) {
   pusha();
 
   // get lock_obj and method pointers
-  movptr    (c_rarg0, lock_reg);
-  get_method(c_rarg1);
+   movptr    (c_rarg1, lock_reg);
+  //get_method(c_rarg1);
+  get_thread(c_rarg0);
   // gets bcp
   movptr    (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
 
-  call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_sync_exit), c_rarg0, c_rarg1, c_rarg2);
+  call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_sync_exit), c_rarg0, c_rarg1);
 
   popa();
 }
@@ -2097,9 +2099,9 @@ void InterpreterMacroAssembler::notify_method_entry() {
     JTSAN_ONLY(
       get_thread  (rthread);
       get_method  (rarg);
-      // calculate bcp
-      movptr      (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
-      
+      // caller bcp is previously saved in _bcp_register by template interpreter
+      movptr      (c_rarg2, _bcp_register);
+
       call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), rthread, rarg, c_rarg2);
     );
   }
@@ -2146,11 +2148,9 @@ void InterpreterMacroAssembler::notify_method_exit(
     JTSAN_ONLY(
       push(state);
       get_thread(rthread);
-      get_method  (rarg);
-      // calculate bcp
-      movptr      (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
 
-      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), rthread, rarg, c_rarg2);
+      // no need for bci and method* in method exit, they will be null/0 anyways
+      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), rthread, noreg, noreg);
       pop(state);
     );
   }

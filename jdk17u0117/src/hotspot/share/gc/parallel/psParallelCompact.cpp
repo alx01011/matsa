@@ -1730,7 +1730,7 @@ bool PSParallelCompact::invoke_no_policy(bool maximum_heap_compaction) {
     return false;
   }
 
-  JTSAN_ONLY(increment_gc_epoch());
+  //JTSAN_ONLY(increment_gc_epoch());
 
   ParallelScavengeHeap* heap = ParallelScavengeHeap::heap();
 

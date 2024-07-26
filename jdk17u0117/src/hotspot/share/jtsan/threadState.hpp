@@ -10,26 +10,17 @@
 #include <cstddef>
 #include <cstdint>
 
-class JtsanThreadState : public CHeapObj<mtInternal> {
-    private:
-        static JtsanThreadState* instance;
-        
+class JTSanThreadState : AllStatic {
+    private:        
         /*
             Each thread has an array of epochs.
             Epochs can change after a synchronization event
         */
+        static Vectorclock *epoch;
+        static size_t   size;
 
-        Vectorclock *epoch;
-        size_t   size;
-
-        ThreadHistory *history[MAX_THREADS];
-
-        JtsanThreadState(void);
-        ~JtsanThreadState(void);
-
+        static ThreadHistory *history[MAX_THREADS];
     public:
-        static JtsanThreadState* getInstance(void);
-
         static void init(void);
         static void destroy(void);
 
@@ -44,8 +35,6 @@ class JtsanThreadState : public CHeapObj<mtInternal> {
         static uint32_t getEpoch(size_t threadId, size_t otherThreadId);
 
         static void     transferEpoch(size_t from_tid, size_t to_tid);
-        static void     clearEpoch(size_t threadId);
-        
 
         static ThreadHistory *getHistory(int threadId);
 };

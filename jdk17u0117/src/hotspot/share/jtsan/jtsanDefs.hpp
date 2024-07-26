@@ -16,22 +16,30 @@
 
 // TODO: this has to be done at compile time
 // because we have to check if avx is supported
-#ifndef JTSAN_VECTORIZE
-#define JTSAN_VECTORIZE 0
-#endif
-
-
-// For now vectorization performs worse than scalar
-// so we disable it
 #ifdef JTSAN_VECTORIZE
 #undef JTSAN_VECTORIZE
 #define JTSAN_VECTORIZE 0
+#else
+#define JTSAN_VECTORIZE 0
 #endif
 
+#define GIB(x) ((x) * 1024ull * 1024ull * 1024ull)
+#define TIB(x) ((x) * 1024ull * 1024ull * 1024ull * 1024ull)
+
+
+// #if JTSAN_VECTORIZE
+// #undef JTSAN_VECTORIZE
+// #define JTSAN_VECTORIZE __SSE4_2__
+// #endif
+
 #if JTSAN_VECTORIZE
+#include <emmintrin.h>
+#include <smmintrin.h>
 #include <immintrin.h>
-typedef __m256i m256;
+
 typedef __m128i m128;
+typedef __m256i m256;
+
 #endif
 
 // branch prediction

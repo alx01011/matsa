@@ -39,6 +39,10 @@
 #include "utilities/formatBuffer.hpp"
 #include "utilities/growableArray.hpp"
 
+#if INCLUDE_JTSAN
+#include "jtsan/jtsanGlobals.hpp"
+#endif
+
 // A "CollectedHeap" is an implementation of a java heap for HotSpot.  This
 // is an abstract class: there may be many different kinds of heaps.  This
 // class defines the functions that a heap must implement, and contains
@@ -223,6 +227,12 @@ class CollectedHeap : public CHeapObj<mtGC> {
   virtual void safepoint_synchronize_begin() {}
   virtual void safepoint_synchronize_end() {}
 
+#if INCLUDE_JTSAN
+// runtime check if gc uses reserved_region
+// I only observed ZGC not using it, not 100% sure for others
+  MemRegion reserved_region() const { return _reserved; }
+#endif
+
   void initialize_reserved_region(const ReservedHeapSpace& rs);
 
   virtual size_t capacity() const = 0;
@@ -379,6 +389,9 @@ class CollectedHeap : public CHeapObj<mtGC> {
   // Increment total number of GC collections (started)
   void increment_total_collections(bool full = false) {
     _total_collections++;
+    // increment gc epoch
+    // atomic
+    JTSAN_ONLY(increment_gc_epoch());
     if (full) {
       increment_total_full_collections();
     }

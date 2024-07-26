@@ -371,7 +371,7 @@ bool PSScavenge::invoke_no_policy() {
 
   // aantonak - jtsan
   // update gc epoch
-  JTSAN_ONLY(increment_gc_epoch());
+  //JTSAN_ONLY(increment_gc_epoch());
 
   _gc_timer.register_gc_start();
 

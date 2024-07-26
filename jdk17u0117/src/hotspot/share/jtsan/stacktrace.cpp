@@ -26,10 +26,6 @@
 // }
 
 JTSanStackTrace::JTSanStackTrace(Thread *thread) {
-  if (thread == nullptr) {
-    return;
-  }
-
     _thread = thread;
     _frame_count = 0;
 
