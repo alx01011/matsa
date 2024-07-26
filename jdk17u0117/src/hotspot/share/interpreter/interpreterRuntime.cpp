@@ -806,9 +806,7 @@ void (*InterpreterRuntime::jtsan_store[]) (void *addr, Method *m, address bcp) =
 };
 
 // for object locks
-void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp) {
-  JavaThread *thread = JavaThread::current();
-
+void InterpreterRuntime::jtsan_lock(JavaThread *thread, void *lock_obj)  {
   int tid = JavaThread::get_jtsan_tid(thread);
 
   oop p = (oopDesc*)lock_obj;
@@ -826,11 +824,7 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
   *cur = *ts;
 }
 
-void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bcp) {
-  JavaThread *thread = JavaThread::current();
-
-  oop thread_oop = thread->threadObj();
-
+void InterpreterRuntime::jtsan_unlock(JavaThread *thread, void *lock_obj) {
   int tid = JavaThread::get_jtsan_tid(thread);
 
   oop p = (oopDesc*)lock_obj;
