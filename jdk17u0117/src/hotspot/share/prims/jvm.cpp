@@ -3873,11 +3873,9 @@ JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env, jobject x))
 
       // if (fr.is_interpreted_frame()) {
       //   Method *m      = fr.interpreter_frame_method();
-      //   address bcp    = fr.interpreter_frame_bcp();
-      //   oop lock_obj   = JNIHandles::resolve(x);
-      
+      //   address bcp    = fr.interpreter_frame_bcp();  
       // }
-
+      oop lock_obj   = JNIHandles::resolve(x);
       InterpreterRuntime::jtsan_lock(jt, (void*)lock_obj);
     }
 JVM_END
