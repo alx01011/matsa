@@ -884,9 +884,7 @@ void InterpreterRuntime::jtsan_sync_exit(JavaThread *thread, BasicObjectLock *lo
 void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method, address bcp) {
   int tid = JavaThread::get_jtsan_tid(current);
 
-  methodHandle m(current, method);
-
-  const int bci = m->bci_from(bcp);
+  const int bci = method->bci_from(bcp);
 
   Symbolizer::Symbolize(FUNC, method, bci, tid);
 }
