@@ -65,7 +65,7 @@ class oopDesc {
   /*
     JTSAN sync object
   */
-    LockShadow* _lock_state;
+  LockShadow* _lock_state;
 #endif
 
  public:
