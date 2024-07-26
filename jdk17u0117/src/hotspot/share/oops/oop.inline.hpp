@@ -405,7 +405,7 @@ bool oopDesc::mark_must_be_preserved_for_promotion_failure(markWord m) const {
 }
 
 // jtsan lock index
-#ifdef INCLUDE_JTSAN
+#if INCLUDE_JTSAN
 #include "jtsan/jtsanGlobals.hpp"
 #include "jtsan/lockState.hpp"
 #include "jtsan/jtsanGlobals.hpp"
