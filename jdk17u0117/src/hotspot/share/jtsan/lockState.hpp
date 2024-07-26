@@ -1,7 +1,6 @@
 #ifndef LOCKSTATE_HPP
 #define LOCKSTATE_HPP
 
-#include "threadState.hpp"
 #include "vectorclock.hpp"
 
 #include <cstddef>

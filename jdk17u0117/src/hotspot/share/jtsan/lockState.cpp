@@ -1,6 +1,7 @@
 #include "lockState.hpp"
 #include "shadow.hpp"
 #include "vectorclock.hpp"
+#include "threadState.hpp"
 
 #include "runtime/os.hpp"
 #include "runtime/atomic.hpp"

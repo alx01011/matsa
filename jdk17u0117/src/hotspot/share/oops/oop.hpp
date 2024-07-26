@@ -68,7 +68,7 @@ class oopDesc {
   // volatile uint32_t _obj_lock_index;
   // volatile uint32_t _sync_lock_index;
 
-    LockShadow* _lock_state;
+    void* _lock_state;
 #endif
 
  public:
