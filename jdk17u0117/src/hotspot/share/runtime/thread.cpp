@@ -567,7 +567,7 @@ void Thread::start(Thread* thread) {
 
         oop thread_object   = thread->as_Java_thread()->threadObj();
 
-        LockShadow *ls      = (LockShadow*)thread_object->lock_state();
+        LockShadow *ls      = thread_object->lock_state();
         // transfer the vector clock of the current thread to the new thread object
         ls->transfer_vc(cur_tid);
 
@@ -1449,10 +1449,8 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
 
     oop thread_object   = this->threadObj();
 
-    LockShadow *ls      = (LockShadow*)thread_object->lock_state();
-    //uint32_t lock_index = thread_object->obj_lock_index();
+    LockShadow *ls      = thread_object->lock_state();
 
-    // ls->transferVectorclock(cur_tid, lock_index);
     // transfer the vector clock from the current thread to the thread object (Thread ...)
     ls->transfer_vc(cur_tid);
     // no need to increment the vector clock, since the thread is exiting
@@ -1460,8 +1458,7 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
     // clear the thread state
     // to be reused by another thread
     JTSanThreadState::getThreadState(cur_tid)->clear();
-    // pop the thread from the stack (make it available to be reused)
-    // cast is always safe because on start of the thread we have set the thread id
+    // put the thread id back to the pool to be reused by another thread
     JtsanThreadPool::get_queue()->enqueue(cur_tid);
   );
 

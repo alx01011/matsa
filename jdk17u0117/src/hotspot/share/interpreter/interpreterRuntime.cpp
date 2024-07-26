@@ -806,19 +806,15 @@ void (*InterpreterRuntime::jtsan_store[]) (void *addr, Method *m, address bcp) =
 };
 
 // for object locks
-void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp) {
-  JavaThread *thread = JavaThread::current();
-
+void InterpreterRuntime::jtsan_lock(JavaThread *thread, oop lock_obj) {
   int tid = JavaThread::get_jtsan_tid(thread);
-
-  Handle h_obj(thread, (oopDesc*)lock_obj);
 
   /*
     On lock acquisition we have to perform a max operation between the thread state of current thread and the lock state.
     Store the result into the thread state.
   */
 
-  LockShadow *obs = (LockShadow*)h_obj->lock_state();
+  LockShadow *obs = lock_obj->lock_state();
   Vectorclock* ts = obs->get_vectorclock();
 
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
@@ -826,19 +822,15 @@ void InterpreterRuntime::jtsan_lock(void *lock_obj, Method *method, address bcp)
   *cur = *ts;
 }
 
-void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bcp) {
-  JavaThread *thread = JavaThread::current();
-  
+void InterpreterRuntime::jtsan_unlock(JavaThread *thread, oop lock_obj) {
   int tid = JavaThread::get_jtsan_tid(thread);
-
-  Handle h_obj(thread, (oopDesc*)lock_obj);
 
   /*
     On lock release we have to max the thread state with the lock state.
     Store the result into lock state.
   */
 
-  LockShadow *obs = (LockShadow*)h_obj->lock_state();
+  LockShadow *obs = lock_obj->lock_state();
 
   Vectorclock* ls = obs->get_vectorclock();
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
@@ -849,21 +841,19 @@ void InterpreterRuntime::jtsan_unlock(void *lock_obj, Method *method, address bc
   JTSanThreadState::incrementEpoch(tid);
 }
 
-void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, address bcp) {
-  JavaThread *thread = JavaThread::current();
-
+void InterpreterRuntime::jtsan_sync_enter(JavaThread *thread, BasicObjectLock *lock) {
   int tid = JavaThread::get_jtsan_tid(thread);
 
-  Handle h_obj(thread, lock->obj());
+  oop obj = lock->obj();
 
-  assert(oopDesc::is_oop(h_obj()), "must be a valid oop");
+  assert(oopDesc::is_oop(obj), "must be a valid oop");
 
   /*
     On lock acquisition we have to perform a max operation between the thread state of current thread and the lock state.
     Store the result into the thread state.
   */
 
-  LockShadow *sls = (LockShadow*)h_obj->lock_state();
+  LockShadow *sls = obj->lock_state();
   Vectorclock* ts = sls->get_vectorclock();
 
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
@@ -871,20 +861,18 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   *cur = *ts;
 }
 
-void InterpreterRuntime::jtsan_sync_exit(BasicObjectLock *lock, Method *m, address bcp) {
-  JavaThread *thread = JavaThread::current();
-
+void InterpreterRuntime::jtsan_sync_exit(JavaThread *thread, BasicObjectLock *lock) {
   int tid = JavaThread::get_jtsan_tid(thread);
 
-  Handle h_obj(thread, lock->obj());
+  oop obj = lock->obj();
 
   /*
     On lock release we have to max the thread state with the lock state.
     Store the result into lock state.
   */
 
-  LockShadow* sls =  (LockShadow*)h_obj->lock_state();
-  Vectorclock* ls = sls->get_vectorclock();
+  LockShadow* sls  = obj->lock_state();
+  Vectorclock* ls  = sls->get_vectorclock();
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
 
   *ls = *cur;

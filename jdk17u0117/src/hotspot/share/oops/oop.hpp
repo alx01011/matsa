@@ -63,8 +63,8 @@ class oopDesc {
   */
   // volatile uint32_t _obj_lock_index;
   // volatile uint32_t _sync_lock_index;
-
-    void* _lock_state;
+#include "jtsan/lockState.hpp"
+    LockShadow *_lock_state;
 #endif
 
  public:
@@ -124,8 +124,10 @@ class oopDesc {
 
   // jtsan - lock index
 #ifdef INCLUDE_JTSAN
+#include "jtsan/lockState.hpp"
+
   inline void  init_lock_state(void);
-  inline void* lock_state(void);
+  inline LockShadow *lock_state(void);
 #endif
 
  protected:
