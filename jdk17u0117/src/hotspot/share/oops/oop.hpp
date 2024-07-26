@@ -66,7 +66,7 @@ class oopDesc {
 
 #include "jtsan/lockState.hpp"
 
-    LockShadow* _lock_state;
+  LockShadow* _lock_state;
 #endif
 
  public:
@@ -124,10 +124,10 @@ class oopDesc {
   bool is_typeArray_noinline()         const;
 
 
-  // jtsan - lock index
+  // jtsan - lock state
 #ifdef INCLUDE_JTSAN
   inline void  init_lock_state(void);
-  inline void* lock_state(void);
+  inline LockShadow* lock_state(void);
 #endif
 
  protected:
