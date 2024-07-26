@@ -868,17 +868,6 @@ void InterpreterRuntime::jtsan_sync_enter(BasicObjectLock *lock, Method *m, addr
   LockShadow *sls = (LockShadow*)p->lock_state();
   Vectorclock* ts = sls->get_vectorclock();
 
-  const int lineno = m->line_number_from_bci(m->bci_from(bcp));
-
-  if ((lineno == 433) || (lineno == 364)) {
-    ResourceMark rm;
-    const char *method_name = m->external_name_as_fully_qualified();
-
-    if (strstr(method_name, "java.lang.ProcessImpl")) {
-      printf("Sync ENTER, line : %d, obj : %p, lock_shadow: %p, m: %s\n", lineno, (void*)p, (void*)sls, method_name);
-    }
-  }
-
   Vectorclock* cur = JTSanThreadState::getThreadState(tid);
 
   *cur = *ts;
