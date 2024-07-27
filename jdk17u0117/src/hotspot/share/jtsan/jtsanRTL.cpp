@@ -142,6 +142,5 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
 
     if (is_race && !JTSanSilent) {
         JTSanReport::do_report_race(stack_trace, addr, access_size, bcp, m, cur, prev, pair);
-        exit(1);
     }
 }
