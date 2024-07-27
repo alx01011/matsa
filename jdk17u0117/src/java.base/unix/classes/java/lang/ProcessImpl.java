@@ -25,6 +25,7 @@
 
 package java.lang;
 
+import java.lang.Process.PipeInputStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -362,7 +363,8 @@ final class ProcessImpl extends Process {
 
                 ProcessHandleImpl.completion(pid, true).handle((exitcode, throwable) -> {
                     synchronized (this) {
-                        System.out.println("this in completion.handle: " + this.hashCode());
+                        System.out.println("TID: " +  Thread.currentThread().getId() +
+                                            ", this in completion.handle: " + this.hashCode());
                         this.exitcode = (exitcode == null) ? -1 : exitcode.intValue();
                         this.hasExited = true;
                         this.notifyAll();
@@ -435,7 +437,8 @@ final class ProcessImpl extends Process {
         while (!hasExited) {
             wait();
         }
-        System.out.println("this in waitFor: " + this.hashCode());
+        System.out.println("TID: " +  Thread.currentThread().getId() +
+        ", this in waitFor: " + this.hashCode());
         return exitcode;
     }
     }
