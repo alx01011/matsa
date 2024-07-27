@@ -365,6 +365,14 @@ final class ProcessImpl extends Process {
                     synchronized (this) {
                         System.out.println("TID: " +  Thread.currentThread().getId() +
                                             ", this in completion.handle: " + this.hashCode());
+
+                        // print stack trace that led to this call
+                        StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+                        for (StackTraceElement stackTraceElement : stackTraceElements) {
+                            System.out.println(stackTraceElement);
+                        }
+                        System.out.println("\n\n");
+
                         this.exitcode = (exitcode == null) ? -1 : exitcode.intValue();
                         this.hasExited = true;
                         this.notifyAll();
@@ -439,6 +447,14 @@ final class ProcessImpl extends Process {
         }
         System.out.println("TID: " +  Thread.currentThread().getId() +
         ", this in waitFor: " + this.hashCode());
+
+        // print stack trace that led to this call
+        StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+        for (StackTraceElement stackTraceElement : stackTraceElements) {
+            System.out.println(stackTraceElement);
+        }
+        System.out.println("\n\n");
+
         return exitcode;
     }
     }
