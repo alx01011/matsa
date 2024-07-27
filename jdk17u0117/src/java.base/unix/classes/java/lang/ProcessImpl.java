@@ -41,7 +41,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
@@ -51,8 +50,6 @@ import jdk.internal.access.JavaIOFileDescriptorAccess;
 import jdk.internal.access.SharedSecrets;
 import jdk.internal.util.StaticProperty;
 import sun.security.action.GetPropertyAction;
-
-import java.util.concurrent.*;
 
 /**
  * java.lang.Process subclass in the UNIX environment.
@@ -78,9 +75,6 @@ final class ProcessImpl extends Process {
     private /* final */ OutputStream stdin;
     private /* final */ InputStream  stdout;
     private /* final */ InputStream  stderr;
-
-    private final ReentrantLock lock = new ReentrantLock();
-    private final Condition condition = lock.newCondition();
 
     private static enum LaunchMechanism {
         // order IS important!
