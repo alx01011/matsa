@@ -362,6 +362,7 @@ final class ProcessImpl extends Process {
 
                 ProcessHandleImpl.completion(pid, true).handle((exitcode, throwable) -> {
                     synchronized (this) {
+                        System.out.println("this in completion.handle: " + this);
                         this.exitcode = (exitcode == null) ? -1 : exitcode.intValue();
                         this.hasExited = true;
                         this.notifyAll();
@@ -429,11 +430,14 @@ final class ProcessImpl extends Process {
         return stderr;
     }
 
-    public synchronized int waitFor() throws InterruptedException {
+    public int waitFor() throws InterruptedException {
+        synchronized(this) {
         while (!hasExited) {
             wait();
         }
+        System.out.println("this in waitFor: " + this);
         return exitcode;
+    }
     }
 
     @Override
