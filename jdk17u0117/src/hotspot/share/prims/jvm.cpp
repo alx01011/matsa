@@ -111,6 +111,7 @@
 #include "jtsan/jtsanThreadPool.hpp"
 #include "jtsan/threadState.hpp"
 #include "runtime/registerMap.hpp"
+#include "jtsan/vectorclock.hpp"
 #endif
 
 #include <errno.h>
@@ -3919,6 +3920,7 @@ JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
 JVM_END
 
 JVM_ENTRY(void, JVM_jtsanPrintLockState(JNIEnv* env, jobject x))
+  fprintf(stderr, "called\n");
   if (JTSan) {
     oop obj = JNIHandles::resolve(x);
     LockShadow *ls = obj->lock_state_or_null();
