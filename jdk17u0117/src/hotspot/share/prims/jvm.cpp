@@ -3920,19 +3920,19 @@ JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
 JVM_END
 
 JVM_ENTRY(void, JVM_jtsanPrintLockState(JNIEnv* env, jobject x))
-  fprintf(stderr, "called\n");
+  jio_fprintf(stderr, "called\n");
   if (JTSan) {
     oop obj = JNIHandles::resolve(x);
     LockShadow *ls = obj->lock_state_or_null();
 
     if (ls == NULL) {
-      fprintf(stderr, "JTSan: Lock state for object %p is NULL\n", (void*)obj);
+      jio_fprintf(stderr, "JTSan: Lock state for object %p is NULL\n", (void*)obj);
       return;
     }
 
     Vectorclock *vc = ls->get_vectorclock();
 
-    fprintf(stderr, "JTSan: Lock state for object %p\n", (void*)obj);
+    jio_fprintf(stderr, "JTSan: Lock state for object %p\n", (void*)obj);
     vc->print();
   }
 JVM_END
