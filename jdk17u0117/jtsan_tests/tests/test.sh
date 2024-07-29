@@ -123,6 +123,7 @@ main() {
     echo -e "${YELLOW}Test execution started at $(date)${RESET}"
     process_test_directory "no_race"
     process_test_directory "race"
+    process_test_directory "tsan_nr"
     echo -e "${YELLOW}Test execution completed at $(date)${RESET}"
 }
 
