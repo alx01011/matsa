@@ -40,7 +40,7 @@
    }
  
    public static void main(String[] args) throws InterruptedException {
-    NonRacyBooleanArrayLoopTest test = new NonRacyBooleanArrayLoopTest();
+    NonRacyBooleanMemberLoopTest test = new NonRacyBooleanMemberLoopTest();
 
      final Thread t1 =
      new Thread(
