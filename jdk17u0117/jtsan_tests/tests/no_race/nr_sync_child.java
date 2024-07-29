@@ -1,13 +1,26 @@
-public class r_simple {
-    public static int x = 3;
+public class nr_sync_child {
+  long x;
 
-    public static void main(String... args) {
+  public void advance() {
+	x++;
+  }
+
+  public synchronized void work() {
+	advance();
+	synchronized(this) {
+		x = 8;
+	}
+  }
+
+  public static void main(String... args) {
+	nr_sync_child obj = new nr_sync_child();
+
         Thread t1 = new Thread(() -> {
-            increment();
+		obj.work();
         });
 
         Thread t2 = new Thread(() -> {
-            increment();
+		obj.work();
         });
 
         t1.start();
@@ -20,9 +33,6 @@ public class r_simple {
             throw new RuntimeException(e);
         }
 
-    }
+  }
 
-    public static void increment() {
-        x++;
-    }
 }

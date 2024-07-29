@@ -8,7 +8,7 @@
 #   -s, Adds additional switches to java command
 
 # Parse options
-JAVA_OPTS="-XX:-UseCompressedOops -XX:-UseCompressedClassPointers -Xint -XX:+UseParallelGC -XX:+JTSan"
+JAVA_OPTS="-XX:+JTSan"
 # Set up environment
 BUILD=../../build/linux-x86_64-server-release/jdk/bin/
 
@@ -41,60 +41,95 @@ fi
 # create class output dir if it doesn't exist
 mkdir -p ./class_files
 
+# Color codes for output
+YELLOW='\e[33m'
+GREEN='\e[32m'
+RESET='\e[0m'
+RED='\e[31m'
+BLUE='\e[34m'
 
-# Run non racy tests (in no_race dir)
-echo -e "\e[33mRunning non racy tests\e[0m"
-
-# compile everything
-for i in `ls ./no_race/*.java`; do
-    # get basename
-    base_name=$(basename $i .java)
-    echo -e "\e[32mCompiling $base_name\e[0m"
-
-    # Compile Java file to the class_files directory
-    $BUILD/javac -d ./class_files $i
-done
-echo ""
-
-# run em
-for i in `ls ./no_race/*.java`; do
-    # get basename
-    base_name=$(basename $i .java)
-    echo -e "\e[32mRunning $base_name\e[0m"
-
-    $BUILD/java -cp ./class_files $JAVA_OPTS $base_name
-
-    # Some spacing
+# Function to compile Java files
+compile_java_files() {
+    local dir=$1
+    echo -e "${YELLOW}Compiling $dir tests${RESET}"
+    mkdir -p ./class_files
+    for i in ./$dir/*.java; do
+        [ -e "$i" ] || continue
+        base_name=$(basename "$i" .java)
+        echo -e "Compiling $base_name"
+        if ! $BUILD/javac -d ./class_files "$i"; then
+            echo -e "${RED}Compilation failed for $base_name${RESET}"
+            return 1
+        fi
+    done
     echo ""
-done
+}
 
+run_java_files() {
+    local dir=$1
+    echo -e "${YELLOW}Running tests in $dir${RESET}"
+    local non_racy_pass=0
+    local non_racy_total=0
+    local racy_pass=0
+    local racy_total=0
+    local other_total=0
 
-# Run racy
-echo -e "\e[33mRunning racy tests\e[0m"
-
-# compile everything
-for i in `ls ./race/*.java`; do
-    # get basename
-    base_name=$(basename $i .java)
-    echo -e "\e[32mCompiling $base_name\e[0m"
-
-    # Compile Java file to the class_files directory
-    $BUILD/javac -d ./class_files $i
-done
-echo ""
-
-for i in `ls ./race/*.java`; do
-    # get basename
-    base_name=$(basename $i .java)
-    echo -e "\e[32mRunning $base_name\e[0m"
-
-    # run
-    $BUILD/java -cp ./class_files $JAVA_OPTS $base_name
-
-    # Some spacing
+    for i in ./$dir/*.java; do
+        [ -e "$i" ] || continue
+        base_name=$(basename "$i" .java)
+        echo -n "$base_name : "
+        
+        $BUILD/java -cp ./class_files $JAVA_OPTS "$base_name" > .test.out.tmp 2>&1
+        
+        if [[ "$base_name" =~ ^nr_ || "$base_name" =~ ^NonRacy ]]; then
+            if grep -q "0 warnings" .test.out.tmp; then
+                echo -e "${GREEN}PASS${RESET}"
+                ((non_racy_pass++))
+            else
+                echo -e "${RED}FAIL${RESET}"
+                echo "Output:"
+                cat .test.out.tmp
+            fi
+        elif [[ "$base_name" =~ ^r_ || "$base_name" =~ ^Racy ]]; then
+            if grep -q "0 warning" .test.out.tmp; then
+                echo -e "${RED}FAIL${RESET}"
+                echo "Output:"
+                cat .test.out.tmp
+            else
+                echo -e "${GREEN}PASS${RESET}"
+            fi
+        else
+            echo -e "${YELLOW}Unknown test kind: $base_name${RESET}"
+            echo "Output:"
+            cat .test.out.tmp
+        fi
+    done
     echo ""
-done
+}
+
+
+# Function to process a test directory
+process_test_directory() {
+    local dir=$1
+    if compile_java_files "$dir"; then
+        run_java_files "$dir"
+    else
+        echo -e "${RED}Skipping test execution for $dir due to compilation errors${RESET}"
+    fi
+}
+
+# Main function
+main() {
+    echo -e "${YELLOW}Test execution started at $(date)${RESET}"
+    process_test_directory "no_race"
+    process_test_directory "race"
+    echo -e "${YELLOW}Test execution completed at $(date)${RESET}"
+}
+
+# Run the main function
+main
 
 # Clean up
-echo -e "\e[33mCleaning up\e[0m"
+echo -e "${YELLOW}Cleaning up${RESET}"
 rm -rf ./class_files
+rm -f .test.out.tmp
