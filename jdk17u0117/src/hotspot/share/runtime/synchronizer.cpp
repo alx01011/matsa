@@ -58,7 +58,7 @@
 #include "utilities/dtrace.hpp"
 #include "utilities/events.hpp"
 #include "utilities/preserveException.hpp"
-#if INCLUDE_JTSAN
+#if !INCLUDE_JTSAN
 #include "interpreter/interpreterRuntime.hpp"
 #endif
 
@@ -598,6 +598,7 @@ void ObjectSynchronizer::jni_enter(Handle obj, JavaThread* current) {
     }
   }
   current->set_current_pending_monitor_is_from_java(true);
+  JTSAN_ONLY(InterpreterRuntime::jtsan_unlock(current, (void*)obj()));
 }
 
 // NOTE: must use heavy weight monitor to handle jni monitor exit
@@ -617,7 +618,7 @@ void ObjectSynchronizer::jni_exit(oop obj, TRAPS) {
   // intentionally do not use CHECK on check_owner because we must exit the
   // monitor even if an exception was already pending.
   if (monitor->check_owner(THREAD)) {
-    //JTSAN_ONLY(InterpreterRuntime::jtsan_oop_unlock(current, obj));
+    JTSAN_ONLY(InterpreterRuntime::jtsan_unlock(current, (void*)obj));
     monitor->exit(current);
   }
 }
