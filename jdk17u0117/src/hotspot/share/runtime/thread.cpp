@@ -1459,7 +1459,11 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
 
     // clear the thread state
     // to be reused by another thread
+    // but preserve the last epoch
+    // it is crucial incase the thread is reused and there are older sync objects holding older epochs
+    int thread_epoch = JTSanThreadState::getThreadState(cur_tid)->getEpoch(cur_tid, cur_tid);
     JTSanThreadState::getThreadState(cur_tid)->clear();
+    JTSanThreadState::getThreadState(cur_tid)->setEpoch(cur_tid, cur_tid, thread_epoch);
     // pop the thread from the stack (make it available to be reused)
     // cast is always safe because on start of the thread we have set the thread id
     JtsanThreadPool::get_queue()->enqueue(cur_tid);
