@@ -598,7 +598,7 @@ void ObjectSynchronizer::jni_enter(Handle obj, JavaThread* current) {
     }
   }
   current->set_current_pending_monitor_is_from_java(true);
-  JTSAN_ONLY(InterpreterRuntime::jtsan_unlock(current, (void*)obj()));
+  JTSAN_ONLY(InterpreterRuntime::jtsan_lock(current, (void*)obj()));
 }
 
 // NOTE: must use heavy weight monitor to handle jni monitor exit
