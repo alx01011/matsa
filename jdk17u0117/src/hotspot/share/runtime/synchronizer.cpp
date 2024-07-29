@@ -639,7 +639,7 @@ ObjectLocker::ObjectLocker(Handle obj, JavaThread* thread) {
 
 ObjectLocker::~ObjectLocker() {
   if (_obj() != NULL) {
-    JTSAN_ONLY(InterpreterRuntime::jtsan_unlock(current, (void*)obj()));
+    JTSAN_ONLY(InterpreterRuntime::jtsan_unlock(_thread, (void*)obj()));
     ObjectSynchronizer::exit(_obj(), &_lock, _thread);
   }
 }
