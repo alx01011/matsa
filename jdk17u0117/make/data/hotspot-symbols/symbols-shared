@@ -37,6 +37,7 @@ JVM_InitAgentProperties
 JVM_jtsanLock
 JVM_jtsanUnlock
 JVM_jtsanJoin
+JVM_jtsanPrintLockState
 JVM_jtsanReleaseAcquire
 JVM_jtsanAcquire
 JVM_jtsanRelease
