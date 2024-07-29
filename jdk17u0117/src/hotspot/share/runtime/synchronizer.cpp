@@ -58,7 +58,7 @@
 #include "utilities/dtrace.hpp"
 #include "utilities/events.hpp"
 #include "utilities/preserveException.hpp"
-#if !INCLUDE_JTSAN
+#if INCLUDE_JTSAN
 #include "interpreter/interpreterRuntime.hpp"
 #endif
 
