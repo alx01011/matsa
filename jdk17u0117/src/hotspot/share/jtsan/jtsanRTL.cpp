@@ -141,7 +141,7 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     Symbolizer::Symbolize((Event)(cur.is_write + 1), addr, m->bci_from(bcp), tid, pair.cur_shadow);
 
     if (is_race && !JTSanSilent) {
-        fprintf(stderr, "Race! epochs: <(cur)%d, (prev)%d> at gc %d\n", cur.epoch, prev.epoch, get_gc_epoch());
+        fprintf(stderr, "Race! epochs: <(cur)%lu, (prev)%lu> at gc %lu\n", cur.epoch, prev.epoch, get_gc_epoch());
         JTSanReport::do_report_race(stack_trace, addr, access_size, bcp, m, cur, prev, pair);
     }
 }
