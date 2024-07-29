@@ -693,6 +693,13 @@ public final class System {
 
     /**
      * aantonak
+     * Debug print lockstate
+     * @param x the lock object
+     */
+    public static native void jtsanPrintLockState(Object x);
+
+    /**
+     * aantonak
      * Acquire and release vector clock
      * @param x the thread object
      */

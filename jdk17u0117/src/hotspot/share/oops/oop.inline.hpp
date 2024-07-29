@@ -422,6 +422,10 @@ LockShadow* oopDesc::lock_state(void) {
   return _lock_state;
 }
 
+LockShadow* oopDesc::lock_state_or_null(void) {
+  return _lock_state;
+}
+
 #endif
 
 #endif // SHARE_OOPS_OOP_INLINE_HPP

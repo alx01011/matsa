@@ -27,6 +27,8 @@ class Vectorclock {
         // clear (zero out) the clock
         void clear(void);
 
+        void print(void);
+
         void release_acquire(Vectorclock* other);
         void release(Vectorclock* other);
         void acquire(Vectorclock* other);

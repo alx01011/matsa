@@ -80,6 +80,13 @@ Java_java_lang_System_jtsanJoin(JNIEnv *env, jobject this, jobject x)
 
 //aantonak - jtsan
 JNIEXPORT void JNICALL
+Java_java_lang_System_jtsanPrintLockState(JNIEnv *env, jobject this, jobject x)
+{
+    
+}
+
+//aantonak - jtsan
+JNIEXPORT void JNICALL
 Java_java_lang_System_jtsanReleaseAcquire(JNIEnv *env, jobject this, jobject x)
 {
     JVM_jtsanReleaseAcquire(env, x);

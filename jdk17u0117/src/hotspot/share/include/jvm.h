@@ -129,6 +129,9 @@ JNIEXPORT void JNICALL
 JVM_jtsanJoin(JNIEnv *env, jobject obj);
 
 JNIEXPORT void JNICALL
+JVM_jtsanPrintLockState(JNIEnv *env, jobject obj);
+
+JNIEXPORT void JNICALL
 JVM_jtsanReleaseAcquire(JNIEnv *env, jobject obj);
 
 JNIEXPORT void JNICALL
