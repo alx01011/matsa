@@ -371,8 +371,8 @@ oop MemAllocator::finish(HeapWord* mem) const {
   }
 
   JTSAN_ONLY(
-  oop o = cast_to_oop(mem);
-  o->init_lock_state();
+    oop o = cast_to_oop(mem);
+    o->init_lock_state();
   );
 
   // Need a release store to ensure array/class length, mark word, and
