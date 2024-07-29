@@ -82,7 +82,7 @@ Java_java_lang_System_jtsanJoin(JNIEnv *env, jobject this, jobject x)
 JNIEXPORT void JNICALL
 Java_java_lang_System_jtsanPrintLockState(JNIEnv *env, jobject this, jobject x)
 {
-    
+    JVM_jtsanPrintLockState(env, x);
 }
 
 //aantonak - jtsan
