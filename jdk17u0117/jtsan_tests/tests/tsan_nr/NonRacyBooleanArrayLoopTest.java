@@ -32,7 +32,7 @@
  import java.io.IOException;
  
  
- class NonRacyBooleanArrayLoopTest {
+class NonRacyBooleanArrayLoopTest extends Object {
    private boolean[] x = new boolean[2];
  
    protected synchronized void run(int i) {
