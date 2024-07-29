@@ -35,7 +35,6 @@
  class NonRacyBooleanArrayLoopTest {
    private boolean[] x = new boolean[2];
  
-   @Override
    protected synchronized void run(int i) {
      x[0] = !x[0];
    }
