@@ -3931,7 +3931,7 @@ JVM_ENTRY(void, JVM_jtsanPrintLockState(JNIEnv* env, jobject x))
 
     Vectorclock *vc = ls->get_vectorclock();
 
-    fprintf(stderr, "JTSan: Lock state for object %p\n", (void*)obj);
+    fprintf(stderr, "JTSan: Lock state for object %p -> %p\n", (void*)obj, (void*)ls);
     vc->print();
   }
 JVM_END
