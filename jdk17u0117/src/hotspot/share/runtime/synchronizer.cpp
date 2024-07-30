@@ -633,13 +633,11 @@ ObjectLocker::ObjectLocker(Handle obj, JavaThread* thread) {
 
   if (_obj() != NULL) {
     ObjectSynchronizer::enter(_obj, &_lock, _thread);
-    //JTSAN_ONLY(InterpreterRuntime::jtsan_lock(_thread, (void*)_obj()));
   }
 }
 
 ObjectLocker::~ObjectLocker() {
   if (_obj() != NULL) {
-    //JTSAN_ONLY(InterpreterRuntime::jtsan_unlock(_thread, (void*)_obj()));
     ObjectSynchronizer::exit(_obj(), &_lock, _thread);
   }
 }
@@ -664,9 +662,12 @@ int ObjectSynchronizer::wait(Handle obj, jlong millis, TRAPS) {
 
   DTRACE_MONITOR_WAIT_PROBE(monitor, obj(), current, millis);
 
+  // if we reach here (wait), we have to perform an unlock operation as the lock is released
+  // it is reacquired when the thread is notified
   JTSAN_ONLY(InterpreterRuntime::jtsan_unlock(current, (void*)obj()));
   monitor->wait(millis, true, THREAD); // Not CHECK as we need following code
 
+  // reacquire the lock
   JTSAN_ONLY(InterpreterRuntime::jtsan_lock(current, (void*)obj()));
 
   // This dummy call is in place to get around dtrace bug 6254741.  Once
