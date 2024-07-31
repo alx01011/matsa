@@ -3873,8 +3873,8 @@ JVM_END
 // aantonak - jtsan
 JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env, jobject x))
     if (JTSan) {
-        void *lock_obj = (void*)JNIHandles::resolve(x);
-        InterpreterRuntime::jtsan_unlock(thread, lock_obj);
+      void *lock_obj = (void*)JNIHandles::resolve(x);
+      InterpreterRuntime::jtsan_unlock(thread, lock_obj);
     }
 JVM_END
 
