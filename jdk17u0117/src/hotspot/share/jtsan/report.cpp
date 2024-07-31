@@ -68,6 +68,9 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
                             ShadowCell &cur, ShadowCell &prev, ShadowPair &pair) {
     JTSanScopedLock lock(JTSanReport::_report_lock);
 
+    // TODO: consider adding a bit map to track which bci's have already been reported
+    // this would make the output more concise and significantly smaller
+
     
     int pid = os::current_process_id();
 
