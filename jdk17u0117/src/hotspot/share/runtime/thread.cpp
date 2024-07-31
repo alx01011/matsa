@@ -1437,13 +1437,9 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
 
   JTSAN_ONLY(
     int cur_tid         = JavaThread::get_jtsan_tid(this);
-
     oop thread_object   = this->threadObj();
-
     LockShadow *ls      = thread_object->lock_state();
-    //uint32_t lock_index = thread_object->obj_lock_index();
 
-    // ls->transferVectorclock(cur_tid, lock_index);
     // transfer the vector clock from the current thread to the thread object (Thread ...)
     ls->transfer_vc(cur_tid);
     // no need to increment the vector clock, since the thread is exiting
