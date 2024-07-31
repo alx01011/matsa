@@ -3865,29 +3865,23 @@ JVM_END
 // aantonak - jtsan
 JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env, jobject x))
     if (JTSan) {
-      JavaThread *jt = (JavaThread *) thread;
-
       oop lock_obj   = JNIHandles::resolve(x);
-      InterpreterRuntime::jtsan_lock(jt, (void*)lock_obj);
+      InterpreterRuntime::jtsan_lock(thread, (void*)lock_obj);
     }
 JVM_END
 
 // aantonak - jtsan
 JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env, jobject x))
     if (JTSan) {
-        JavaThread *jt = (JavaThread *) thread;
-
         void *lock_obj = (void*)JNIHandles::resolve(x);
-        InterpreterRuntime::jtsan_unlock(jt, lock_obj);
+        InterpreterRuntime::jtsan_unlock(thread, lock_obj);
     }
 JVM_END
 
 // aantonak - jtsan
 JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
     if (JTSan) {
-      JavaThread *jt = (JavaThread *) thread;
-
       oop thread_object = JNIHandles::resolve(x);
-      InterpreterRuntime::jtsan_lock(jt, (void*)thread_object);
+      InterpreterRuntime::jtsan_lock(thread, (void*)thread_object);
     }
 JVM_END
