@@ -3862,7 +3862,10 @@ JVM_END
 
 
 
-// aantonak - jtsan
+/*
+  * Java Thread Sanitizer (JTSan)
+  * Called on java.util.concurrent.lock() and semaphore() operations
+*/
 JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env, jobject x))
     if (JTSan) {
       oop lock_obj   = JNIHandles::resolve(x);
@@ -3870,7 +3873,10 @@ JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env, jobject x))
     }
 JVM_END
 
-// aantonak - jtsan
+/*
+  * Java Thread Sanitizer (JTSan)
+  * Called on java.util.concurrent.unlock() and semaphore() operations
+*/
 JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env, jobject x))
     if (JTSan) {
       void *lock_obj = (void*)JNIHandles::resolve(x);
@@ -3878,7 +3884,10 @@ JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env, jobject x))
     }
 JVM_END
 
-// aantonak - jtsan
+/*
+  * Java Thread Sanitizer (JTSan)
+  * Called on java.lang.Thread.join() operations and transfers thread state to thread object
+*/
 JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
     if (JTSan) {
       oop thread_object = JNIHandles::resolve(x);
