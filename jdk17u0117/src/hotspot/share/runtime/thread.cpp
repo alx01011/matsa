@@ -879,15 +879,6 @@ void JavaThread::set_jtsan_tid(JavaThread *thread, int tid) {
   assert(thread->is_Java_thread(), "thread not java thread in jtsan set id");
   
   thread->_jtsan_tid = tid;
-
-}
-
-void JavaThread::set_thread_initializing(bool value) {
-  _initializing_class = value;
-}
-  
-bool JavaThread::is_thread_initializing(void) {
-  return _initializing_class;
 }
 
 void JavaThread::set_threadObj(oop p) {

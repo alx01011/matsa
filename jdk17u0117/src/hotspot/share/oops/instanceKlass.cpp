@@ -791,10 +791,6 @@ void InstanceKlass::eager_initialize_impl() {
     if (old_state != _init_state)
       set_init_state(old_state);
   } else {
-      JTSAN_ONLY(
-      JavaThread *jt = THREAD;
-      jt->set_thread_initializing(false);
-    );
     // linking successfull, mark class as initialized
     set_init_state(fully_initialized);
     fence_and_clear_init_lock();
@@ -818,10 +814,6 @@ void InstanceKlass::initialize(TRAPS) {
     //       in case of recursive initialization!
   } else {
     assert(is_initialized(), "sanity check");
-    JTSAN_ONLY(
-      JavaThread *jt = THREAD;
-      jt->set_thread_initializing(true);
-    );
   }
 }
 
@@ -1247,11 +1239,6 @@ void InstanceKlass::set_initialization_state_and_notify(ClassState state, TRAPS)
   Handle h_init_lock(THREAD, init_lock());
   if (h_init_lock() != NULL) {
     ObjectLocker ol(h_init_lock, THREAD);
-
-    JTSAN_ONLY(
-      JavaThread *jt = THREAD;
-      jt->set_thread_initializing(false);
-    );
 
     set_init_thread(NULL); // reset _init_thread before changing _init_state
     set_init_state(state);
