@@ -3866,16 +3866,7 @@ JVM_END
 JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env, jobject x))
     if (JTSan) {
       JavaThread *jt = (JavaThread *) thread;
-      // frame fr = jt->last_frame();
-      // // To get the actual sender frame, we need to skip Runtime and java.util.concurrent frames
-      // RegisterMap map(thread);
-      // fr = fr.sender(&map);
-      // fr = fr.sender(&map);
 
-      // if (fr.is_interpreted_frame()) {
-      //   Method *m      = fr.interpreter_frame_method();
-      //   address bcp    = fr.interpreter_frame_bcp();  
-      // }
       oop lock_obj   = JNIHandles::resolve(x);
       InterpreterRuntime::jtsan_lock(jt, (void*)lock_obj);
     }
@@ -3885,15 +3876,7 @@ JVM_END
 JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env, jobject x))
     if (JTSan) {
         JavaThread *jt = (JavaThread *) thread;
-        // frame fr = jt->last_frame();
-        // // To get the actual sender frame, we need to skip Runtime and java.util.concurrent frames
-        // RegisterMap map(thread);
-        // fr = fr.sender(&map);
-        // fr = fr.sender(&map);
-        // if (fr.is_interpreted_frame()) {
-        //     Method *m      = fr.interpreter_frame_method();
-        //     address bcp    = fr.interpreter_frame_bcp();
-        // }
+
         void *lock_obj = (void*)JNIHandles::resolve(x);
         InterpreterRuntime::jtsan_unlock(jt, lock_obj);
     }
@@ -3903,114 +3886,8 @@ JVM_END
 JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
     if (JTSan) {
       JavaThread *jt = (JavaThread *) thread;
-      // frame fr = jt->last_frame();
-      // // get the actual frame
-      // RegisterMap map(thread);
-      // fr = fr.sender(&map);
 
       oop thread_object = JNIHandles::resolve(x);
-
-      // if (fr.is_interpreted_frame()) {
-      //   Method *m      = fr.interpreter_frame_method();
-      //   address bcp    = fr.interpreter_frame_bcp();
-      // }
-
       InterpreterRuntime::jtsan_lock(jt, (void*)thread_object);
-    }
-JVM_END
-
-JVM_ENTRY(void, JVM_jtsanPrintLockState(JNIEnv* env, jobject x))
-  if (JTSan) {
-    oop obj = JNIHandles::resolve(x);
-    LockShadow *ls = obj->lock_state_or_null();
-
-    if (ls == NULL) {
-      fprintf(stderr, "JTSan: Lock state for object %p is NULL\n", (void*)obj);
-      return;
-    }
-
-    Vectorclock *vc = ls->get_vectorclock();
-
-    fprintf(stderr, "JTSan: Lock state for object %p -> %p\n", (void*)obj, (void*)ls);
-    vc->print();
-  }
-JVM_END
-// aantonak - jtsan
-JVM_ENTRY(void, JVM_jtsanReleaseAcquire(JNIEnv* env, jobject x))
-    if (JTSan && thread && thread->is_Java_thread()) {
-      JavaThread *jt = (JavaThread *) thread;
-      frame fr = jt->last_frame();
-      // get the actual frame
-      RegisterMap map(thread);
-      fr = fr.sender(&map);
-
-      oop thread_object = JNIHandles::resolve(x);
-
-      if (fr.is_interpreted_frame()) {
-        Method *m      = fr.interpreter_frame_method();
-        address bcp    = fr.interpreter_frame_bcp();
-
-        int cur_tid = JavaThread::get_jtsan_tid(thread);
-
-        // before transferring the vector clock, we need to update the epoch of the current thread
-        oop obj = JNIHandles::resolve(x);
-
-        LockShadow *ls      = obj->lock_state();
-        // transfer the vector clock of the current thread to the new thread object
-        ls->get_vectorclock()->release_acquire(JTSanThreadState::getThreadState(cur_tid));
-        JTSanThreadState::incrementEpoch(cur_tid);
-      }
-    }
-JVM_END
-
-// aantonak - jtsan
-JVM_ENTRY(void, JVM_jtsanAcquire(JNIEnv* env, jobject x))
-    if (JTSan && thread && thread->is_Java_thread()) {
-      JavaThread *jt = (JavaThread *) thread;
-      frame fr = jt->last_frame();
-      // get the actual frame
-      RegisterMap map(thread);
-      fr = fr.sender(&map);
-
-      oop thread_object = JNIHandles::resolve(x);
-
-      if (fr.is_interpreted_frame()) {
-        Method *m      = fr.interpreter_frame_method();
-        address bcp    = fr.interpreter_frame_bcp();
-
-        int cur_tid = JavaThread::get_jtsan_tid(thread);
-
-        // before transferring the vector clock, we need to update the epoch of the current thread
-        oop obj = JNIHandles::resolve(x);
-
-        LockShadow *ls      = obj->lock_state();
-        JTSanThreadState::getThreadState(cur_tid)->acquire(ls->get_vectorclock());
-      }
-    }
-JVM_END
-
-// aantonak - jtsan
-JVM_ENTRY(void, JVM_jtsanRelease(JNIEnv* env, jobject x))
-    if (JTSan && thread && thread->is_Java_thread()) {
-      JavaThread *jt = (JavaThread *) thread;
-      frame fr = jt->last_frame();
-      // get the actual frame
-      RegisterMap map(thread);
-      fr = fr.sender(&map);
-
-      oop thread_object = JNIHandles::resolve(x);
-
-      if (fr.is_interpreted_frame()) {
-        Method *m      = fr.interpreter_frame_method();
-        address bcp    = fr.interpreter_frame_bcp();
-
-        int cur_tid = JavaThread::get_jtsan_tid(thread);
-
-        // before transferring the vector clock, we need to update the epoch of the current thread
-        oop obj = JNIHandles::resolve(x);
-
-        LockShadow *ls      = obj->lock_state();
-        JTSanThreadState::getThreadState(cur_tid)->release(ls->get_vectorclock());
-      }
     }
 JVM_END

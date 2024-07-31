@@ -692,38 +692,6 @@ public final class System {
     public static native void jtsanJoin(Object x);
 
     /**
-     * aantonak
-     * Debug print lockstate
-     * @param x the lock object
-     */
-    public static native void jtsanPrintLockState(Object x);
-
-    /**
-     * aantonak
-     * Acquire and release vector clock
-     * @param x the thread object
-     */
-    @Hidden
-    public static native void jtsanReleaseAcquire(Object x);
-
-    /**
-     * aantonak
-     * Acquire vector clock
-     * @param x the thread object
-     */
-    @Hidden
-    public static native void jtsanAcquire(Object x);
-
-    /**
-     * aantonak
-     * Release vector clock
-     * @param x the thread object
-     */
-    @Hidden
-    public static native void jtsanRelease(Object x);
-
-
-    /**
      * System properties.
      *
      * See {@linkplain #getProperties getProperties} for details.
