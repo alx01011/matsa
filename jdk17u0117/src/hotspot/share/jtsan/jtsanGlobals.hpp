@@ -54,7 +54,7 @@ class JTSanScopedLock {
 };
 
 // check for x86
-if defined(__x86_64__) || defined(__i386__)
+#if defined(__x86_64__) || defined(__i386__)
 #define CPU_PAUSE() asm volatile("pause\n": : :"memory")
 #else
 #define CPU_PAUSE()
