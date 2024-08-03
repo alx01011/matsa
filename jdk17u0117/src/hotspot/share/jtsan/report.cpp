@@ -73,6 +73,7 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
 
     
     int pid = os::current_process_id();
+    ResourceMark rm;
 
     fprintf(stderr, "==================\n");
 
