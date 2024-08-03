@@ -10,7 +10,8 @@
 #define BLUE  "\033[1;34m"
 #define RESET "\033[0m"
 
-Mutex *JTSanReport::_report_lock;
+//Mutex *JTSanReport::_report_lock;
+uint8_t _report_lock;
 
 void print_method_info(Method *m, int bci, int index) {
     const char *file_name = "<null>";
@@ -66,7 +67,8 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, void *cell_sha
 
 void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t size, address bcp, Method *m, 
                             ShadowCell &cur, ShadowCell &prev, ShadowPair &pair) {
-    JTSanScopedLock lock(JTSanReport::_report_lock);
+    //JTSanScopedLock lock(JTSanReport::_report_lock);
+    JTSanSpinLock lock(&_report_lock);
 
     // TODO: consider adding a bit map to track which bci's have already been reported
     // this would make the output more concise and significantly smaller
