@@ -2149,7 +2149,7 @@ void InterpreterMacroAssembler::notify_method_exit(
       get_thread(rthread);
 
       // no need for bci and method* in method exit, they will be null/0 anyways
-      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), rthread, noreg, noreg);
+      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), rthread);
       pop(state);
     );
   }
