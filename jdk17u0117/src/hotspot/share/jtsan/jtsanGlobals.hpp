@@ -65,7 +65,7 @@ class JTSanSpinLock {
         JTSanSpinLock(uint8_t *lock) : _lock(lock) {
             while (1) {
                 // cmpxchg (dest, compare, exchange)
-                if (Atomic::cmpxchg(_lock, 0, 1) == 0) {
+                if (Atomic::cmpxchg(_lock, (uint8_t)0, (uint8_t)1) == 0) {
                     break;
                 }
 
