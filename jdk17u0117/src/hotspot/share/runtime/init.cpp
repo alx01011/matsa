@@ -135,14 +135,12 @@ jint init_globals() {
   if (status != JNI_OK)
     return status;
 
-    // jtsan initialization must be done after gc initialization
-  // we want to delay jtsan init as much as possible
+  // jtsan initialization must be done after gc initialization
   JTSAN_ONLY(set_jtsan_initialized(false));
   JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
   JTSAN_ONLY(JTSanThreadState::init());
   JTSAN_ONLY(JtsanThreadPool::jtsan_threadpool_init());
   JTSAN_ONLY(JTSanSuppression::init());
-  //JTSAN_ONLY(JTSanReport::_report_lock = new Mutex(Mutex::access, "JTSanReport::_report_lock"));
   JTSAN_ONLY(JTSanReport::_report_lock = 0);
   JTSAN_ONLY(set_jtsan_initialized(true));
 

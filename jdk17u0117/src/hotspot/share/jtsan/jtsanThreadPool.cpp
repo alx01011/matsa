@@ -1,56 +1,64 @@
 #include "jtsanThreadPool.hpp"
+#include "jtsanGlobals.hpp"
 
 ThreadQueue::ThreadQueue(void) {
     _front = 0;
-    _rear = 0;
-    _lock = new Mutex(Mutex::event, "JTSAN Thread Queue Lock");
+    _rear  = 0;
+    _lock  = 0;
+    //_lock = new Mutex(Mutex::event, "JTSAN Thread Queue Lock");
 }
 
-ThreadQueue::~ThreadQueue(void) {
-    delete _lock;
-}
+// ThreadQueue::~ThreadQueue(void) {
+//     delete _lock;
+// }
 
 uint8_t ThreadQueue::enqueue(uint8_t tid) {
-    _lock->lock();
+    JTSanSpinLock lock(&_lock);
+    //_lock->lock();
 
     if ((_rear + 1) % MAX_THREADS == _front) {
-        _lock->unlock();
+        //_lock->unlock();
         return 1;
     }
 
     _queue[_rear] = tid;
     _rear = (_rear + 1) % MAX_THREADS;
-    _lock->unlock();
+    //_lock->unlock();
 
     return 0;
 }
 
 int ThreadQueue::dequeue(void) {
-    _lock->lock();
+    JTSanSpinLock lock(&_lock);
+    //_lock->lock();
 
     if (_front == _rear) {
-        _lock->unlock();
+        //_lock->unlock();
         return -1;
     }
 
     uint8_t tid = _queue[_front];
     _front = (_front + 1) % MAX_THREADS;
-    _lock->unlock();
+    //_lock->unlock();
 
     return tid;
 }
 
 int ThreadQueue::front(void) {
-    _lock->lock();
+    JTSanSpinLock lock(&_lock);
+
+    //_lock->lock();
     uint8_t tid = _queue[_front];
-    _lock->unlock();
+    //_lock->unlock();
     return tid;
 }
 
 bool ThreadQueue::empty(void) {
-    _lock->lock();
+    JTSanSpinLock lock(&_lock);
+
+    //_lock->lock();
     bool empty = _front == _rear;
-    _lock->unlock();
+    //_lock->unlock();
     return empty;
 }
 
