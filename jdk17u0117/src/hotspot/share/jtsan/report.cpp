@@ -11,7 +11,7 @@
 #define RESET "\033[0m"
 
 //Mutex *JTSanReport::_report_lock;
-uint8_t _report_lock;
+uint8_t JTSanReport::_report_lock;
 
 void print_method_info(Method *m, int bci, int index) {
     const char *file_name = "<null>";
