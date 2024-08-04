@@ -33,8 +33,8 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
 
     
     if (_thread != nullptr) {
-        frame fr = os::current_frame();
-        for (; fr.pc() != nullptr;) {
+        frame fr = thread->as_Java_thread()->last_frame();
+        for (;;) {
             if (Interpreter::contains(fr.pc())) {
                 Method *bt_method = fr.interpreter_frame_method();
                 address bt_bcp = (fr.is_interpreted_frame()) ? fr.interpreter_frame_bcp() : fr.pc();
@@ -43,6 +43,11 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
                 _frames[_frame_count].pc = bt_bcp;
                 _frame_count++;
             }
+
+            if (fr.is_first_frame()) {
+                break;
+            }
+
             fr = fr.sender(&reg_map);
             //fr = next_frame(fr, (Thread*)thread);
         }
