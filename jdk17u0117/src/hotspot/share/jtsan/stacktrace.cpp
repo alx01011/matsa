@@ -32,7 +32,7 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
     //RegisterMap reg_map(thread->as_Java_thread(), false);
     
     if (_thread != nullptr) {
-        frame fr = thread->as_Java_thread()->last_frame();
+        frame fr = thread->last_frame();
         for (size_t i = 0; i < MAX_FRAMES; i++) {
             if (fr.pc() == NULL) {
                 break;
@@ -48,7 +48,7 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
             }
 
             //fr = fr.sender(&reg_map);
-            fr = next_frame(fr, (Thread*)thread);
+            fr = next_frame(fr, thread);
         }
 
     }
