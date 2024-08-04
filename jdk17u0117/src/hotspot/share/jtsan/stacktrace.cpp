@@ -28,26 +28,22 @@
 JTSanStackTrace::JTSanStackTrace(Thread *thread) {
     _thread = thread;
     _frame_count = 0;
-
-  RegisterMap reg_map(thread->as_Java_thread(), false);
-
     
     if (_thread != nullptr) {
         frame fr = thread->as_Java_thread()->last_frame();
         for (size_t i = 0; i < MAX_FRAMES; i++) {
+            RegisterMap reg_map(thread->as_Java_thread(), false);
             if (fr.is_first_frame()) {
                 break;
             }
 
             if (fr.is_interpreted_frame()) {
                 Method *bt_method = fr.interpreter_frame_method();
-                address bt_bcp = (fr.is_interpreted_frame()) ? fr.interpreter_frame_bcp() : fr.pc();
+                address bt_bcp    = fr.interpreter_frame_bcp();
 
                 _frames[_frame_count].method = bt_method;
                 _frames[_frame_count].pc = bt_bcp;
                 _frame_count++;
-            } else {
-                break;
             }
 
             fr = fr.sender(&reg_map);
