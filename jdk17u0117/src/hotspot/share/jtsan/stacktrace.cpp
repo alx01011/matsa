@@ -1,29 +1,5 @@
 #include "stacktrace.hpp"
 
-static frame next_frame(frame fr, Thread* t) {
-  // Compiled code may use EBP register on x86 so it looks like
-  // non-walkable C frame. Use frame.sender() for java frames.
-  frame invalid;
-  if (t != nullptr && t->is_Java_thread()) {
-    // Catch very first native frame by using stack address.
-    // For JavaThread stack_base and stack_size should be set.
-    if (!t->is_in_full_stack((address)(fr.real_fp() + 1))) {
-      return invalid;
-    }
-    if (fr.is_java_frame() || fr.is_native_frame() || fr.is_runtime_frame()) {
-      RegisterMap map(t->as_Java_thread(), false); // No update
-      return fr.sender(&map);
-    } else {
-      // is_first_C_frame() does only simple checks for frame pointer,
-      // it will pass if java compiled code has a pointer in EBP.
-      if (os::is_first_C_frame(&fr)) return invalid;
-      return os::get_sender_for_C_frame(&fr);
-    }
-  } else {
-    if (os::is_first_C_frame(&fr)) return invalid;
-    return os::get_sender_for_C_frame(&fr);
-  }
-}
 
 JTSanStackTrace::JTSanStackTrace(Thread *thread) {
     _thread = thread;
@@ -34,9 +10,9 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
 
     // skips native jtsan api calls
     // checkraces, memoryaccess, jtsan_read/write$size
-    // for (size_t i = 0; i < 3; i++) {
-    //     fr = fr.sender(&reg_map);
-    // }
+    for (size_t i = 0; i < 3; i++) {
+        fr = fr.sender(&reg_map);
+    }
 
     for (size_t i = 0; i < MAX_FRAMES;) {
         if (fr.is_first_frame() || fr.pc() == NULL) {
@@ -51,12 +27,9 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
             _frames[_frame_count].pc = bt_bcp;
             _frame_count++;
             i++;
-        } else {
-            fprintf(stderr, "skipping frame\n");
         }
 
         fr = fr.sender(&reg_map);
-        //fr = next_frame(fr, thread);
     }
 }
 
