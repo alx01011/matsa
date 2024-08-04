@@ -562,11 +562,10 @@ void Thread::start(Thread* thread) {
             // out of available threads
             fatal("No more threads available for JTSan");
           }
+          JavaThread::set_jtsan_tid(thread->as_Java_thread(), new_tid);
         }
 
         int cur_tid = JavaThread::get_jtsan_tid(cur_thread);
-
-        JavaThread::set_jtsan_tid(thread->as_Java_thread(), new_tid);
         JTSanThreadState::transferEpoch(cur_tid, new_tid);
 
         oop thread_object   = thread->as_Java_thread()->threadObj();
