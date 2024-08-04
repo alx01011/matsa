@@ -1185,9 +1185,7 @@ JavaThread::JavaThread() :
     }
 
     _jtsan_tid = new_tid;
-
-    // increment epoch of the new thread - epochs start at 1
-    JTSanThreadState::incrementEpoch(new_tid);
+    fprintf(stderr, "New tid at weird path: %d\n", new_tid);
   );
 
   set_jni_functions(jni_functions());
