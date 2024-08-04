@@ -21,7 +21,7 @@ FILE=$1
 $BUILD/javac $FILE
 
 
-ARGS='-XX:-UseCompressedOops -XX:-UseCompressedClassPointers -Xms100m -Xmx100g -Xint -XX:+UseParallelGC -XX:+JTSAN'
+ARGS='-XX:+JTSan'
 
 # Run
 $BUILD/java $ARGS `basename $FILE .java`
