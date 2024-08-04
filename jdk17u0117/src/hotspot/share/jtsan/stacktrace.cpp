@@ -39,7 +39,7 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
     }
 
     for (size_t i = 0; i < MAX_FRAMES; i++) {
-        if (fr.pc() == NULL) {
+        if (fr.is_first_java_frame() || fr.pc() == NULL) {
             break;
         }
 
@@ -52,8 +52,8 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
             _frame_count++;
         }
 
-        //fr = fr.sender(&reg_map);
-        fr = next_frame(fr, thread);
+        fr = fr.sender(&reg_map);
+        //fr = next_frame(fr, thread);
     }
 }
 
