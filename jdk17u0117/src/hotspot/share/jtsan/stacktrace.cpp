@@ -39,7 +39,7 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
     }
 
     for (size_t i = 0; i < MAX_FRAMES; i++) {
-        if (fr.is_first_java_frame() || fr.pc() == NULL) {
+        if (fr.is_first_frame() || fr.pc() == NULL) {
             break;
         }
 
