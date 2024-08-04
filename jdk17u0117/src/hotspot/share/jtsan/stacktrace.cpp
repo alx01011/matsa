@@ -29,28 +29,31 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
     _thread = thread;
     _frame_count = 0;
 
-    //RegisterMap reg_map(thread->as_Java_thread(), false);
-    
-    if (_thread != nullptr) {
-        frame fr = thread->last_frame();
-        for (size_t i = 0; i < MAX_FRAMES; i++) {
-            if (fr.pc() == NULL) {
-                break;
-            }
+    RegisterMap reg_map(thread->as_Java_thread(), false);
+    frame fr = os::current_frame();
 
-            if (fr.is_interpreted_frame()) {
-                Method *bt_method = fr.interpreter_frame_method();
-                address bt_bcp    = fr.interpreter_frame_bcp();
+    // skips native jtsan api calls
+    // checkraces, memoryaccess, jtsan_read/write$size
+    for (size_t i = 0; i < 3; i++) {
+        fr = fr.sender(&reg_map);
+    }
 
-                _frames[_frame_count].method = bt_method;
-                _frames[_frame_count].pc = bt_bcp;
-                _frame_count++;
-            }
-
-            //fr = fr.sender(&reg_map);
-            fr = next_frame(fr, thread);
+    for (size_t i = 0; i < MAX_FRAMES; i++) {
+        if (fr.pc() == NULL) {
+            break;
         }
 
+        if (fr.is_interpreted_frame()) {
+            Method *bt_method = fr.interpreter_frame_method();
+            address bt_bcp    = fr.interpreter_frame_bcp();
+
+            _frames[_frame_count].method = bt_method;
+            _frames[_frame_count].pc = bt_bcp;
+            _frame_count++;
+        }
+
+        //fr = fr.sender(&reg_map);
+        fr = next_frame(fr, thread);
     }
 }
 
