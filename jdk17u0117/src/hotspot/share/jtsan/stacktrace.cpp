@@ -51,6 +51,8 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
             _frames[_frame_count].pc = bt_bcp;
             _frame_count++;
             i++;
+        } else {
+            fprintf(stderr, "skipping frame\n");
         }
 
         fr = fr.sender(&reg_map);
