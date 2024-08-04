@@ -29,7 +29,7 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
     _thread = thread;
     _frame_count = 0;
 
-  RegisterMap reg_map(thread->as_Java_thread(), false, false);
+  RegisterMap reg_map(thread->as_Java_thread(), false);
 
     
     if (_thread != nullptr) {
