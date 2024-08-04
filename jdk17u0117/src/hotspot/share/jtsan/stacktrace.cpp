@@ -34,12 +34,12 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
     
     if (_thread != nullptr) {
         frame fr = thread->as_Java_thread()->last_frame();
-        for (;;) {
+        for (size_t i = 0; i < MAX_FRAMES; i++) {
             if (fr.is_first_frame()) {
                 break;
             }
 
-            if (Interpreter::contains(fr.pc())) {
+            if (fr.is_interpreted_frame()) {
                 Method *bt_method = fr.interpreter_frame_method();
                 address bt_bcp = (fr.is_interpreted_frame()) ? fr.interpreter_frame_bcp() : fr.pc();
 
