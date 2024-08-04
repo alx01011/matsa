@@ -46,6 +46,8 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
                 _frames[_frame_count].method = bt_method;
                 _frames[_frame_count].pc = bt_bcp;
                 _frame_count++;
+            } else {
+                break;
             }
 
             fr = fr.sender(&reg_map);
