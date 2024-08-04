@@ -14,7 +14,7 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
         fr = fr.sender(&reg_map);
     }
 
-    for (size_t i = 0; i < MAX_FRAMES;) {
+    for (; _frame_count < MAX_FRAMES;) {
         if (fr.is_first_frame() || fr.pc() == NULL) {
             break;
         }
@@ -26,7 +26,6 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
             _frames[_frame_count].method = bt_method;
             _frames[_frame_count].pc = bt_bcp;
             _frame_count++;
-            i++;
         }
 
         fr = fr.sender(&reg_map);
