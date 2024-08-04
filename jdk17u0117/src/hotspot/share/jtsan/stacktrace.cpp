@@ -43,7 +43,7 @@ JTSanStackTrace::JTSanStackTrace(Thread *thread) {
             break;
         }
 
-        if (fr.is_interpreted_frame()) {
+        if (!fr.is_native_frame() && fr.is_interpreted_frame()) {
             Method *bt_method = fr.interpreter_frame_method();
             address bt_bcp    = fr.interpreter_frame_bcp();
 
