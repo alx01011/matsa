@@ -142,8 +142,8 @@ jint init_globals() {
   JTSAN_ONLY(JtsanThreadPool::jtsan_threadpool_init());
   // init the main thread
   JTSAN_ONLY(
-    // int tid = JtsanThreadPool::get_queue()->dequeue();
-    // JavaThread::set_jtsan_tid(JavaThread::current(), tid);
+    int tid = JtsanThreadPool::get_queue()->dequeue();
+    JavaThread::set_jtsan_tid(JavaThread::current(), tid);
     // increment epoch
     JTSanThreadState::incrementEpoch(0);
   );

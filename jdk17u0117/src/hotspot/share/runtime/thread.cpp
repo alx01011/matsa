@@ -1190,8 +1190,8 @@ JavaThread::JavaThread() :
 JavaThread::JavaThread(bool is_attaching_via_jni) : JavaThread() {
   if (is_attaching_via_jni) {
     _jni_attach_state = _attaching_via_jni;
-    
-    // in case we don't pass through start, we still need a valid tid
+
+    // in case we don't pass through start, we still need a valid tid for the symbolizer
     JTSAN_ONLY(
       int tid = JtsanThreadPool::get_queue()->dequeue();
       if (tid == -1) {
