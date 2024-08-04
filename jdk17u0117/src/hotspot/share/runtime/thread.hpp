@@ -720,7 +720,7 @@ class JavaThread: public Thread {
   bool           _on_thread_list;                 // Is set when this JavaThread is added to the Threads list
   OopHandle      _threadObj;                     // The Java level thread object
 #if INCLUDE_JTSAN
-  int            _jtsan_tid          = 0;            // jtsan thread id
+  int            _jtsan_tid          = -1;            // jtsan thread id
 #endif
 
 #ifdef ASSERT

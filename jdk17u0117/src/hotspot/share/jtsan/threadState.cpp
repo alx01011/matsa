@@ -12,23 +12,20 @@ size_t         JTSanThreadState::size                 = 0;
 ThreadHistory* JTSanThreadState::history[MAX_THREADS] = {nullptr};
 
 void JTSanThreadState::init(void) {
-  JTSanThreadState::size = MAX_THREADS * sizeof(Vectorclock);
+    JTSanThreadState::size = MAX_THREADS * sizeof(Vectorclock);
 
-  JTSanThreadState::epoch = (Vectorclock*)os::reserve_memory(JTSanThreadState::size);
+    JTSanThreadState::epoch = (Vectorclock*)os::reserve_memory(JTSanThreadState::size);
 
-  if (JTSanThreadState::epoch == nullptr) {
-    fprintf(stderr, "JTSAN: Failed to allocate thread state memory\n");
-    exit(1);
-  }
+    if (JTSanThreadState::epoch == nullptr) {
+        fprintf(stderr, "JTSAN: Failed to allocate thread state memory\n");
+        exit(1);
+    }
 
-  bool protect = os::protect_memory((char*)JTSanThreadState::epoch, JTSanThreadState::size, os::MEM_PROT_RW);
-  if (!protect) {
-    fprintf(stderr, "JTSAN: Failed to protect thread state\n");
-    exit(1);
-  }
-
-  // increment the epoch of the initial thread
-    JTSanThreadState::epoch[0].set(0, 1);
+    bool protect = os::protect_memory((char*)JTSanThreadState::epoch, JTSanThreadState::size, os::MEM_PROT_RW);
+    if (!protect) {
+        fprintf(stderr, "JTSAN: Failed to protect thread state\n");
+        exit(1);
+    }
 
     for (size_t i = 0; i < MAX_THREADS; i++) {
         JTSanThreadState::history[i] = new ThreadHistory();

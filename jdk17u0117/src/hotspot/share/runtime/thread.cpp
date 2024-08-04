@@ -553,11 +553,15 @@ void Thread::start(Thread* thread) {
       if (Thread::current()->is_Java_thread()) {
         JavaThread *cur_thread = JavaThread::current();
 
-        int new_tid = JtsanThreadPool::get_instance()->get_queue()->dequeue();
+        int new_tid;
+        if ((new_tid = JavaThread::get_jtsan_tid(cur_thread)) == -1) {
+          // we need to assign a new tid to the current thread
+          new_tid = JtsanThreadPool::get_instance()->get_queue()->dequeue();
 
-        if (new_tid == -1) {
-          // out of available threads
-          fatal("No more threads available for JTSan");
+          if (new_tid == -1) {
+            // out of available threads
+            fatal("No more threads available for JTSan");
+          }
         }
 
         int cur_tid = JavaThread::get_jtsan_tid(cur_thread);
@@ -571,8 +575,11 @@ void Thread::start(Thread* thread) {
         // transfer the vector clock of the current thread to the new thread object
         ls->transfer_vc(cur_tid);
 
-        // increment epoch of the new thread - epochs start at 1
-        JTSanThreadState::incrementEpoch(new_tid);
+        if (JTSanThreadState::getEpoch(new_tid, new_tid) == 0) {
+          // increment epoch of the new thread - epochs start at 1
+          JTSanThreadState::incrementEpoch(new_tid);
+        }
+    
         // increment epoch of the current thread
         JTSanThreadState::incrementEpoch(cur_tid);
 
@@ -1165,6 +1172,24 @@ JavaThread::JavaThread() :
 
   _SleepEvent(ParkEvent::Allocate(this))
 {
+
+  JTSAN_ONLY(
+    // in some paths, a new thread object will be created, and wont pass through start
+    // we will assign it a tid and increments its epoch here
+    // we won't do any vc transfering
+
+    int new_tid = JtsanThreadPool::get_instance()->get_queue()->dequeue();
+    if (new_tid == -1) {
+      // out of available threads
+      fatal("No more threads available for JTSan");
+    }
+
+    _jtsan_tid = new_tid;
+
+    // increment epoch of the new thread - epochs start at 1
+    JTSanThreadState::incrementEpoch(new_tid);
+  );
+
   set_jni_functions(jni_functions());
 
 #if INCLUDE_JVMCI
@@ -3039,13 +3064,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
   assert(Universe::is_fully_initialized(), "not initialized");
 
-  //   // jtsan initialization must be done after gc initialization
-  // JTSAN_ONLY(set_jtsan_initialized(false));
-  // JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
-  // JTSAN_ONLY(JtsanThreadState::init());
-  // JTSAN_ONLY(LockShadow::init());
-  // JTSAN_ONLY(set_jtsan_initialized(true));
-
   if (VerifyDuringStartup) {
     // Make sure we're starting with a clean slate.
     VM_Verify verify_op;
@@ -3621,10 +3639,6 @@ void Threads::destroy_vm() {
   // Deleting the shutdown thread here is safe. See comment on
   // wait_until_not_protected() above.
   delete thread;
-
-  // jtsan - this is where destruction happens
-  JTSAN_ONLY(ShadowMemory::destroy());
-  // TODO: free rest of jtsan mem
 
 #if INCLUDE_JVMCI
   if (JVMCICounterSize > 0) {
