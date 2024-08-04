@@ -10,6 +10,15 @@ JTSAN_BUILD_CXXFLAGS='--with-extra-cxxflags=-DINCLUDE_JTSAN'
 BOOT_JVM=''
 CONF='linux-x86_64-server-release'
 
+# usage
+if [ "$1" == "-h" ]; then
+    echo "Usage: "
+    echo "./build_jtsan.sh -fd --boot-jvm <JVM17> (fast debug build)"
+    echo "./build_jtsan.sh -sd --boot-jvm <JVM17> (slow debug build)"
+    echo "./build_jtsan.sh --boot-jvm <JVM17> (release build) (default)"
+    exit 0
+fi
+
 # check for debug builds
 if [ "$1" == "-fd" ]; then
     CONFIGURE_FLAGS='--disable-warnings-as-errors --with-debug-level=fastdebug'
@@ -39,5 +48,6 @@ fi
 
 /bin/bash configure $CONFIGURE_FLAGS $JTSAN_BUILD_CXXFLAGS
 
+make CONF=$CONF clean
 make CONF=$CONF images
 
