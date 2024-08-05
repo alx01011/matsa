@@ -1355,8 +1355,7 @@ void InterpreterMacroAssembler::jtsan_monitor_exit(Register lock_reg) {
   //get_method(c_rarg1);
   get_thread(c_rarg0);
   // gets bcp
-  movptr    (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
-
+  // movptr    (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
   call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_sync_exit), c_rarg0, c_rarg1);
 
   popa();
@@ -2150,7 +2149,7 @@ void InterpreterMacroAssembler::notify_method_exit(
       get_thread(rthread);
 
       // no need for bci and method* in method exit, they will be null/0 anyways
-      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), rthread, noreg, noreg);
+      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), rthread);
       pop(state);
     );
   }

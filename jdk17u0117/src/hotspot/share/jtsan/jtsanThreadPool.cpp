@@ -1,57 +1,48 @@
 #include "jtsanThreadPool.hpp"
+#include "jtsanGlobals.hpp"
 
 ThreadQueue::ThreadQueue(void) {
     _front = 0;
-    _rear = 0;
-    _lock = new Mutex(Mutex::event, "JTSAN Thread Queue Lock");
-}
-
-ThreadQueue::~ThreadQueue(void) {
-    delete _lock;
+    _rear  = 0;
+    _lock  = 0;
 }
 
 uint8_t ThreadQueue::enqueue(uint8_t tid) {
-    _lock->lock();
+    JTSanSpinLock lock(&_lock);
 
     if ((_rear + 1) % MAX_THREADS == _front) {
-        _lock->unlock();
         return 1;
     }
 
     _queue[_rear] = tid;
     _rear = (_rear + 1) % MAX_THREADS;
-    _lock->unlock();
 
     return 0;
 }
 
 int ThreadQueue::dequeue(void) {
-    _lock->lock();
+    JTSanSpinLock lock(&_lock);
 
     if (_front == _rear) {
-        _lock->unlock();
         return -1;
     }
 
     uint8_t tid = _queue[_front];
     _front = (_front + 1) % MAX_THREADS;
-    _lock->unlock();
 
     return tid;
 }
 
 int ThreadQueue::front(void) {
-    _lock->lock();
-    uint8_t tid = _queue[_front];
-    _lock->unlock();
-    return tid;
+    JTSanSpinLock lock(&_lock);
+
+    return _queue[_front];
 }
 
 bool ThreadQueue::empty(void) {
-    _lock->lock();
-    bool empty = _front == _rear;
-    _lock->unlock();
-    return empty;
+    JTSanSpinLock lock(&_lock);
+
+    return _front == _rear;
 }
 
 uint8_t ThreadQueue::enqueue_unsafe(uint8_t tid) {
@@ -72,8 +63,7 @@ JtsanThreadPool::JtsanThreadPool(void) {
     _queue = new ThreadQueue();
 
     // init the thread stack with all the available tids 0 - 255
-    // we are skipping 0 as it is reserved for the main thread
-    for (int i = 1; i < MAX_THREADS; i++) {
+    for (int i = 0; i < MAX_THREADS; i++) {
        _queue->enqueue_unsafe(i); 
     }
 }

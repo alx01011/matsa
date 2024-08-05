@@ -135,6 +135,23 @@ jint init_globals() {
   if (status != JNI_OK)
     return status;
 
+  // jtsan initialization must be done after gc initialization
+  JTSAN_ONLY(set_jtsan_initialized(false));
+  JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
+  JTSAN_ONLY(JTSanThreadState::init());
+  JTSAN_ONLY(JtsanThreadPool::jtsan_threadpool_init());
+  // init the main thread
+  JTSAN_ONLY(
+    int tid = JtsanThreadPool::get_queue()->dequeue();
+    JavaThread::set_jtsan_tid(JavaThread::current(), tid);
+    // increment epoch
+    JTSanThreadState::incrementEpoch(0);
+  );
+
+  JTSAN_ONLY(JTSanSuppression::init());
+  JTSAN_ONLY(JTSanReport::_report_lock = 0);
+  JTSAN_ONLY(set_jtsan_initialized(true));
+
   AsyncLogWriter::initialize();
   gc_barrier_stubs_init();  // depends on universe_init, must be before interpreter_init
   interpreter_init_stub();  // before methods get loaded
@@ -177,18 +194,6 @@ jint init_globals() {
   if (PrintFlagsFinal || PrintFlagsRanges) {
     JVMFlag::printFlags(tty, false, PrintFlagsRanges);
   }
-
-  // jtsan initialization must be done after gc initialization
-  // we want to delay jtsan init as much as possible
-  JTSAN_ONLY(set_jtsan_initialized(false));
-  JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
-  JTSAN_ONLY(JTSanThreadState::init());
-  JTSAN_ONLY(JtsanThreadPool::jtsan_threadpool_init());
-  JTSAN_ONLY(JTSanSuppression::init());
-  JTSAN_ONLY(JTSanReport::_report_lock = new Mutex(Mutex::access, "JTSanReport::_report_lock"));
-  JTSAN_ONLY(set_jtsan_initialized(true));
-
-
 
   return JNI_OK;
 }

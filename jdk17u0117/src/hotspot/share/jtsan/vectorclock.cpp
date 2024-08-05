@@ -51,6 +51,21 @@ void Vectorclock::clear(void) {
     this->_slot_size = 0;
 }
 
+// unsafe, for debugging purposes only
+void Vectorclock::print(void) {
+    for (size_t i = 0; i < this->_slot_size; i++) {
+        size_t index = this->_slot[i];
+        uint64_t value = this->_clock[index];
+
+        if (value == 0) {
+            continue;
+        }
+
+        printf("\tThread %lu: %lu\n", index, value);
+    }
+
+}
+
 void Vectorclock::release_acquire(Vectorclock* other) {
     for (size_t i = 0; i < other->_slot_size; i++) {
         size_t index = other->_slot[i];

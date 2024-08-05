@@ -549,20 +549,29 @@ void Thread::start(Thread* thread) {
   // Start is different from resume in that its safety is guaranteed by context or
   // being called from a Java method synchronized on the Thread object.
   if (thread->is_Java_thread()) {
-    JTSAN_ONLY(
+    // Initialize the thread state to RUNNABLE before starting this thread.
+    // Can not set it after the thread started because we do not know the
+    // exact thread state at that time. It could be in MONITOR_WAIT or
+    // in SLEEPING or some other state.
+    java_lang_Thread::set_thread_status(thread->as_Java_thread()->threadObj(),
+                                        JavaThreadStatus::RUNNABLE);
+  }
+
+  JTSAN_ONLY(
       if (Thread::current()->is_Java_thread()) {
         JavaThread *cur_thread = JavaThread::current();
+        JavaThread *new_thread = thread->as_Java_thread();
 
         int new_tid = JtsanThreadPool::get_instance()->get_queue()->dequeue();
-
+          
         if (new_tid == -1) {
           // out of available threads
           fatal("No more threads available for JTSan");
         }
+        JavaThread::set_jtsan_tid(thread->as_Java_thread(), new_tid);
 
         int cur_tid = JavaThread::get_jtsan_tid(cur_thread);
 
-        JavaThread::set_jtsan_tid(thread->as_Java_thread(), new_tid);
         JTSanThreadState::transferEpoch(cur_tid, new_tid);
 
         oop thread_object   = thread->as_Java_thread()->threadObj();
@@ -581,13 +590,6 @@ void Thread::start(Thread* thread) {
       }
   );
 
-    // Initialize the thread state to RUNNABLE before starting this thread.
-    // Can not set it after the thread started because we do not know the
-    // exact thread state at that time. It could be in MONITOR_WAIT or
-    // in SLEEPING or some other state.
-    java_lang_Thread::set_thread_status(thread->as_Java_thread()->threadObj(),
-                                        JavaThreadStatus::RUNNABLE);
-  }
   os::start_thread(thread);
 }
 
@@ -879,15 +881,6 @@ void JavaThread::set_jtsan_tid(JavaThread *thread, int tid) {
   assert(thread->is_Java_thread(), "thread not java thread in jtsan set id");
   
   thread->_jtsan_tid = tid;
-
-}
-
-void JavaThread::set_thread_initializing(bool value) {
-  _initializing_class = value;
-}
-  
-bool JavaThread::is_thread_initializing(void) {
-  return _initializing_class;
 }
 
 void JavaThread::set_threadObj(oop p) {
@@ -1173,7 +1166,7 @@ JavaThread::JavaThread() :
   _class_to_be_initialized(nullptr),
 
   _SleepEvent(ParkEvent::Allocate(this))
-{
+{ 
   set_jni_functions(jni_functions());
 
 #if INCLUDE_JVMCI
@@ -1197,6 +1190,17 @@ JavaThread::JavaThread() :
 JavaThread::JavaThread(bool is_attaching_via_jni) : JavaThread() {
   if (is_attaching_via_jni) {
     _jni_attach_state = _attaching_via_jni;
+
+    // in case we don't pass through start, we still need a valid tid for the symbolizer
+    JTSAN_ONLY(
+      int tid = JtsanThreadPool::get_queue()->dequeue();
+      if (tid == -1) {
+      // out of available threads
+        fatal("No more threads available for JTSan");
+      }
+      JavaThread::set_jtsan_tid(this, tid);
+      JTSanThreadState::incrementEpoch(tid);
+    );
   }
 }
 
@@ -1446,20 +1450,20 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
 
   JTSAN_ONLY(
     int cur_tid         = JavaThread::get_jtsan_tid(this);
-
     oop thread_object   = this->threadObj();
-
     LockShadow *ls      = thread_object->lock_state();
-    //uint32_t lock_index = thread_object->obj_lock_index();
 
-    // ls->transferVectorclock(cur_tid, lock_index);
     // transfer the vector clock from the current thread to the thread object (Thread ...)
     ls->transfer_vc(cur_tid);
     // no need to increment the vector clock, since the thread is exiting
 
     // clear the thread state
     // to be reused by another thread
+    // but preserve the last epoch
+    // it is crucial incase the thread is reused and there are older sync objects holding older epochs
+    int thread_epoch = JTSanThreadState::getEpoch(cur_tid, cur_tid);
     JTSanThreadState::getThreadState(cur_tid)->clear();
+    JTSanThreadState::setEpoch(cur_tid, cur_tid, thread_epoch);
     // pop the thread from the stack (make it available to be reused)
     // cast is always safe because on start of the thread we have set the thread id
     JtsanThreadPool::get_queue()->enqueue(cur_tid);

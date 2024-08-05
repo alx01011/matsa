@@ -6,9 +6,9 @@ const char * def_top_frame_suppressions = "";
 
 const char * def_frame_suppressions = 
     "java.lang.invoke.*\n"
-    "java.util.concurrent.*\n"
-    "java.lang.ref.ReferenceQueue.*\n"
-    "java.lang.ref.Reference.*\n";
+    "java.util.concurrent.*\n";
+    // "java.lang.ref.ReferenceQueue.*\n"
+    // "java.lang.ref.Reference.*\n";
 
 Trie::Trie() {
     root = new TrieNode();

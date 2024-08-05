@@ -12,8 +12,8 @@
     A class for managing the lock shadow memory.
 */
 LockShadow::LockShadow(void) {
-    this->size = sizeof(Vectorclock);
-    this->addr = os::reserve_memory(this->size);
+    this->size   = sizeof(Vectorclock);
+    this->addr   = os::reserve_memory(this->size);
     bool protect = os::protect_memory((char*)this->addr, this->size, os::MEM_PROT_RW);
 
     if (this->addr == nullptr || !protect) {

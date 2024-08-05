@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "runtime/mutex.hpp"
+#include "runtime/atomic.hpp"
 
 bool is_jtsan_initialized(void);
 void set_jtsan_initialized(bool value);
@@ -50,6 +51,36 @@ class JTSanScopedLock {
         }
     private:
         Mutex *_lock;
+};
+
+// check for x86
+#if defined(__x86_64__) || defined(__i386__)
+#define CPU_PAUSE() asm volatile("pause\n": : :"memory")
+#else
+#define CPU_PAUSE()
+#endif
+
+class JTSanSpinLock {
+    public:
+        JTSanSpinLock(uint8_t *lock) : _lock(lock) {
+            while (1) {
+                // cmpxchg (dest, compare, exchange)
+                if (Atomic::cmpxchg(_lock, (uint8_t)0, (uint8_t)1) == 0) {
+                    break;
+                }
+
+                while (*_lock) {
+                    CPU_PAUSE();
+                }
+            }
+        }
+
+        ~JTSanSpinLock() {
+            *_lock = 0;
+        }
+
+    private:
+        uint8_t *_lock;
 };
 
 #endif

@@ -250,8 +250,6 @@ JRT_ENTRY(void, InterpreterRuntime::_new(JavaThread* current, ConstantPool* pool
   //       because the _breakpoint bytecode would be lost.
   oop obj = klass->allocate_instance(CHECK);
   current->set_vm_result(obj);
-
-  JTSAN_ONLY(obj->init_lock_state());
 JRT_END
 
 

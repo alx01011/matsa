@@ -10,7 +10,7 @@ class Vectorclock {
     private:
         // clock contains the epoch of each thread seen by the current thread
         uint64_t _clock[MAX_THREADS];
-        // slot contains the ids of the threads that the clock has been set to
+        // slot contains the ids of the threads that the clock has been set
         uint8_t  _slot[MAX_THREADS];
         size_t   _slot_size;
         // map is used for faster lookup in slot, to determine if a thread has been added
@@ -26,6 +26,8 @@ class Vectorclock {
         void set(size_t index, uint64_t value);
         // clear (zero out) the clock
         void clear(void);
+
+        void print(void);
 
         void release_acquire(Vectorclock* other);
         void release(Vectorclock* other);

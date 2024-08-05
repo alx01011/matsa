@@ -125,6 +125,7 @@ class oopDesc {
 #ifdef INCLUDE_JTSAN
   inline void  init_lock_state(void);
   inline LockShadow* lock_state(void);
+  inline LockShadow* lock_state_or_null(void);
 #endif
 
  protected:
