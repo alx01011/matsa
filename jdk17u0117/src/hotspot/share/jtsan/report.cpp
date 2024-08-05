@@ -3,12 +3,105 @@
 #include "symbolizer.hpp"
 
 #include "runtime/os.hpp"
+#include "utilities/debug.hpp"
 
 #include <cstdint>
 
 #define RED   "\033[1;31m"
 #define BLUE  "\033[1;34m"
 #define RESET "\033[0m"
+
+
+JTSanReportMap *JTSanReportMap::_instance = nullptr;
+
+JTSanReportMap::JTSanReportMap() {
+    _size = 0;
+    memset(_table, 0, sizeof(_table));
+}
+
+JTSanReportMap::~JTSanReportMap() {
+    clear();
+}
+
+// we will use simple fnv1a hash
+uint64_t JTSanReportMap::hash(uintptr_t bcp) {
+    assert(sizeof(bcp) == 8, "JTSan Hash: bcp must be 64 bits");
+    assert(bcp, "JTSan Hash: bcp must be non-zero");
+
+    uint64_t hash  = 0xcbf29ce484222325ull; // offset basis
+    uint64_t prime = 0x00000100000001B3ull; // prime 
+    uint8_t *ptr = (uint8_t*)&bcp;
+
+    for (size_t i = 0; i < sizeof(bcp); i++) {
+        hash ^= ptr[i];
+        hash *= prime;
+    }
+
+    return hash;
+}
+
+JTSanReportMap *JTSanReportMap::instance() {
+    assert(_instance != nullptr, "JTSanReportMap not initialized");
+    return _instance;
+}
+
+void JTSanReportMap::init() {
+    assert(_instance == nullptr, "JTSanReportMap already initialized");
+    _instance = new JTSanReportMap();
+}
+
+void JTSanReportMap::destroy() {
+    assert(_instance != nullptr, "JTSanReportMap not initialized");
+    _instance->clear();
+
+    delete _instance;
+    _instance = nullptr;
+}
+
+bool JTSanReportMap::contains(uintptr_t bcp) {
+    uint64_t hash_val = hash(bcp);
+    uint64_t bucket   = hash_val % BUCKETS;
+
+    ReportEntry *entry = _table[bucket];
+    while (entry != nullptr) {
+        if (entry->bcp == bcp) {
+            return true;
+        }
+
+        entry = entry->next;
+    }
+
+    return false;
+}
+
+void JTSanReportMap::insert(uintptr_t bcp) {
+    uint64_t hash_val = hash(bcp);
+    uint64_t bucket   = hash_val % BUCKETS;
+
+    ReportEntry *entry = _table[bucket];
+
+    ReportEntry *new_entry = NEW_C_HEAP_OBJ(ReportEntry, mtInternal);
+    new_entry->bcp  = bcp;
+    new_entry->next = entry;
+
+    _table[bucket] = new_entry;
+    _size++;
+}
+
+void JTSanReportMap::clear() {
+    for (size_t i = 0; i < BUCKETS; i++) {
+        ReportEntry *entry = _table[i];
+        while (entry != nullptr) {
+            ReportEntry *next = entry->next;
+            FREE_C_HEAP_OBJ(entry);
+            entry = next;
+        }
+    }
+
+    _size = 0;
+}
+
+
 
 uint8_t JTSanReport::_report_lock;
 
@@ -69,8 +162,10 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
     //JTSanScopedLock lock(JTSanReport::_report_lock);
     JTSanSpinLock lock(&_report_lock);
 
-    // TODO: consider adding a bit map to track which bci's have already been reported
-    // this would make the output more concise and significantly smaller
+    // already reported
+    if (JTSanReportMap::instance()->contains((uintptr_t)bcp)) {
+        return;
+    }
 
     
     int pid = os::current_process_id();
@@ -92,7 +187,6 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
         fprintf(stderr, "  <no stack trace available>\n");
     }
 
-    // null checks here are not necessary, at least thats what tests have shown so far
     const char *file_name   = "<null>";
     const char *method_name = m->external_name_as_fully_qualified();
     const int lineno        = m->line_number_from_bci(m->bci_from(bcp));
@@ -105,6 +199,9 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
 
     fprintf(stderr, "\nSUMMARY: ThreadSanitizer: data race %s:%d in %s()\n", file_name, lineno, method_name);
     fprintf(stderr, "==================\n");
+
+    // store it in the report map
+    JTSanReportMap::instance()->insert((uintptr_t)bcp);
 
     COUNTER_INC(race);
 }
