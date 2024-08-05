@@ -93,9 +93,15 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
     }
 
     // null checks here are not necessary, at least thats what tests have shown so far
-    const char *file_name   = m->method_holder()->source_file_name()->as_C_string();
+    const char *file_name   = "<null>";
     const char *method_name = m->external_name_as_fully_qualified();
     const int lineno        = m->line_number_from_bci(m->bci_from(bcp));
+
+    InstanceKlass *holder = m->method_holder();
+    Symbol *source_file   = nullptr;
+    if (holder != nullptr && (source_file = holder->source_file_name()) != nullptr) {
+        file_name = source_file->as_C_string();
+    }
 
     fprintf(stderr, "\nSUMMARY: ThreadSanitizer: data race %s:%d in %s()\n", file_name, lineno, method_name);
     fprintf(stderr, "==================\n");
