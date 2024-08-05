@@ -150,6 +150,7 @@ jint init_globals() {
 
   JTSAN_ONLY(JTSanSuppression::init());
   JTSAN_ONLY(JTSanReport::_report_lock = 0);
+  JTSAN_ONLY(JTSanReportMap::init());
   JTSAN_ONLY(set_jtsan_initialized(true));
 
   AsyncLogWriter::initialize();
