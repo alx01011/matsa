@@ -143,8 +143,8 @@ void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
 
     for (size_t i = 0; i < stack_size; i++) {
         uint64_t raw_frame = stack->get(i);
-        mp  = (Method*)(raw_frame & ((1ULL << 48) - 1));
-        bci = raw_frame >> 48;
+        mp  = (Method*)(raw_frame >> 16);
+        bci = raw_frame & 0xFFFF;
 
         print_method_info(mp, bci, i);
     }
@@ -192,7 +192,11 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
     fprintf(stderr, RED "WARNING: ThreadSanitizer: data race (pid=%d)\n", pid);
     fprintf(stderr, BLUE " %s of size %u at %p by thread T%u:\n" RESET,  cur.is_write ? "Write" : "Read", 
             size, addr, (uint32_t)cur.tid);
-    if (!try_print_event_trace(addr, cur.tid, cur, pair.cur_shadow)) {
+    // if (!try_print_event_trace(addr, cur.tid, cur, pair.cur_shadow)) {
+    //     // less accurate line numbers
+    //     print_stack_trace(trace);
+    // }
+    if (true) {
         // less accurate line numbers
         print_stack_trace(trace);
     }
