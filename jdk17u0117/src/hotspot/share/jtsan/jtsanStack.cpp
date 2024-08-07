@@ -1,13 +1,13 @@
 #include "jtsanStack.hpp"
 
 JTSanStack::JTSanStack(size_t size) {
-    this->_stack = new uint64_t[size];
+    this->_stack = NEW_C_HEAP_ARRAY(uint64_t, size, mtInternal);
     this->top = 0;
     this->size = size;
 }
 
 JTSanStack::~JTSanStack() {
-    delete[] this->_stack;
+    FREE_C_HEAP_ARRAY(uint64_t, this->_stack);
 }
 
 void JTSanStack::push(uint64_t value) {
