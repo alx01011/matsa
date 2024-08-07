@@ -895,6 +895,13 @@ void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method,
 
   // first 48 bits are the method id, last 16 bits are the bci
   uint64_t packed_frame = ((uint64_t)method << 16) | (uint64_t)bci;
+
+  Method *unpacked_method = (Method *)(packed_frame & 0xFFFFFFFFFFFF);
+
+  if (unpacked_method != method) {
+    fatal("Method pointer mismatch");
+  }
+
   stack->push(packed_frame);
 }
 
