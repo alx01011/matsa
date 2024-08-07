@@ -1352,6 +1352,12 @@ JavaThread::~JavaThread() {
     FREE_C_HEAP_ARRAY(jlong, _jvmci_counters);
   }
 #endif // INCLUDE_JVMCI
+
+  JTSAN_ONLY(
+    // clear the stack here
+    // if we clear it on exit we will miss the thread.exit frame
+    delete _jtsan_stack;
+  );
 }
 
 
@@ -1484,9 +1490,6 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
     // pop the thread from the stack (make it available to be reused)
     // cast is always safe because on start of the thread we have set the thread id
     JtsanThreadPool::get_queue()->enqueue(cur_tid);
-
-    // clear the stack
-    //delete _jtsan_stack;
   );
 
   HandleMark hm(this);
