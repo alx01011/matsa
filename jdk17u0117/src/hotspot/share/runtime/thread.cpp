@@ -569,7 +569,7 @@ void Thread::start(Thread* thread) {
           fatal("No more threads available for JTSan");
         }
         JavaThread::set_jtsan_tid(new_thread, new_tid);
-        JavaThread::init_jtsan_stack(new_thread, DEFAULT_STACK_SIZE)
+        JavaThread::init_jtsan_stack(new_thread, DEFAULT_STACK_SIZE);
 
         int cur_tid = JavaThread::get_jtsan_tid(cur_thread);
 
