@@ -1,17 +1,18 @@
 #include "suppression.hpp"
 #include "jtsanStack.hpp"
+#include "jtsanGlobals.hpp"
+#include "report.hpp"
 
 #include "oops/method.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/allocation.hpp"
 
-const char * def_top_frame_suppressions = "";
+uint8_t JTSanSuppression::_suppresion_lock = 0;
 
+const char * def_top_frame_suppressions = "";
 const char * def_frame_suppressions = 
     "java.lang.invoke.*\n"
     "java.util.concurrent.*\n";
-    // "java.lang.ref.ReferenceQueue.*\n"
-    // "java.lang.ref.Reference.*\n";
 
 Trie::Trie() {
     root = new TrieNode();
@@ -95,10 +96,19 @@ void JTSanSuppression::init(void) {
     add_suppressions(frame_suppressions    , def_frame_suppressions);
 }
 
-bool JTSanSuppression::is_suppressed(JavaThread *thread) {
+bool JTSanSuppression::is_suppressed(JavaThread *thread, address bcp) {
+    JTSanSpinLock lock(&_suppresion_lock);
+
+    // already reported
+    if (JTSanReportMap::instance()->contains((uintptr_t)bcp)) {
+        return true;
+    }
+
+
     ResourceMark rm;
 
     JTSanStack *stack = JavaThread::get_jtsan_stack(thread);
+    bool ret  = false;
 
     // first check the top frame
     Method *mp = NULL;
@@ -108,9 +118,10 @@ bool JTSanSuppression::is_suppressed(JavaThread *thread) {
     mp = (Method*)((uintptr_t)(raw_frame >> 16));
     const char *fname = mp->external_name_as_fully_qualified();
 
-    // if (top_frame_suppressions->search(fname)) {
-    //     return true;
-    // }
+    if (top_frame_suppressions->search(fname)) {
+        ret = true;
+        goto DONE;
+    }
 
     int stack_size = stack->size();
     // now check the rest of the frames
@@ -119,18 +130,15 @@ bool JTSanSuppression::is_suppressed(JavaThread *thread) {
         mp = (Method*)((uintptr_t)(raw_frame >> 16));
         fname = mp->external_name_as_fully_qualified();
 
-        if (strncmp(fname, "java.lang.invoke.", 17) == 0) {
-            return true;
-        } else if (strncmp(fname, "java.util.concurrent.", 21) == 0) {
-            return true;
+        if (frame_suppressions->search(fname)) {
+            ret = true;
+            goto DONE;
         }
-
-        // if (frame_suppressions->search(fname)) {
-        //     return true;
-        // }
     }
 
-    return false;
+DONE:
+    JTSanReportMap::instance()->insert((uintptr_t)bcp);
+    return ret;
 }
 
 

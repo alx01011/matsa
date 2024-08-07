@@ -2,6 +2,7 @@
 #define SUPPRESSION_HPP
 
 #include "memory/allocation.hpp"
+#include "utilities/globalDefinitions.hpp"
 
 #include <unordered_map>
 
@@ -68,7 +69,9 @@ class Trie : public CHeapObj<mtInternal> {
 class JTSanSuppression : public CHeapObj<mtInternal> {
     public:
         static void init();
-        static bool is_suppressed(JavaThread *thread);
+        static bool is_suppressed(JavaThread *thread, address bcp);
+
+        static uint8_t _suppresion_lock;
     private:
         static Trie *top_frame_suppressions;
         static Trie *frame_suppressions;
