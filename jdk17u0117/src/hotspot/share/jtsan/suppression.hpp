@@ -1,7 +1,6 @@
 #ifndef SUPPRESSION_HPP
 #define SUPPRESSION_HPP
 
-#include "stacktrace.hpp"
 #include "memory/allocation.hpp"
 
 #include <unordered_map>
