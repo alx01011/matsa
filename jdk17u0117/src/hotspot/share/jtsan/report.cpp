@@ -124,7 +124,7 @@ void print_method_info(Method *m, int bci, int index) {
 
 
 // must hold lock else the output will be garbled
-void JTSanReport::print_stack_trace(JavaThread *thread) {
+void JTSanReport::print_current_stack(JavaThread *thread) {
     JTSanStack *stack = JavaThread::get_jtsan_stack(thread);
 
     int stack_size = stack->size();
@@ -182,7 +182,7 @@ void JTSanReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
     fprintf(stderr, RED "WARNING: ThreadSanitizer: data race (pid=%d)\n", pid);
     fprintf(stderr, BLUE " %s of size %u at %p by thread T%u:\n" RESET,  cur.is_write ? "Write" : "Read", 
             size, addr, (uint32_t)cur.tid);
-            
+
     print_current_stack(thread);
     
     fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%u:\n" RESET, prev.is_write ? "write" : "read", 
