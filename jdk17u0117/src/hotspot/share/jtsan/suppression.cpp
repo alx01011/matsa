@@ -108,9 +108,9 @@ bool JTSanSuppression::is_suppressed(JavaThread *thread) {
     mp = (Method*)((uintptr_t)(raw_frame >> 16));
     const char *fname = mp->external_name_as_fully_qualified();
 
-    if (top_frame_suppressions->search(fname)) {
-        return true;
-    }
+    // if (top_frame_suppressions->search(fname)) {
+    //     return true;
+    // }
 
     int stack_size = stack->size();
     // now check the rest of the frames
@@ -118,24 +118,17 @@ bool JTSanSuppression::is_suppressed(JavaThread *thread) {
         raw_frame = stack->get(i);
         mp = (Method*)((uintptr_t)(raw_frame >> 16));
         fname = mp->external_name_as_fully_qualified();
-        if (frame_suppressions->search(fname)) {
+
+        if (strncmp(fname, "java.lang.invoke.", 17) == 0) {
+            return true;
+        } else if (strncmp(fname, "java.util.concurrent.", 21) == 0) {
             return true;
         }
+
+        // if (frame_suppressions->search(fname)) {
+        //     return true;
+        // }
     }
-
-    // // first check the top frame
-    // const char *frame = stack_trace->get_frame(0).method->external_name_as_fully_qualified();
-    // if (top_frame_suppressions->search(frame)) {
-    //     return true;
-    // }
-
-    // // now check the rest of the frames
-    // for (size_t i = 0; i < stack_trace->frame_count(); i++) {
-    //     frame = stack_trace->get_frame(i).method->external_name_as_fully_qualified();
-    //     if (frame_suppressions->search(frame)) {
-    //         return true;
-    //     }
-    // }
 
     return false;
 }
