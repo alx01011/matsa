@@ -39,6 +39,6 @@ uint64_t JTSanStack::get(size_t index) {
     return this->_stack[index];
 }
 
-size_t JTSanStack::size(void) {
+int JTSanStack::size(void) {
     return this->_top;
 }
