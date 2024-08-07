@@ -99,13 +99,14 @@ bool JTSanSuppression::is_suppressed(JTSanStackTrace *stack_trace) {
 
     JavaThread *thread = JavaThread::current();
     JTSanStack *stack = JavaThread::get_jtsan_stack(thread);
+    uint64_t mask = 0xFFFFFFFFFFFF;
 
     // first check the top frame
     Method *mp = NULL;
     uint64_t raw_frame = stack->top();
 
     // first 48bits are the method pointer
-    mp = (Method*)(raw_frame & ((1ULL << 48) - 1));
+    mp = (Method*)(raw_frame & mask);
     const char *fname = mp->external_name_as_fully_qualified();
 
     if (top_frame_suppressions->search(fname)) {
@@ -116,7 +117,7 @@ bool JTSanSuppression::is_suppressed(JTSanStackTrace *stack_trace) {
     // now check the rest of the frames
     for (size_t i = 0; i < stack_size; i++) {
         raw_frame = stack->get(i);
-        mp = (Method*)(raw_frame & ((1ULL << 48) - 1));
+        mp = (Method*)(raw_frame & mask);
         fname = mp->external_name_as_fully_qualified();
         if (frame_suppressions->search(fname)) {
             return true;
