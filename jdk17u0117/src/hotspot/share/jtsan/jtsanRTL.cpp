@@ -18,8 +18,8 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
 
-bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *addr, ShadowCell &cur,
-                                                             ShadowCell &prev, ShadowPair &pair) {
+bool JtsanRTL::CheckRaces(JavaThread *thread, void *addr, ShadowCell &cur, ShadowCell &prev, 
+                           ShadowPair &pair) {
     uptr addr_aligned = ((uptr)addr);
 
     bool stored   = false;
@@ -95,8 +95,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         isRace = true;
 
         // its a race, so check if it is a suppressed one
-        //trace = new JTSanStackTrace(thread);
-        if (LIKELY(JTSanSuppression::is_suppressed(trace))) {
+        if (LIKELY(JTSanSuppression::is_suppressed(thread))) {
             // ignore
             isRace = false;
         }
@@ -132,15 +131,14 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     // race
     ShadowCell prev;
     ShadowPair pair = {nullptr, nullptr};
-    JTSanStackTrace *stack_trace = nullptr;
 
-    bool is_race = CheckRaces(thread, stack_trace, addr, cur, prev, pair);
+    bool is_race = CheckRaces(thread, addr, cur, prev, pair);
 
     // symbolize the access
     // 1 is read, 2 is write
     Symbolizer::Symbolize((Event)(cur.is_write + 1), addr, m->bci_from(bcp), tid, pair.cur_shadow);
 
     if (is_race && !JTSanSilent) {
-        JTSanReport::do_report_race(stack_trace, addr, access_size, bcp, m, cur, prev, pair);
+        JTSanReport::do_report_race(thread, addr, access_size, bcp, m, cur, prev, pair);
     }
 }

@@ -124,17 +124,7 @@ void print_method_info(Method *m, int bci, int index) {
 
 
 // must hold lock else the output will be garbled
-void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
-    // for (size_t i = 0; i < trace->frame_count(); i++) {
-    //     JTSanStackFrame frame = trace->get_frame(i);
-    //     Method *method = frame.method;
-    //     address pc = frame.pc;
-
-    //     int bci = method->bci_from(pc);
-    //     print_method_info(method, bci, i);
-    // }
-
-    JavaThread *thread = JavaThread::current();
+void JTSanReport::print_stack_trace(JavaThread *thread) {
     JTSanStack *stack = JavaThread::get_jtsan_stack(thread);
 
     int stack_size = stack->size();
@@ -173,7 +163,7 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, void *cell_sha
     return has_trace;
 }
 
-void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t size, address bcp, Method *m, 
+void JTSanReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
                             ShadowCell &cur, ShadowCell &prev, ShadowPair &pair) {
     //JTSanScopedLock lock(JTSanReport::_report_lock);
     JTSanSpinLock lock(&_report_lock);
@@ -192,14 +182,8 @@ void JTSanReport::do_report_race(JTSanStackTrace *trace, void *addr, uint8_t siz
     fprintf(stderr, RED "WARNING: ThreadSanitizer: data race (pid=%d)\n", pid);
     fprintf(stderr, BLUE " %s of size %u at %p by thread T%u:\n" RESET,  cur.is_write ? "Write" : "Read", 
             size, addr, (uint32_t)cur.tid);
-    // if (!try_print_event_trace(addr, cur.tid, cur, pair.cur_shadow)) {
-    //     // less accurate line numbers
-    //     print_stack_trace(trace);
-    // }
-    if (true) {
-        // less accurate line numbers
-        print_stack_trace(trace);
-    }
+            
+    print_current_stack(thread);
     
     fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%u:\n" RESET, prev.is_write ? "write" : "read", 
             size, addr, (uint32_t)prev.tid);

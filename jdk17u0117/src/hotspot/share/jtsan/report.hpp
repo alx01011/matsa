@@ -43,9 +43,9 @@ namespace JTSanReport {
     //extern Mutex *_report_lock;
     extern uint8_t _report_lock;
 
-    void do_report_race   (JTSanStackTrace *trace, void *addr, uint8_t size, address bcp, Method *m, 
+    void do_report_race   (JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
                             ShadowCell &cur, ShadowCell &prev, ShadowPair &pair);
-    void print_stack_trace(JTSanStackTrace *trace);
+    void print_current_stack(JavaThread *thread);
 }
 
 #endif
