@@ -32,6 +32,6 @@ class Vectorclock {
         void release_acquire(Vectorclock* other);
         void release(Vectorclock* other);
         void acquire(Vectorclock* other);
-} ALIGNED(64); // 64 bytes cache line
+};
 
 #endif
