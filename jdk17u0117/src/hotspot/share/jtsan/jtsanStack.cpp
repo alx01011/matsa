@@ -14,13 +14,13 @@ void JTSanStack::push(uint64_t value) {
     // if we are at the end of the stack, double the size
     if (this->top == this->size) {
         this->size *= 2;
-        uint64_t *new_stack = new uint64_t[this->size];
+        uint64_t *new_stack = NEW_C_HEAP_ARRAY(uint64_t, this->size, mtInternal);
 
         for (size_t i = 0; i < this->top; i++) {
             new_stack[i] = this->_stack[i];
         }
 
-        delete[] this->_stack;
+        FREE_C_HEAP_ARRAY(uint64_t, this->_stack);
         this->_stack = new_stack;
     }
 
