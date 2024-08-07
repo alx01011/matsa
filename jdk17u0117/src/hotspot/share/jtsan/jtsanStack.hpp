@@ -20,6 +20,11 @@ class JTSanStack : public CHeapObj<mtInternal> {
 
         void push(uint64_t value);
         uint64_t pop(void);
+
+        uint64_t top(void);
+        uint64_t get(size_t index);
+
+        size_t size(void);
 };
 
 #endif

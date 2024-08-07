@@ -1,4 +1,6 @@
 #include "suppression.hpp"
+#include "jtsanStack.hpp"
+
 #include "memory/resourceArea.hpp"
 #include "memory/allocation.hpp"
 
@@ -95,19 +97,45 @@ void JTSanSuppression::init(void) {
 bool JTSanSuppression::is_suppressed(JTSanStackTrace *stack_trace) {
     ResourceMark rm;
 
+    JavaThread *thread = JavaThread::current();
+    JTSanStack *stack = JavaThread::get_jtsan_stack(thread);
+
     // first check the top frame
-    const char *frame = stack_trace->get_frame(0).method->external_name_as_fully_qualified();
-    if (top_frame_suppressions->search(frame)) {
+    Method *mp = NULL;
+    uint64_t raw_frame = stack->top();
+
+    // first 48bits are the method pointer
+    mp = (Method*)(raw_frame & ((1ULL << 48) - 1));
+    const char *fname = mp->external_name_as_fully_qualified();
+
+    if (top_frame_suppressions->search(fname)) {
         return true;
     }
 
+    size_t stack_size = stack->size();
     // now check the rest of the frames
-    for (size_t i = 0; i < stack_trace->frame_count(); i++) {
-        frame = stack_trace->get_frame(i).method->external_name_as_fully_qualified();
-        if (frame_suppressions->search(frame)) {
+    for (size_t i = 0; i < stack_size; i++) {
+        raw_frame = stack->get(i);
+        mp = (Method*)(raw_frame & ((1ULL << 48) - 1));
+        fname = mp->external_name_as_fully_qualified();
+        if (frame_suppressions->search(fname)) {
             return true;
         }
     }
+
+    // // first check the top frame
+    // const char *frame = stack_trace->get_frame(0).method->external_name_as_fully_qualified();
+    // if (top_frame_suppressions->search(frame)) {
+    //     return true;
+    // }
+
+    // // now check the rest of the frames
+    // for (size_t i = 0; i < stack_trace->frame_count(); i++) {
+    //     frame = stack_trace->get_frame(i).method->external_name_as_fully_qualified();
+    //     if (frame_suppressions->search(frame)) {
+    //         return true;
+    //     }
+    // }
 
     return false;
 }

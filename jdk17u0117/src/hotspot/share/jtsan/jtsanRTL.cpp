@@ -95,7 +95,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, JTSanStackTrace* &trace, void *add
         isRace = true;
 
         // its a race, so check if it is a suppressed one
-        trace = new JTSanStackTrace(thread);
+        //trace = new JTSanStackTrace(thread);
         if (LIKELY(JTSanSuppression::is_suppressed(trace))) {
             // ignore
             isRace = false;

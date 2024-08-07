@@ -30,3 +30,15 @@ void JTSanStack::push(uint64_t value) {
 uint64_t JTSanStack::pop(void) {
     return this->_stack[--this->top];
 }
+
+uint64_t JTSanStack::top(void) {
+    return this->_stack[this->top - 1];
+}
+
+uint64_t JTSanStack::get(size_t index) {
+    return this->_stack[index];
+}
+
+size_t JTSanStack::size(void) {
+    return this->top;
+}

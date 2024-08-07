@@ -1,6 +1,7 @@
 #include "report.hpp"
 #include "jtsanGlobals.hpp"
 #include "symbolizer.hpp"
+#include "jtsanStack.hpp"
 
 #include "runtime/os.hpp"
 #include "utilities/debug.hpp"
@@ -124,13 +125,28 @@ void print_method_info(Method *m, int bci, int index) {
 
 // must hold lock else the output will be garbled
 void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
-    for (size_t i = 0; i < trace->frame_count(); i++) {
-        JTSanStackFrame frame = trace->get_frame(i);
-        Method *method = frame.method;
-        address pc = frame.pc;
+    // for (size_t i = 0; i < trace->frame_count(); i++) {
+    //     JTSanStackFrame frame = trace->get_frame(i);
+    //     Method *method = frame.method;
+    //     address pc = frame.pc;
 
-        int bci = method->bci_from(pc);
-        print_method_info(method, bci, i);
+    //     int bci = method->bci_from(pc);
+    //     print_method_info(method, bci, i);
+    // }
+
+    JavaThread *thread = JavaThread::current();
+    JTSanStack *stack = JavaThread::get_jtsan_stack(thread);
+
+    size_t stack_size = stack->size();
+    Method *mp = NULL;
+    int bci = 0;
+
+    for (size_t i = 0; i < stack_size; i++) {
+        uint64_t raw_frame = stack->get(i);
+        mp  = (Method*)(raw_frame & ((1ULL << 48) - 1));
+        bci = raw_frame >> 48;
+
+        print_method_info(mp, bci, i);
     }
 
 }
