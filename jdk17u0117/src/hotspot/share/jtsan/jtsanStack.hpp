@@ -11,8 +11,8 @@
 class JTSanStack : public CHeapObj<mtInternal> {
     private:
         uint64_t *_stack;
-        uint16_t _top;
         int _size;
+        uint16_t _top;
 
     public:
         JTSanStack(size_t size);
