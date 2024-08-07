@@ -107,6 +107,7 @@ bool JTSanSuppression::is_suppressed(JTSanStackTrace *stack_trace) {
 
     // first 48bits are the method pointer
     mp = (Method*)((uintptr_t)(raw_frame & mask));
+    fprintf(stderr, "mp: %p\n",(void*)mp);
     const char *fname = mp->external_name_as_fully_qualified();
     fprintf(stderr, "got first frame\n");
 
