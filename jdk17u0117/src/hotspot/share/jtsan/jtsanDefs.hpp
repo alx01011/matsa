@@ -45,11 +45,17 @@ typedef __m256i m256;
 // branch prediction
 
 #ifdef __GNUC__
-#define LIKELY(x)   __builtin_expect(!!(x), 1)
-#define UNLIKELY(x) __builtin_expect(!!(x), 0)
+// #define LIKELY(x)   __builtin_expect(!!(x), 1)
+// #define UNLIKELY(x) __builtin_expect(!!(x), 0)
+#define LIKELY(x)   (x)
+#define UNLIKELY(x) (x)
+
+#define ALIGNED(x) __attribute__((aligned(x)))
+
 #else
 #define LIKELY(x)   (x)
 #define UNLIKELY(x) (x)
+#define ALIGNED(x) 
 #endif
 
 #endif
