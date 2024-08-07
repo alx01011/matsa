@@ -894,7 +894,7 @@ void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method,
   JTSanStack *stack = JavaThread::get_jtsan_stack(current);
 
   // first 48 bits are the method id, last 16 bits are the bci
-  uint64_t packed_frame = (uint64_t)method << 16 | bci;
+  uint64_t packed_frame = ((uint64_t)method << 16) | (uint64_t)bci;
   stack->push(packed_frame);
 }
 
