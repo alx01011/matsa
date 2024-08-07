@@ -12,11 +12,11 @@ JTSanStack::~JTSanStack() {
 
 void JTSanStack::push(uint64_t value) {
     // if we are at the end of the stack, double the size
-    if (this->top == this->size) {
-        this->size *= 2;
-        uint64_t *new_stack = NEW_C_HEAP_ARRAY(uint64_t, this->size, mtInternal);
+    if (this->_top == this->_size) {
+        this->_size *= 2;
+        uint64_t *new_stack = NEW_C_HEAP_ARRAY(uint64_t, this->_size, mtInternal);
 
-        for (size_t i = 0; i < this->top; i++) {
+        for (size_t i = 0; i < this->_top; i++) {
             new_stack[i] = this->_stack[i];
         }
 
@@ -24,11 +24,11 @@ void JTSanStack::push(uint64_t value) {
         this->_stack = new_stack;
     }
 
-    this->_stack[this->top++] = value;
+    this->_stack[this->_top++] = value;
 }
 
 uint64_t JTSanStack::pop(void) {
-    return this->_stack[--this->top];
+    return this->_stack[--this->_top];
 }
 
 uint64_t JTSanStack::top(void) {
