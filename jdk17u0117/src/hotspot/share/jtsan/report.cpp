@@ -4,6 +4,7 @@
 #include "jtsanStack.hpp"
 
 #include "runtime/os.hpp"
+#include "oops/method.hpp"
 #include "memory/resourceArea.hpp"
 #include "utilities/debug.hpp"
 
