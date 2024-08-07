@@ -5,7 +5,6 @@
 #include "utilities/globalDefinitions.hpp"
 
 #include "shadow.hpp"
-#include "stacktrace.hpp"
 
 #include <cstdint>
 
