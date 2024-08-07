@@ -170,6 +170,12 @@ void JTSanReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
     //JTSanScopedLock lock(JTSanReport::_report_lock);
     JTSanSpinLock lock(&_report_lock);
 
+    // already reported
+    if (JTSanReportMap::instance()->contains((uintptr_t)bcp)) {
+        return;
+    }
+
+    
     int pid = os::current_process_id();
     ResourceMark rm;
 
@@ -199,6 +205,9 @@ void JTSanReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
 
     fprintf(stderr, "\nSUMMARY: ThreadSanitizer: data race %s:%d in %s()\n", file_name, lineno, method_name);
     fprintf(stderr, "==================\n");
+
+    // store it in the report map
+    JTSanReportMap::instance()->insert((uintptr_t)bcp);
 
     COUNTER_INC(race);
 }
