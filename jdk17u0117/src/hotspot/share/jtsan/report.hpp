@@ -1,7 +1,6 @@
 #ifndef REPORT_HPP
 #define REPORT_HPP
 
-#include "stacktrace.hpp"
 #include "shadow.hpp"
 
 #include "runtime/mutex.hpp"
