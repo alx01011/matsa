@@ -108,6 +108,7 @@ bool JTSanSuppression::is_suppressed(JTSanStackTrace *stack_trace) {
     // first 48bits are the method pointer
     mp = (Method*)(raw_frame & mask);
     const char *fname = mp->external_name_as_fully_qualified();
+    fpritnf(stderr, "got first frame\n");
 
     if (top_frame_suppressions->search(fname)) {
         return true;
