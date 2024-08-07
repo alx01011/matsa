@@ -115,7 +115,7 @@ bool JTSanSuppression::is_suppressed(JTSanStackTrace *stack_trace) {
 
     size_t stack_size = stack->size();
     // now check the rest of the frames
-    for (size_t i = stack_size - 1; i >= 0; i--) {
+    for (size_t i = stack_size - 1; i > 0; i--) {
         raw_frame = stack->get(i);
         mp = (Method*)(raw_frame & mask);
         fname = mp->external_name_as_fully_qualified();
