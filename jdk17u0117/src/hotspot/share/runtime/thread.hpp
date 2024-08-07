@@ -814,7 +814,7 @@ class JavaThread: public Thread {
   static int get_jtsan_tid(JavaThread *thread);
   static void set_jtsan_tid(JavaThread *thread, int tid);
 
-  static void init_jtsan_stackinit_jtsan_stack(JavaThread *thread, size_t size);
+  static void init_jtsan_stack(JavaThread *thread, size_t size);
   
  private:
   MonitorChunk* _monitor_chunks;              // Contains the off stack monitors
