@@ -136,7 +136,7 @@ void JTSanReport::print_current_stack(JavaThread *thread) {
         mp  = (Method*)(raw_frame >> 16);
         bci = raw_frame & 0xFFFF;
 
-        print_method_info(mp, bci, i);
+        print_method_info(mp, bci, (stack_size - 1) - i);
     }
 
 }
