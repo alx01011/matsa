@@ -113,6 +113,7 @@ bool JTSanSuppression::is_suppressed(JavaThread *thread, address bcp) {
     // first check the top frame
     Method *mp = NULL;
     uint64_t raw_frame = stack->top();
+    int stack_size = stack->size();
 
     // first 48bits are the method pointer
     mp = (Method*)((uintptr_t)(raw_frame >> 16));
@@ -123,8 +124,7 @@ bool JTSanSuppression::is_suppressed(JavaThread *thread, address bcp) {
         goto DONE;
     }
 
-    int stack_size = stack->size();
-    // now check the rest of the frames
+    // now check the rest of the stack
     for (int i = stack_size - 1; i >= 0; i--) {
         raw_frame = stack->get(i);
         mp = (Method*)((uintptr_t)(raw_frame >> 16));
