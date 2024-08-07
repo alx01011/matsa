@@ -141,7 +141,7 @@ void JTSanReport::print_stack_trace(JTSanStackTrace *trace) {
     Method *mp = NULL;
     int bci = 0;
 
-    for (size_t i = stack_size - 1; i >= 0; i--) {
+    for (ssize_t i = stack_size - 1; i >= 0; i--) {
         uint64_t raw_frame = stack->get(i);
         mp  = (Method*)(raw_frame >> 16);
         bci = raw_frame & 0xFFFF;
