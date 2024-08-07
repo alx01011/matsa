@@ -16,7 +16,7 @@ void JTSanStack::push(uint64_t value) {
         this->_size *= 2;
         uint64_t *new_stack = NEW_C_HEAP_ARRAY(uint64_t, this->_size, mtInternal);
 
-        for (size_t i = 0; i < this->_top; i++) {
+        for (int i = 0; i < this->_top; i++) {
             new_stack[i] = this->_stack[i];
         }
 
