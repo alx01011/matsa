@@ -1486,7 +1486,7 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
     JtsanThreadPool::get_queue()->enqueue(cur_tid);
 
     // clear the stack
-    delete _jtsan_stack;
+    //delete _jtsan_stack;
   );
 
   HandleMark hm(this);
