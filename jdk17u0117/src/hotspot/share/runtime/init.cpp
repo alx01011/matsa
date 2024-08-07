@@ -146,6 +146,8 @@ jint init_globals() {
     JavaThread::set_jtsan_tid(JavaThread::current(), tid);
     // increment epoch
     JTSanThreadState::incrementEpoch(0);
+
+    JavaThread::init_jtsan_stack(JavaThread::current());
   );
 
   JTSAN_ONLY(JTSanSuppression::init());

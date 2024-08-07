@@ -569,7 +569,7 @@ void Thread::start(Thread* thread) {
           fatal("No more threads available for JTSan");
         }
         JavaThread::set_jtsan_tid(new_thread, new_tid);
-        JavaThread::init_jtsan_stack(new_thread, DEFAULT_STACK_SIZE);
+        JavaThread::init_jtsan_stack(new_thread);
 
         int cur_tid = JavaThread::get_jtsan_tid(cur_thread);
 
@@ -884,11 +884,11 @@ void JavaThread::set_jtsan_tid(JavaThread *thread, int tid) {
   thread->_jtsan_tid = tid;
 }
 
-void JavaThread::init_jtsan_stack(JavaThread *thread, size_t size) {
+void JavaThread::init_jtsan_stack(JavaThread *thread) {
   assert(thread != NULL, "null thread in jtsan init stack");
   assert(thread->is_Java_thread(), "thread not java thread in jtsan init stack");
 
-  thread->_jtsan_stack = new JTSanStack(size);
+  thread->_jtsan_stack = new JTSanStack(DEFAULT_STACK_SIZE);
 }
 
 JTSanStack *JavaThread::get_jtsan_stack(JavaThread *thread) {
