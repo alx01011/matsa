@@ -1,6 +1,7 @@
 #include "suppression.hpp"
 #include "jtsanStack.hpp"
 
+#include "oops/method.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/allocation.hpp"
 
