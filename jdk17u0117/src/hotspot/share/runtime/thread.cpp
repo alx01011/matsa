@@ -891,6 +891,13 @@ void JavaThread::init_jtsan_stack(JavaThread *thread, size_t size) {
   thread->_jtsan_stack = new JTSanStack(size);
 }
 
+JTSanStack *JavaThread::get_jtsan_stack(JavaThread *thread) {
+  assert(thread != NULL, "null thread in jtsan get stack");
+  assert(thread->is_Java_thread(), "thread not java thread in jtsan get stack");
+
+  return thread->_jtsan_stack;
+}
+
 void JavaThread::set_threadObj(oop p) {
   assert(_thread_oop_storage != NULL, "not yet initialized");
   _threadObj = OopHandle(_thread_oop_storage, p);

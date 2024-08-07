@@ -85,6 +85,7 @@
 #include "jtsan/jtsanGlobals.hpp"
 #include "jtsan/vectorclock.hpp"
 #include "jtsan/symbolizer.hpp"
+#include "jtsan/jtsanStack.hpp"
 #endif
 
 // Helper class to access current interpreter state
@@ -890,12 +891,19 @@ void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method,
   const int bci = method->bci_from(bcp);
 
   Symbolizer::Symbolize(FUNC, method, bci, tid);
+  JTSanStack *stack = JavaThread::get_jtsan_stack(current);
+
+  // first 48 bits are the method id, last 16 bits are the bci
+  uint64_t packed_frame = (uint64_t)method << 16 | bci;
+  stack->push(packed_frame);
 }
 
 void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp) {
   int tid = JavaThread::get_jtsan_tid(current);
 
   Symbolizer::Symbolize(FUNC, 0, 0, tid);
+  JTSanStack *stack = JavaThread::get_jtsan_stack(current);
+  (void)stack->pop();
 }
 
 //------------------------------------------------------------------------------------------------------------------------
