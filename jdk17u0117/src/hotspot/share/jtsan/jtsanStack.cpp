@@ -2,7 +2,7 @@
 
 JTSanStack::JTSanStack(size_t size) {
     this->_stack = NEW_C_HEAP_ARRAY(uint64_t, size, mtInternal);
-    this->_top = 0;
+    this->_top = -1;
     this->_size = size;
 }
 
@@ -24,7 +24,7 @@ void JTSanStack::push(uint64_t value) {
         this->_stack = new_stack;
     }
 
-    this->_stack[this->_top++] = value;
+    this->_stack[++this->_top] = value;
 }
 
 uint64_t JTSanStack::pop(void) {
@@ -32,7 +32,7 @@ uint64_t JTSanStack::pop(void) {
 }
 
 uint64_t JTSanStack::top(void) {
-    return this->_stack[this->_top - 1];
+    return this->_stack[this->_top];
 }
 
 uint64_t JTSanStack::get(size_t index) {
