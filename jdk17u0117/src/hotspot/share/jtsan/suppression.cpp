@@ -94,10 +94,9 @@ void JTSanSuppression::init(void) {
     add_suppressions(frame_suppressions    , def_frame_suppressions);
 }
 
-bool JTSanSuppression::is_suppressed(JTSanStackTrace *stack_trace) {
+bool JTSanSuppression::is_suppressed(JavaThread *thread) {
     ResourceMark rm;
 
-    JavaThread *thread = JavaThread::current();
     JTSanStack *stack = JavaThread::get_jtsan_stack(thread);
 
     // first check the top frame

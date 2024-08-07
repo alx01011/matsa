@@ -69,7 +69,7 @@ class Trie : public CHeapObj<mtInternal> {
 class JTSanSuppression : public CHeapObj<mtInternal> {
     public:
         static void init();
-        static bool is_suppressed(JTSanStackTrace *stack_trace);
+        static bool is_suppressed(JavaThread *thread);
     private:
         static Trie *top_frame_suppressions;
         static Trie *frame_suppressions;
