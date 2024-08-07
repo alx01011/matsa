@@ -17,7 +17,7 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
 
-bool JtsanRTL::CheckRaces(JavaThread *thread, void *addr, ShadowCell &cur, ShadowCell &prev, 
+bool JtsanRTL::CheckRaces(JavaThread *thread, void *addr, address bcp, ShadowCell &cur, ShadowCell &prev, 
                            ShadowPair &pair) {
     uptr addr_aligned = ((uptr)addr);
 
@@ -94,7 +94,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, void *addr, ShadowCell &cur, Shado
         isRace = true;
 
         // its a race, so check if it is a suppressed one
-        if (LIKELY(JTSanSuppression::is_suppressed(thread))) {
+        if (LIKELY(JTSanSuppression::is_suppressed(thread, bcp))) {
             // ignore
             isRace = false;
         }
@@ -131,7 +131,7 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     ShadowCell prev;
     ShadowPair pair = {nullptr, nullptr};
 
-    bool is_race = CheckRaces(thread, addr, cur, prev, pair);
+    bool is_race = CheckRaces(thread, addr, bcp, cur, prev, pair);
 
     // symbolize the access
     // 1 is read, 2 is write
