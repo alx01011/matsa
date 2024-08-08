@@ -146,10 +146,13 @@ jint init_globals() {
     JavaThread::set_jtsan_tid(JavaThread::current(), tid);
     // increment epoch
     JTSanThreadState::incrementEpoch(0);
+
+    JavaThread::init_jtsan_stack(JavaThread::current());
   );
 
   JTSAN_ONLY(JTSanSuppression::init());
   JTSAN_ONLY(JTSanReport::_report_lock = 0);
+  JTSAN_ONLY(JTSanReportMap::init());
   JTSAN_ONLY(set_jtsan_initialized(true));
 
   AsyncLogWriter::initialize();

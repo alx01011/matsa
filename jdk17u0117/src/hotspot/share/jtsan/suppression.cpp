@@ -1,14 +1,16 @@
 #include "suppression.hpp"
+#include "jtsanStack.hpp"
+#include "jtsanGlobals.hpp"
+#include "report.hpp"
+
+#include "oops/method.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/allocation.hpp"
 
 const char * def_top_frame_suppressions = "";
-
 const char * def_frame_suppressions = 
     "java.lang.invoke.*\n"
     "java.util.concurrent.*\n";
-    // "java.lang.ref.ReferenceQueue.*\n"
-    // "java.lang.ref.Reference.*\n";
 
 Trie::Trie() {
     root = new TrieNode();
@@ -92,19 +94,31 @@ void JTSanSuppression::init(void) {
     add_suppressions(frame_suppressions    , def_frame_suppressions);
 }
 
-bool JTSanSuppression::is_suppressed(JTSanStackTrace *stack_trace) {
+bool JTSanSuppression::is_suppressed(JavaThread *thread, address bcp) {
     ResourceMark rm;
 
+    JTSanStack *stack = JavaThread::get_jtsan_stack(thread);
+
     // first check the top frame
-    const char *frame = stack_trace->get_frame(0).method->external_name_as_fully_qualified();
-    if (top_frame_suppressions->search(frame)) {
+    Method *mp = NULL;
+    uint64_t raw_frame = stack->top();
+
+    // first 48bits are the method pointer
+    mp = (Method*)((uintptr_t)(raw_frame >> 16));
+    const char *fname = mp->external_name_as_fully_qualified();
+
+    if (top_frame_suppressions->search(fname)) {
         return true;
     }
 
+    int stack_size = stack->size();
     // now check the rest of the frames
-    for (size_t i = 0; i < stack_trace->frame_count(); i++) {
-        frame = stack_trace->get_frame(i).method->external_name_as_fully_qualified();
-        if (frame_suppressions->search(frame)) {
+    for (int i = stack_size - 1; i >= 0; i--) {
+        raw_frame = stack->get(i);
+        mp = (Method*)((uintptr_t)(raw_frame >> 16));
+        fname = mp->external_name_as_fully_qualified();
+
+        if (frame_suppressions->search(fname)) {
             return true;
         }
     }

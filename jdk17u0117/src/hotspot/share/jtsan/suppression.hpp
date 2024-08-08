@@ -1,8 +1,8 @@
 #ifndef SUPPRESSION_HPP
 #define SUPPRESSION_HPP
 
-#include "stacktrace.hpp"
 #include "memory/allocation.hpp"
+#include "utilities/globalDefinitions.hpp"
 
 #include <unordered_map>
 
@@ -69,7 +69,7 @@ class Trie : public CHeapObj<mtInternal> {
 class JTSanSuppression : public CHeapObj<mtInternal> {
     public:
         static void init();
-        static bool is_suppressed(JTSanStackTrace *stack_trace);
+        static bool is_suppressed(JavaThread *thread, address bcp);
     private:
         static Trie *top_frame_suppressions;
         static Trie *frame_suppressions;

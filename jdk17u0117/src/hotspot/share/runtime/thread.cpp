@@ -568,13 +568,14 @@ void Thread::start(Thread* thread) {
           // out of available threads
           fatal("No more threads available for JTSan");
         }
-        JavaThread::set_jtsan_tid(thread->as_Java_thread(), new_tid);
+        JavaThread::set_jtsan_tid(new_thread, new_tid);
+        JavaThread::init_jtsan_stack(new_thread);
 
         int cur_tid = JavaThread::get_jtsan_tid(cur_thread);
 
         JTSanThreadState::transferEpoch(cur_tid, new_tid);
 
-        oop thread_object   = thread->as_Java_thread()->threadObj();
+        oop thread_object   = new_thread->threadObj();
 
         LockShadow *ls      = thread_object->lock_state();
         // transfer the vector clock of the current thread to the new thread object
@@ -881,6 +882,20 @@ void JavaThread::set_jtsan_tid(JavaThread *thread, int tid) {
   assert(thread->is_Java_thread(), "thread not java thread in jtsan set id");
   
   thread->_jtsan_tid = tid;
+}
+
+void JavaThread::init_jtsan_stack(JavaThread *thread) {
+  assert(thread != NULL, "null thread in jtsan init stack");
+  assert(thread->is_Java_thread(), "thread not java thread in jtsan init stack");
+
+  thread->_jtsan_stack = new JTSanStack(DEFAULT_STACK_SIZE);
+}
+
+JTSanStack *JavaThread::get_jtsan_stack(JavaThread *thread) {
+  assert(thread != NULL, "null thread in jtsan get stack");
+  assert(thread->is_Java_thread(), "thread not java thread in jtsan get stack");
+
+  return thread->_jtsan_stack;
 }
 
 void JavaThread::set_threadObj(oop p) {
@@ -1200,6 +1215,8 @@ JavaThread::JavaThread(bool is_attaching_via_jni) : JavaThread() {
       }
       JavaThread::set_jtsan_tid(this, tid);
       JTSanThreadState::incrementEpoch(tid);
+
+      _jtsan_stack = new JTSanStack(DEFAULT_STACK_SIZE);
     );
   }
 }
@@ -1335,6 +1352,12 @@ JavaThread::~JavaThread() {
     FREE_C_HEAP_ARRAY(jlong, _jvmci_counters);
   }
 #endif // INCLUDE_JVMCI
+
+  JTSAN_ONLY(
+    // clear the stack here
+    // if we clear it on exit we will miss the thread.exit frame
+    delete _jtsan_stack;
+  );
 }
 
 

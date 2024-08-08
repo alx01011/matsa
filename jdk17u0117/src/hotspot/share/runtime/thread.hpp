@@ -54,6 +54,10 @@
 #include "jfr/support/jfrThreadExtension.hpp"
 #endif
 
+#if INCLUDE_JTSAN
+#include "jtsan/jtsanStack.hpp"
+#endif
+
 class SafeThreadsListPtr;
 class ThreadSafepointState;
 class ThreadsList;
@@ -721,6 +725,8 @@ class JavaThread: public Thread {
   OopHandle      _threadObj;                     // The Java level thread object
 #if INCLUDE_JTSAN
   int            _jtsan_tid          = -1;            // jtsan thread id
+  JTSanStack*    _jtsan_stack        = nullptr;       // jtsan stack
+
 #endif
 
 #ifdef ASSERT
@@ -807,6 +813,9 @@ class JavaThread: public Thread {
   static int get_thread_obj_id(JavaThread *thread);
   static int get_jtsan_tid(JavaThread *thread);
   static void set_jtsan_tid(JavaThread *thread, int tid);
+
+  static void init_jtsan_stack(JavaThread *thread);
+  static JTSanStack *get_jtsan_stack(JavaThread *thread);
   
  private:
   MonitorChunk* _monitor_chunks;              // Contains the off stack monitors
