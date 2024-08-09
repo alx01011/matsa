@@ -23,6 +23,9 @@ void     decrement_tid(void);
 void increment_func_entry(void);
 uint64_t get_func_entry(void);
 
+void increment_memory_access(void);
+uint64_t get_memory_access(void);
+
 #define COUNTER(x)\
     static uint64_t x##_counter;\
     static void increment_##x(void) {\
