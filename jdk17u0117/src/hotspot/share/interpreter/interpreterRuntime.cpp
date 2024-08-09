@@ -892,6 +892,7 @@ void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method,
 
   Symbolizer::Symbolize(FUNC, method, bci, tid);
   JTSanStack *stack = JavaThread::get_jtsan_stack(current);
+  increment_func_entry();
 
   // first 48 bits are the method id, last 16 bits are the bci
   uint64_t packed_frame = ((uint64_t)method << 16) | (uint64_t)bci;
