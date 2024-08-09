@@ -99,10 +99,11 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, void *addr, address bcp, ShadowCel
             isRace = false;
         }
 
-        // mark ignore flag and store at 0 index
-        // so we can skip the whole block faster
+        // mark ignore flag and store at ith index
+        // so we can skip if ever encountered again
+        // its fine if we miss it, we also check for previously reported races in do_report
         cur.is_ignored = 1;
-        ShadowBlock::store_cell_at((uptr)addr, &cur, 0);
+        ShadowBlock::store_cell_at((uptr)addr, &cur, i);
         pair.cur_shadow = base_shadow;
         stored = true;
 

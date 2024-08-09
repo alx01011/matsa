@@ -20,6 +20,9 @@ uint16_t get_tid(void);
 void     increment_tid(void);
 void     decrement_tid(void);
 
+void increment_func_entry(void);
+uint64_t get_func_entry(void);
+
 #define COUNTER(x)\
     static uint64_t x##_counter;\
     static void increment_##x(void) {\
