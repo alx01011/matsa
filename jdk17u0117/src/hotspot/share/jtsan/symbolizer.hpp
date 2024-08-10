@@ -52,7 +52,7 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         ThreadHistory();
         uint64_t index;
 
-        void add_event(uint64_t event, uint64_t shadow_addr);
+        void add_event(uint64_t event);
 
         uint64_t get_event(uint32_t i);
         uint64_t get_old_shadow(uint32_t i);

@@ -22,15 +22,13 @@ ThreadHistory::ThreadHistory() {
     }
 }
 
-void ThreadHistory::add_event(uint64_t event, uint64_t shadow_addr) {
+void ThreadHistory::add_event(uint64_t event) {
     // if the buffer gets full, there is a small chance that we will report the wrong trace
     // might happen if slots before the access get filled with method entry/exit events
     // if it gets filled we invalidate
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
-    uint16_t idx = index++;
-
-    events[idx]            = event;
+    events[index++] = event;
 }
 
 uint64_t ThreadHistory::get_event(uint32_t i) {
@@ -63,7 +61,7 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
     uint64_t e = (uint64_t) event | (uint64_t)addr << 2 | (uint64_t)bci << 50;
 
     ThreadHistory *history = JTSanThreadState::getHistory(tid);
-    history->add_event(e, store_addr);
+    history->add_event(e);
 }
 
 bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
