@@ -1208,6 +1208,7 @@ void InterpreterMacroAssembler::get_method_counters(Register method,
 // aantonak - jtsan
 void InterpreterMacroAssembler::jtsan_monitor_enter(Register lock_reg) {
   pusha();
+  push_d(xmm0);
 
   // get lock_obj and method pointers
   movptr    (c_rarg1, lock_reg);
@@ -1219,6 +1220,7 @@ void InterpreterMacroAssembler::jtsan_monitor_enter(Register lock_reg) {
 
   call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_sync_enter), c_rarg0, c_rarg1);
 
+  pop_d(xmm0);
   popa();
 }
 
@@ -1349,6 +1351,7 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
 // aantonak - jtsan
 void InterpreterMacroAssembler::jtsan_monitor_exit(Register lock_reg) {
   pusha();
+  push_d(xmm0);
 
   // get lock_obj and method pointers
    movptr    (c_rarg1, lock_reg);
@@ -1358,6 +1361,7 @@ void InterpreterMacroAssembler::jtsan_monitor_exit(Register lock_reg) {
   // movptr    (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
   call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_sync_exit), c_rarg0, c_rarg1);
 
+  pop_d(xmm0);
   popa();
 }
 
