@@ -52,7 +52,6 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         // maybe 8 events could share a cache line too?
     public:
         ThreadHistory();
-        // lock free due to x86's 
         uint64_t index;
 
         void add_event(uint64_t event, void *shadow_addr = nullptr);
