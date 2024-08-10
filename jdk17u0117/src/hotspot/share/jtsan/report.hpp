@@ -43,7 +43,7 @@ namespace JTSanReport {
     extern uint8_t _report_lock;
 
     void do_report_race   (JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
-                            ShadowCell &cur, ShadowCell &prev, ShadowPair &pair);
+                            ShadowCell &cur, ShadowCell &prev);
     void print_current_stack(JavaThread *thread);
 }
 

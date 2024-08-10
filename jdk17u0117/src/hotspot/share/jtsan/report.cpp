@@ -143,7 +143,7 @@ void JTSanReport::print_current_stack(JavaThread *thread) {
 
 }
 
-bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, void *cell_shadow_addr) {
+bool try_print_event_trace(void *addr, int tid, ShadowCell &cell) {
     JTSanEventTrace trace;
     bool has_trace = false;
 
@@ -166,7 +166,7 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, void *cell_sha
 }
 
 void JTSanReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
-                            ShadowCell &cur, ShadowCell &prev, ShadowPair &pair) {
+                            ShadowCell &cur, ShadowCell &prev) {
     //JTSanScopedLock lock(JTSanReport::_report_lock);
     JTSanSpinLock lock(&_report_lock);
 
@@ -189,7 +189,7 @@ void JTSanReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
     
     fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%u:\n" RESET, prev.is_write ? "write" : "read", 
             size, addr, (uint32_t)prev.tid);
-    if (!try_print_event_trace(addr, prev.tid, prev, pair.prev_shadow)) {
+    if (!try_print_event_trace(addr, prev.tid, prev)) {
         fprintf(stderr, "  <no stack trace available>\n");
     }
 
