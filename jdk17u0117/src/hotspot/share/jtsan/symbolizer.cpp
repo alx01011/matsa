@@ -34,7 +34,7 @@ void ThreadHistory::add_event(uint64_t event, uint64_t shadow_addr) {
     uint16_t idx = index++;
 
     events[idx]            = event;
-    event_shadow_addr[idx] = shadow_addr;
+    // event_shadow_addr[idx] = shadow_addr;
 }
 
 uint64_t ThreadHistory::get_event(uint32_t i) {
@@ -94,10 +94,10 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
             case MEM_READ:
             case MEM_WRITE: {
                 if ((Event)(prev.is_write + 1) == e.event && (void*)((uintptr_t)e.pc) == addr) {
-                    uint64_t shadow_old = history->get_old_shadow(i);
-                    if (shadow_old != prev_shadow_addr) {
-                        continue; // shadow address mismatch, probably a different access
-                    }
+                    // uint64_t shadow_old = history->get_old_shadow(i);
+                    // if (shadow_old != prev_shadow_addr) {
+                    //     continue; // shadow address mismatch, probably a different access
+                    // }
 
                     last = i;
                     i    = 0; // break
