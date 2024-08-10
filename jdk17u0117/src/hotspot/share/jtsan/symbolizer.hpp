@@ -45,7 +45,7 @@ class ThreadHistory : public CHeapObj<mtInternal>{
     private:
         uint64_t *events;
         // can we do better in terms of memory?
-        void    **event_shadow_addr;
+        uint64_t *event_shadow_addr;
         //uint8_t   index; // 256 events at most
         // instead of locking, is it faster to do an atomic increment on index and just load whatever is on events?
         // a single event is 8 bytes and the memory is dword aligned, so we are safe
@@ -54,10 +54,10 @@ class ThreadHistory : public CHeapObj<mtInternal>{
         ThreadHistory();
         uint64_t index;
 
-        void add_event(uint64_t event, void *shadow_addr = nullptr);
+        void add_event(uint64_t event, uint64_t shadow_addr);
 
         uint64_t get_event(uint32_t i);
-        void *get_old_shadow(uint32_t i);
+        uint64_t get_old_shadow(uint32_t i);
 
         void clear(void) {
             index = 0;
@@ -72,7 +72,7 @@ namespace Symbolizer {
     uintptr_t RestoreAddr(uintptr_t addr);
 
     void Symbolize       (Event event, void *addr, int bci, int tid, void *shadow_addr = nullptr);
-    bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev, void *prev_shadow_addr);
+    bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev, uint64_t prev_shadow_addr);
 
     void ClearThreadHistory(int tid);
 };

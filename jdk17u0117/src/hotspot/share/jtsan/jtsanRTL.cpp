@@ -136,7 +136,7 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
 
     // symbolize the access
     // 1 is read, 2 is write
-    Symbolizer::Symbolize((Event)(is_write + 1), addr, m->bci_from(bcp), tid, pair.cur_shadow);
+    Symbolizer::Symbolize((Event)(is_write + 1), addr, m->bci_from(bcp), tid, (uint64_t)pair.cur_shadow);
 
     if (is_race && !JTSanSilent) {
         JTSanReport::do_report_race(thread, addr, access_size, bcp, m, cur, prev, pair);

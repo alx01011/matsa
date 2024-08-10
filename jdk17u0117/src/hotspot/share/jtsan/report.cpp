@@ -147,7 +147,7 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, void *cell_sha
     JTSanEventTrace trace;
     bool has_trace = false;
 
-    has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, cell, cell_shadow_addr);
+    has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, cell, (uint64_t)cell_shadow_addr);
 
     if (has_trace) {
         for (int i = trace.size - 1; i >= 0; i--) {
