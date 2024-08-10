@@ -71,7 +71,7 @@ namespace Symbolizer {
     uintptr_t CompressAddr(uintptr_t addr);
     uintptr_t RestoreAddr(uintptr_t addr);
 
-    void Symbolize       (Event event, void *addr, int bci, int tid, void *shadow_addr = nullptr);
+    void Symbolize       (Event event, void *addr, int bci, int tid, uint64_t shadow_addr = 0);
     bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev, uint64_t prev_shadow_addr);
 
     void ClearThreadHistory(int tid);
