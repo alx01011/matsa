@@ -28,7 +28,7 @@ void ThreadHistory::add_event(uint64_t event) {
     // if it gets filled we invalidate
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
-    events[index++] = event;
+    events[(uint16_t)index++] = event;
 }
 
 uint64_t ThreadHistory::get_event(uint32_t i) {
