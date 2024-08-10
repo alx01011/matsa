@@ -209,8 +209,6 @@ void exit_globals() {
 
   JTSAN_ONLY(
     fprintf(stderr, "Java ThreadSanitizer: reported %lu warnings\n", COUNTER_GET(race));
-    fprintf(stderr, "Total function calls: %lu\n", get_func_entry());
-    fprintf(stderr, "Total memory accesses: %lu\n", get_memory_access());
   );
 
     perfMemory_exit();
