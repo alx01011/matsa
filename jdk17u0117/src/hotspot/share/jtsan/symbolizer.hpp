@@ -44,8 +44,6 @@ class JTSanEventTrace {
 class ThreadHistory : public CHeapObj<mtInternal>{
     private:
         uint64_t *events;
-        // can we do better in terms of memory?
-        uint64_t *event_shadow_addr;
         //uint8_t   index; // 256 events at most
         // instead of locking, is it faster to do an atomic increment on index and just load whatever is on events?
         // a single event is 8 bytes and the memory is dword aligned, so we are safe
@@ -71,8 +69,8 @@ namespace Symbolizer {
     uintptr_t CompressAddr(uintptr_t addr);
     uintptr_t RestoreAddr(uintptr_t addr);
 
-    void Symbolize       (Event event, void *addr, int bci, int tid, uint64_t shadow_addr = 0);
-    bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev, uint64_t prev_shadow_addr);
+    void Symbolize       (Event event, void *addr, int bci, int tid);
+    bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev);
 
     void ClearThreadHistory(int tid);
 };

@@ -8,17 +8,14 @@
 #include <cstring>
 
 ThreadHistory::ThreadHistory() {
-    index = 0;
+    index  = 0;
+    events = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
 
-    events            = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
-    event_shadow_addr = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
-
-    if (!events || !event_shadow_addr) {
+    if (!events) {
         fatal("JTSan Symbolizer: Failed to mmap");
     }
 
-    bool protect = os::protect_memory((char*)events, EVENT_BUFFER_SIZE * sizeof(uint64_t), os::MEM_PROT_RW)
-                   && os::protect_memory((char*)event_shadow_addr, EVENT_BUFFER_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
+    bool protect = os::protect_memory((char*)events, EVENT_BUFFER_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
 
     if (!protect) {
         fatal("JTSan Symbolizer: Failed to protect memory");
@@ -34,7 +31,6 @@ void ThreadHistory::add_event(uint64_t event, uint64_t shadow_addr) {
     uint16_t idx = index++;
 
     events[idx]            = event;
-    // event_shadow_addr[idx] = shadow_addr;
 }
 
 uint64_t ThreadHistory::get_event(uint32_t i) {
@@ -45,10 +41,6 @@ uint64_t ThreadHistory::get_event(uint32_t i) {
     return events[i];
 }
 
-uint64_t ThreadHistory::get_old_shadow(uint32_t i) {
-    return event_shadow_addr[i];
-}
-
 uintptr_t Symbolizer::CompressAddr(uintptr_t addr) {
     return addr & ((1ull << COMPRESSED_ADDR_BITS) - 1); // see jtsanDefs
 }
@@ -57,7 +49,7 @@ uintptr_t Symbolizer::RestoreAddr(uintptr_t addr) {
     return addr | (ShadowMemory::heap_base & ~((1ull << COMPRESSED_ADDR_BITS) - 1));
 }
 
-void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid, uint64_t store_addr) {
+void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
     /*
         Layout of packed event uint64_t:
         | event (2 bits) | addr (48 bits) | bci (14 bits) |
@@ -74,7 +66,7 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid, uint64_t s
     history->add_event(e, store_addr);
 }
 
-bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev, uint64_t prev_shadow_addr) {
+bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
     ThreadHistory *history = JTSanThreadState::getHistory(tid);
 
     uint16_t sp = 0;
