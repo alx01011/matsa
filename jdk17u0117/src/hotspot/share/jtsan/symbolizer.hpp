@@ -27,6 +27,11 @@ enum Event {
     FUNC      = 3
 };
 
+/*
+    TODO:
+    In the future, to make the trace more accurate, we could also store the shadow index if it is a memory access.
+    On checkraces, we could return the racy index, and the store index.
+*/
 class JTSanEvent {
     public:
         Event     event : 2; // 4 events
