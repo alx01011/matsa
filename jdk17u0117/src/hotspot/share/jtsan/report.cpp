@@ -4,6 +4,7 @@
 #include "jtsanStack.hpp"
 
 #include "runtime/os.hpp"
+#include "runtime/mutexLocker.hpp"
 #include "oops/method.hpp"
 #include "memory/resourceArea.hpp"
 #include "utilities/debug.hpp"
@@ -105,8 +106,9 @@ void JTSanReportMap::clear() {
 }
 
 
+//uint8_t JTSanReport::_report_lock;
+Mutex *JTSanReport::_report_lock;
 
-uint8_t JTSanReport::_report_lock;
 
 void print_method_info(Method *m, int bci, int index) {
     const char *file_name = "<null>";
@@ -168,7 +170,8 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell) {
 void JTSanReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
                             ShadowCell &cur, ShadowCell &prev) {
     //JTSanScopedLock lock(JTSanReport::_report_lock);
-    JTSanSpinLock lock(&_report_lock);
+    //JTSanSpinLock lock(&_report_lock);
+    MutexLocker ml(JTSanReport::_report_lock, Mutex::_no_safepoint_check_flag);
 
     // already reported
     if (JTSanReportMap::instance()->contains((uintptr_t)bcp)) {

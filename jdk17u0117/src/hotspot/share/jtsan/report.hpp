@@ -39,8 +39,8 @@ class JTSanReportMap : public CHeapObj<mtInternal> {
 };
 
 namespace JTSanReport {
-    //extern Mutex *_report_lock;
-    extern uint8_t _report_lock;
+    extern Mutex *_report_lock;
+    //extern uint8_t _report_lock;
 
     void do_report_race   (JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
                             ShadowCell &cur, ShadowCell &prev);
