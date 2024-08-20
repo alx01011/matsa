@@ -1,14 +1,21 @@
 #include "jtsanThreadPool.hpp"
 #include "jtsanGlobals.hpp"
 
+#include "runtime/mutexLocker.hpp"
+
 ThreadQueue::ThreadQueue(void) {
     _front = 0;
     _rear  = 0;
-    _lock  = 0;
+    _lock  = new PaddedMutex(leaf, "ThreadQueue lock", false, Mutex::SafepointCheckRequired::_safepoint_check_never);
+}
+
+ThreadQueue::~ThreadQueue(void) {
+    delete _lock;
 }
 
 uint8_t ThreadQueue::enqueue(uint8_t tid) {
-    JTSanSpinLock lock(&_lock);
+    //JTSanSpinLock lock(&_lock);
+    MutexLocker ml(_lock, Mutex::_no_safepoint_check_flag);
 
     if ((_rear + 1) % MAX_THREADS == _front) {
         return 1;
@@ -21,7 +28,8 @@ uint8_t ThreadQueue::enqueue(uint8_t tid) {
 }
 
 int ThreadQueue::dequeue(void) {
-    JTSanSpinLock lock(&_lock);
+    // JTSanSpinLock lock(&_lock);
+    MutexLocker ml(_lock, Mutex::_no_safepoint_check_flag);
 
     if (_front == _rear) {
         return -1;
@@ -34,13 +42,15 @@ int ThreadQueue::dequeue(void) {
 }
 
 int ThreadQueue::front(void) {
-    JTSanSpinLock lock(&_lock);
+    // JTSanSpinLock lock(&_lock);
+    MutexLocker ml(_lock, Mutex::_no_safepoint_check_flag);
 
     return _queue[_front];
 }
 
 bool ThreadQueue::empty(void) {
-    JTSanSpinLock lock(&_lock);
+    // JTSanSpinLock lock(&_lock);
+    MutexLocker ml(_lock, Mutex::_no_safepoint_check_flag);
 
     return _front == _rear;
 }

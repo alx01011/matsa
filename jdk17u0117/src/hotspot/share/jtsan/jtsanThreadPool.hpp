@@ -13,11 +13,11 @@ class ThreadQueue : public CHeapObj<mtInternal> {
         uint8_t _queue[MAX_THREADS];
         uint16_t _front;
         uint16_t _rear;
-        uint8_t _lock;
-        // Mutex* _lock;
+
+        Mutex* _lock;
     public:
         ThreadQueue(void);
-        // ~ThreadQueue(void);
+        ~ThreadQueue(void);
 
         uint8_t enqueue(uint8_t tid);
         int     dequeue(void);
