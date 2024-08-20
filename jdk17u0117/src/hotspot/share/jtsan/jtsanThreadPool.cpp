@@ -6,7 +6,8 @@
 ThreadQueue::ThreadQueue(void) {
     _front = 0;
     _rear  = 0;
-    _lock  = new PaddedMutex(leaf, "ThreadQueue lock", false, Mutex::SafepointCheckRequired::_safepoint_check_never);
+    _lock  = new PaddedMutex(PaddedMutex::leaf, "ThreadQueue lock", 
+                    false, Mutex::SafepointCheckRequired::_safepoint_check_never);
 }
 
 ThreadQueue::~ThreadQueue(void) {
