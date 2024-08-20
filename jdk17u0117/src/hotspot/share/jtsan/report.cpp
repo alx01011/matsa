@@ -169,8 +169,6 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell) {
 
 void JTSanReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
                             ShadowCell &cur, ShadowCell &prev) {
-    //JTSanScopedLock lock(JTSanReport::_report_lock);
-    //JTSanSpinLock lock(&_report_lock);
     MutexLocker ml(JTSanReport::_report_lock, Mutex::_no_safepoint_check_flag);
 
     // already reported
