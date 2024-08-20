@@ -1,22 +1,16 @@
 #include "jtsanThreadPool.hpp"
 #include "jtsanGlobals.hpp"
 
-#include "runtime/mutexLocker.hpp"
-
 ThreadQueue::ThreadQueue(void) {
     _front = 0;
     _rear  = 0;
-    _lock  = new PaddedMutex(PaddedMutex::leaf, "ThreadQueue lock", 
-                    false, Mutex::SafepointCheckRequired::_safepoint_check_never);
-}
-
-ThreadQueue::~ThreadQueue(void) {
-    delete _lock;
+    _lock  = 0;
 }
 
 uint8_t ThreadQueue::enqueue(uint8_t tid) {
-    //JTSanSpinLock lock(&_lock);
-    MutexLocker ml(_lock, Mutex::_no_safepoint_check_flag);
+    // we are using a spinlock since Thread::current can return null on vm exit
+    // spinlock won't be a problem since we are not going to have a lot of contention anyway
+    JTSanSpinLock lock(&_lock);
 
     if ((_rear + 1) % MAX_THREADS == _front) {
         return 1;
@@ -29,8 +23,7 @@ uint8_t ThreadQueue::enqueue(uint8_t tid) {
 }
 
 int ThreadQueue::dequeue(void) {
-    // JTSanSpinLock lock(&_lock);
-    MutexLocker ml(_lock, Mutex::_no_safepoint_check_flag);
+    JTSanSpinLock lock(&_lock);
 
     if (_front == _rear) {
         return -1;
@@ -43,15 +36,13 @@ int ThreadQueue::dequeue(void) {
 }
 
 int ThreadQueue::front(void) {
-    // JTSanSpinLock lock(&_lock);
-    MutexLocker ml(_lock, Mutex::_no_safepoint_check_flag);
+    JTSanSpinLock lock(&_lock);
 
     return _queue[_front];
 }
 
 bool ThreadQueue::empty(void) {
-    // JTSanSpinLock lock(&_lock);
-    MutexLocker ml(_lock, Mutex::_no_safepoint_check_flag);
+    JTSanSpinLock lock(&_lock);
 
     return _front == _rear;
 }
