@@ -152,7 +152,8 @@ jint init_globals() {
 
   JTSAN_ONLY(JTSanSuppression::init());
   JTSAN_ONLY(
-    JTSanReport::_report_lock = new PaddedMutex(PaddedMutex::leaf, "JTSanReport::_report_lock");
+    JTSanReport::_report_lock = new PaddedMutex(PaddedMutex::leaf, "JTSanReport::_report_lock", false,
+       Mutex::SafepointCheckRequired::_safepoint_check_never);
     JTSanReportMap::init()
   );
   JTSAN_ONLY(set_jtsan_initialized(true));
