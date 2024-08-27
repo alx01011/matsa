@@ -1,6 +1,5 @@
 #ifndef JTSAN_THREADPOOL_HPP
 
-#include "runtime/mutex.hpp"
 #include "memory/allocation.hpp"
 
 #include <cstdint>
@@ -14,10 +13,8 @@ class ThreadQueue : public CHeapObj<mtInternal> {
         uint16_t _front;
         uint16_t _rear;
         uint8_t _lock;
-        // Mutex* _lock;
     public:
         ThreadQueue(void);
-        // ~ThreadQueue(void);
 
         uint8_t enqueue(uint8_t tid);
         int     dequeue(void);

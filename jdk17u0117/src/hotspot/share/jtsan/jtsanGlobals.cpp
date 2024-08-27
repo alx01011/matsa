@@ -4,7 +4,7 @@
 #include <cstdio>
 
 volatile bool    _is_jtsan_initialized = false;
-volatile uint32_t _gc_epoch = 0;
+uint32_t _gc_epoch = 0;
 
 volatile bool   _is_klass_init = false;
 

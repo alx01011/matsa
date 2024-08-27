@@ -8,6 +8,8 @@ ThreadQueue::ThreadQueue(void) {
 }
 
 uint8_t ThreadQueue::enqueue(uint8_t tid) {
+    // we are using a spinlock since Thread::current can return null on vm exit
+    // spinlock won't be a problem since we are not going to have a lot of contention anyway
     JTSanSpinLock lock(&_lock);
 
     if ((_rear + 1) % MAX_THREADS == _front) {

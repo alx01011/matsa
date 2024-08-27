@@ -69,10 +69,4 @@ class ShadowBlock : AllStatic {
         static void       atomic_store_cell(ShadowCell *cell, ShadowCell *val);
 };
 
-// a pair of shadow addresses
-struct ShadowPair {
-    void *prev_shadow;
-    void *cur_shadow;
-};
-
 #endif

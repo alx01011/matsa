@@ -27,6 +27,11 @@ enum Event {
     FUNC      = 3
 };
 
+/*
+    TODO:
+    In the future, to make the trace more accurate, we could also store the shadow index if it is a memory access.
+    On checkraces, we could return the racy index, and the store index.
+*/
 class JTSanEvent {
     public:
         Event     event : 2; // 4 events
@@ -44,21 +49,18 @@ class JTSanEventTrace {
 class ThreadHistory : public CHeapObj<mtInternal>{
     private:
         uint64_t *events;
-        // can we do better in terms of memory?
-        void    **event_shadow_addr;
         //uint8_t   index; // 256 events at most
         // instead of locking, is it faster to do an atomic increment on index and just load whatever is on events?
         // a single event is 8 bytes and the memory is dword aligned, so we are safe
         // maybe 8 events could share a cache line too?
     public:
         ThreadHistory();
-        // lock free due to x86's 
         uint64_t index;
 
-        void add_event(uint64_t event, void *shadow_addr = nullptr);
+        void add_event(uint64_t event);
 
         uint64_t get_event(uint32_t i);
-        void *get_old_shadow(uint32_t i);
+        uint64_t get_old_shadow(uint32_t i);
 
         void clear(void) {
             index = 0;
@@ -72,8 +74,8 @@ namespace Symbolizer {
     uintptr_t CompressAddr(uintptr_t addr);
     uintptr_t RestoreAddr(uintptr_t addr);
 
-    void Symbolize       (Event event, void *addr, int bci, int tid, void *shadow_addr = nullptr);
-    bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev, void *prev_shadow_addr);
+    void Symbolize       (Event event, void *addr, int bci, int tid);
+    bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev);
 
     void ClearThreadHistory(int tid);
 };

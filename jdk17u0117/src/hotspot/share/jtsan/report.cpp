@@ -4,6 +4,7 @@
 #include "jtsanStack.hpp"
 
 #include "runtime/os.hpp"
+#include "runtime/mutexLocker.hpp"
 #include "oops/method.hpp"
 #include "memory/resourceArea.hpp"
 #include "utilities/debug.hpp"
@@ -105,8 +106,9 @@ void JTSanReportMap::clear() {
 }
 
 
+//uint8_t JTSanReport::_report_lock;
+Mutex *JTSanReport::_report_lock;
 
-uint8_t JTSanReport::_report_lock;
 
 void print_method_info(Method *m, int bci, int index) {
     const char *file_name = "<null>";
@@ -143,11 +145,11 @@ void JTSanReport::print_current_stack(JavaThread *thread) {
 
 }
 
-bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, void *cell_shadow_addr) {
+bool try_print_event_trace(void *addr, int tid, ShadowCell &cell) {
     JTSanEventTrace trace;
     bool has_trace = false;
 
-    has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, cell, cell_shadow_addr);
+    has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, cell);
 
     if (has_trace) {
         for (int i = trace.size - 1; i >= 0; i--) {
@@ -166,9 +168,8 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, void *cell_sha
 }
 
 void JTSanReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
-                            ShadowCell &cur, ShadowCell &prev, ShadowPair &pair) {
-    //JTSanScopedLock lock(JTSanReport::_report_lock);
-    JTSanSpinLock lock(&_report_lock);
+                            ShadowCell &cur, ShadowCell &prev) {
+    MutexLocker ml(JTSanReport::_report_lock, Mutex::_no_safepoint_check_flag);
 
     // already reported
     if (JTSanReportMap::instance()->contains((uintptr_t)bcp)) {
@@ -189,7 +190,7 @@ void JTSanReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
     
     fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%u:\n" RESET, prev.is_write ? "write" : "read", 
             size, addr, (uint32_t)prev.tid);
-    if (!try_print_event_trace(addr, prev.tid, prev, pair.prev_shadow)) {
+    if (!try_print_event_trace(addr, prev.tid, prev)) {
         fprintf(stderr, "  <no stack trace available>\n");
     }
 

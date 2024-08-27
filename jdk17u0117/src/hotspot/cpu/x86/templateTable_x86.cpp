@@ -782,11 +782,6 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
   __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
   __ jcc(Assembler::notEqual, skip);
 
-  // if (state == atos) {
-  //   __ movptr(c_rarg0, member.base());
-  // } else {
-  //   __ leaq(c_rarg0, member);
-  // }
 
   __ leaq(c_rarg0, member);
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_load[state]), c_rarg0, c_rarg1, rbcp);
@@ -2909,7 +2904,13 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   Label safe;
 
   __ pusha(); // save all registers
+  // pusha doesnt save xmm0
+  // some function calls require 128bit (or more) registers and use xmm registers
+  // in general push_d on a xmm register isn't ok but works here
+  // apparently templateInterpreter uses xmm register only for double/float purposes
+  // check code above
   __ push_d(xmm0);
+
 
     // volatile and final check
   __ testl(flags, f_or_v_or_ignore);
