@@ -780,7 +780,7 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
 
   // check if class is initialized
   // __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
-  __ jcc(Assembler::notEqual, skip);
+  // __ jcc(Assembler::notEqual, skip);
 
 
   __ leaq(c_rarg0, member);
@@ -1113,7 +1113,7 @@ void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
   __ load_method_holder(klass, c_rarg1);
 
   // __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
-  __ jcc(Assembler::notEqual, safe);
+  // __ jcc(Assembler::notEqual, safe);
 
   // if (state == atos) {
   //   __ movptr(c_rarg0, member.base());
@@ -3246,7 +3246,7 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
 
   // check if class is initialized
   // __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
-  __ jcc(Assembler::notEqual, safe);
+  // __ jcc(Assembler::notEqual, safe);
 
   __ leaq(c_rarg0, field); // get field address
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);
