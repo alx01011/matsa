@@ -813,10 +813,6 @@ void InstanceKlass::initialize(TRAPS) {
     //       OR it may be in the state of being initialized
     //       in case of recursive initialization!
   } else {
-    JTSAN_ONLY(
-      // pseudo lock
-      InterpreterRuntime::jtsan_lock(THREAD, (void*)java_mirror());
-    );
     assert(is_initialized(), "sanity check");
   }
 }
@@ -1241,13 +1237,6 @@ void InstanceKlass::initialize_impl(TRAPS) {
 
 void InstanceKlass::set_initialization_state_and_notify(ClassState state, TRAPS) {
   Handle h_init_lock(THREAD, init_lock());
-
-  JTSAN_ONLY(
-    if (state == fully_initialized) {
-      // pseudo lock-unlock to form a happens-before edge
-      InterpreterRuntime::jtsan_unlock(THREAD, (void*)java_mirror());
-    }
-  );
 
   if (h_init_lock() != NULL) {
     ObjectLocker ol(h_init_lock, THREAD);
