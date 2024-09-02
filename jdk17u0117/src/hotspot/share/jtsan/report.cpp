@@ -183,12 +183,12 @@ void JTSanReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
     fprintf(stderr, "==================\n");
 
     fprintf(stderr, RED "WARNING: ThreadSanitizer: data race (pid=%d)\n", pid);
-    fprintf(stderr, BLUE " %s of size %u at %p by thread T%u:\n" RESET,  cur.is_write ? "Write" : "Read", 
+    fprintf(stderr, BLUE " %s of size %u at %p by thread T%u:" RESET"\n",  cur.is_write ? "Write" : "Read", 
             size, addr, (uint32_t)cur.tid);
 
     print_current_stack(thread);
     
-    fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%u:\n" RESET, prev.is_write ? "write" : "read", 
+    fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%u:" RESET"\n", prev.is_write ? "write" : "read", 
             size, addr, (uint32_t)prev.tid);
     if (!try_print_event_trace(addr, prev.tid, prev)) {
         fprintf(stderr, "  <no stack trace available>\n");
