@@ -139,10 +139,10 @@ jint init_globals() {
   MATSA_ONLY(set_matsa_initialized(false));
   MATSA_ONLY(ShadowMemory::init(MaxHeapSize));
   MATSA_ONLY(MaTSaThreadState::init());
-  MATSA_ONLY(JtsanThreadPool::matsa_threadpool_init());
+  MATSA_ONLY(MaTSaThreadPool::matsa_threadpool_init());
   // init the main thread
   MATSA_ONLY(
-    int tid = JtsanThreadPool::get_queue()->dequeue();
+    int tid = MaTSaThreadPool::get_queue()->dequeue();
     JavaThread::set_matsa_tid(JavaThread::current(), tid);
     // increment epoch
     MaTSaThreadState::incrementEpoch(0);

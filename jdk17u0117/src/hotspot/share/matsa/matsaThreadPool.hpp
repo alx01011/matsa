@@ -26,16 +26,16 @@ class ThreadQueue : public CHeapObj<mtInternal> {
 };
 
 
-class JtsanThreadPool : public CHeapObj<mtInternal> {
+class MaTSaThreadPool : public CHeapObj<mtInternal> {
     private:
         ThreadQueue* _queue;
 
-        JtsanThreadPool(void);
-        ~JtsanThreadPool(void);
+        MaTSaThreadPool(void);
+        ~MaTSaThreadPool(void);
 
-        static JtsanThreadPool* instance;
+        static MaTSaThreadPool* instance;
     public:
-        static JtsanThreadPool* get_instance(void);
+        static MaTSaThreadPool* get_instance(void);
 
         static void matsa_threadpool_destroy(void);
         static void matsa_threadpool_init(void);

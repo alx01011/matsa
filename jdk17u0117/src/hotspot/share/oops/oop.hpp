@@ -62,7 +62,7 @@ class oopDesc {
   } _metadata;
 
 #ifdef INCLUDE_MATSA
-  //JTSAN lock state
+  //MaTSa lock state
   LockShadow* _lock_state;
 #endif
 

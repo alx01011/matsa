@@ -167,21 +167,21 @@ class FieldInfo {
 
 #ifdef INCLUDE_MATSA
   bool is_matsa_ignore_field() const {
-    return (access_flags() & JVM_ACC_FIELD_JTSAN_IGNORE) != 0;
+    return (access_flags() & JVM_ACC_FIELD_MATSA_IGNORE) != 0;
   }
 
   void set_matsa_ignore_field(bool z) {
-    if (z) _shorts[access_flags_offset] |=  JVM_ACC_FIELD_JTSAN_IGNORE;
-    else   _shorts[access_flags_offset] &= ~JVM_ACC_FIELD_JTSAN_IGNORE;
+    if (z) _shorts[access_flags_offset] |=  JVM_ACC_FIELD_MATSA_IGNORE;
+    else   _shorts[access_flags_offset] &= ~JVM_ACC_FIELD_MATSA_IGNORE;
   }
 
   bool is_matsa_ignore_class() const {
-    return (access_flags() & JVM_ACC_CLASS_JTSAN_IGNORE) != 0;
+    return (access_flags() & JVM_ACC_CLASS_MATSA_IGNORE) != 0;
   }
 
   void set_matsa_ignore_class(bool z) {
-    if (z) _shorts[access_flags_offset] |=  JVM_ACC_CLASS_JTSAN_IGNORE;
-    else   _shorts[access_flags_offset] &= ~JVM_ACC_CLASS_JTSAN_IGNORE;
+    if (z) _shorts[access_flags_offset] |=  JVM_ACC_CLASS_MATSA_IGNORE;
+    else   _shorts[access_flags_offset] &= ~JVM_ACC_CLASS_MATSA_IGNORE;
   }
 
 #endif

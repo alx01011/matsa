@@ -562,7 +562,7 @@ void Thread::start(Thread* thread) {
         JavaThread *cur_thread = JavaThread::current();
         JavaThread *new_thread = thread->as_Java_thread();
 
-        int new_tid = JtsanThreadPool::get_instance()->get_queue()->dequeue();
+        int new_tid = MaTSaThreadPool::get_instance()->get_queue()->dequeue();
           
         if (new_tid == -1) {
           // out of available threads
@@ -1208,7 +1208,7 @@ JavaThread::JavaThread(bool is_attaching_via_jni) : JavaThread() {
 
     // in case we don't pass through start, we still need a valid tid for the symbolizer
     MATSA_ONLY(
-      int tid = JtsanThreadPool::get_queue()->dequeue();
+      int tid = MaTSaThreadPool::get_queue()->dequeue();
       if (tid == -1) {
       // out of available threads
         fatal("No more threads available for MaTSa");
@@ -1489,7 +1489,7 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
     MaTSaThreadState::setEpoch(cur_tid, cur_tid, thread_epoch);
     // pop the thread from the stack (make it available to be reused)
     // cast is always safe because on start of the thread we have set the thread id
-    JtsanThreadPool::get_queue()->enqueue(cur_tid);
+    MaTSaThreadPool::get_queue()->enqueue(cur_tid);
   );
 
   HandleMark hm(this);
@@ -3074,13 +3074,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   }
 
   assert(Universe::is_fully_initialized(), "not initialized");
-
-  //   // MaTSa initialization must be done after gc initialization
-  // MATSA_ONLY(set_matsa_initialized(false));
-  // MATSA_ONLY(ShadowMemory::init(MaxHeapSize));
-  // MATSA_ONLY(JtsanThreadState::init());
-  // MATSA_ONLY(LockShadow::init());
-  // MATSA_ONLY(set_matsa_initialized(true));
 
   if (VerifyDuringStartup) {
     // Make sure we're starting with a clean slate.

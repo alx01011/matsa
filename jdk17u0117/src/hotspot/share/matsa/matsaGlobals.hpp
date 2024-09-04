@@ -1,5 +1,5 @@
-#ifndef JTSAN_GLOBALS_HPP
-#define JTSAN_GLOBALS_HPP
+#ifndef MATSA_GLOBALS_HPP
+#define MATSA_GLOBALS_HPP
 
 #include <cstdint>
 

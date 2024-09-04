@@ -3866,7 +3866,7 @@ JVM_END
   * Managed Thread Sanitizer (MaTSa)
   * Called on java.util.concurrent.lock() and semaphore() operations
 */
-JVM_ENTRY(void, JVM_matsaLock(JNIEnv* env, jobject x))
+JVM_ENTRY(void, JVM_MaTSaLock(JNIEnv* env, jobject x))
     if (MaTSa) {
       oop lock_obj   = JNIHandles::resolve(x);
       InterpreterRuntime::matsa_lock(thread, (void*)lock_obj);
@@ -3877,7 +3877,7 @@ JVM_END
   * Managed Thread Sanitizer (MaTSa)
   * Called on java.util.concurrent.unlock() and semaphore() operations
 */
-JVM_ENTRY(void, JVM_matsaUnlock(JNIEnv* env, jobject x))
+JVM_ENTRY(void, JVM_MaTSaUnlock(JNIEnv* env, jobject x))
     if (MaTSa) {
       void *lock_obj = (void*)JNIHandles::resolve(x);
       InterpreterRuntime::matsa_unlock(thread, lock_obj);
@@ -3888,7 +3888,7 @@ JVM_END
   * Java Thread Sanitizer (MaTSa)
   * Called on java.lang.Thread.join() operations and transfers thread state to thread object
 */
-JVM_ENTRY(void, JVM_matsaJoin(JNIEnv* env, jobject x))
+JVM_ENTRY(void, JVM_MaTSaJoin(JNIEnv* env, jobject x))
     if (MaTSa) {
       oop thread_object = JNIHandles::resolve(x);
       InterpreterRuntime::matsa_lock(thread, (void*)thread_object);

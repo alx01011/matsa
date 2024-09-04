@@ -969,7 +969,7 @@ public:
     _jdk_internal_vm_annotation_Contended,
     _field_Stable,
     _field_MaTSaIgnore,
-    _class_JTsanIgnore,
+    _class_MaTSaIgnore,
     _jdk_internal_vm_annotation_ReservedStackAccess,
     _jdk_internal_ValueBased,
     _annotation_LIMIT
@@ -1010,10 +1010,10 @@ public:
 
 #ifdef INCLUDE_MATSA
   void set_matsa_ignore_field(bool ignore) { set_annotation(_field_MaTSaIgnore); }
-  void set_matsa_ignore_class(bool ignore) { set_annotation(_class_JTsanIgnore); }
+  void set_matsa_ignore_class(bool ignore) { set_annotation(_class_MaTSaIgnore); }
 
   bool is_matsa_ignore_field() const { return has_annotation(_field_MaTSaIgnore); }
-  bool is_matsa_ignore_class() const { return has_annotation(_class_JTsanIgnore); }
+  bool is_matsa_ignore_class() const { return has_annotation(_class_MaTSaIgnore); }
 #endif
 
 };
@@ -2028,7 +2028,7 @@ AnnotationCollector::annotation_index(const ClassLoaderData* loader_data,
      }
      case VM_SYMBOL_ENUM_NAME(java_util_concurrent_annotation_MaTSaIgnoreClass): {
         if (_location != _in_class)   break;  // only allow for classes
-        return _class_JTsanIgnore;
+        return _class_MaTSaIgnore;
      }
     #endif
     case VM_SYMBOL_ENUM_NAME(jdk_internal_vm_annotation_Contended_signature): {

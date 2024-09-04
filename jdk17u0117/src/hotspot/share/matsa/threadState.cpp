@@ -17,13 +17,13 @@ void MaTSaThreadState::init(void) {
     MaTSaThreadState::epoch = (Vectorclock*)os::reserve_memory(MaTSaThreadState::size);
 
     if (MaTSaThreadState::epoch == nullptr) {
-        fprintf(stderr, "JTSAN: Failed to allocate thread state memory\n");
+        fprintf(stderr, "MATSA: Failed to allocate thread state memory\n");
         exit(1);
     }
 
     bool protect = os::protect_memory((char*)MaTSaThreadState::epoch, MaTSaThreadState::size, os::MEM_PROT_RW);
     if (!protect) {
-        fprintf(stderr, "JTSAN: Failed to protect thread state\n");
+        fprintf(stderr, "MATSA: Failed to protect thread state\n");
         exit(1);
     }
 
@@ -42,41 +42,41 @@ void MaTSaThreadState::destroy(void) {
 }
 
 Vectorclock* MaTSaThreadState::getThreadState(size_t threadId) {
-    assert(threadId < MAX_THREADS, "JTSAN: Thread id out of bounds");
+    assert(threadId < MAX_THREADS, "MATSA: Thread id out of bounds");
 
     return &(MaTSaThreadState::epoch[threadId]);
 }
 
 void MaTSaThreadState::incrementEpoch(size_t threadId) {
-    assert(threadId < MAX_THREADS, "JTSAN: Thread id out of bounds");
+    assert(threadId < MAX_THREADS, "MATSA: Thread id out of bounds");
     
     MaTSaThreadState::epoch[threadId].set(threadId, MaTSaThreadState::epoch[threadId].get(threadId) + 1);
 }
 
 void MaTSaThreadState::setEpoch(size_t threadId, size_t otherThreadId, uint32_t epoch) {
-    assert(threadId < MAX_THREADS, "JTSAN: Thread id out of bounds");
-    assert(otherThreadId < MAX_THREADS, "JTSAN: OtherThread id out of bounds");
+    assert(threadId < MAX_THREADS, "MATSA: Thread id out of bounds");
+    assert(otherThreadId < MAX_THREADS, "MATSA: OtherThread id out of bounds");
 
     MaTSaThreadState::epoch[threadId].set(otherThreadId, epoch);
 }
 
 uint32_t MaTSaThreadState::getEpoch(size_t threadId, size_t otherThreadId) {
-    assert(threadId < MaTSaThreadState::size, "JTSAN: Thread id out of bounds");
-    assert(otherThreadId < MaTSaThreadState::size, "JTSAN: Thread id out of bounds");
+    assert(threadId < MaTSaThreadState::size, "MATSA: Thread id out of bounds");
+    assert(otherThreadId < MaTSaThreadState::size, "MATSA: Thread id out of bounds");
 
     return MaTSaThreadState::epoch[threadId].get(otherThreadId);
 }
 
 void MaTSaThreadState::transferEpoch(size_t from_tid, size_t to_tid) {
-    assert(from_tid < MaTSaThreadState::size, "JTSAN: Thread id out of bounds");
-    assert(to_tid < MaTSaThreadState::size, "JTSAN: OtherThread id out of bounds");
+    assert(from_tid < MaTSaThreadState::size, "MATSA: Thread id out of bounds");
+    assert(to_tid < MaTSaThreadState::size, "MATSA: OtherThread id out of bounds");
     
     MaTSaThreadState::epoch[to_tid] = MaTSaThreadState::epoch[from_tid];
 }
 
 
 ThreadHistory* MaTSaThreadState::getHistory(int threadId) {
-    assert(threadId < MAX_THREADS, "JTSAN: Thread id out of bounds");
+    assert(threadId < MAX_THREADS, "MATSA: Thread id out of bounds");
 
     return MaTSaThreadState::history[threadId];
 }

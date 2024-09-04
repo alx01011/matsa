@@ -30,17 +30,17 @@ void ShadowMemory::init(size_t bytes) {
     */  
 
     if (sizeof(ShadowCell) != 8) {
-        fprintf(stderr, "JTSAN: ShadowCell size is not 64bits\n");
+        fprintf(stderr, "MATSA: ShadowCell size is not 64bits\n");
         exit(1);
     }
 
     if (sizeof(void*) != 8) {
-        fprintf(stderr, "JTSAN: Only 64bit systems are supported\n");
+        fprintf(stderr, "MATSA: Only 64bit systems are supported\n");
         exit(1);
     }
 
     if (Universe::heap()->kind() == CollectedHeap::Name::Z) {
-        fprintf(stderr, "JTSAN: ZGC is not supported\n");
+        fprintf(stderr, "MATSA: ZGC is not supported\n");
         exit(1);
     }
 
@@ -65,13 +65,13 @@ void ShadowMemory::init(size_t bytes) {
     bool protect = os::protect_memory((char*)shadow_base, shadow_size, os::MEM_PROT_RW);
 
     if (shadow_base == nullptr || !protect) {
-        fprintf(stderr, "JTSAN: Failed to allocate shadow memory\n");
+        fprintf(stderr, "MATSA: Failed to allocate shadow memory\n");
         exit(1);
     }
 
     // check for memory alignment
     if ((uptr)shadow_base & 0x7) { // shadow_base % 8
-        fprintf(stderr, "JTSAN: Shadow memory is not aligned\n");
+        fprintf(stderr, "MATSA: Shadow memory is not aligned\n");
         exit(1);
     }
 

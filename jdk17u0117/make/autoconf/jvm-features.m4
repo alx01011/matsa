@@ -324,7 +324,7 @@ AC_DEFUN_ONCE([JVM_FEATURES_CHECK_SHENANDOAHGC],
 ###############################################################################
 # Check if this platform supports avx for MaTSa
 #
-AC_DEFUN_ONCE([JVM_FEATURES_CHECK_JTSAN],
+AC_DEFUN_ONCE([JVM_FEATURES_CHECK_MATSA],
 [
   JVM_FEATURES_CHECK_AVAILABILITY(MaTSa, [
     AC_MSG_CHECKING([if platform supports AVX for MaTSa])
@@ -428,7 +428,7 @@ AC_DEFUN_ONCE([JVM_FEATURES_PREPARE_PLATFORM],
   JVM_FEATURES_CHECK_SHENANDOAHGC
   JVM_FEATURES_CHECK_STATIC_BUILD
   JVM_FEATURES_CHECK_ZGC
-  JVM_FEATURES_CHECK_JTSAN
+  JVM_FEATURES_CHECK_MATSA
 
   # Filter out features by default for all variants on certain platforms.
   # Make sure to just add to JVM_FEATURES_PLATFORM_FILTER, since it could

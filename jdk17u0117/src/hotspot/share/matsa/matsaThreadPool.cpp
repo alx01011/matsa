@@ -59,9 +59,9 @@ uint8_t ThreadQueue::enqueue_unsafe(uint8_t tid) {
 }
 
 
-JtsanThreadPool* JtsanThreadPool::instance = nullptr;
+MaTSaThreadPool* MaTSaThreadPool::instance = nullptr;
 
-JtsanThreadPool::JtsanThreadPool(void) {
+MaTSaThreadPool::MaTSaThreadPool(void) {
     _queue = new ThreadQueue();
 
     // init the thread stack with all the available tids 0 - 255
@@ -70,30 +70,30 @@ JtsanThreadPool::JtsanThreadPool(void) {
     }
 }
 
-JtsanThreadPool::~JtsanThreadPool(void) {
+MaTSaThreadPool::~MaTSaThreadPool(void) {
     delete _queue;
 }
 
-ThreadQueue* JtsanThreadPool::get_queue(void) {
+ThreadQueue* MaTSaThreadPool::get_queue(void) {
     return instance->_queue;
 }
 
-JtsanThreadPool* JtsanThreadPool::get_instance(void) {
+MaTSaThreadPool* MaTSaThreadPool::get_instance(void) {
     if (UNLIKELY(instance == nullptr)) {
-        instance = new JtsanThreadPool();
+        instance = new MaTSaThreadPool();
     }
 
     return instance;
 }
 
-void JtsanThreadPool::matsa_threadpool_init(void) {
+void MaTSaThreadPool::matsa_threadpool_init(void) {
     if (UNLIKELY(instance != nullptr)) {
         return;
     }
-    instance = new JtsanThreadPool();
+    instance = new MaTSaThreadPool();
 }
 
-void JtsanThreadPool::matsa_threadpool_destroy(void) {
+void MaTSaThreadPool::matsa_threadpool_destroy(void) {
     if (LIKELY(instance != nullptr)) {
         delete instance;
     }
