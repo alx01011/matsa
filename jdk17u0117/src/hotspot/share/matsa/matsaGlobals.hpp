@@ -6,8 +6,8 @@
 #include "runtime/mutex.hpp"
 #include "runtime/atomic.hpp"
 
-bool is_jtsan_initialized(void);
-void set_jtsan_initialized(bool value);
+bool is_matsa_initialized(void);
+void set_matsa_initialized(bool value);
 
 void          increment_gc_epoch(void);
 uint32_t      get_gc_epoch(void);
@@ -30,23 +30,23 @@ void     decrement_tid(void);
     }
     
 #define COUNTER_INC(x)\
-    JTSanStats::increment_##x()
+    MaTSaStats::increment_##x()
 
 #define COUNTER_GET(x)\
-    JTSanStats::get_##x()
+    MaTSaStats::get_##x()
 
-class JTSanStats {
+class MaTSaStats {
     public:
         COUNTER(race);
 };
 
-class JTSanScopedLock {
+class MaTSaScopedLock {
     public:
-        JTSanScopedLock(Mutex *lock) : _lock(lock) {
+        MaTSaScopedLock(Mutex *lock) : _lock(lock) {
             _lock->lock();
         }
 
-        ~JTSanScopedLock() {
+        ~MaTSaScopedLock() {
             _lock->unlock();
         }
     private:
@@ -60,9 +60,9 @@ class JTSanScopedLock {
 #define CPU_PAUSE()
 #endif
 
-class JTSanSpinLock {
+class MaTSaSpinLock {
     public:
-        JTSanSpinLock(uint8_t *lock) : _lock(lock) {
+        MaTSaSpinLock(uint8_t *lock) : _lock(lock) {
             while (1) {
                 // cmpxchg (dest, compare, exchange)
                 if (Atomic::cmpxchg(_lock, (uint8_t)0, (uint8_t)1) == 0) {
@@ -75,7 +75,7 @@ class JTSanSpinLock {
             }
         }
 
-        ~JTSanSpinLock() {
+        ~MaTSaSpinLock() {
             *_lock = 0;
         }
 

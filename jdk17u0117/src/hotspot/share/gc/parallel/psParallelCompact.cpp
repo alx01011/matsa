@@ -89,8 +89,8 @@
 #include "jvmci/jvmci.hpp"
 #endif
 
-#if INCLUDE_JTSAN
-#include "jtsan/jtsanGlobals.hpp"
+#if INCLUDE_MATSA
+#include "matsa/matsaGlobals.hpp"
 #endif
 
 #include <math.h>
@@ -1730,7 +1730,7 @@ bool PSParallelCompact::invoke_no_policy(bool maximum_heap_compaction) {
     return false;
   }
 
-  //JTSAN_ONLY(increment_gc_epoch());
+  //MATSA_ONLY(increment_gc_epoch());
 
   ParallelScavengeHeap* heap = ParallelScavengeHeap::heap();
 

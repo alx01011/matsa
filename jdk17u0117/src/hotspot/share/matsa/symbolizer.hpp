@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <atomic>
 
-#include "jtsanDefs.hpp"
+#include "matsaDefs.hpp"
 #include "shadow.hpp"
 
 #include "runtime/mutex.hpp"
@@ -32,16 +32,16 @@ enum Event {
     In the future, to make the trace more accurate, we could also store the shadow index if it is a memory access.
     On checkraces, we could return the racy index, and the store index.
 */
-class JTSanEvent {
+class MaTSaEvent {
     public:
         Event     event : 2; // 4 events
-        uintptr_t pc    : 48; // can't easily compress this
+        uintptr_t pc    : 48; // can't easily compress this without a custom allocator
         int       bci   : 64 - 48 - 2;
 };
 
-class JTSanEventTrace {
+class MaTSaEventTrace {
     public:
-        JTSanEvent events[MAX_TRACE_SIZE];
+        MaTSaEvent events[MAX_TRACE_SIZE];
         int      size;
 };
 
@@ -75,7 +75,7 @@ namespace Symbolizer {
     uintptr_t RestoreAddr(uintptr_t addr);
 
     void Symbolize       (Event event, void *addr, int bci, int tid);
-    bool TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev);
+    bool TraceUpToAddress(MaTSaEventTrace &trace, void *addr, int tid, ShadowCell &prev);
 
     void ClearThreadHistory(int tid);
 };

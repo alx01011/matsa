@@ -1205,8 +1205,8 @@ void InterpreterMacroAssembler::get_method_counters(Register method,
   bind(has_counters);
 }
 
-// aantonak - jtsan
-void InterpreterMacroAssembler::jtsan_monitor_enter(Register lock_reg) {
+// aantonak - MaTSa
+void InterpreterMacroAssembler::matsa_monitor_enter(Register lock_reg) {
   pusha();
 
   // get lock_obj and method pointers
@@ -1217,7 +1217,7 @@ void InterpreterMacroAssembler::jtsan_monitor_enter(Register lock_reg) {
   // if we have a synchronized method, the line number will be the first line of the method
   //movptr    (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
 
-  call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_sync_enter), c_rarg0, c_rarg1);
+  call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_sync_enter), c_rarg0, c_rarg1);
 
   popa();
 }
@@ -1233,7 +1233,7 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
   assert(lock_reg == LP64_ONLY(c_rarg1) NOT_LP64(rdx),
          "The argument is only for looks. It must be c_rarg1");
 
-  JTSAN_ONLY(push_ptr(lock_reg)); // save lock_reg
+  MATSA_ONLY(push_ptr(lock_reg)); // save lock_reg
 
   if (UseHeavyMonitors) {
     call_VM(noreg,
@@ -1340,14 +1340,14 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
     bind(done);
   }
 
-  // aantonak - jtsan
+  // aantonak - MaTSa
   // restore lock_reg
-  JTSAN_ONLY(pop_ptr(lock_reg));
-  JTSAN_ONLY(jtsan_monitor_enter(lock_reg));
+  MATSA_ONLY(pop_ptr(lock_reg));
+  MATSA_ONLY(matsa_monitor_enter(lock_reg));
 }
 
-// aantonak - jtsan
-void InterpreterMacroAssembler::jtsan_monitor_exit(Register lock_reg) {
+// aantonak - MaTSa
+void InterpreterMacroAssembler::matsa_monitor_exit(Register lock_reg) {
   pusha();
 
   // get lock_obj and method pointers
@@ -1356,7 +1356,7 @@ void InterpreterMacroAssembler::jtsan_monitor_exit(Register lock_reg) {
   get_thread(c_rarg0);
   // gets bcp
   // movptr    (c_rarg2, Address(rbp, frame::interpreter_frame_bcp_offset * wordSize));
-  call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_sync_exit), c_rarg0, c_rarg1);
+  call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_sync_exit), c_rarg0, c_rarg1);
 
   popa();
 }
@@ -1378,8 +1378,8 @@ void InterpreterMacroAssembler::unlock_object(Register lock_reg) {
   assert(lock_reg == LP64_ONLY(c_rarg1) NOT_LP64(rdx),
          "The argument is only for looks. It must be c_rarg1");
 
-  // aantonak - jtsan
-  JTSAN_ONLY(jtsan_monitor_exit(lock_reg));
+  // aantonak - MaTSa
+  MATSA_ONLY(matsa_monitor_exit(lock_reg));
 
   if (UseHeavyMonitors) {
     call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorexit), lock_reg);
@@ -2093,15 +2093,15 @@ void InterpreterMacroAssembler::notify_method_entry() {
                  rthread, rarg);
   }
 
-  // jtsan
+  // MaTSa
   {
-    JTSAN_ONLY(
+    MATSA_ONLY(
       get_thread  (rthread);
       get_method  (rarg);
       // caller bcp is previously saved in _bcp_register by template interpreter
       movptr      (c_rarg2, _bcp_register);
 
-      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_enter), rthread, rarg, c_rarg2);
+      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_method_enter), rthread, rarg, c_rarg2);
     );
   }
 
@@ -2142,14 +2142,14 @@ void InterpreterMacroAssembler::notify_method_exit(
     pop(state);
   }
 
-  // jtsan
+  // MaTSa
   {
-    JTSAN_ONLY(
+    MATSA_ONLY(
       push(state);
       get_thread(rthread);
 
       // no need for bci and method* in method exit, they will be null/0 anyways
-      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_method_exit), rthread);
+      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_method_exit), rthread);
       pop(state);
     );
   }

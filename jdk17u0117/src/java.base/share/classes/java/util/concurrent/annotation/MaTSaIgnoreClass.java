@@ -14,5 +14,5 @@
     */
  @Retention(RetentionPolicy.RUNTIME)
  @Target(ElementType.TYPE)
- public @interface JTSanIgnoreClass {}
+ public @interface MaTSaIgnoreClass {}
  

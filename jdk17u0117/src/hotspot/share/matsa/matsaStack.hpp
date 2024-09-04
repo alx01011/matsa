@@ -1,5 +1,5 @@
-#ifndef JTSAN_STACK_HPP
-#define JTSAN_STACK_HPP
+#ifndef MATSA_STACK_HPP
+#define MATSA_STACK_HPP
 
 // 65k entries
 #define DEFAULT_STACK_SIZE (1 << 16)
@@ -8,15 +8,15 @@
 
 #include "memory/allocation.hpp"
 
-class JTSanStack : public CHeapObj<mtInternal> {
+class MaTSaStack : public CHeapObj<mtInternal> {
     private:
         uint64_t *_stack;
         int _size;
         uint16_t _top;
 
     public:
-        JTSanStack(size_t size);
-        ~JTSanStack();
+        MaTSaStack(size_t size);
+        ~MaTSaStack();
 
         void push(uint64_t value);
         uint64_t pop(void);

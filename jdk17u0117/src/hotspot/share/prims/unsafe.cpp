@@ -60,11 +60,11 @@
 #include "utilities/dtrace.hpp"
 #include "utilities/macros.hpp"
 
-#if INCLUDE_JTSAN
-#include "jtsan/lockState.hpp"
-#include "jtsan/threadState.hpp"
-#include "jtsan/vectorclock.hpp"
-#include "jtsan/jtsanRTL.hpp"
+#if INCLUDE_MATSA
+#include "matsa/lockState.hpp"
+#include "matsa/threadState.hpp"
+#include "matsa/vectorclock.hpp"
+#include "matsa/matsaRTL.hpp"
 #endif
 
 /**

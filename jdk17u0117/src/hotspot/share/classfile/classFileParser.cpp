@@ -968,7 +968,7 @@ public:
     _method_IntrinsicCandidate,
     _jdk_internal_vm_annotation_Contended,
     _field_Stable,
-    _field_JTSanIgnore,
+    _field_MaTSaIgnore,
     _class_JTsanIgnore,
     _jdk_internal_vm_annotation_ReservedStackAccess,
     _jdk_internal_ValueBased,
@@ -1008,12 +1008,12 @@ public:
   void set_stable(bool stable) { set_annotation(_field_Stable); }
   bool is_stable() const { return has_annotation(_field_Stable); }
 
-#ifdef INCLUDE_JTSAN
-  void set_jtsan_ignore_field(bool ignore) { set_annotation(_field_JTSanIgnore); }
-  void set_jtsan_ignore_class(bool ignore) { set_annotation(_class_JTsanIgnore); }
+#ifdef INCLUDE_MATSA
+  void set_matsa_ignore_field(bool ignore) { set_annotation(_field_MaTSaIgnore); }
+  void set_matsa_ignore_class(bool ignore) { set_annotation(_class_JTsanIgnore); }
 
-  bool is_jtsan_ignore_field() const { return has_annotation(_field_JTSanIgnore); }
-  bool is_jtsan_ignore_class() const { return has_annotation(_class_JTsanIgnore); }
+  bool is_matsa_ignore_field() const { return has_annotation(_field_MaTSaIgnore); }
+  bool is_matsa_ignore_class() const { return has_annotation(_class_JTsanIgnore); }
 #endif
 
 };
@@ -2021,12 +2021,12 @@ AnnotationCollector::annotation_index(const ClassLoaderData* loader_data,
       if (!privileged)              break;  // only allow in privileged code
       return _field_Stable;
     }
-    #ifdef INCLUDE_JTSAN
-     case VM_SYMBOL_ENUM_NAME(java_util_concurrent_annotation_JTSanIgnoreField): {
+    #ifdef INCLUDE_MATSA
+     case VM_SYMBOL_ENUM_NAME(java_util_concurrent_annotation_MaTSaIgnoreField): {
        if (_location != _in_field)   break;  // only allow for fields
-       return _field_JTSanIgnore;
+       return _field_MaTSaIgnore;
      }
-     case VM_SYMBOL_ENUM_NAME(java_util_concurrent_annotation_JTSanIgnoreClass): {
+     case VM_SYMBOL_ENUM_NAME(java_util_concurrent_annotation_MaTSaIgnoreClass): {
         if (_location != _in_class)   break;  // only allow for classes
         return _class_JTsanIgnore;
      }
@@ -2062,9 +2062,9 @@ void ClassFileParser::FieldAnnotationCollector::apply_to(FieldInfo* f) {
     f->set_contended_group(contended_group());
   if (is_stable())
     f->set_stable(true);
-  JTSAN_ONLY(
-    if(is_jtsan_ignore_field()) {
-      f->set_jtsan_ignore_field(true);
+  MATSA_ONLY(
+    if(is_matsa_ignore_field()) {
+      f->set_matsa_ignore_field(true);
     }
   );
 }
@@ -2108,9 +2108,9 @@ void ClassFileParser::ClassAnnotationCollector::apply_to(InstanceKlass* ik) {
       ik->set_prototype_header(markWord::prototype());
     }
   }
-  JTSAN_ONLY(
-    if (is_jtsan_ignore_class()) {
-      ik->set_is_jtsan_ignore();
+  MATSA_ONLY(
+    if (is_matsa_ignore_class()) {
+      ik->set_is_matsa_ignore();
     }
   );
 }

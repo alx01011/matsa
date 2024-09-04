@@ -96,11 +96,11 @@
 #include "jfr/jfrEvents.hpp"
 #endif
 
-#if INCLUDE_JTSAN
+#if INCLUDE_MATSA
 #include "interpreter/interpreterRuntime.hpp"
 #include "oops/oop.hpp"
 #include "oops/oop.inline.hpp"
-#include "jtsan/lockState.hpp"
+#include "matsa/lockState.hpp"
 #endif
 
 

@@ -1,9 +1,9 @@
-#include "jtsanGlobals.hpp"
+#include "matsaGlobals.hpp"
 #include "runtime/atomic.hpp"
 
 #include <cstdio>
 
-volatile bool    _is_jtsan_initialized = false;
+volatile bool    _is_matsa_initialized = false;
 uint32_t _gc_epoch = 0;
 
 volatile bool   _is_klass_init = false;
@@ -21,12 +21,12 @@ void increment_gc_epoch(void) {
 
 }
 
-bool is_jtsan_initialized(void) {
-    return Atomic::load(&_is_jtsan_initialized);
+bool is_matsa_initialized(void) {
+    return Atomic::load(&_is_matsa_initialized);
 }
 
-void set_jtsan_initialized(bool value) {
-    Atomic::store(&_is_jtsan_initialized, value);
+void set_matsa_initialized(bool value) {
+    Atomic::store(&_is_matsa_initialized, value);
 }
 
 void clear_klass_init(void) {
@@ -55,6 +55,6 @@ void decrement_tid(void) {
 }
 
 #define COUNTER_DEF(x)\
-    uint64_t JTSanStats::x##_counter = 0;
+    uint64_t MaTSaStats::x##_counter = 0;
 
 COUNTER_DEF(race);

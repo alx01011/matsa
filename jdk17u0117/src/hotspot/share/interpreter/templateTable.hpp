@@ -100,13 +100,13 @@ class TemplateTable: AllStatic {
   // special registers
   static inline Address at_bcp(int offset);
 
-  // aantonak - jtsan
-  static void jtsan_load_field(const Address &field, Register flags, TosState state);
-  static void jtsan_load_array(const Address &member, TosState state);
+  // aantonak - MaTSa
+  static void matsa_load_field(const Address &field, Register flags, TosState state);
+  static void matsa_load_array(const Address &member, TosState state);
 
-  // aantonak - jtsan
-  static void jtsan_store_field(const Address &field, Register flags, TosState state);
-  static void jtsan_store_array(const Address &member, TosState state);
+  // aantonak - MaTSa
+  static void matsa_store_field(const Address &field, Register flags, TosState state);
+  static void matsa_store_array(const Address &member, TosState state);
 
   // helpers
   static void unimplemented_bc();

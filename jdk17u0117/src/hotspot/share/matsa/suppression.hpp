@@ -66,7 +66,7 @@ class Trie : public CHeapObj<mtInternal> {
         bool search(const char *name);
 };
 
-class JTSanSuppression : public CHeapObj<mtInternal> {
+class MaTSaSuppression : public CHeapObj<mtInternal> {
     public:
         static void init();
         static bool is_suppressed(JavaThread *thread, address bcp);

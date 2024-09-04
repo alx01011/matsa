@@ -1,5 +1,5 @@
-#include "jtsanThreadPool.hpp"
-#include "jtsanGlobals.hpp"
+#include "matsaThreadPool.hpp"
+#include "matsaGlobals.hpp"
 
 ThreadQueue::ThreadQueue(void) {
     _front = 0;
@@ -10,7 +10,7 @@ ThreadQueue::ThreadQueue(void) {
 uint8_t ThreadQueue::enqueue(uint8_t tid) {
     // we are using a spinlock since Thread::current can return null on vm exit
     // spinlock won't be a problem since we are not going to have a lot of contention anyway
-    JTSanSpinLock lock(&_lock);
+    MaTSaSpinLock lock(&_lock);
 
     if ((_rear + 1) % MAX_THREADS == _front) {
         return 1;
@@ -23,7 +23,7 @@ uint8_t ThreadQueue::enqueue(uint8_t tid) {
 }
 
 int ThreadQueue::dequeue(void) {
-    JTSanSpinLock lock(&_lock);
+    MaTSaSpinLock lock(&_lock);
 
     if (_front == _rear) {
         return -1;
@@ -36,13 +36,13 @@ int ThreadQueue::dequeue(void) {
 }
 
 int ThreadQueue::front(void) {
-    JTSanSpinLock lock(&_lock);
+    MaTSaSpinLock lock(&_lock);
 
     return _queue[_front];
 }
 
 bool ThreadQueue::empty(void) {
-    JTSanSpinLock lock(&_lock);
+    MaTSaSpinLock lock(&_lock);
 
     return _front == _rear;
 }
@@ -86,14 +86,14 @@ JtsanThreadPool* JtsanThreadPool::get_instance(void) {
     return instance;
 }
 
-void JtsanThreadPool::jtsan_threadpool_init(void) {
+void JtsanThreadPool::matsa_threadpool_init(void) {
     if (UNLIKELY(instance != nullptr)) {
         return;
     }
     instance = new JtsanThreadPool();
 }
 
-void JtsanThreadPool::jtsan_threadpool_destroy(void) {
+void JtsanThreadPool::matsa_threadpool_destroy(void) {
     if (LIKELY(instance != nullptr)) {
         delete instance;
     }

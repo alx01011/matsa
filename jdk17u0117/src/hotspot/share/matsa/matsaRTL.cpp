@@ -1,10 +1,10 @@
-#include "jtsanRTL.hpp"
+#include "matsaRTL.hpp"
 #include "threadState.hpp"
-#include "jtsanGlobals.hpp"
+#include "matsaGlobals.hpp"
 #include "suppression.hpp"
 #include "report.hpp"
 #include "symbolizer.hpp"
-#include "jtsanDefs.hpp"
+#include "matsaDefs.hpp"
 
 #include "runtime/thread.hpp"
 #include "runtime/frame.inline.hpp"
@@ -17,7 +17,7 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
 
-bool JtsanRTL::CheckRaces(JavaThread *thread, void *addr, address bcp, ShadowCell &cur, ShadowCell &prev) {
+bool MaTSaRTL::CheckRaces(JavaThread *thread, void *addr, address bcp, ShadowCell &cur, ShadowCell &prev) {
     uptr addr_aligned = ((uptr)addr);
 
     bool stored   = false;
@@ -74,7 +74,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, void *addr, address bcp, ShadowCel
         }
 
         // at least one of the accesses is a write
-        uint32_t thr = JTSanThreadState::getEpoch(cur.tid, cell.tid);
+        uint32_t thr = MaTSaThreadState::getEpoch(cur.tid, cell.tid);
 
         // if the current thread has a higher epoch then we can skip
         if (LIKELY(thr >= cell.epoch)) {
@@ -85,7 +85,7 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, void *addr, address bcp, ShadowCel
         isRace = true;
 
         // its a race, so check if it is a suppressed one
-        if (LIKELY(JTSanSuppression::is_suppressed(thread, bcp))) {
+        if (LIKELY(MaTSaSuppression::is_suppressed(thread, bcp))) {
             // ignore
             isRace = false;
         }
@@ -109,11 +109,11 @@ bool JtsanRTL::CheckRaces(JavaThread *thread, void *addr, address bcp, ShadowCel
     return isRace;
 }
 
-void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write) {
+void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write) {
     JavaThread *thread = JavaThread::current();
-    uint16_t tid       = JavaThread::get_jtsan_tid(thread);
+    uint16_t tid       = JavaThread::get_matsa_tid(thread);
     
-    uint32_t epoch = JTSanThreadState::getEpoch(tid, tid);
+    uint32_t epoch = MaTSaThreadState::getEpoch(tid, tid);
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write, 0};
 
@@ -126,7 +126,7 @@ void JtsanRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     // 1 is read, 2 is write
     Symbolizer::Symbolize((Event)(is_write + 1), addr, m->bci_from(bcp), tid);
 
-    if (is_race && !JTSanSilent) {
-        JTSanReport::do_report_race(thread, addr, access_size, bcp, m, cur, prev);
+    if (is_race && !MaTSaSilent) {
+        MaTSaReport::do_report_race(thread, addr, access_size, bcp, m, cur, prev);
     }
 }

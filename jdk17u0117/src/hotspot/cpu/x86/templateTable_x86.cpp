@@ -766,7 +766,7 @@ void TemplateTable::index_check_without_pop(Register array, Register index) {
   __ bind(skip);
 }
 
-void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
+void TemplateTable::matsa_load_array(const Address& member, TosState state) {
   Label skip;
 
   // push all registers, in the future we might want to push only the ones that are used
@@ -784,7 +784,7 @@ void TemplateTable::jtsan_load_array(const Address& member, TosState state) {
 
 
   __ leaq(c_rarg0, member);
-  __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_load[state]), c_rarg0, c_rarg1, rbcp);
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_load[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(skip);
 
@@ -800,7 +800,7 @@ void TemplateTable::iaload() {
   Address addr(rdx, rax, Address::times_4,
                          arrayOopDesc::base_offset_in_bytes(T_INT));
 
-  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, itos));
+  MATSA_ONLY(TemplateTable::matsa_load_array(addr, itos));
   
   __ access_load_at(T_INT, IN_HEAP | IS_ARRAY, rax, addr, noreg, noreg);
 }
@@ -815,7 +815,7 @@ void TemplateTable::laload() {
   Address addr(rdx, rbx, Address::times_8,
                             arrayOopDesc::base_offset_in_bytes(T_LONG));
 
-  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, ltos));
+  MATSA_ONLY(TemplateTable::matsa_load_array(addr, ltos));
 
   __ access_load_at(T_LONG, IN_HEAP | IS_ARRAY, noreg /* ltos */,
                     addr, noreg, noreg);
@@ -829,7 +829,7 @@ void TemplateTable::faload() {
   Address addr(rdx, rax, Address::times_4,
                           arrayOopDesc::base_offset_in_bytes(T_FLOAT));
 
-  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, ftos));         
+  MATSA_ONLY(TemplateTable::matsa_load_array(addr, ftos));         
 
   __ access_load_at(T_FLOAT, IN_HEAP | IS_ARRAY, noreg /* ftos */,
                     addr,
@@ -844,7 +844,7 @@ void TemplateTable::daload() {
   Address addr(rdx, rax, Address::times_8,
                           arrayOopDesc::base_offset_in_bytes(T_DOUBLE));
 
-  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, dtos));
+  MATSA_ONLY(TemplateTable::matsa_load_array(addr, dtos));
   
   __ access_load_at(T_DOUBLE, IN_HEAP | IS_ARRAY, noreg /* dtos */,
                     addr,
@@ -861,7 +861,7 @@ void TemplateTable::aaload() {
                       UseCompressedOops ? Address::times_4 : Address::times_ptr,
                       arrayOopDesc::base_offset_in_bytes(T_OBJECT));
 
-  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, atos));
+  MATSA_ONLY(TemplateTable::matsa_load_array(addr, atos));
 
   do_oop_load(_masm, addr, rax, IS_ARRAY);
 }
@@ -873,7 +873,7 @@ void TemplateTable::baload() {
   index_check(rdx, rax); // kills rbx
   Address addr(rdx, rax, Address::times_1, arrayOopDesc::base_offset_in_bytes(T_BYTE));
 
-  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, itos));
+  MATSA_ONLY(TemplateTable::matsa_load_array(addr, itos));
 
   __ access_load_at(T_BYTE, IN_HEAP | IS_ARRAY, rax, addr, noreg, noreg);
 }
@@ -885,7 +885,7 @@ void TemplateTable::caload() {
   index_check(rdx, rax); // kills rbx
   Address addr(rdx, rax, Address::times_2, arrayOopDesc::base_offset_in_bytes(T_CHAR));
 
-  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, itos));
+  MATSA_ONLY(TemplateTable::matsa_load_array(addr, itos));
 
   __ access_load_at(T_CHAR, IN_HEAP | IS_ARRAY, rax, addr, noreg, noreg);
 }
@@ -913,7 +913,7 @@ void TemplateTable::saload() {
   index_check(rdx, rax); // kills rbx
   Address addr(rdx, rax, Address::times_2, arrayOopDesc::base_offset_in_bytes(T_SHORT));
 
-  JTSAN_ONLY(TemplateTable::jtsan_load_array(addr, itos));
+  MATSA_ONLY(TemplateTable::matsa_load_array(addr, itos));
 
   __ access_load_at(T_SHORT, IN_HEAP | IS_ARRAY, rax, addr, noreg, noreg);
 }
@@ -1100,7 +1100,7 @@ void TemplateTable::wide_astore() {
   __ movptr(aaddress(rbx), rax);
 }
 
-void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
+void TemplateTable::matsa_store_array(const Address &member, TosState state) {
   // push all registers, in the future we might want to push only the ones that are used
   Label safe;
   __ pusha();
@@ -1116,7 +1116,7 @@ void TemplateTable::jtsan_store_array(const Address &member, TosState state) {
   __ jcc(Assembler::notEqual, safe);
 
   __ leaq(c_rarg0, member);
-  __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_store[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(safe);
 
@@ -1135,7 +1135,7 @@ void TemplateTable::iastore() {
   Address addr(rdx, rbx, Address::times_4,
                 arrayOopDesc::base_offset_in_bytes(T_INT));
 
-  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, itos));
+  MATSA_ONLY(TemplateTable::matsa_store_array(addr, itos));
 
   __ access_store_at(T_INT, IN_HEAP | IS_ARRAY,
                      addr, rax, noreg, noreg);
@@ -1153,7 +1153,7 @@ void TemplateTable::lastore() {
   Address addr(rcx, rbx, Address::times_8,
                   arrayOopDesc::base_offset_in_bytes(T_LONG));
 
-  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, ltos));
+  MATSA_ONLY(TemplateTable::matsa_store_array(addr, ltos));
 
   __ access_store_at(T_LONG, IN_HEAP | IS_ARRAY,
                      addr, noreg /* ltos */, noreg, noreg);
@@ -1171,7 +1171,7 @@ void TemplateTable::fastore() {
   Address addr(rdx, rbx, Address::times_4,
              arrayOopDesc::base_offset_in_bytes(T_FLOAT));
 
-  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, ftos));
+  MATSA_ONLY(TemplateTable::matsa_store_array(addr, ftos));
 
   __ access_store_at(T_FLOAT, IN_HEAP | IS_ARRAY,
                      addr, noreg /* ftos */, noreg, noreg);
@@ -1188,7 +1188,7 @@ void TemplateTable::dastore() {
   Address addr(rdx, rbx, Address::times_8,
                 arrayOopDesc::base_offset_in_bytes(T_DOUBLE));
 
-  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, dtos));                
+  MATSA_ONLY(TemplateTable::matsa_store_array(addr, dtos));                
 
   __ access_store_at(T_DOUBLE, IN_HEAP | IS_ARRAY,
                      addr, noreg /* dtos */, noreg, noreg);
@@ -1208,7 +1208,7 @@ void TemplateTable::aastore() {
 
   index_check_without_pop(rdx, rcx);     // kills rbx
 
-  JTSAN_ONLY(TemplateTable::jtsan_store_array(element_address, atos));
+  MATSA_ONLY(TemplateTable::matsa_store_array(element_address, atos));
 
   __ testptr(rax, rax);
   __ jcc(Assembler::zero, is_null);
@@ -1273,7 +1273,7 @@ void TemplateTable::bastore() {
   Address addr(rdx, rbx,Address::times_1,
                 arrayOopDesc::base_offset_in_bytes(T_BYTE));
 
-  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, itos));
+  MATSA_ONLY(TemplateTable::matsa_store_array(addr, itos));
 
   __ access_store_at(T_BYTE, IN_HEAP | IS_ARRAY,
                      addr, rax, noreg, noreg);
@@ -1290,7 +1290,7 @@ void TemplateTable::castore() {
   Address addr(rdx, rbx, Address::times_2,
                   arrayOopDesc::base_offset_in_bytes(T_CHAR));
 
-  JTSAN_ONLY(TemplateTable::jtsan_store_array(addr, itos));
+  MATSA_ONLY(TemplateTable::matsa_store_array(addr, itos));
 
   __ access_store_at(T_CHAR, IN_HEAP | IS_ARRAY,
                      addr, rax, noreg, noreg);
@@ -2888,12 +2888,12 @@ void TemplateTable::pop_and_check_object(Register r) {
   __ verify_oop(r);
 }
 
-void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosState state) {
+void TemplateTable::matsa_load_field(const Address &field, Register flags, TosState state) {
   int32_t is_volatile       = 1 << ConstantPoolCacheEntry::is_volatile_shift;
   int32_t is_final          = 1 << ConstantPoolCacheEntry::is_final_shift;
-  int32_t is_jtsan_ignore   = 1 << ConstantPoolCacheEntry::is_jtsan_ignore_shift;
+  int32_t is_matsa_ignore   = 1 << ConstantPoolCacheEntry::is_matsa_ignore_shift;
 
-  int32_t f_or_v_or_ignore  = is_volatile | is_final | is_jtsan_ignore;
+  int32_t f_or_v_or_ignore  = is_volatile | is_final | is_matsa_ignore;
 
   Label safe;
 
@@ -2904,7 +2904,6 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   // apparently templateInterpreter uses xmm register only for double/float purposes
   // check code above
   __ push_d(xmm0);
-
 
     // volatile and final check
   __ testl(flags, f_or_v_or_ignore);
@@ -2922,7 +2921,7 @@ void TemplateTable::jtsan_load_field(const Address &field, Register flags, TosSt
   __ leaq(c_rarg0, field); // get address
 
   //__ movptr(c_rarg0, field.base()); // get oop address
-  __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_load[state]), c_rarg0, c_rarg1, rbcp);
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_load[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(safe);
 
@@ -2948,9 +2947,9 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
 
   const Address field(obj, off, Address::times_1, 0*wordSize);
 
-  // aantonak - jtsan
+  // aantonak - MaTSa
   // preserve flags on rdx, it gets clobbered by some calls below
-  JTSAN_ONLY(__ movl(rdx, flags));
+  MATSA_ONLY(__ movl(rdx, flags));
 
   Label Done, notByte, notBool, notInt, notShort, notChar, notLong, notFloat, notObj;
 
@@ -2965,8 +2964,8 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ access_load_at(T_BYTE, IN_HEAP, rax, field, noreg, noreg);
   __ push(btos);
 
-  // aantonak - jtsan
-  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, btos));
+  // aantonak - MaTSa
+  MATSA_ONLY(TemplateTable::matsa_load_field(field, rdx, btos));
 
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
@@ -2982,8 +2981,8 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ access_load_at(T_BOOLEAN, IN_HEAP, rax, field, noreg, noreg);
   __ push(ztos);
 
-  // aantonak - jtsan
-  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, ztos));
+  // aantonak - MaTSa
+  MATSA_ONLY(TemplateTable::matsa_load_field(field, rdx, ztos));
 
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
@@ -2999,8 +2998,8 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   do_oop_load(_masm, field, rax);
   __ push(atos);
 
-  // aantonak - jtsan
-  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, atos));
+  // aantonak - MaTSa
+  MATSA_ONLY(TemplateTable::matsa_load_field(field, rdx, atos));
 
   if (!is_static && rc == may_rewrite) {
     patch_bytecode(Bytecodes::_fast_agetfield, bc, rbx);
@@ -3014,8 +3013,8 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ access_load_at(T_INT, IN_HEAP, rax, field, noreg, noreg);
   __ push(itos);
 
-  // aantonak - jtsan
-  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, itos));
+  // aantonak - MaTSa
+  MATSA_ONLY(TemplateTable::matsa_load_field(field, rdx, itos));
 
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
@@ -3030,8 +3029,8 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ access_load_at(T_CHAR, IN_HEAP, rax, field, noreg, noreg);
   __ push(ctos);
 
-  // aantonak - jtsan
-  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, ctos));
+  // aantonak - MaTSa
+  MATSA_ONLY(TemplateTable::matsa_load_field(field, rdx, ctos));
 
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
@@ -3046,8 +3045,8 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ access_load_at(T_SHORT, IN_HEAP, rax, field, noreg, noreg);
   __ push(stos);
 
-  // aantonak - jtsan
-  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, stos));
+  // aantonak - MaTSa
+  MATSA_ONLY(TemplateTable::matsa_load_field(field, rdx, stos));
 
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
@@ -3064,8 +3063,8 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ access_load_at(T_LONG, IN_HEAP | MO_RELAXED, noreg /* ltos */, field, noreg, noreg);
   __ push(ltos);
 
-  // aantonak - jtsan
-  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, ltos));
+  // aantonak - MaTSa
+  MATSA_ONLY(TemplateTable::matsa_load_field(field, rdx, ltos));
 
   // Rewrite bytecode to be faster
   LP64_ONLY(if (!is_static && rc == may_rewrite) patch_bytecode(Bytecodes::_fast_lgetfield, bc, rbx));
@@ -3079,8 +3078,8 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ access_load_at(T_FLOAT, IN_HEAP, noreg /* ftos */, field, noreg, noreg);
   __ push(ftos);
 
-  // aantonak - jtsan
-  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, ftos));
+  // aantonak - MaTSa
+  MATSA_ONLY(TemplateTable::matsa_load_field(field, rdx, ftos));
 
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
@@ -3099,8 +3098,8 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   __ access_load_at(T_DOUBLE, IN_HEAP | MO_RELAXED, noreg /* dtos */, field, noreg, noreg);
   __ push(dtos);
 
-  // aantonak - jtsan
-  JTSAN_ONLY(TemplateTable::jtsan_load_field(field, rdx, dtos));
+  // aantonak - MaTSa
+  MATSA_ONLY(TemplateTable::matsa_load_field(field, rdx, dtos));
 
   // Rewrite bytecode to be faster
   if (!is_static && rc == may_rewrite) {
@@ -3218,11 +3217,11 @@ void TemplateTable::jvmti_post_field_mod(Register cache, Register index, bool is
   }
 }
 
-void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosState state) {
+void TemplateTable::matsa_store_field(const Address &field, Register flags, TosState state) {
   int32_t is_volatile     = 1 << ConstantPoolCacheEntry::is_volatile_shift;
-  int32_t is_jtsan_ignore = 1 << ConstantPoolCacheEntry::is_jtsan_ignore_shift;
+  int32_t is_matsa_ignore = 1 << ConstantPoolCacheEntry::is_matsa_ignore_shift;
 
-  int32_t v_or_ignore     = is_volatile | is_jtsan_ignore;
+  int32_t v_or_ignore     = is_volatile | is_matsa_ignore;
 
   Label safe;
 
@@ -3243,7 +3242,7 @@ void TemplateTable::jtsan_store_field(const Address &field, Register flags, TosS
   __ jcc(Assembler::notEqual, safe);
 
   __ leaq(c_rarg0, field); // get field address
-  __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::jtsan_store[state]), c_rarg0, c_rarg1, rbcp);
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_store[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(safe);
 
@@ -3301,7 +3300,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
 
   const Register bc    = LP64_ONLY(c_rarg3) NOT_LP64(rcx);
 
-// jtsan - get a new copy of flags
+// MaTSa - get a new copy of flags
 // it is destroyed by the shift below
 // we need to know if a store is in volatile var
   __ movl(rdx, flags);
@@ -3316,7 +3315,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(btos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, btos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, rdx, btos));
     __ access_store_at(T_BYTE, IN_HEAP, field, rax, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_bputfield, bc, rbx, true, byte_no);
@@ -3332,7 +3331,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(ztos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, ztos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, rdx, ztos));
     __ access_store_at(T_BOOLEAN, IN_HEAP, field, rax, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_zputfield, bc, rbx, true, byte_no);
@@ -3348,7 +3347,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(atos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, atos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, rdx, atos));
     // Store into the field
     do_oop_store(_masm, field, rax);
     if (!is_static && rc == may_rewrite) {
@@ -3365,7 +3364,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(itos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, itos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, rdx, itos));
     __ access_store_at(T_INT, IN_HEAP, field, rax, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_iputfield, bc, rbx, true, byte_no);
@@ -3381,7 +3380,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(ctos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, ctos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, rdx, ctos));
     __ access_store_at(T_CHAR, IN_HEAP, field, rax, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_cputfield, bc, rbx, true, byte_no);
@@ -3397,7 +3396,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(stos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, stos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, rdx, stos));
     __ access_store_at(T_SHORT, IN_HEAP, field, rax, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_sputfield, bc, rbx, true, byte_no);
@@ -3413,7 +3412,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(ltos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, ltos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, rdx, ltos));
     // MO_RELAXED: generate atomic store for the case of volatile field (important for x86_32)
     __ access_store_at(T_LONG, IN_HEAP | MO_RELAXED, field, noreg /* ltos*/, noreg, noreg);
 #ifdef _LP64
@@ -3432,7 +3431,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(ftos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, ftos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, rdx, ftos));
     __ access_store_at(T_FLOAT, IN_HEAP, field, noreg /* ftos */, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_fputfield, bc, rbx, true, byte_no);
@@ -3451,7 +3450,7 @@ void TemplateTable::putfield_or_static_helper(int byte_no, bool is_static, Rewri
   {
     __ pop(dtos);
     if (!is_static) pop_and_check_object(obj);
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, rdx, dtos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, rdx, dtos));
     // MO_RELAXED: for the case of volatile field, in fact it adds no extra work for the underlying implementation
     __ access_store_at(T_DOUBLE, IN_HEAP | MO_RELAXED, field, noreg /* dtos */, noreg, noreg);
     if (!is_static && rc == may_rewrite) {
@@ -3554,7 +3553,7 @@ void TemplateTable::fast_storefield(TosState state) {
                        in_bytes(base +
                                 ConstantPoolCacheEntry::flags_offset())));
   // rdx gets clobbered later on, but rsi is ok to use                                
-  JTSAN_ONLY(
+  MATSA_ONLY(
     __ movl(rsi, rdx)
     );
 
@@ -3598,43 +3597,43 @@ void TemplateTable::fast_storefield_helper(Address field, Register rax) {
   // access field
   switch (bytecode()) {
   case Bytecodes::_fast_aputfield:
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, atos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, flags, atos));
     do_oop_store(_masm, field, rax);
     break;
   case Bytecodes::_fast_lputfield:
 #ifdef _LP64
-  JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, ltos));
+  MATSA_ONLY(TemplateTable::matsa_store_field(field, flags, ltos));
     __ access_store_at(T_LONG, IN_HEAP, field, noreg /* ltos */, noreg, noreg);
 #else
   __ stop("should not be rewritten");
 #endif
     break;
   case Bytecodes::_fast_iputfield:
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, itos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, flags, itos));
     __ access_store_at(T_INT, IN_HEAP, field, rax, noreg, noreg);
     break;
   case Bytecodes::_fast_zputfield:
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, ztos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, flags, ztos));
     __ access_store_at(T_BOOLEAN, IN_HEAP, field, rax, noreg, noreg);
     break;
   case Bytecodes::_fast_bputfield:
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, btos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, flags, btos));
     __ access_store_at(T_BYTE, IN_HEAP, field, rax, noreg, noreg);
     break;
   case Bytecodes::_fast_sputfield:
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, stos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, flags, stos));
     __ access_store_at(T_SHORT, IN_HEAP, field, rax, noreg, noreg);
     break;
   case Bytecodes::_fast_cputfield:
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, ctos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, flags, ctos));
     __ access_store_at(T_CHAR, IN_HEAP, field, rax, noreg, noreg);
     break;
   case Bytecodes::_fast_fputfield:
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, ftos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, flags, ftos));
     __ access_store_at(T_FLOAT, IN_HEAP, field, noreg /* ftos*/, noreg, noreg);
     break;
   case Bytecodes::_fast_dputfield:
-    JTSAN_ONLY(TemplateTable::jtsan_store_field(field, flags, dtos));
+    MATSA_ONLY(TemplateTable::matsa_store_field(field, flags, dtos));
     __ access_store_at(T_DOUBLE, IN_HEAP, field, noreg /* dtos*/, noreg, noreg);
     break;
   default:
@@ -3672,7 +3671,7 @@ void TemplateTable::fast_accessfield(TosState state) {
 
   const Register flags = rsi;
   // load flags
-  JTSAN_ONLY(
+  MATSA_ONLY(
   __ movl(flags, Address(rcx, rbx, Address::times_8,
                        in_bytes(ConstantPoolCache::base_offset() +
                                 ConstantPoolCacheEntry::flags_offset())));
@@ -3698,40 +3697,40 @@ void TemplateTable::fast_accessfield(TosState state) {
   // access field
   switch (bytecode()) {
   case Bytecodes::_fast_agetfield:
-    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, atos)); 
+    MATSA_ONLY(TemplateTable::matsa_load_field(field, flags, atos)); 
     do_oop_load(_masm, field, rax);
     __ verify_oop(rax);
     break;
   case Bytecodes::_fast_lgetfield:
 #ifdef _LP64
-    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, ltos)); 
+    MATSA_ONLY(TemplateTable::matsa_load_field(field, flags, ltos)); 
     __ access_load_at(T_LONG, IN_HEAP, noreg /* ltos */, field, noreg, noreg);
 #else
   __ stop("should not be rewritten");
 #endif
     break;
   case Bytecodes::_fast_igetfield:
-    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, itos));
+    MATSA_ONLY(TemplateTable::matsa_load_field(field, flags, itos));
     __ access_load_at(T_INT, IN_HEAP, rax, field, noreg, noreg);
     break;
   case Bytecodes::_fast_bgetfield:
-    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, btos));
+    MATSA_ONLY(TemplateTable::matsa_load_field(field, flags, btos));
     __ access_load_at(T_BYTE, IN_HEAP, rax, field, noreg, noreg);
     break;
   case Bytecodes::_fast_sgetfield:
-    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, stos));
+    MATSA_ONLY(TemplateTable::matsa_load_field(field, flags, stos));
     __ access_load_at(T_SHORT, IN_HEAP, rax, field, noreg, noreg);
     break;
   case Bytecodes::_fast_cgetfield:
-    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, ctos));
+    MATSA_ONLY(TemplateTable::matsa_load_field(field, flags, ctos));
     __ access_load_at(T_CHAR, IN_HEAP, rax, field, noreg, noreg);
     break;
   case Bytecodes::_fast_fgetfield:
-    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, ftos));  
+    MATSA_ONLY(TemplateTable::matsa_load_field(field, flags, ftos));  
     __ access_load_at(T_FLOAT, IN_HEAP, noreg /* ftos */, field, noreg, noreg);
     break;
   case Bytecodes::_fast_dgetfield:
-    JTSAN_ONLY(TemplateTable::jtsan_load_field(field, flags, dtos)); 
+    MATSA_ONLY(TemplateTable::matsa_load_field(field, flags, dtos)); 
     __ access_load_at(T_DOUBLE, IN_HEAP, noreg /* dtos */, field, noreg, noreg);
     break;
   default:
@@ -4294,8 +4293,8 @@ void TemplateTable::_new() {
     Register tmp_store_klass = LP64_ONLY(rscratch1) NOT_LP64(noreg);
     __ store_klass(rax, rcx, tmp_store_klass);  // klass
 
-  // aantonak - jtsan lockstate pointer initialization
-  JTSAN_ONLY(__ movptr(Address(rax, oopDesc::lock_state_offset_in_bytes()), 0x0));
+  // aantonak - MaTSa lockstate pointer initialization
+  MATSA_ONLY(__ movptr(Address(rax, oopDesc::lock_state_offset_in_bytes()), 0x0));
 
 
     {

@@ -118,15 +118,15 @@ JVM_Halt(jint code);
 JNIEXPORT void JNICALL
 JVM_GC(void);
 
-// aantonak - jtsan
+// aantonak - MaTSa
 JNIEXPORT void JNICALL
-JVM_jtsanLock(JNIEnv *env, jobject obj);
+JVM_MaTSaLock(JNIEnv *env, jobject obj);
 
 JNIEXPORT void JNICALL
-JVM_jtsanUnlock(JNIEnv *env, jobject obj);
+JVM_MaTSaUnlock(JNIEnv *env, jobject obj);
 
 JNIEXPORT void JNICALL
-JVM_jtsanJoin(JNIEnv *env, jobject obj);
+JVM_MaTSaJoin(JNIEnv *env, jobject obj);
 
 
 /* Returns the number of real-time milliseconds that have elapsed since the

@@ -178,8 +178,8 @@ void C1_MacroAssembler::initialize_header(Register obj, Register klass, Register
     movptr(Address(obj, oopDesc::klass_offset_in_bytes()), klass);
   }
 
-  // aantonak - jtsan init lockstate pointer
-  JTSAN_ONLY(movptr(Address(obj, oopDesc::lock_state_offset_in_bytes()), 0x0));
+  // aantonak - MaTSa init lockstate pointer
+  MATSA_ONLY(movptr(Address(obj, oopDesc::lock_state_offset_in_bytes()), 0x0));
 
   if (len->is_valid()) {
     movl(Address(obj, arrayOopDesc::length_offset_in_bytes()), len);

@@ -33,8 +33,8 @@
 #include "runtime/atomic.hpp"
 #include "utilities/macros.hpp"
 
-#if INCLUDE_JTSAN
-#include "jtsan/lockState.hpp"
+#if INCLUDE_MATSA
+#include "matsa/lockState.hpp"
 #endif
 
 // oopDesc is the top baseclass for objects classes. The {name}Desc classes describe
@@ -61,7 +61,7 @@ class oopDesc {
     narrowKlass _compressed_klass;
   } _metadata;
 
-#ifdef INCLUDE_JTSAN
+#ifdef INCLUDE_MATSA
   //JTSAN lock state
   LockShadow* _lock_state;
 #endif
@@ -121,8 +121,8 @@ class oopDesc {
   bool is_typeArray_noinline()         const;
 
 
-  // jtsan - lock index
-#ifdef INCLUDE_JTSAN
+  // MaTSa - lock index
+#ifdef INCLUDE_MATSA
   inline void  init_lock_state(void);
   inline LockShadow* lock_state(void);
   inline LockShadow* lock_state_or_null(void);
@@ -323,13 +323,13 @@ class oopDesc {
   static int klass_offset_in_bytes()     { return offset_of(oopDesc, _metadata._klass); }
   static int klass_gap_offset_in_bytes() {
     assert(has_klass_gap(), "only applicable to compressed klass pointers");
-  #ifdef INCLUDE_JTSAN
+  #ifdef INCLUDE_MATSA
     return klass_offset_in_bytes() + sizeof(narrowKlass) + sizeof(void*);
   #endif
     return klass_offset_in_bytes() + sizeof(narrowKlass);
   }
 
-#ifdef INCLUDE_JTSAN
+#ifdef INCLUDE_MATSA
   // static int obj_lock_index_offset_in_bytes() { return (int)offset_of(oopDesc, _obj_lock_index); }
   // static int sync_lock_index_offset_in_bytes() { return (int)offset_of(oopDesc, _sync_lock_index); }
 

@@ -105,13 +105,13 @@
 #include "jfr/jfr.hpp"
 #endif
 
-#if INCLUDE_JTSAN
+#if INCLUDE_MATSA
 #include "interpreter/interpreterRuntime.hpp"
-#include "jtsan/lockState.hpp"
-#include "jtsan/jtsanThreadPool.hpp"
-#include "jtsan/threadState.hpp"
+#include "matsa/lockState.hpp"
+#include "matsa/matsaThreadPool.hpp"
+#include "matsa/threadState.hpp"
 #include "runtime/registerMap.hpp"
-#include "jtsan/vectorclock.hpp"
+#include "matsa/vectorclock.hpp"
 #endif
 
 #include <errno.h>
@@ -3863,34 +3863,34 @@ JVM_END
 
 
 /*
-  * Java Thread Sanitizer (JTSan)
+  * Managed Thread Sanitizer (MaTSa)
   * Called on java.util.concurrent.lock() and semaphore() operations
 */
-JVM_ENTRY(void, JVM_jtsanLock(JNIEnv* env, jobject x))
-    if (JTSan) {
+JVM_ENTRY(void, JVM_matsaLock(JNIEnv* env, jobject x))
+    if (MaTSa) {
       oop lock_obj   = JNIHandles::resolve(x);
-      InterpreterRuntime::jtsan_lock(thread, (void*)lock_obj);
+      InterpreterRuntime::matsa_lock(thread, (void*)lock_obj);
     }
 JVM_END
 
 /*
-  * Java Thread Sanitizer (JTSan)
+  * Managed Thread Sanitizer (MaTSa)
   * Called on java.util.concurrent.unlock() and semaphore() operations
 */
-JVM_ENTRY(void, JVM_jtsanUnlock(JNIEnv* env, jobject x))
-    if (JTSan) {
+JVM_ENTRY(void, JVM_matsaUnlock(JNIEnv* env, jobject x))
+    if (MaTSa) {
       void *lock_obj = (void*)JNIHandles::resolve(x);
-      InterpreterRuntime::jtsan_unlock(thread, lock_obj);
+      InterpreterRuntime::matsa_unlock(thread, lock_obj);
     }
 JVM_END
 
 /*
-  * Java Thread Sanitizer (JTSan)
+  * Java Thread Sanitizer (MaTSa)
   * Called on java.lang.Thread.join() operations and transfers thread state to thread object
 */
-JVM_ENTRY(void, JVM_jtsanJoin(JNIEnv* env, jobject x))
-    if (JTSan) {
+JVM_ENTRY(void, JVM_matsaJoin(JNIEnv* env, jobject x))
+    if (MaTSa) {
       oop thread_object = JNIHandles::resolve(x);
-      InterpreterRuntime::jtsan_lock(thread, (void*)thread_object);
+      InterpreterRuntime::matsa_lock(thread, (void*)thread_object);
     }
 JVM_END

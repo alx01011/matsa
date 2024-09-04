@@ -1,5 +1,5 @@
 #include "symbolizer.hpp"
-#include "jtsanGlobals.hpp"
+#include "matsaGlobals.hpp"
 #include "threadState.hpp"
 
 #include "memory/allocation.hpp"
@@ -12,13 +12,13 @@ ThreadHistory::ThreadHistory() {
     events = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
 
     if (!events) {
-        fatal("JTSan Symbolizer: Failed to mmap");
+        fatal("MaTSa Symbolizer: Failed to mmap");
     }
 
     bool protect = os::protect_memory((char*)events, EVENT_BUFFER_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
 
     if (!protect) {
-        fatal("JTSan Symbolizer: Failed to protect memory");
+        fatal("MaTSa Symbolizer: Failed to protect memory");
     }
 }
 
@@ -40,7 +40,7 @@ uint64_t ThreadHistory::get_event(uint32_t i) {
 }
 
 uintptr_t Symbolizer::CompressAddr(uintptr_t addr) {
-    return addr & ((1ull << COMPRESSED_ADDR_BITS) - 1); // see jtsanDefs
+    return addr & ((1ull << COMPRESSED_ADDR_BITS) - 1); // see matsaDefs
 }
 
 uintptr_t Symbolizer::RestoreAddr(uintptr_t addr) {
@@ -60,12 +60,12 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
    // this actually produces better assembly than initializing a struct
     uint64_t e = (uint64_t) event | (uint64_t)addr << 2 | (uint64_t)bci << 50;
 
-    ThreadHistory *history = JTSanThreadState::getHistory(tid);
+    ThreadHistory *history = MaTSaThreadState::getHistory(tid);
     history->add_event(e);
 }
 
-bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
-    ThreadHistory *history = JTSanThreadState::getHistory(tid);
+bool Symbolizer::TraceUpToAddress(MaTSaEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
+    ThreadHistory *history = MaTSaThreadState::getHistory(tid);
 
     uint16_t sp = 0;
 
@@ -78,7 +78,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
     // last access is more likely to be closer to the end
     for (int i = idx; i >= 0; i--) {
         uint64_t raw_event = history->get_event(i);
-        JTSanEvent e = *(JTSanEvent*)&raw_event;
+        MaTSaEvent e = *(MaTSaEvent*)&raw_event;
 
         switch (e.event) {
             case MEM_READ:
@@ -102,12 +102,12 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
     }
 
     uint64_t raw_event;
-    JTSanEvent e;
+    MaTSaEvent e;
 
     // traverse up to last but not include last
     for (int i = 0; i < last; i++) {
         raw_event = history->get_event(i);
-        e         = *(JTSanEvent*)&raw_event;
+        e         = *(MaTSaEvent*)&raw_event;
 
         switch (e.event) {
             case FUNC:
@@ -135,7 +135,7 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
             return false;
         }
 
-        e = *(JTSanEvent*)&raw_event;
+        e = *(MaTSaEvent*)&raw_event;
 
         trace.events[sp - 1].bci = e.bci;
         trace.size = sp;
@@ -147,6 +147,6 @@ bool Symbolizer::TraceUpToAddress(JTSanEventTrace &trace, void *addr, int tid, S
 }
 
 void Symbolizer::ClearThreadHistory(int tid) {
-    ThreadHistory *history = JTSanThreadState::getHistory(tid);
+    ThreadHistory *history = MaTSaThreadState::getHistory(tid);
     history->clear();
 }

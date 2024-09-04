@@ -57,25 +57,25 @@ Java_java_lang_System_identityHashCode(JNIEnv *env, jobject this, jobject x)
     return JVM_IHashCode(env, x);
 }
 
-//aantonak - jtsan
+//aantonak - MaTSa
 JNIEXPORT void JNICALL
-Java_java_lang_System_jtsanLock(JNIEnv *env, jobject this, jobject x)
+Java_java_lang_System_MaTSaLock(JNIEnv *env, jobject this, jobject x)
 {
-    JVM_jtsanLock(env, x);
+    JVM_MaTSaLock(env, x);
 }
 
-//aantonak - jtsan
+//aantonak - MaTSa
 JNIEXPORT void JNICALL
-Java_java_lang_System_jtsanUnlock(JNIEnv *env, jobject this, jobject x)
+Java_java_lang_System_MaTSaUnlock(JNIEnv *env, jobject this, jobject x)
 {
-    JVM_jtsanUnlock(env, x);
+    JVM_MaTSaUnlock(env, x);
 }
 
-//aantonak - jtsan
+//aantonak - MaTSa
 JNIEXPORT void JNICALL
-Java_java_lang_System_jtsanJoin(JNIEnv *env, jobject this, jobject x)
+Java_java_lang_System_MaTSaJoin(JNIEnv *env, jobject this, jobject x)
 {
-    JVM_jtsanJoin(env, x);
+    JVM_MaTSaJoin(env, x);
 }
 
 /* VENDOR, VENDOR_URL, VENDOR_URL_BUG are set in VersionProps.java.template. */

@@ -334,15 +334,15 @@
 #define COMPILER1_OR_COMPILER2_PRESENT(code)
 #endif
 
-// aantonak - jtsan
-#ifndef INCLUDE_JTSAN
-#define INCLUDE_JTSAN 0
+// aantonak - MaTSa
+#ifndef INCLUDE_MATSA
+#define INCLUDE_MATSA 0
 #endif
 
-#if INCLUDE_JTSAN
-#define JTSAN_ONLY(code) \
+#if INCLUDE_MATSA
+#define MATSA_ONLY(code) \
     do { \
-      if (JTSan) { \
+      if (MaTSa) { \
         code; \
       } \
     } while (0)

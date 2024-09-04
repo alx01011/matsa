@@ -404,11 +404,11 @@ bool oopDesc::mark_must_be_preserved_for_promotion_failure(markWord m) const {
   return m.must_be_preserved_for_promotion_failure(this);
 }
 
-// jtsan lock index
-#ifdef INCLUDE_JTSAN
-#include "jtsan/jtsanGlobals.hpp"
-#include "jtsan/lockState.hpp"
-#include "jtsan/jtsanGlobals.hpp"
+// MaTSa lock index
+#ifdef INCLUDE_MATSA
+#include "matsa/matsaGlobals.hpp"
+#include "matsa/lockState.hpp"
+#include "matsa/matsaGlobals.hpp"
 
 void oopDesc::init_lock_state(void) {
   _lock_state = nullptr;

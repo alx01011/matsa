@@ -58,7 +58,7 @@
 #include "utilities/dtrace.hpp"
 #include "utilities/events.hpp"
 #include "utilities/preserveException.hpp"
-#if INCLUDE_JTSAN
+#if INCLUDE_MATSA
 #include "interpreter/interpreterRuntime.hpp"
 #endif
 
@@ -598,7 +598,7 @@ void ObjectSynchronizer::jni_enter(Handle obj, JavaThread* current) {
     }
   }
   current->set_current_pending_monitor_is_from_java(true);
-  JTSAN_ONLY(InterpreterRuntime::jtsan_lock(current, (void*)obj()));
+  MATSA_ONLY(InterpreterRuntime::matsa_lock(current, (void*)obj()));
 }
 
 // NOTE: must use heavy weight monitor to handle jni monitor exit
@@ -618,7 +618,7 @@ void ObjectSynchronizer::jni_exit(oop obj, TRAPS) {
   // intentionally do not use CHECK on check_owner because we must exit the
   // monitor even if an exception was already pending.
   if (monitor->check_owner(THREAD)) {
-    JTSAN_ONLY(InterpreterRuntime::jtsan_unlock(current, (void*)obj));
+    MATSA_ONLY(InterpreterRuntime::matsa_unlock(current, (void*)obj));
     monitor->exit(current);
   }
 }
@@ -664,11 +664,11 @@ int ObjectSynchronizer::wait(Handle obj, jlong millis, TRAPS) {
 
   // if we reach here (wait), we have to perform an unlock operation as the lock is released
   // it is reacquired when the thread is notified
-  JTSAN_ONLY(InterpreterRuntime::jtsan_unlock(current, (void*)obj()));
+  MATSA_ONLY(InterpreterRuntime::matsa_unlock(current, (void*)obj()));
   monitor->wait(millis, true, THREAD); // Not CHECK as we need following code
 
   // reacquire the lock
-  JTSAN_ONLY(InterpreterRuntime::jtsan_lock(current, (void*)obj()));
+  MATSA_ONLY(InterpreterRuntime::matsa_lock(current, (void*)obj()));
 
   // This dummy call is in place to get around dtrace bug 6254741.  Once
   // that's fixed we can uncomment the following line, remove the call

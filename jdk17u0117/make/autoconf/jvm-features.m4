@@ -322,12 +322,12 @@ AC_DEFUN_ONCE([JVM_FEATURES_CHECK_SHENANDOAHGC],
 ])
 
 ###############################################################################
-# Check if this platform supports avx for jtsan
+# Check if this platform supports avx for MaTSa
 #
 AC_DEFUN_ONCE([JVM_FEATURES_CHECK_JTSAN],
 [
-  JVM_FEATURES_CHECK_AVAILABILITY(jtsan, [
-    AC_MSG_CHECKING([if platform supports AVX for JTSan])
+  JVM_FEATURES_CHECK_AVAILABILITY(MaTSa, [
+    AC_MSG_CHECKING([if platform supports AVX for MaTSa])
     if test "x$OPENJDK_TARGET_CPU_ARCH" = "xx86" || \
         test "x$OPENJDK_TARGET_CPU" = "xriscv64"; then
       AC_MSG_RESULT([yes])

@@ -1093,7 +1093,7 @@ public abstract class AbstractQueuedSynchronizer
     public final boolean releaseShared(int arg) {
         if (tryReleaseShared(arg)) {
             // unlock before signal to ensure next thread sees updated state
-            System.jtsanUnlock(this);
+            System.MaTSaUnlock(this);
             signalNext(head);
             return true;
         }

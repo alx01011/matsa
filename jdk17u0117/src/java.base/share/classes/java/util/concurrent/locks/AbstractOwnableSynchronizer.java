@@ -35,8 +35,8 @@
 
 package java.util.concurrent.locks;
 
-import java.util.concurrent.annotation.JTSanIgnoreClass;
-import java.util.concurrent.annotation.JTSanIgnoreField;
+import java.util.concurrent.annotation.MaTSaIgnoreClass;
+import java.util.concurrent.annotation.MaTSaIgnoreField;
 
 /**
  * A synchronizer that may be exclusively owned by a thread.  This
@@ -64,7 +64,7 @@ public abstract class AbstractOwnableSynchronizer
     /**
      * The current owner of exclusive mode synchronization.
      */
-    @JTSanIgnoreField
+    @MaTSaIgnoreField
     private transient Thread exclusiveOwnerThread;
 
     /**
