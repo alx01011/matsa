@@ -211,7 +211,7 @@ void exit_globals() {
     destructorsCalled = true;
 
   MATSA_ONLY(
-    fprintf(stderr, "Java ThreadSanitizer: reported %lu warnings\n", COUNTER_GET(race));
+    fprintf(stderr, "MaTSa: reported %lu warnings\n", COUNTER_GET(race));
   );
 
     perfMemory_exit();
