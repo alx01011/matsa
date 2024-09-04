@@ -1,6 +1,6 @@
 import java.util.concurrent.annotation.*;
 
-@JTSanIgnoreClass
+@MaTSaIgnoreClass
 class ignore_this_class {
     public int x;
     public int y;
