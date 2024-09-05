@@ -28,6 +28,11 @@ void ThreadHistory::add_event(uint64_t event) {
     // if it gets filled we invalidate
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
+
+    if (index == (1 << 16)) {
+        fprintf(stderr, "oops im full\n");
+    }
+
     events[(uint16_t)index++] = event;
 }
 
