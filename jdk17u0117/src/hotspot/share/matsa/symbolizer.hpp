@@ -69,6 +69,7 @@ class ThreadHistory : public CHeapObj<mtInternal>{
 
         void clear(void) {
             index = 0;
+            access_idx = 0;
             // lock->lock();
             // index = 0;
             // lock->unlock();
