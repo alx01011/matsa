@@ -9,6 +9,7 @@
 
 ThreadHistory::ThreadHistory() {
     index  = 0;
+    access_idx = 0;
     events   = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
     accesses = (uint64_t*)os::reserve_memory(2 * EVENT_BUFFER_SIZE * sizeof(uint64_t));
 
