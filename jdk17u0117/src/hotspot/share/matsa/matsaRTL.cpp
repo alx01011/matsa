@@ -125,6 +125,7 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     // symbolize the access
     // 1 is read, 2 is write
     //Symbolizer::Symbolize((Event)(is_write + 1), addr, m->bci_from(bcp), tid);
+    Symbolizer::Symbolize(addr, tid);
 
     if (is_race && !MaTSaSilent) {
         MaTSaReport::do_report_race(thread, addr, access_size, bcp, m, cur, prev);

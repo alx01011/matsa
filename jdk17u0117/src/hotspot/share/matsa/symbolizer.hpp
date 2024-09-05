@@ -49,6 +49,7 @@ class MaTSaEventTrace {
 class ThreadHistory : public CHeapObj<mtInternal>{
     private:
         uint64_t *events;
+        uint64_t *accesses;
         //uint8_t   index; // 256 events at most
         // instead of locking, is it faster to do an atomic increment on index and just load whatever is on events?
         // a single event is 8 bytes and the memory is dword aligned, so we are safe
@@ -56,8 +57,12 @@ class ThreadHistory : public CHeapObj<mtInternal>{
     public:
         ThreadHistory();
         uint64_t index;
+        uint64_t access_idx;
 
         void add_event(uint64_t event);
+        void add_access(uintptr_t addr);
+
+        uint64_t get_access(uint32_t i);
 
         uint64_t get_event(uint32_t i);
         uint64_t get_old_shadow(uint32_t i);
@@ -74,7 +79,8 @@ namespace Symbolizer {
     uintptr_t CompressAddr(uintptr_t addr);
     uintptr_t RestoreAddr(uintptr_t addr);
 
-    void Symbolize       (Event event, void *addr, int bci, int tid);
+    void Symbolize       (Event event, void *addr, int bci, int tid); // for functions
+    void Symbolize       (void *addr, int tid); // for memory accesses only
     bool TraceUpToAddress(MaTSaEventTrace &trace, void *addr, int tid, ShadowCell &prev);
 
     void ClearThreadHistory(int tid);
