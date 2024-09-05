@@ -9,29 +9,17 @@
 
 ThreadHistory::ThreadHistory() {
     index  = 0;
-    access_idx = 0;
-    events   = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
-    accesses = (uint64_t*)os::reserve_memory(2 * EVENT_BUFFER_SIZE * sizeof(uint64_t));
+    events = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
 
-    if (!events || !accesses) {
+    if (!events) {
         fatal("MaTSa Symbolizer: Failed to mmap");
     }
 
     bool protect = os::protect_memory((char*)events, EVENT_BUFFER_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
-    protect &= os::protect_memory((char*)accesses, 2 * EVENT_BUFFER_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
-
 
     if (!protect) {
         fatal("MaTSa Symbolizer: Failed to protect memory");
     }
-}
-
-void ThreadHistory::add_access(uintptr_t addr) {
-    /*
-        48 bits for the address | 16 bits for events idx
-    */
-    uint64_t access = (uint64_t)addr << 16 | index;
-    accesses[(uint16_t)access_idx++] = access;
 }
 
 void ThreadHistory::add_event(uint64_t event) {
@@ -40,7 +28,6 @@ void ThreadHistory::add_event(uint64_t event) {
     // if it gets filled we invalidate
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
-
     events[(uint16_t)index++] = event;
 }
 
@@ -50,14 +37,6 @@ uint64_t ThreadHistory::get_event(uint32_t i) {
     }
 
     return events[i];
-}
-
-uint64_t ThreadHistory::get_access(uint32_t i) {
-    if (i >= (uint16_t)access_idx) {
-        return 0;
-    }
-
-    return accesses[i];
 }
 
 uintptr_t Symbolizer::CompressAddr(uintptr_t addr) {
@@ -85,93 +64,6 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
     history->add_event(e);
 }
 
-void Symbolizer::Symbolize(void *addr, int tid) {
-    ThreadHistory *history = MaTSaThreadState::getHistory(tid);
-    history->add_access((uintptr_t)addr);
-}
-
-// bool Symbolizer::TraceUpToAddress(MaTSaEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
-//     ThreadHistory *history = MaTSaThreadState::getHistory(tid);
-
-//     uint16_t sp = 0;
-
-//     int last = 0;
-
-//     uint16_t idx = history->index - 1;
-
-//     // find last occurrence of the address
-//     // we start traversing from the end of the buffer
-//     // last access is more likely to be closer to the end
-//     for (int i = idx; i >= 0; i--) {
-//         uint64_t raw_event = history->get_event(i);
-//         MaTSaEvent e = *(MaTSaEvent*)&raw_event;
-
-//         switch (e.event) {
-//             case MEM_READ:
-//             case MEM_WRITE: {
-//                 if ((Event)(prev.is_write + 1) == e.event && (void*)((uintptr_t)e.pc) == addr) {
-//                     // uint64_t shadow_old = history->get_old_shadow(i);
-//                     // if (shadow_old != prev_shadow_addr) {
-//                     //     continue; // shadow address mismatch, probably a different access
-//                     // }
-
-//                     last = i;
-//                     i    = 0; // break
-//                 }
-//                 break;
-//             }
-//             case INVALID:
-//                 return false;
-//             default:
-//                 break;
-//         }
-//     }
-
-//     uint64_t raw_event;
-//     MaTSaEvent e;
-
-//     // traverse up to last but not include last
-//     for (int i = 0; i < last; i++) {
-//         raw_event = history->get_event(i);
-//         e         = *(MaTSaEvent*)&raw_event;
-
-//         switch (e.event) {
-//             case FUNC:
-//                 switch(e.pc) {
-//                     case 0: // method exit
-//                         if (sp > 0) {
-//                             sp--;
-//                         }
-//                         break;
-//                     default: // method entry
-//                         trace.events[sp++] = e;
-//                         break;
-//                 }
-//                 break;
-//             default:
-//                 break;
-//         }
-//     }
-
-//     if (sp > 0) {
-//         // include the last event
-//         raw_event = history->get_event(last);
-
-//         if (!raw_event) {
-//             return false;
-//         }
-
-//         e = *(MaTSaEvent*)&raw_event;
-
-//         trace.events[sp - 1].bci = e.bci;
-//         trace.size = sp;
-
-//         return true;
-//     }
-
-//     return false;
-// }
-
 bool Symbolizer::TraceUpToAddress(MaTSaEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
     ThreadHistory *history = MaTSaThreadState::getHistory(tid);
 
@@ -179,22 +71,33 @@ bool Symbolizer::TraceUpToAddress(MaTSaEventTrace &trace, void *addr, int tid, S
 
     int last = 0;
 
-    uint32_t idx = history->access_idx - 1;
+    uint16_t idx = history->index - 1;
 
     // find last occurrence of the address
     // we start traversing from the end of the buffer
     // last access is more likely to be closer to the end
     for (int i = idx; i >= 0; i--) {
-        uint64_t raw_access = history->get_access(i);
-        uintptr_t access_addr = raw_access >> 16;
+        uint64_t raw_event = history->get_event(i);
+        MaTSaEvent e = *(MaTSaEvent*)&raw_event;
 
-        if (!raw_access) {
-            return false;
-        }
+        switch (e.event) {
+            case MEM_READ:
+            case MEM_WRITE: {
+                if ((Event)(prev.is_write + 1) == e.event && (void*)((uintptr_t)e.pc) == addr) {
+                    // uint64_t shadow_old = history->get_old_shadow(i);
+                    // if (shadow_old != prev_shadow_addr) {
+                    //     continue; // shadow address mismatch, probably a different access
+                    // }
 
-        if (access_addr == (uintptr_t)addr) {
-            last = raw_access & 0xFFFF; // gets the stack index
-            i    = 0; // break
+                    last = i;
+                    i    = 0; // break
+                }
+                break;
+            }
+            case INVALID:
+                return false;
+            default:
+                break;
         }
     }
 
