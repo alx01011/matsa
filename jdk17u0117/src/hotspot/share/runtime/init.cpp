@@ -152,7 +152,6 @@ jint init_globals() {
 
       if (tmp && *endptr == '\0') {
         history_size_width = tmp;
-        fprintf(stderr, "MaTSa: using history size %lu\n", history_size_width);
       }
     }
     env_event_buffer_size = 1 << history_size_width;
