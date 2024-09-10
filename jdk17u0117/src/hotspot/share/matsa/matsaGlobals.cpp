@@ -3,6 +3,8 @@
 
 #include <cstdio>
 
+uint64_t env_event_buffer_size = 1 << 17;
+
 volatile bool    _is_matsa_initialized = false;
 uint32_t _gc_epoch = 0;
 

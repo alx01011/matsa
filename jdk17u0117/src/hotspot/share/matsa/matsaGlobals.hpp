@@ -6,6 +6,9 @@
 #include "runtime/mutex.hpp"
 #include "runtime/atomic.hpp"
 
+// this gets set up on init and is fetched from MATSA_HISTORY env var
+extern uint64_t env_event_buffer_size;
+
 bool is_matsa_initialized(void);
 void set_matsa_initialized(bool value);
 

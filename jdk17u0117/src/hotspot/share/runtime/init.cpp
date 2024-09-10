@@ -57,8 +57,10 @@
 #include "matsa/matsaGlobals.hpp"
 #include "gc/shared/gc_globals.hpp"
 #include "matsa/matsaThreadPool.hpp"
+#include "matsa/symbolizer.hpp"
 #include "matsa/suppression.hpp"
 #include "matsa/report.hpp"
+#include <cstdlib> // getenv
 #endif
 
 
@@ -138,7 +140,25 @@ jint init_globals() {
   // MaTSa initialization must be done after gc initialization
   MATSA_ONLY(set_matsa_initialized(false));
   MATSA_ONLY(ShadowMemory::init(MaxHeapSize));
-  MATSA_ONLY(MaTSaThreadState::init());
+  MATSA_ONLY(
+    // before initializing the thread state we have to fetch the MATSA_HISTORY size
+    // from the environment
+    // defaults to 2^17
+    uint64_t history_size = 1 << 17;
+    const char* matsa_history_size = getenv("MATSA_HISTORY");
+    if (matsa_history_size != NULL) {
+      const char *endptr = NULL;
+      uint64_t tmp = strtoul(matsa_history_size, &endptr, 10);
+
+      if (tmp && *endptr == '\0') {
+        history_size = tmp;
+        fprintf(stderr, "MaTSa: using history size %lu\n", history_size);
+      }
+    }
+    env_event_buffer_size = history_size;
+
+    MaTSaThreadState::init()
+    );
   MATSA_ONLY(MaTSaThreadPool::matsa_threadpool_init());
   // init the main thread
   MATSA_ONLY(

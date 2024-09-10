@@ -7,6 +7,8 @@
 
 #include <cstring>
 
+uint64_t env_event_buffer_size = 0ull;
+
 ThreadHistory::ThreadHistory() {
     index  = 0;
     events = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
