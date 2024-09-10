@@ -28,11 +28,11 @@ void ThreadHistory::add_event(uint64_t event) {
     // if it gets filled we invalidate
     // because index is unsinged it will wrap around
     // effectively invalidating the buffer by setting the index to 0
-    events[(uint16_t)index++] = event;
+    events[index = (index + 1) & (EVENT_BUFFER_SIZE - 1)] = event;
 }
 
 uint64_t ThreadHistory::get_event(uint32_t i) {
-    if (i >= (uint16_t)index) {
+    if (i >= (uint32_t)index) {
         return 0;
     }
 
@@ -67,11 +67,11 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
 bool Symbolizer::TraceUpToAddress(MaTSaEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
     ThreadHistory *history = MaTSaThreadState::getHistory(tid);
 
-    uint16_t sp = 0;
+    uint32_t sp = 0;
 
     int last = 0;
 
-    uint16_t idx = history->index - 1;
+    uint32_t idx = history->index - 1;
 
     // find last occurrence of the address
     // we start traversing from the end of the buffer
@@ -88,7 +88,6 @@ bool Symbolizer::TraceUpToAddress(MaTSaEventTrace &trace, void *addr, int tid, S
                     // if (shadow_old != prev_shadow_addr) {
                     //     continue; // shadow address mismatch, probably a different access
                     // }
-
                     last = i;
                     i    = 0; // break
                 }
@@ -118,7 +117,7 @@ bool Symbolizer::TraceUpToAddress(MaTSaEventTrace &trace, void *addr, int tid, S
                         }
                         break;
                     default: // method entry
-                        trace.events[sp++] = e;
+                        trace.events[sp = (sp + 1) & (EVENT_BUFFER_SIZE - 1)] = e;
                         break;
                 }
                 break;

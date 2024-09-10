@@ -1,10 +1,10 @@
 #ifndef SYMBOLIZER_HPP
 #define SYMBOLIZER_HPP
 
-#define EVENT_BUFFER_WIDTH (16)
-#define EVENT_BUFFER_SIZE  (1 << EVENT_BUFFER_WIDTH) // 65k
+#define EVENT_BUFFER_WIDTH (17)
+#define EVENT_BUFFER_SIZE  (1 << EVENT_BUFFER_WIDTH) // 128k
 
-#define MAX_TRACE_SIZE     (1 << 16) // 65k
+#define MAX_TRACE_SIZE     (1 << 17) // 65k
 
 
 #include <cstdint>
