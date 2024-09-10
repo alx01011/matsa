@@ -67,7 +67,7 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
 bool Symbolizer::TraceUpToAddress(MaTSaEventTrace &trace, void *addr, int tid, ShadowCell &prev) {
     ThreadHistory *history = MaTSaThreadState::getHistory(tid);
 
-    uint32_t sp = 0;
+    uint16_t sp = 0;
 
     int last = 0;
 
@@ -117,7 +117,7 @@ bool Symbolizer::TraceUpToAddress(MaTSaEventTrace &trace, void *addr, int tid, S
                         }
                         break;
                     default: // method entry
-                        trace.events[sp = (sp + 1) & (EVENT_BUFFER_SIZE - 1)] = e;
+                        trace.events[sp++] = e;
                         break;
                 }
                 break;
