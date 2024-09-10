@@ -144,18 +144,18 @@ jint init_globals() {
     // before initializing the thread state we have to fetch the MATSA_HISTORY size
     // from the environment
     // defaults to 2^17
-    uint64_t history_size = 1 << 17;
+    uint64_t history_size_width = 17;
     const char* matsa_history_size = getenv("MATSA_HISTORY");
     if (matsa_history_size != NULL) {
-      const char *endptr = NULL;
+      char *endptr = NULL;
       uint64_t tmp = strtoul(matsa_history_size, &endptr, 10);
 
       if (tmp && *endptr == '\0') {
-        history_size = tmp;
-        fprintf(stderr, "MaTSa: using history size %lu\n", history_size);
+        history_size_width = tmp;
+        fprintf(stderr, "MaTSa: using history size %lu\n", history_size_width);
       }
     }
-    env_event_buffer_size = history_size;
+    env_event_buffer_size = 1 << history_size_width;
 
     MaTSaThreadState::init()
     );
