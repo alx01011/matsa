@@ -152,6 +152,10 @@ jint init_globals() {
 
       if (tmp && *endptr == '\0') {
         history_size_width = tmp;
+        // max 22
+        if (history_size_width > 22) {
+         history_size_width = 22; 
+        }
       }
     }
     env_event_buffer_size = 1 << history_size_width;
