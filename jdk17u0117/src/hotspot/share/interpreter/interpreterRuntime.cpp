@@ -895,8 +895,13 @@ void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method,
 
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
 
-  Method *sender = stack->size() > 0 ? (Method*)((uintptr_t)(stack->top() >> 16)) : method;
-  const int bci = sender->bci_from(bcp);
+  Method *sender = method;
+  if (stack->size()) {
+    uint64_t packed_frame = stack->top();
+    sender = (Method*)(packed_frame >> 16);
+  }
+
+  const int bci  = sender->bci_from(bcp);
 
   // first 48 bits are the method id, last 16 bits are the bci
   uint64_t packed_frame = ((uint64_t)method << 16) | (uint64_t)bci;
