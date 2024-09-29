@@ -900,11 +900,11 @@ void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method,
     uint64_t packed_frame = stack->top();
     sender = (Method*)(packed_frame >> 16);
 
-    ResourceArea rm;
-    printf("sender: %p, method: %p, func: %s\n", (void*)sender, (void*)method, method->name()->as_C_string());
+    // ResourceArea rm;
+    // printf("sender: %p, method: %p, func: %s\n", (void*)sender, (void*)method, method->name()->as_C_string());
   }
 
-  const int bci  = sender->bci_from(bcp);
+  const uint16_t bci  = sender->bci_from(bcp);
 
   // first 48 bits are the method id, last 16 bits are the bci
   uint64_t packed_frame = ((uint64_t)method << 16) | (uint64_t)bci;
