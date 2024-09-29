@@ -896,7 +896,7 @@ void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method,
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
 
   Method *sender = method;
-  if (stack->size()) {
+  if (stack->size() > 1) {
     uint64_t packed_frame = stack->top();
     sender = (Method*)(packed_frame >> 16);
 
