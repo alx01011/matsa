@@ -899,6 +899,8 @@ void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method,
   if (stack->size()) {
     uint64_t packed_frame = stack->top();
     sender = (Method*)(packed_frame >> 16);
+
+    printf("sender: %p\n", (void*)sender);
   }
 
   const int bci  = sender->bci_from(bcp);
