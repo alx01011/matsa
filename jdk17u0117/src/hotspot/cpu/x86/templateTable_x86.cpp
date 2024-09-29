@@ -873,7 +873,7 @@ void TemplateTable::baload() {
   index_check(rdx, rax); // kills rbx
   Address addr(rdx, rax, Address::times_1, arrayOopDesc::base_offset_in_bytes(T_BYTE));
 
-  MATSA_ONLY(TemplateTable::matsa_load_array(addr, itos));
+  MATSA_ONLY(TemplateTable::matsa_load_array(addr, btos));
 
   __ access_load_at(T_BYTE, IN_HEAP | IS_ARRAY, rax, addr, noreg, noreg);
 }
@@ -1273,7 +1273,7 @@ void TemplateTable::bastore() {
   Address addr(rdx, rbx,Address::times_1,
                 arrayOopDesc::base_offset_in_bytes(T_BYTE));
 
-  MATSA_ONLY(TemplateTable::matsa_store_array(addr, itos));
+  MATSA_ONLY(TemplateTable::matsa_store_array(addr, btos));
 
   __ access_store_at(T_BYTE, IN_HEAP | IS_ARRAY,
                      addr, rax, noreg, noreg);
