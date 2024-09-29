@@ -1,6 +1,6 @@
 #include "suppression.hpp"
-#include "jtsanStack.hpp"
-#include "jtsanGlobals.hpp"
+#include "matsaStack.hpp"
+#include "matsaGlobals.hpp"
 #include "report.hpp"
 
 #include "oops/method.hpp"
@@ -83,10 +83,10 @@ static void add_suppressions(Trie *trie, const char *suppression_string) {
     }
 }
 
-Trie *JTSanSuppression::top_frame_suppressions = nullptr;
-Trie *JTSanSuppression::frame_suppressions     = nullptr;
+Trie *MaTSaSuppression::top_frame_suppressions = nullptr;
+Trie *MaTSaSuppression::frame_suppressions     = nullptr;
 
-void JTSanSuppression::init(void) {
+void MaTSaSuppression::init(void) {
     top_frame_suppressions = new Trie();
     frame_suppressions     = new Trie();
 
@@ -94,10 +94,10 @@ void JTSanSuppression::init(void) {
     add_suppressions(frame_suppressions    , def_frame_suppressions);
 }
 
-bool JTSanSuppression::is_suppressed(JavaThread *thread, address bcp) {
+bool MaTSaSuppression::is_suppressed(JavaThread *thread, address bcp) {
     ResourceMark rm;
 
-    JTSanStack *stack = JavaThread::get_jtsan_stack(thread);
+    MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
 
     // first check the top frame
     Method *mp = NULL;

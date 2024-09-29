@@ -132,13 +132,13 @@
 #include "utilities/preserveException.hpp"
 #include "utilities/spinYield.hpp"
 #include "utilities/vmError.hpp"
-#if INCLUDE_JTSAN
-#include "jtsan/shadow.hpp"
-#include "jtsan/symbolizer.hpp"
-#include "jtsan/threadState.hpp"
-#include "jtsan/lockState.hpp"
-#include "jtsan/jtsanGlobals.hpp"
-#include "jtsan/jtsanThreadPool.hpp"
+#if INCLUDE_MATSA
+#include "matsa/shadow.hpp"
+#include "matsa/symbolizer.hpp"
+#include "matsa/threadState.hpp"
+#include "matsa/lockState.hpp"
+#include "matsa/matsaGlobals.hpp"
+#include "matsa/matsaThreadPool.hpp"
 #include "interpreter/interpreterRuntime.hpp"
 #endif
 #if INCLUDE_JVMCI
@@ -557,23 +557,23 @@ void Thread::start(Thread* thread) {
                                         JavaThreadStatus::RUNNABLE);
   }
 
-  JTSAN_ONLY(
+  MATSA_ONLY(
       if (Thread::current()->is_Java_thread()) {
         JavaThread *cur_thread = JavaThread::current();
         JavaThread *new_thread = thread->as_Java_thread();
 
-        int new_tid = JtsanThreadPool::get_instance()->get_queue()->dequeue();
+        int new_tid = MaTSaThreadPool::get_instance()->get_queue()->dequeue();
           
         if (new_tid == -1) {
           // out of available threads
-          fatal("No more threads available for JTSan");
+          fatal("No more threads available for MaTSa");
         }
-        JavaThread::set_jtsan_tid(new_thread, new_tid);
-        JavaThread::init_jtsan_stack(new_thread);
+        JavaThread::set_matsa_tid(new_thread, new_tid);
+        JavaThread::init_matsa_stack(new_thread);
 
-        int cur_tid = JavaThread::get_jtsan_tid(cur_thread);
+        int cur_tid = JavaThread::get_matsa_tid(cur_thread);
 
-        JTSanThreadState::transferEpoch(cur_tid, new_tid);
+        MaTSaThreadState::transferEpoch(cur_tid, new_tid);
 
         oop thread_object   = new_thread->threadObj();
 
@@ -582,9 +582,9 @@ void Thread::start(Thread* thread) {
         ls->transfer_vc(cur_tid);
 
         // increment epoch of the new thread - epochs start at 1
-        JTSanThreadState::incrementEpoch(new_tid);
+        MaTSaThreadState::incrementEpoch(new_tid);
         // increment epoch of the current thread
-        JTSanThreadState::incrementEpoch(cur_tid);
+        MaTSaThreadState::incrementEpoch(cur_tid);
 
         // we might as well clear the event trace
         Symbolizer::ClearThreadHistory(new_tid);
@@ -870,32 +870,32 @@ int JavaThread::get_thread_obj_id(JavaThread *thread) {
   return java_lang_Thread::thread_id(threadObj);
 }
 
-int JavaThread::get_jtsan_tid(JavaThread *thread) {
-  assert(thread != NULL, "null thread in jtsan get id");
-  assert(thread->is_Java_thread(), "thread not java thread in jtsan get id");
+int JavaThread::get_matsa_tid(JavaThread *thread) {
+  assert(thread != NULL, "null thread in MaTSa get id");
+  assert(thread->is_Java_thread(), "thread not java thread in MaTSa get id");
   
-  return thread->_jtsan_tid;
+  return thread->_matsa_tid;
 }
 
-void JavaThread::set_jtsan_tid(JavaThread *thread, int tid) {
-  assert(thread != NULL, "null thread in jtsan set id");
-  assert(thread->is_Java_thread(), "thread not java thread in jtsan set id");
+void JavaThread::set_matsa_tid(JavaThread *thread, int tid) {
+  assert(thread != NULL, "null thread in MaTSa set id");
+  assert(thread->is_Java_thread(), "thread not java thread in MaTSa set id");
   
-  thread->_jtsan_tid = tid;
+  thread->_matsa_tid = tid;
 }
 
-void JavaThread::init_jtsan_stack(JavaThread *thread) {
-  assert(thread != NULL, "null thread in jtsan init stack");
-  assert(thread->is_Java_thread(), "thread not java thread in jtsan init stack");
+void JavaThread::init_matsa_stack(JavaThread *thread) {
+  assert(thread != NULL, "null thread in MaTSa init stack");
+  assert(thread->is_Java_thread(), "thread not java thread in MaTSa init stack");
 
-  thread->_jtsan_stack = new JTSanStack(DEFAULT_STACK_SIZE);
+  thread->_matsa_stack = new MaTSaStack(DEFAULT_STACK_SIZE);
 }
 
-JTSanStack *JavaThread::get_jtsan_stack(JavaThread *thread) {
-  assert(thread != NULL, "null thread in jtsan get stack");
-  assert(thread->is_Java_thread(), "thread not java thread in jtsan get stack");
+MaTSaStack *JavaThread::get_matsa_stack(JavaThread *thread) {
+  assert(thread != NULL, "null thread in MaTSa get stack");
+  assert(thread->is_Java_thread(), "thread not java thread in MaTSa get stack");
 
-  return thread->_jtsan_stack;
+  return thread->_matsa_stack;
 }
 
 void JavaThread::set_threadObj(oop p) {
@@ -1207,16 +1207,16 @@ JavaThread::JavaThread(bool is_attaching_via_jni) : JavaThread() {
     _jni_attach_state = _attaching_via_jni;
 
     // in case we don't pass through start, we still need a valid tid for the symbolizer
-    JTSAN_ONLY(
-      int tid = JtsanThreadPool::get_queue()->dequeue();
+    MATSA_ONLY(
+      int tid = MaTSaThreadPool::get_queue()->dequeue();
       if (tid == -1) {
       // out of available threads
-        fatal("No more threads available for JTSan");
+        fatal("No more threads available for MaTSa");
       }
-      JavaThread::set_jtsan_tid(this, tid);
-      JTSanThreadState::incrementEpoch(tid);
+      JavaThread::set_matsa_tid(this, tid);
+      MaTSaThreadState::incrementEpoch(tid);
 
-      _jtsan_stack = new JTSanStack(DEFAULT_STACK_SIZE);
+      _matsa_stack = new MaTSaStack(DEFAULT_STACK_SIZE);
     );
   }
 }
@@ -1353,10 +1353,10 @@ JavaThread::~JavaThread() {
   }
 #endif // INCLUDE_JVMCI
 
-  JTSAN_ONLY(
+  MATSA_ONLY(
     // clear the stack here
     // if we clear it on exit we will miss the thread.exit frame
-    delete _jtsan_stack;
+    delete _matsa_stack;
   );
 }
 
@@ -1471,8 +1471,8 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
     _timer_exit_phase1.start();
   }
 
-  JTSAN_ONLY(
-    int cur_tid         = JavaThread::get_jtsan_tid(this);
+  MATSA_ONLY(
+    int cur_tid         = JavaThread::get_matsa_tid(this);
     oop thread_object   = this->threadObj();
     LockShadow *ls      = thread_object->lock_state();
 
@@ -1484,12 +1484,12 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
     // to be reused by another thread
     // but preserve the last epoch
     // it is crucial incase the thread is reused and there are older sync objects holding older epochs
-    int thread_epoch = JTSanThreadState::getEpoch(cur_tid, cur_tid);
-    JTSanThreadState::getThreadState(cur_tid)->clear();
-    JTSanThreadState::setEpoch(cur_tid, cur_tid, thread_epoch);
+    int thread_epoch = MaTSaThreadState::getEpoch(cur_tid, cur_tid);
+    MaTSaThreadState::getThreadState(cur_tid)->clear();
+    MaTSaThreadState::setEpoch(cur_tid, cur_tid, thread_epoch);
     // pop the thread from the stack (make it available to be reused)
     // cast is always safe because on start of the thread we have set the thread id
-    JtsanThreadPool::get_queue()->enqueue(cur_tid);
+    MaTSaThreadPool::get_queue()->enqueue(cur_tid);
   );
 
   HandleMark hm(this);
@@ -2881,8 +2881,8 @@ void Threads::initialize_jsr292_core_classes(TRAPS) {
 jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   extern void JDK_Version_init();
 
-  // jtsan initialization must be done after gc initialization
-  JTSAN_ONLY(set_jtsan_initialized(false));
+  // MaTSa initialization must be done after gc initialization
+  MATSA_ONLY(set_matsa_initialized(false));
 
   // Preinitialize version info.
   VM_Version::early_initialize();
@@ -3074,13 +3074,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   }
 
   assert(Universe::is_fully_initialized(), "not initialized");
-
-  //   // jtsan initialization must be done after gc initialization
-  // JTSAN_ONLY(set_jtsan_initialized(false));
-  // JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
-  // JTSAN_ONLY(JtsanThreadState::init());
-  // JTSAN_ONLY(LockShadow::init());
-  // JTSAN_ONLY(set_jtsan_initialized(true));
 
   if (VerifyDuringStartup) {
     // Make sure we're starting with a clean slate.
@@ -3658,9 +3651,9 @@ void Threads::destroy_vm() {
   // wait_until_not_protected() above.
   delete thread;
 
-  // jtsan - this is where destruction happens
-  JTSAN_ONLY(ShadowMemory::destroy());
-  // TODO: free rest of jtsan mem
+  // MaTSa - this is where destruction happens
+  MATSA_ONLY(ShadowMemory::destroy());
+  // TODO: free rest of MaTSa mem
 
 #if INCLUDE_JVMCI
   if (JVMCICounterSize > 0) {

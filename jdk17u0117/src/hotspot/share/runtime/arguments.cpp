@@ -2938,19 +2938,19 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
           return JNI_EINVAL;
         }
       }
-    } else if (match_option(option, "-XX:+JTSan", &tail)) { // aantonak - jtsan
-        if (FLAG_SET_CMDLINE(JTSan, true) != JVMFlag::SUCCESS) {
+    } else if (match_option(option, "-XX:+MaTSa", &tail)) { // aantonak - MaTSa
+        if (FLAG_SET_CMDLINE(MaTSa, true) != JVMFlag::SUCCESS) {
           return JNI_EINVAL;
         }
          // Unknown option
-      } else if (match_option(option, "-XX:+JTSanSilent", &tail)) { // aantonak - jtsan 
-        if (!JTSan) {
+      } else if (match_option(option, "-XX:+MaTSaSilent", &tail)) { // aantonak - MaTSa 
+        if (!MaTSa) {
           jio_fprintf(defaultStream::error_stream(),
-            "JTSanSilent can only be used with JTSan\n");
+            "MaTSa can only be used with MaTSa\n");
           return JNI_EINVAL;
         }
 
-        if (FLAG_SET_CMDLINE(JTSanSilent, true) != JVMFlag::SUCCESS) {
+        if (FLAG_SET_CMDLINE(MaTSaSilent, true) != JVMFlag::SUCCESS) {
           return JNI_EINVAL;
         }
          // Unknown option
@@ -4002,7 +4002,7 @@ jint Arguments::parse(const JavaVMInitArgs* initial_cmd_args) {
 
   apply_debugger_ergo();
 
-  JTSAN_ONLY(
+  MATSA_ONLY(
     // no jit until masters
     set_mode_flags(_int);
 

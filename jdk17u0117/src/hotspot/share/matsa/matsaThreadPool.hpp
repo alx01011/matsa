@@ -1,10 +1,11 @@
-#ifndef JTSAN_THREADPOOL_HPP
+#ifndef MATSA_THREADPOOL_HPP
+#define MATSA_THREADPOOL_HPP
 
 #include "memory/allocation.hpp"
 
 #include <cstdint>
 
-#include "jtsanDefs.hpp"
+#include "matsaDefs.hpp"
 
 // a circular queue
 class ThreadQueue : public CHeapObj<mtInternal> {
@@ -25,19 +26,19 @@ class ThreadQueue : public CHeapObj<mtInternal> {
 };
 
 
-class JtsanThreadPool : public CHeapObj<mtInternal> {
+class MaTSaThreadPool : public CHeapObj<mtInternal> {
     private:
         ThreadQueue* _queue;
 
-        JtsanThreadPool(void);
-        ~JtsanThreadPool(void);
+        MaTSaThreadPool(void);
+        ~MaTSaThreadPool(void);
 
-        static JtsanThreadPool* instance;
+        static MaTSaThreadPool* instance;
     public:
-        static JtsanThreadPool* get_instance(void);
+        static MaTSaThreadPool* get_instance(void);
 
-        static void jtsan_threadpool_destroy(void);
-        static void jtsan_threadpool_init(void);
+        static void matsa_threadpool_destroy(void);
+        static void matsa_threadpool_init(void);
 
         static ThreadQueue* get_queue(void);
 };

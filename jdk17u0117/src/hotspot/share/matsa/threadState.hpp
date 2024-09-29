@@ -10,7 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 
-class JTSanThreadState : AllStatic {
+class MaTSaThreadState : AllStatic {
     private:        
         /*
             Each thread has an array of epochs.

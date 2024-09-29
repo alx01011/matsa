@@ -54,8 +54,8 @@
 #include "jfr/support/jfrThreadExtension.hpp"
 #endif
 
-#if INCLUDE_JTSAN
-#include "jtsan/jtsanStack.hpp"
+#if INCLUDE_MATSA
+#include "matsa/matsaStack.hpp"
 #endif
 
 class SafeThreadsListPtr;
@@ -723,9 +723,9 @@ class JavaThread: public Thread {
   bool           _in_asgct;                        // Is set when this JavaThread is handling ASGCT call
   bool           _on_thread_list;                 // Is set when this JavaThread is added to the Threads list
   OopHandle      _threadObj;                     // The Java level thread object
-#if INCLUDE_JTSAN
-  int            _jtsan_tid          = -1;            // jtsan thread id
-  JTSanStack*    _jtsan_stack        = nullptr;       // jtsan stack
+#if INCLUDE_MATSA
+  int            _matsa_tid          = -1;            // MaTSa thread id
+  MaTSaStack*    _matsa_stack        = nullptr;       // MaTSa stack
 
 #endif
 
@@ -809,13 +809,13 @@ class JavaThread: public Thread {
     Atomic::store(&_current_waiting_monitor, monitor);
   }
 
-  // aantonak - jtsan
+  // aantonak - MaTSa
   static int get_thread_obj_id(JavaThread *thread);
-  static int get_jtsan_tid(JavaThread *thread);
-  static void set_jtsan_tid(JavaThread *thread, int tid);
+  static int get_matsa_tid(JavaThread *thread);
+  static void set_matsa_tid(JavaThread *thread, int tid);
 
-  static void init_jtsan_stack(JavaThread *thread);
-  static JTSanStack *get_jtsan_stack(JavaThread *thread);
+  static void init_matsa_stack(JavaThread *thread);
+  static MaTSaStack *get_matsa_stack(JavaThread *thread);
   
  private:
   MonitorChunk* _monitor_chunks;              // Contains the off stack monitors

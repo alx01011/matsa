@@ -172,7 +172,7 @@ public class Thread implements Runnable {
     private Runnable target;
 
     /* The group of this thread */
-    @JTSanIgnoreField
+    @MaTSaIgnoreField
     private ThreadGroup group;
 
     /* The context ClassLoader for this thread */
@@ -190,7 +190,7 @@ public class Thread implements Runnable {
 
     /* ThreadLocal values pertaining to this thread. This map is maintained
      * by the ThreadLocal class. */
-    @JTSanIgnoreField
+    @MaTSaIgnoreField
     ThreadLocal.ThreadLocalMap threadLocals = null;
 
     /*
@@ -1312,14 +1312,14 @@ public class Thread implements Runnable {
                 } while (isAlive() && (delay = millis -
                         TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime)) > 0);
                 if (!isAlive()) {
-                    System.jtsanJoin(this);
+                    System.MaTSaJoin(this);
                 }
             }
         } else if (millis == 0) {
             while (isAlive()) {
                 wait(0);
             }
-            System.jtsanJoin(this);
+            System.MaTSaJoin(this);
         } else {
             throw new IllegalArgumentException("timeout value is negative");
         }

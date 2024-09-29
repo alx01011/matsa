@@ -53,7 +53,7 @@ import java.util.concurrent.annotation.*;
     This framework avoids the primary disadvantage of using reflection
     for this purpose, namely the loss of compile-time checking. */
 
-@JTSanIgnoreClass
+@MaTSaIgnoreClass
 public class SharedSecrets {
     private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
     private static JavaAWTAccess javaAWTAccess;

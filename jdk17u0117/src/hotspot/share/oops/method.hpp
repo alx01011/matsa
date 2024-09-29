@@ -180,7 +180,7 @@ class Method : public Metadata {
   char* name_and_sig_as_C_string() const;
   char* name_and_sig_as_C_string(char* buf, int size) const;
 
-  // aantonak - jtsan
+  // aantonak - MaTSa
   const char* external_name_as_fully_qualified() const;//perpap
   static const char* external_name(Klass* klass, Symbol* method_name);//perpap
   static void  print_external_name(outputStream *os, Klass *klass, Symbol* method_name);//perpap

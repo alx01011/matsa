@@ -50,15 +50,17 @@
 #include "services/memTracker.hpp"
 #include "utilities/macros.hpp"
 
-#if INCLUDE_JTSAN
-#include "jtsan/shadow.hpp"
-#include "jtsan/threadState.hpp"
-#include "jtsan/lockState.hpp"
-#include "jtsan/jtsanGlobals.hpp"
+#if INCLUDE_MATSA
+#include "matsa/shadow.hpp"
+#include "matsa/threadState.hpp"
+#include "matsa/lockState.hpp"
+#include "matsa/matsaGlobals.hpp"
 #include "gc/shared/gc_globals.hpp"
-#include "jtsan/jtsanThreadPool.hpp"
-#include "jtsan/suppression.hpp"
-#include "jtsan/report.hpp"
+#include "matsa/matsaThreadPool.hpp"
+#include "matsa/symbolizer.hpp"
+#include "matsa/suppression.hpp"
+#include "matsa/report.hpp"
+#include <cstdlib> // getenv
 #endif
 
 
@@ -135,28 +137,49 @@ jint init_globals() {
   if (status != JNI_OK)
     return status;
 
-  // jtsan initialization must be done after gc initialization
-  JTSAN_ONLY(set_jtsan_initialized(false));
-  JTSAN_ONLY(ShadowMemory::init(MaxHeapSize));
-  JTSAN_ONLY(JTSanThreadState::init());
-  JTSAN_ONLY(JtsanThreadPool::jtsan_threadpool_init());
+  // MaTSa initialization must be done after gc initialization
+  MATSA_ONLY(set_matsa_initialized(false));
+  MATSA_ONLY(ShadowMemory::init(MaxHeapSize));
+  MATSA_ONLY(
+    // before initializing the thread state we have to fetch the MATSA_HISTORY size
+    // from the environment
+    // defaults to 2^17
+    uint64_t history_size_width = 17;
+    const char* matsa_history_size = getenv("MATSA_HISTORY");
+    if (matsa_history_size != NULL) {
+      char *endptr = NULL;
+      uint64_t tmp = strtoul(matsa_history_size, &endptr, 10);
+
+      if (tmp && *endptr == '\0') {
+        history_size_width = tmp;
+        // max 22
+        if (history_size_width > 22) {
+         history_size_width = 22; 
+        }
+      }
+    }
+    env_event_buffer_size = 1 << history_size_width;
+
+    MaTSaThreadState::init()
+    );
+  MATSA_ONLY(MaTSaThreadPool::matsa_threadpool_init());
   // init the main thread
-  JTSAN_ONLY(
-    int tid = JtsanThreadPool::get_queue()->dequeue();
-    JavaThread::set_jtsan_tid(JavaThread::current(), tid);
+  MATSA_ONLY(
+    int tid = MaTSaThreadPool::get_queue()->dequeue();
+    JavaThread::set_matsa_tid(JavaThread::current(), tid);
     // increment epoch
-    JTSanThreadState::incrementEpoch(0);
+    MaTSaThreadState::incrementEpoch(0);
 
-    JavaThread::init_jtsan_stack(JavaThread::current());
+    JavaThread::init_matsa_stack(JavaThread::current());
   );
 
-  JTSAN_ONLY(JTSanSuppression::init());
-  JTSAN_ONLY(
-    JTSanReport::_report_lock = new PaddedMutex(PaddedMutex::leaf, "JTSanReport::_report_lock", false,
+  MATSA_ONLY(MaTSaSuppression::init());
+  MATSA_ONLY(
+    MaTSaReport::_report_lock = new PaddedMutex(PaddedMutex::leaf, "MaTSaReport::_report_lock", false,
        Mutex::SafepointCheckRequired::_safepoint_check_never);
-    JTSanReportMap::init()
+    MaTSaReportMap::init()
   );
-  JTSAN_ONLY(set_jtsan_initialized(true));
+  MATSA_ONLY(set_matsa_initialized(true));
 
   AsyncLogWriter::initialize();
   gc_barrier_stubs_init();  // depends on universe_init, must be before interpreter_init
@@ -210,8 +233,8 @@ void exit_globals() {
   if (!destructorsCalled) {
     destructorsCalled = true;
 
-  JTSAN_ONLY(
-    fprintf(stderr, "Java ThreadSanitizer: reported %lu warnings\n", COUNTER_GET(race));
+  MATSA_ONLY(
+    fprintf(stderr, "MaTSa: reported %lu warnings\n", COUNTER_GET(race));
   );
 
     perfMemory_exit();

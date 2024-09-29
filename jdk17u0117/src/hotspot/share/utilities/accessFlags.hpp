@@ -70,7 +70,7 @@ enum {
   JVM_ACC_IS_HIDDEN_CLASS         = 0x04000000,     // True if klass is hidden
   JVM_ACC_IS_VALUE_BASED_CLASS    = 0x08000000,     // True if klass is marked as a ValueBased class
   JVM_ACC_IS_BEING_REDEFINED      = 0x00100000,     // True if the klass is being redefined.
-  JVM_ACC_CLASS_JTSAN_IGNORE      = 0x00008000,     // class is ignored by JTSan
+  JVM_ACC_CLASS_MATSA_IGNORE      = 0x00008000,     // class is ignored by MaTSa
 
   // Klass* and Method* flags
   JVM_ACC_HAS_LOCAL_VARIABLE_TABLE= 0x00200000,
@@ -88,7 +88,7 @@ enum {
   JVM_ACC_FIELD_MODIFICATION_WATCHED      = 0x00008000, // field modification is watched by JVMTI
   JVM_ACC_FIELD_INTERNAL                  = 0x00000400, // internal field, same as JVM_ACC_ABSTRACT
   JVM_ACC_FIELD_STABLE                    = 0x00000020, // @Stable field, same as JVM_ACC_SYNCHRONIZED and JVM_ACC_SUPER
-  JVM_ACC_FIELD_JTSAN_IGNORE              = 0x00000040, // field is ignored by JTSan
+  JVM_ACC_FIELD_MATSA_IGNORE              = 0x00000040, // field is ignored by MaTSa
   JVM_ACC_FIELD_INITIALIZED_FINAL_UPDATE  = 0x00000100, // (static) final field updated outside (class) initializer, same as JVM_ACC_NATIVE
   JVM_ACC_FIELD_HAS_GENERIC_SIGNATURE     = 0x00000800, // field has generic signature
 
@@ -127,9 +127,9 @@ class AccessFlags {
   bool is_interface   () const         { return (_flags & JVM_ACC_INTERFACE   ) != 0; }
   bool is_abstract    () const         { return (_flags & JVM_ACC_ABSTRACT    ) != 0; }
 
-#if INCLUDE_JTSAN
-  bool is_jtsan_ignore_field() const   { return (_flags & JVM_ACC_FIELD_JTSAN_IGNORE) != 0; }
-  bool is_jtsan_ignore_class() const   { return (_flags & JVM_ACC_CLASS_JTSAN_IGNORE) != 0; }
+#if INCLUDE_MATSA
+  bool is_matsa_ignore_field() const   { return (_flags & JVM_ACC_FIELD_MATSA_IGNORE) != 0; }
+  bool is_matsa_ignore_class() const   { return (_flags & JVM_ACC_CLASS_MATSA_IGNORE) != 0; }
 #endif
 
   // Attribute flags
@@ -239,8 +239,8 @@ class AccessFlags {
   void set_is_shared_class()           { atomic_set_bits(JVM_ACC_IS_SHARED_CLASS);         }
   void set_is_hidden_class()           { atomic_set_bits(JVM_ACC_IS_HIDDEN_CLASS);         }
   void set_is_value_based_class()      { atomic_set_bits(JVM_ACC_IS_VALUE_BASED_CLASS);    }
-#if INCLUDE_JTSAN
-  void set_is_jtsan_ignore_class()     {atomic_set_bits(JVM_ACC_CLASS_JTSAN_IGNORE);       }
+#if INCLUDE_MATSA
+  void set_is_matsa_ignore_class()     {atomic_set_bits(JVM_ACC_CLASS_MATSA_IGNORE);       }
 #endif
  public:
   // field flags

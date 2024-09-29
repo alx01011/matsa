@@ -653,7 +653,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         }
 
         protected boolean tryRelease(int unused) {
-            System.jtsanUnlock(this);
+            System.MaTSaUnlock(this);
             setExclusiveOwnerThread(null);
             setState(0);
             return true;
@@ -661,19 +661,19 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
         public void lock() { 
             acquire(1); 
-            System.jtsanLock(this);
+            System.MaTSaLock(this);
         }
         public boolean tryLock() {
             boolean res = tryAcquire(1);
 
             if (res) {
-                System.jtsanLock(this);
+                System.MaTSaLock(this);
             }
 
             return res;
         }
         public void unlock() {
-            System.jtsanUnlock(this); 
+            System.MaTSaUnlock(this); 
             release(1); 
         }
         public boolean isLocked() { return isHeldExclusively(); }

@@ -1,6 +1,6 @@
 #include "shadow.hpp"
 #include "threadState.hpp"
-#include "jtsanDefs.hpp"
+#include "matsaDefs.hpp"
 
 #include <cstdlib>
 #include <cstdio>
@@ -30,17 +30,17 @@ void ShadowMemory::init(size_t bytes) {
     */  
 
     if (sizeof(ShadowCell) != 8) {
-        fprintf(stderr, "JTSAN: ShadowCell size is not 64bits\n");
+        fprintf(stderr, "MATSA: ShadowCell size is not 64bits\n");
         exit(1);
     }
 
     if (sizeof(void*) != 8) {
-        fprintf(stderr, "JTSAN: Only 64bit systems are supported\n");
+        fprintf(stderr, "MATSA: Only 64bit systems are supported\n");
         exit(1);
     }
 
     if (Universe::heap()->kind() == CollectedHeap::Name::Z) {
-        fprintf(stderr, "JTSAN: ZGC is not supported\n");
+        fprintf(stderr, "MATSA: ZGC is not supported\n");
         exit(1);
     }
 
@@ -65,13 +65,13 @@ void ShadowMemory::init(size_t bytes) {
     bool protect = os::protect_memory((char*)shadow_base, shadow_size, os::MEM_PROT_RW);
 
     if (shadow_base == nullptr || !protect) {
-        fprintf(stderr, "JTSAN: Failed to allocate shadow memory\n");
+        fprintf(stderr, "MATSA: Failed to allocate shadow memory\n");
         exit(1);
     }
 
     // check for memory alignment
     if ((uptr)shadow_base & 0x7) { // shadow_base % 8
-        fprintf(stderr, "JTSAN: Shadow memory is not aligned\n");
+        fprintf(stderr, "MATSA: Shadow memory is not aligned\n");
         exit(1);
     }
 
@@ -109,7 +109,7 @@ void *ShadowBlock::store_cell(uptr mem, ShadowCell* cell) {
 
     // if we reach here, all the cells are occupied
     // just pick one at random and overwrite it
-    uint8_t ci = JTSanThreadState::getHistory(cell->tid)->index % SHADOW_CELLS;
+    uint8_t ci = MaTSaThreadState::getHistory(cell->tid)->index % SHADOW_CELLS;
     void *store_addr = (void*)((uptr)shadow_addr + (ci * sizeof(ShadowCell)));
 
     __atomic_store_n((uint64_t*)store_addr, *(uint64_t*)cell, __ATOMIC_RELAXED);

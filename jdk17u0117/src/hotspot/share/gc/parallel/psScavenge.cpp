@@ -70,8 +70,8 @@
 #include "services/memoryService.hpp"
 #include "utilities/stack.inline.hpp"
 
-#if INCLUDE_JTSAN
-#include "jtsan/jtsanGlobals.hpp"
+#if INCLUDE_MATSA
+#include "matsa/matsaGlobals.hpp"
 #endif
 
 HeapWord*                     PSScavenge::_to_space_top_before_gc = NULL;
@@ -369,9 +369,9 @@ bool PSScavenge::invoke_no_policy() {
   assert(SafepointSynchronize::is_at_safepoint(), "should be at safepoint");
   assert(Thread::current() == (Thread*)VMThread::vm_thread(), "should be in vm thread");
 
-  // aantonak - jtsan
+  // aantonak - MaTSa
   // update gc epoch
-  //JTSAN_ONLY(increment_gc_epoch());
+  //MATSA_ONLY(increment_gc_epoch());
 
   _gc_timer.register_gc_start();
 

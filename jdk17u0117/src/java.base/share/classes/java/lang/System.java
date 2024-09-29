@@ -87,7 +87,7 @@ import sun.reflect.annotation.AnnotationType;
 import sun.nio.ch.Interruptible;
 import sun.security.util.SecurityConstants;
 
-// for jtsan methods
+// for MaTSa methods
 import jdk.internal.vm.annotation.Hidden;
 
 /**
@@ -673,7 +673,7 @@ public final class System {
      * @param x the lock object
      */
     @Hidden
-    public static native void jtsanLock(Object x);
+    public static native void MaTSaLock(Object x);
 
     /**
      * aantonak
@@ -681,7 +681,7 @@ public final class System {
      * @param x the lock object
      */
     @Hidden
-    public static native void jtsanUnlock(Object x);
+    public static native void MaTSaUnlock(Object x);
 
     /**
      * aantonak
@@ -689,7 +689,7 @@ public final class System {
      * @param x the thread object
      */
     @Hidden
-    public static native void jtsanJoin(Object x);
+    public static native void MaTSaJoin(Object x);
 
     /**
      * System properties.

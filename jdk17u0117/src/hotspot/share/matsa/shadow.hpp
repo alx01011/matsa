@@ -1,5 +1,5 @@
 /*
-    * JTSan: Java Thread Sanitizer
+    * MaTSa: Java Thread Sanitizer
     * Author: Alexandros Antonakakis, University of Crete / FORTH
     * This file contains the shadow memory implementation
     * 

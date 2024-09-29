@@ -12,7 +12,7 @@
 
 // a hash map to keep track of previously reported races
 // unsafe must hold lock before calling any of the methods
-class JTSanReportMap : public CHeapObj<mtInternal> {
+class MaTSaReportMap : public CHeapObj<mtInternal> {
     private:
         struct ReportEntry {
             uintptr_t bcp;
@@ -22,13 +22,13 @@ class JTSanReportMap : public CHeapObj<mtInternal> {
 
         uint64_t hash(uintptr_t bcp);
 
-        static JTSanReportMap *_instance;
+        static MaTSaReportMap *_instance;
 
-        JTSanReportMap();
-        ~JTSanReportMap();
+        MaTSaReportMap();
+        ~MaTSaReportMap();
     
     public:
-        static JTSanReportMap *instance();
+        static MaTSaReportMap *instance();
 
         static void init();
         static void destroy();
@@ -38,7 +38,7 @@ class JTSanReportMap : public CHeapObj<mtInternal> {
         void clear();
 };
 
-namespace JTSanReport {
+namespace MaTSaReport {
     extern Mutex *_report_lock;
     //extern uint8_t _report_lock;
 

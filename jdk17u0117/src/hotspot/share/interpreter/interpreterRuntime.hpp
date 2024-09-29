@@ -53,48 +53,48 @@ class InterpreterRuntime: AllStatic {
   // Inner work method for Interpreter's frequency counter overflow.
   static nmethod* frequency_counter_overflow_inner(JavaThread* current, address branch_bcp);
 
-   // aantonak - jtsan
+   // aantonak - MaTSa
   // load 1 byte (btos, ztos, ctos) (byte, boolean, char)
-  static void jtsan_load1(void *addr, Method *m, address bcp);
+  static void matsa_load1(void *addr, Method *m, address bcp);
   // load 2 bytes (stos) (short)
-  static void jtsan_load2(void *addr, Method *m, address bcp);
+  static void matsa_load2(void *addr, Method *m, address bcp);
   // load 4 bytes (itos, ftos) (int, float)
-  static void jtsan_load4(void *addr, Method *m, address bcp);
+  static void matsa_load4(void *addr, Method *m, address bcp);
   // load 8 bytes (ltos, dtos, atos) (long, double, object)
-  static void jtsan_load8(void *addr, Method *m, address bcp);
+  static void matsa_load8(void *addr, Method *m, address bcp);
 
-  // aantonak - jtsan
+  // aantonak - MaTSa
   // store 1 byte (stob, stos, stoc) (byte, short, char)
-  static void jtsan_store1(void *addr, Method *m, address bcp);
+  static void matsa_store1(void *addr, Method *m, address bcp);
   // store 2 bytes (stos) (short)
-  static void jtsan_store2(void *addr, Method *m, address bcp);
+  static void matsa_store2(void *addr, Method *m, address bcp);
   // store 4 bytes (itos, ftos) (int, float)
-  static void jtsan_store4(void *addr, Method *m, address bcp);
+  static void matsa_store4(void *addr, Method *m, address bcp);
   // store 8 bytes (ltos, dtos, atos) (long, double, object)
-  static void jtsan_store8(void *addr, Method *m, address bcp);
+  static void matsa_store8(void *addr, Method *m, address bcp);
 
  public:
   // Constants
   static void    ldc           (JavaThread* current, bool wide);
   static void    resolve_ldc   (JavaThread* current, Bytecodes::Code bytecode);
 
-   // aantonak - jtsan
-  static void (*jtsan_load[]) (void *addr, Method *m, address bcp);
-  static void (*jtsan_store[])(void *addr, Method *m, address bcp);
+   // aantonak - MaTSa
+  static void (*matsa_load[]) (void *addr, Method *m, address bcp);
+  static void (*matsa_store[])(void *addr, Method *m, address bcp);
 
 
-  // aantonak - jtsan
+  // aantonak - MaTSa
   // for all lock and unlock operations
-  static void jtsan_lock  (JavaThread *thread, void *lock_obj);
-  static void jtsan_unlock(JavaThread *thread, void *lock_obj);
+  static void matsa_lock  (JavaThread *thread, void *lock_obj);
+  static void matsa_unlock(JavaThread *thread, void *lock_obj);
 
-  static void jtsan_sync_enter(JavaThread *thread, BasicObjectLock *lock);
-  static void jtsan_sync_exit (JavaThread *thread, BasicObjectLock *lock);
+  static void matsa_sync_enter(JavaThread *thread, BasicObjectLock *lock);
+  static void matsa_sync_exit (JavaThread *thread, BasicObjectLock *lock);
 
-  // aantonak - jtsan
+  // aantonak - MaTSa
   // for method entry/exit
-  static void jtsan_method_enter(JavaThread *current, Method *method, address bcp);
-  static void jtsan_method_exit (JavaThread *current, Method *method, address bcp);
+  static void matsa_method_enter(JavaThread *current, Method *method, address bcp);
+  static void matsa_method_exit (JavaThread *current, Method *method, address bcp);
 
   // Allocation
   static void    _new          (JavaThread* current, ConstantPool* pool, int index);

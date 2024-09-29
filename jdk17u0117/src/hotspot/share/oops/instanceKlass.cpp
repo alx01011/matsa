@@ -96,11 +96,11 @@
 #include "jfr/jfrEvents.hpp"
 #endif
 
-#if INCLUDE_JTSAN
+#if INCLUDE_MATSA
 #include "interpreter/interpreterRuntime.hpp"
 #include "oops/oop.hpp"
 #include "oops/oop.inline.hpp"
-#include "jtsan/lockState.hpp"
+#include "matsa/lockState.hpp"
 #endif
 
 
@@ -1237,6 +1237,7 @@ void InstanceKlass::initialize_impl(TRAPS) {
 
 void InstanceKlass::set_initialization_state_and_notify(ClassState state, TRAPS) {
   Handle h_init_lock(THREAD, init_lock());
+
   if (h_init_lock() != NULL) {
     ObjectLocker ol(h_init_lock, THREAD);
 

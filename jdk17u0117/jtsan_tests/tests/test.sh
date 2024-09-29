@@ -8,7 +8,7 @@
 #   -s, Adds additional switches to java command
 
 # Parse options
-JAVA_OPTS="-XX:+JTSan"
+JAVA_OPTS="-XX:+MaTSa"
 # Set up environment
 BUILD=../../build/linux-x86_64-server-release/jdk/bin/
 

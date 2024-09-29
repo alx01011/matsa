@@ -736,7 +736,7 @@ public class ReentrantReadWriteLock
          */
         public void lock() {
             sync.acquireShared(1);
-            System.jtsanLock(this);
+            System.MaTSaLock(this);
         }
 
         /**
@@ -811,7 +811,7 @@ public class ReentrantReadWriteLock
             boolean res = sync.tryReadLock();
 
             if (res) {
-                System.jtsanLock(this);
+                System.MaTSaLock(this);
             }
 
             return res;
@@ -901,7 +901,7 @@ public class ReentrantReadWriteLock
          * does not hold this lock
          */
         public void unlock() {
-            System.jtsanUnlock(this);
+            System.MaTSaUnlock(this);
             sync.releaseShared(1);
         }
 
@@ -965,7 +965,7 @@ public class ReentrantReadWriteLock
          */
         public void lock() {
             sync.acquire(1);
-            System.jtsanLock(this);
+            System.MaTSaLock(this);
         }
 
         /**
@@ -1021,7 +1021,7 @@ public class ReentrantReadWriteLock
          */
         public void lockInterruptibly() throws InterruptedException {
             sync.acquireInterruptibly(1);
-            System.jtsanLock(this);
+            System.MaTSaLock(this);
         }
 
         /**
@@ -1057,7 +1057,7 @@ public class ReentrantReadWriteLock
             boolean res = sync.tryWriteLock();
 
             if (res) {
-                System.jtsanLock(this);
+                System.MaTSaLock(this);
             }
             
             return res;
@@ -1147,7 +1147,7 @@ public class ReentrantReadWriteLock
             boolean res = sync.tryAcquireNanos(1, unit.toNanos(timeout));
 
             if (res) {
-                System.jtsanLock(this);
+                System.MaTSaLock(this);
             }
 
             return res;
@@ -1166,7 +1166,7 @@ public class ReentrantReadWriteLock
          * hold this lock
          */
         public void unlock() {
-            System.jtsanUnlock(this);
+            System.MaTSaUnlock(this);
             sync.release(1);
         }
 

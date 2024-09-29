@@ -237,10 +237,10 @@ class InterpreterMacroAssembler: public MacroAssembler {
   void lock_object  (Register lock_reg);
   void unlock_object(Register lock_reg);
 
-  // aantonak - jtsan
+  // aantonak - MaTSa
   // for synchronized blocks
-  void jtsan_monitor_enter(Register lock_reg);
-  void jtsan_monitor_exit(Register lock_reg);
+  void matsa_monitor_enter(Register lock_reg);
+  void matsa_monitor_exit(Register lock_reg);
 
   // Interpreter profiling operations
   void set_method_data_pointer_for_bcp();

@@ -1,5 +1,5 @@
-#ifndef JTSAN_DEFS_HPP
-#define JTSAN_DEFS_HPP
+#ifndef MATSA_DEFS_HPP
+#define MATSA_DEFS_HPP
 
 // 256 threads
 #define MAX_THREADS (1 << 8)
@@ -16,23 +16,23 @@
 
 // TODO: this has to be done at compile time
 // because we have to check if avx is supported
-#ifdef JTSAN_VECTORIZE
-#undef JTSAN_VECTORIZE
-#define JTSAN_VECTORIZE 0
+#ifdef MATSA_VECTORIZE
+#undef MATSA_VECTORIZE
+#define MATSA_VECTORIZE 0
 #else
-#define JTSAN_VECTORIZE 0
+#define MATSA_VECTORIZE 0
 #endif
 
 #define GIB(x) ((x) * 1024ull * 1024ull * 1024ull)
 #define TIB(x) ((x) * 1024ull * 1024ull * 1024ull * 1024ull)
 
 
-// #if JTSAN_VECTORIZE
-// #undef JTSAN_VECTORIZE
-// #define JTSAN_VECTORIZE __SSE4_2__
+// #if MATSA_VECTORIZE
+// #undef MATSA_VECTORIZE
+// #define MATSA_VECTORIZE __SSE4_2__
 // #endif
 
-#if JTSAN_VECTORIZE
+#if MATSA_VECTORIZE
 #include <emmintrin.h>
 #include <smmintrin.h>
 #include <immintrin.h>

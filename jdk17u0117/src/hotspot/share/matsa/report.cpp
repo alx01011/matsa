@@ -1,7 +1,7 @@
 #include "report.hpp"
-#include "jtsanGlobals.hpp"
+#include "matsaGlobals.hpp"
 #include "symbolizer.hpp"
-#include "jtsanStack.hpp"
+#include "matsaStack.hpp"
 
 #include "runtime/os.hpp"
 #include "runtime/mutexLocker.hpp"
@@ -16,21 +16,21 @@
 #define RESET "\033[0m"
 
 
-JTSanReportMap *JTSanReportMap::_instance = nullptr;
+MaTSaReportMap *MaTSaReportMap::_instance = nullptr;
 
-JTSanReportMap::JTSanReportMap() {
+MaTSaReportMap::MaTSaReportMap() {
     _size = 0;
     memset(_table, 0, sizeof(_table));
 }
 
-JTSanReportMap::~JTSanReportMap() {
+MaTSaReportMap::~MaTSaReportMap() {
     clear();
 }
 
 // we will use simple fnv1a hash
-uint64_t JTSanReportMap::hash(uintptr_t bcp) {
-    assert(sizeof(bcp) == 8, "JTSan Hash: bcp must be 64 bits");
-    assert(bcp, "JTSan Hash: bcp must be non-zero");
+uint64_t MaTSaReportMap::hash(uintptr_t bcp) {
+    assert(sizeof(bcp) == 8, "MaTSa Hash: bcp must be 64 bits");
+    assert(bcp, "MaTSa Hash: bcp must be non-zero");
 
     uint64_t hash  = 0xcbf29ce484222325ull; // offset basis
     uint64_t prime = 0x00000100000001B3ull; // prime 
@@ -44,25 +44,25 @@ uint64_t JTSanReportMap::hash(uintptr_t bcp) {
     return hash;
 }
 
-JTSanReportMap *JTSanReportMap::instance() {
-    assert(_instance != nullptr, "JTSanReportMap not initialized");
+MaTSaReportMap *MaTSaReportMap::instance() {
+    assert(_instance != nullptr, "MaTSaReportMap not initialized");
     return _instance;
 }
 
-void JTSanReportMap::init() {
-    assert(_instance == nullptr, "JTSanReportMap already initialized");
-    _instance = new JTSanReportMap();
+void MaTSaReportMap::init() {
+    assert(_instance == nullptr, "MaTSaReportMap already initialized");
+    _instance = new MaTSaReportMap();
 }
 
-void JTSanReportMap::destroy() {
-    assert(_instance != nullptr, "JTSanReportMap not initialized");
+void MaTSaReportMap::destroy() {
+    assert(_instance != nullptr, "MaTSaReportMap not initialized");
     _instance->clear();
 
     delete _instance;
     _instance = nullptr;
 }
 
-bool JTSanReportMap::contains(uintptr_t bcp) {
+bool MaTSaReportMap::contains(uintptr_t bcp) {
     uint64_t hash_val = hash(bcp);
     uint64_t bucket   = hash_val % BUCKETS;
 
@@ -78,7 +78,7 @@ bool JTSanReportMap::contains(uintptr_t bcp) {
     return false;
 }
 
-void JTSanReportMap::insert(uintptr_t bcp) {
+void MaTSaReportMap::insert(uintptr_t bcp) {
     uint64_t hash_val = hash(bcp);
     uint64_t bucket   = hash_val % BUCKETS;
 
@@ -92,7 +92,7 @@ void JTSanReportMap::insert(uintptr_t bcp) {
     _size++;
 }
 
-void JTSanReportMap::clear() {
+void MaTSaReportMap::clear() {
     for (size_t i = 0; i < BUCKETS; i++) {
         ReportEntry *entry = _table[i];
         while (entry != nullptr) {
@@ -106,8 +106,8 @@ void JTSanReportMap::clear() {
 }
 
 
-//uint8_t JTSanReport::_report_lock;
-Mutex *JTSanReport::_report_lock;
+//uint8_t MaTSaReport::_report_lock;
+Mutex *MaTSaReport::_report_lock;
 
 
 void print_method_info(Method *m, int bci, int index) {
@@ -128,8 +128,8 @@ void print_method_info(Method *m, int bci, int index) {
 
 
 // must hold lock else the output will be garbled
-void JTSanReport::print_current_stack(JavaThread *thread) {
-    JTSanStack *stack = JavaThread::get_jtsan_stack(thread);
+void MaTSaReport::print_current_stack(JavaThread *thread) {
+    MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
 
     int stack_size = stack->size();
     Method *mp = NULL;
@@ -146,14 +146,14 @@ void JTSanReport::print_current_stack(JavaThread *thread) {
 }
 
 bool try_print_event_trace(void *addr, int tid, ShadowCell &cell) {
-    JTSanEventTrace trace;
+    MaTSaEventTrace trace;
     bool has_trace = false;
 
     has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, cell);
 
     if (has_trace) {
         for (int i = trace.size - 1; i >= 0; i--) {
-            JTSanEvent e = trace.events[i];
+            MaTSaEvent e = trace.events[i];
             Method *m    = (Method*)((uintptr_t)e.pc);
             
             if (!Method::is_valid_method(m)) {
@@ -167,12 +167,12 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell) {
     return has_trace;
 }
 
-void JTSanReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
+void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
                             ShadowCell &cur, ShadowCell &prev) {
-    MutexLocker ml(JTSanReport::_report_lock, Mutex::_no_safepoint_check_flag);
+    MutexLocker ml(MaTSaReport::_report_lock, Mutex::_no_safepoint_check_flag);
 
     // already reported
-    if (JTSanReportMap::instance()->contains((uintptr_t)bcp)) {
+    if (MaTSaReportMap::instance()->contains((uintptr_t)bcp)) {
         return;
     }
 
@@ -183,12 +183,12 @@ void JTSanReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
     fprintf(stderr, "==================\n");
 
     fprintf(stderr, RED "WARNING: ThreadSanitizer: data race (pid=%d)\n", pid);
-    fprintf(stderr, BLUE " %s of size %u at %p by thread T%u:\n" RESET,  cur.is_write ? "Write" : "Read", 
+    fprintf(stderr, BLUE " %s of size %u at %p by thread T%u:" RESET"\n",  cur.is_write ? "Write" : "Read", 
             size, addr, (uint32_t)cur.tid);
 
     print_current_stack(thread);
     
-    fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%u:\n" RESET, prev.is_write ? "write" : "read", 
+    fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%u:" RESET"\n", prev.is_write ? "write" : "read", 
             size, addr, (uint32_t)prev.tid);
     if (!try_print_event_trace(addr, prev.tid, prev)) {
         fprintf(stderr, "  <no stack trace available>\n");
@@ -208,7 +208,7 @@ void JTSanReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
     fprintf(stderr, "==================\n");
 
     // store it in the report map
-    JTSanReportMap::instance()->insert((uintptr_t)bcp);
+    MaTSaReportMap::instance()->insert((uintptr_t)bcp);
 
     COUNTER_INC(race);
 }

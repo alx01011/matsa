@@ -78,14 +78,14 @@
 #include "opto/runtime.hpp"
 #endif
 
-#if INCLUDE_JTSAN
-#include "jtsan/threadState.hpp"
-#include "jtsan/lockState.hpp"
-#include "jtsan/jtsanRTL.hpp"
-#include "jtsan/jtsanGlobals.hpp"
-#include "jtsan/vectorclock.hpp"
-#include "jtsan/symbolizer.hpp"
-#include "jtsan/jtsanStack.hpp"
+#if INCLUDE_MATSA
+#include "matsa/threadState.hpp"
+#include "matsa/lockState.hpp"
+#include "matsa/matsaRTL.hpp"
+#include "matsa/matsaGlobals.hpp"
+#include "matsa/vectorclock.hpp"
+#include "matsa/symbolizer.hpp"
+#include "matsa/matsaStack.hpp"
 #endif
 
 // Helper class to access current interpreter state
@@ -712,11 +712,11 @@ void InterpreterRuntime::resolve_get_put(JavaThread* current, Bytecodes::Code by
     }
   }
 
-  bool is_jtsan_ignore_field = false;
+  bool is_matsa_ignore_field = false;
 
-#if INCLUDE_JTSAN
+#if INCLUDE_MATSA
   // either ignore on field annotated ignored, or whole class the field is part is annotated ignored
-  is_jtsan_ignore_field = info.access_flags().is_jtsan_ignore_field() || klass->is_jtsan_ignore();
+  is_matsa_ignore_field = info.access_flags().is_matsa_ignore_field() || klass->is_matsa_ignore();
 #endif
 
   cp_cache_entry->set_field(
@@ -728,31 +728,31 @@ void InterpreterRuntime::resolve_get_put(JavaThread* current, Bytecodes::Code by
     state,
     info.access_flags().is_final(),
     info.access_flags().is_volatile(),
-    is_jtsan_ignore_field
+    is_matsa_ignore_field
   );
 }
 
 //------------------------------------------------------------------------------------------------------------------------
-// jtsan instrumentation
+// MaTSa instrumentation
 
-void InterpreterRuntime::jtsan_load1(void *addr, Method *m, address bcp) {
-  JtsanRTL::MemoryAccess(addr, m, bcp, 1, false);
+void InterpreterRuntime::matsa_load1(void *addr, Method *m, address bcp) {
+  MaTSaRTL::MemoryAccess(addr, m, bcp, 1, false);
 }
 
-void InterpreterRuntime::jtsan_load2(void *addr, Method *m, address bcp) {
-  JtsanRTL::MemoryAccess(addr, m, bcp, 2, false);
+void InterpreterRuntime::matsa_load2(void *addr, Method *m, address bcp) {
+  MaTSaRTL::MemoryAccess(addr, m, bcp, 2, false);
 }
 
-void InterpreterRuntime::jtsan_load4(void *addr, Method *m, address bcp) {
-  JtsanRTL::MemoryAccess(addr, m, bcp, 4, false);
+void InterpreterRuntime::matsa_load4(void *addr, Method *m, address bcp) {
+  MaTSaRTL::MemoryAccess(addr, m, bcp, 4, false);
 }
 
-void InterpreterRuntime::jtsan_load8(void *addr, Method *m, address bcp) {
-  JtsanRTL::MemoryAccess(addr, m, bcp, 8, false);
+void InterpreterRuntime::matsa_load8(void *addr, Method *m, address bcp) {
+  MaTSaRTL::MemoryAccess(addr, m, bcp, 8, false);
 }
 
-void jtsan_vtos(void *addr, Method *m, address bcp) {
-  assert(false, "jtsan vtos");
+void matsa_vtos(void *addr, Method *m, address bcp) {
+  assert(false, "MaTSa vtos");
 }
 
 /*
@@ -760,53 +760,53 @@ void jtsan_vtos(void *addr, Method *m, address bcp) {
   For each type of load, there is the corresponding function.
 */
 
-void (*InterpreterRuntime::jtsan_load[]) (void *addr, Method *m, address bcp) = {
-  InterpreterRuntime::jtsan_load1,  // btos
-  InterpreterRuntime::jtsan_load1,  // ztos
-  InterpreterRuntime::jtsan_load1,  // ctos
-  InterpreterRuntime::jtsan_load2,  // stos
-  InterpreterRuntime::jtsan_load4,  // itos
-  InterpreterRuntime::jtsan_load8, //  ltos
-  InterpreterRuntime::jtsan_load4, //  ftos
-  InterpreterRuntime::jtsan_load8, //  dtos
-  InterpreterRuntime::jtsan_load8, //  atos
-  jtsan_vtos // vtos
+void (*InterpreterRuntime::matsa_load[]) (void *addr, Method *m, address bcp) = {
+  InterpreterRuntime::matsa_load1,  // btos
+  InterpreterRuntime::matsa_load1,  // ztos
+  InterpreterRuntime::matsa_load1,  // ctos
+  InterpreterRuntime::matsa_load2,  // stos
+  InterpreterRuntime::matsa_load4,  // itos
+  InterpreterRuntime::matsa_load8, //  ltos
+  InterpreterRuntime::matsa_load4, //  ftos
+  InterpreterRuntime::matsa_load8, //  dtos
+  InterpreterRuntime::matsa_load8, //  atos
+  matsa_vtos // vtos
 };
 
 // Store instrumentation
-void InterpreterRuntime::jtsan_store1(void *addr, Method *m, address bcp) {
-  JtsanRTL::MemoryAccess(addr, m, bcp, 1, true);
+void InterpreterRuntime::matsa_store1(void *addr, Method *m, address bcp) {
+  MaTSaRTL::MemoryAccess(addr, m, bcp, 1, true);
 }
 
-void InterpreterRuntime::jtsan_store2(void *addr, Method *m, address bcp) {
-  JtsanRTL::MemoryAccess(addr, m, bcp, 2, true);
+void InterpreterRuntime::matsa_store2(void *addr, Method *m, address bcp) {
+  MaTSaRTL::MemoryAccess(addr, m, bcp, 2, true);
 }
 
-void InterpreterRuntime::jtsan_store4(void *addr, Method *m, address bcp) {
-  JtsanRTL::MemoryAccess(addr, m, bcp, 4, true);
+void InterpreterRuntime::matsa_store4(void *addr, Method *m, address bcp) {
+  MaTSaRTL::MemoryAccess(addr, m, bcp, 4, true);
 }
 
-void InterpreterRuntime::jtsan_store8(void *addr, Method *m, address bcp) {
-  JtsanRTL::MemoryAccess(addr, m, bcp, 8, true);
+void InterpreterRuntime::matsa_store8(void *addr, Method *m, address bcp) {
+  MaTSaRTL::MemoryAccess(addr, m, bcp, 8, true);
 }
 
 
-void (*InterpreterRuntime::jtsan_store[]) (void *addr, Method *m, address bcp) = {
-  InterpreterRuntime::jtsan_store1,  // btos
-  InterpreterRuntime::jtsan_store1,  // ztos
-  InterpreterRuntime::jtsan_store1,  // ctos
-  InterpreterRuntime::jtsan_store2,  // stos
-  InterpreterRuntime::jtsan_store4,  // itos
-  InterpreterRuntime::jtsan_store8, //  ltos
-  InterpreterRuntime::jtsan_store4, //  ftos
-  InterpreterRuntime::jtsan_store8, //  dtos
-  InterpreterRuntime::jtsan_store8, //  atos
-  jtsan_vtos // vtos
+void (*InterpreterRuntime::matsa_store[]) (void *addr, Method *m, address bcp) = {
+  InterpreterRuntime::matsa_store1,  // btos
+  InterpreterRuntime::matsa_store1,  // ztos
+  InterpreterRuntime::matsa_store1,  // ctos
+  InterpreterRuntime::matsa_store2,  // stos
+  InterpreterRuntime::matsa_store4,  // itos
+  InterpreterRuntime::matsa_store8, //  ltos
+  InterpreterRuntime::matsa_store4, //  ftos
+  InterpreterRuntime::matsa_store8, //  dtos
+  InterpreterRuntime::matsa_store8, //  atos
+  matsa_vtos // vtos
 };
 
 // for object locks
-void InterpreterRuntime::jtsan_lock(JavaThread *thread, void *lock_obj)  {
-  int tid = JavaThread::get_jtsan_tid(thread);
+void InterpreterRuntime::matsa_lock(JavaThread *thread, void *lock_obj)  {
+  int tid = JavaThread::get_matsa_tid(thread);
 
   oop p = (oopDesc*)lock_obj;
 
@@ -818,13 +818,13 @@ void InterpreterRuntime::jtsan_lock(JavaThread *thread, void *lock_obj)  {
   LockShadow *obs = p->lock_state();
   Vectorclock* ts = obs->get_vectorclock();
 
-  Vectorclock* cur = JTSanThreadState::getThreadState(tid);
+  Vectorclock* cur = MaTSaThreadState::getThreadState(tid);
 
   *cur = *ts;
 }
 
-void InterpreterRuntime::jtsan_unlock(JavaThread *thread, void *lock_obj) {
-  int tid = JavaThread::get_jtsan_tid(thread);
+void InterpreterRuntime::matsa_unlock(JavaThread *thread, void *lock_obj) {
+  int tid = JavaThread::get_matsa_tid(thread);
 
   oop p = (oopDesc*)lock_obj;
 
@@ -836,16 +836,16 @@ void InterpreterRuntime::jtsan_unlock(JavaThread *thread, void *lock_obj) {
   LockShadow *obs = p->lock_state();
 
   Vectorclock* ls = obs->get_vectorclock();
-  Vectorclock* cur = JTSanThreadState::getThreadState(tid);
+  Vectorclock* cur = MaTSaThreadState::getThreadState(tid);
 
   *ls = *cur;
 
   // increment the epoch of the current thread after the transfer
-  JTSanThreadState::incrementEpoch(tid);
+  MaTSaThreadState::incrementEpoch(tid);
 }
 
-void InterpreterRuntime::jtsan_sync_enter(JavaThread *thread, BasicObjectLock *lock) {
-  int tid = JavaThread::get_jtsan_tid(thread);
+void InterpreterRuntime::matsa_sync_enter(JavaThread *thread, BasicObjectLock *lock) {
+  int tid = JavaThread::get_matsa_tid(thread);
 
   oop p = lock->obj();
 
@@ -859,13 +859,13 @@ void InterpreterRuntime::jtsan_sync_enter(JavaThread *thread, BasicObjectLock *l
   LockShadow *sls = p->lock_state();
   Vectorclock* ts = sls->get_vectorclock();
 
-  Vectorclock* cur = JTSanThreadState::getThreadState(tid);
+  Vectorclock* cur = MaTSaThreadState::getThreadState(tid);
 
   *cur = *ts;
 }
 
-void InterpreterRuntime::jtsan_sync_exit(JavaThread *thread, BasicObjectLock *lock) {
-  int tid = JavaThread::get_jtsan_tid(thread);
+void InterpreterRuntime::matsa_sync_exit(JavaThread *thread, BasicObjectLock *lock) {
+  int tid = JavaThread::get_matsa_tid(thread);
 
   oop p = lock->obj();
 
@@ -876,22 +876,22 @@ void InterpreterRuntime::jtsan_sync_exit(JavaThread *thread, BasicObjectLock *lo
 
   LockShadow* sls = p->lock_state();
   Vectorclock* ls = sls->get_vectorclock();
-  Vectorclock* cur = JTSanThreadState::getThreadState(tid);
+  Vectorclock* cur = MaTSaThreadState::getThreadState(tid);
 
   *ls = *cur;
 
   // increment the epoch of the current thread after the transfer
-  JTSanThreadState::incrementEpoch(tid);
+  MaTSaThreadState::incrementEpoch(tid);
 }
 
-void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method, address bcp) {
-  int tid = JavaThread::get_jtsan_tid(current);
+void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method, address bcp) {
+  int tid = JavaThread::get_matsa_tid(current);
 
   //const jmethodID m_id     = method->jmethod_id();
   const int bci = method->bci_from(bcp);
 
   Symbolizer::Symbolize(FUNC, method, bci, tid);
-  JTSanStack *stack = JavaThread::get_jtsan_stack(current);
+  MaTSaStack *stack = JavaThread::get_matsa_stack(current);
 
   // first 48 bits are the method id, last 16 bits are the bci
   uint64_t packed_frame = ((uint64_t)method << 16) | (uint64_t)bci;
@@ -899,11 +899,11 @@ void InterpreterRuntime::jtsan_method_enter(JavaThread *current, Method *method,
   stack->push(packed_frame);
 }
 
-void InterpreterRuntime::jtsan_method_exit(JavaThread *current, Method *method, address bcp) {
-  int tid = JavaThread::get_jtsan_tid(current);
+void InterpreterRuntime::matsa_method_exit(JavaThread *current, Method *method, address bcp) {
+  int tid = JavaThread::get_matsa_tid(current);
 
   Symbolizer::Symbolize(FUNC, 0, 0, tid);
-  JTSanStack *stack = JavaThread::get_jtsan_stack(current);
+  MaTSaStack *stack = JavaThread::get_matsa_stack(current);
   (void)stack->pop();
 }
 
