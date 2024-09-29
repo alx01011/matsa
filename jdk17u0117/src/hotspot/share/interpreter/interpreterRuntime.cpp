@@ -888,14 +888,20 @@ void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method,
   int tid = JavaThread::get_matsa_tid(current);
 
   //const jmethodID m_id     = method->jmethod_id();
-  const int bci = method->bci_from(bcp);
+  /* 
+    bci is the bytecode index and is per method.
+    To calculate the line number which the function was called, we need the sender's method and bci.
+  */
 
-  Symbolizer::Symbolize(FUNC, method, bci, tid);
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
+
+  Method *sender = stack->size() > 0 ? (Method*)((uintptr_t)(stack->top() >> 16)) : method;
+  const int bci = sender->bci_from(bcp);
 
   // first 48 bits are the method id, last 16 bits are the bci
   uint64_t packed_frame = ((uint64_t)method << 16) | (uint64_t)bci;
 
+  Symbolizer::Symbolize(FUNC, method, bci, tid);
   stack->push(packed_frame);
 }
 
