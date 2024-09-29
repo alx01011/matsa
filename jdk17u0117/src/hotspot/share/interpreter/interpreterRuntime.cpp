@@ -896,11 +896,12 @@ void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method,
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
 
   Method *sender = method;
-  if (stack->size() > 1) {
+  if (stack->size()) {
     uint64_t packed_frame = stack->top();
     sender = (Method*)(packed_frame >> 16);
-
-    printf("sender: %p\n", (void*)sender);
+    
+    ResourceArea rm;
+    printf("sender: %p, method: %p, func: %s", (void*)sender, (void*)method, method->name()->as_C_string());
   }
 
   const int bci  = sender->bci_from(bcp);
