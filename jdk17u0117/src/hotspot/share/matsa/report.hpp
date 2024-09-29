@@ -44,7 +44,7 @@ namespace MaTSaReport {
 
     void do_report_race   (JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
                             ShadowCell &cur, ShadowCell &prev);
-    void print_current_stack(JavaThread *thread);
+    void print_current_stack(JavaThread *thread, int cur_bci);
 }
 
 #endif

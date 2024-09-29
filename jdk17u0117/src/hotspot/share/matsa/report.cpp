@@ -128,7 +128,7 @@ void print_method_info(Method *m, int bci, int index) {
 
 
 // must hold lock else the output will be garbled
-void MaTSaReport::print_current_stack(JavaThread *thread) {
+void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
 
     int stack_size = stack->size();
@@ -138,7 +138,7 @@ void MaTSaReport::print_current_stack(JavaThread *thread) {
     for (int i = stack_size - 1; i >= 0; i--) {
         uint64_t raw_frame = stack->get(i);
         mp  = (Method*)(raw_frame >> 16);
-        bci = raw_frame & 0xFFFF;
+        bci = (i == 0 ? cur_bci : raw_frame & 0xFFFF);
 
         print_method_info(mp, bci, (stack_size - 1) - i);
     }
@@ -178,6 +178,7 @@ void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
 
     
     int pid = os::current_process_id();
+    int cur_bci = m->bci_from(bcp);
     ResourceMark rm;
 
     fprintf(stderr, "==================\n");
@@ -186,7 +187,7 @@ void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
     fprintf(stderr, BLUE " %s of size %u at %p by thread T%u:" RESET"\n",  cur.is_write ? "Write" : "Read", 
             size, addr, (uint32_t)cur.tid);
 
-    print_current_stack(thread);
+    print_current_stack(thread, cur_bci);
     
     fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%u:" RESET"\n", prev.is_write ? "write" : "read", 
             size, addr, (uint32_t)prev.tid);
@@ -196,7 +197,7 @@ void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
 
     const char *file_name   = "<null>";
     const char *method_name = m->external_name_as_fully_qualified();
-    const int lineno        = m->line_number_from_bci(m->bci_from(bcp));
+    const int lineno        = m->line_number_from_bci(cur_bci);
 
     InstanceKlass *holder = m->method_holder();
     Symbol *source_file   = nullptr;
