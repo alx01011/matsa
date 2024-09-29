@@ -137,7 +137,8 @@ void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
 
     for (int i = stack_size - 1; i >= 0; i--) {
         uint64_t raw_frame = stack->get(i);
-        mp  = (Method*)(raw_frame >> 16);
+        uint64_t raw_sender = i > 0 ? stack->get(i - 1) : 0;
+        mp  = raw_sender ? (Method*)(raw_sender >> 16) : (Method*)(raw_frame >> 16);
         bci = (i == stack_size - 1 ? cur_bci : raw_frame & 0xFFFF);
 
         print_method_info(mp, bci, (stack_size - 1) - i);
