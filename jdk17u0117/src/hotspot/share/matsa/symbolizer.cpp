@@ -112,7 +112,8 @@ bool Symbolizer::TraceUpToAddress(MaTSaEventTrace &trace, void *addr, int tid, S
             case FUNC:
                 switch(e.pc) {
                     case 0: // method exit
-                        if (sp > 0) {
+                    // 0,0 is a method exit
+                        if (sp > 0 && e.bci == 0) {
                             sp--;
                         }
                         break;

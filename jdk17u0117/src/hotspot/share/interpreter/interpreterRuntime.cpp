@@ -884,8 +884,19 @@ void InterpreterRuntime::matsa_sync_exit(JavaThread *thread, BasicObjectLock *lo
   MaTSaThreadState::incrementEpoch(tid);
 }
 
-void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method, address bcp) {
+JRT_ENTRY(void,InterpreterRuntime::matsa_method_enter(JavaThread *current))
   int tid = JavaThread::get_matsa_tid(current);
+
+  const RegisterMap reg_map(current, false);
+  const frame sender = current->last_frame().real_sender(&reg_map);
+
+
+  Method *method = NULL;
+  uint16_t bci   = 1;
+  if (sender.is_interpreted_frame()) {
+    method = sender.interpreter_frame_method();
+    bci    = method->bci_from(sender.interpreter_frame_bcp());
+  }
 
   //const jmethodID m_id     = method->jmethod_id();
   /* 
@@ -894,29 +905,20 @@ void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method,
   */
 
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
-
-  Method *sender = (Method*)(stack->top() >> 16);
-  if (sender == 0) sender = method;
-
-  const uint16_t bci  = sender->bci_from(bcp);  
-
-  ResourceArea rm;
-  printf("Method Called from: %s, %d\n", method->name()->as_C_string(), bci);
-
   // first 48 bits are the method id, last 16 bits are the bci
   uint64_t packed_frame = ((uint64_t)method << 16) | (uint64_t)bci;
 
   Symbolizer::Symbolize(FUNC, method, bci, tid);
   stack->push(packed_frame);
-}
+JRT_END
 
-void InterpreterRuntime::matsa_method_exit(JavaThread *current, Method *method, address bcp) {
+JRT_ENTRY(void,InterpreterRuntime::matsa_method_exit(JavaThread *current))
   int tid = JavaThread::get_matsa_tid(current);
-  // assume 0,1 means method exit
-  Symbolizer::Symbolize(FUNC, 0, 1, tid);
+  // assume 0,0 means method exit
+  Symbolizer::Symbolize(FUNC, 0, 0, tid);
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
   (void)stack->pop();
-}
+JRT_END
 
 //------------------------------------------------------------------------------------------------------------------------
 // Synchronization

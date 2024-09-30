@@ -116,8 +116,13 @@ bool MaTSaSuppression::is_suppressed(JavaThread *thread, address bcp) {
     for (int i = stack_size - 1; i >= 0; i--) {
         raw_frame = stack->get(i);
         mp = (Method*)((uintptr_t)(raw_frame >> 16));
-        fname = mp->external_name_as_fully_qualified();
 
+        // its possible on non interpreted frame senders
+        if (mp == 0) {
+            continue;
+        }
+
+        fname = mp->external_name_as_fully_qualified();
         if (frame_suppressions->search(fname)) {
             return true;
         }
