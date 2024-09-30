@@ -895,8 +895,13 @@ void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method,
 
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
 
-  Method *sender = method;
-  const uint16_t bci  = sender->bci_from(bcp);
+  Method *sender = (Method*)(stack->top() >> 16);
+  if (sender == 0) sender = method;
+
+  const uint16_t bci  = sender->bci_from(bcp);  
+
+  ResourceArea rm;
+  printf("Method Called from: %s, %d\n", method->name()->as_C_string(), bci);
 
   // first 48 bits are the method id, last 16 bits are the bci
   uint64_t packed_frame = ((uint64_t)method << 16) | (uint64_t)bci;
@@ -907,8 +912,8 @@ void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method,
 
 void InterpreterRuntime::matsa_method_exit(JavaThread *current, Method *method, address bcp) {
   int tid = JavaThread::get_matsa_tid(current);
-
-  Symbolizer::Symbolize(FUNC, 0, 0, tid);
+  // assume 0,1 means method exit
+  Symbolizer::Symbolize(FUNC, 0, 1, tid);
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
   (void)stack->pop();
 }
