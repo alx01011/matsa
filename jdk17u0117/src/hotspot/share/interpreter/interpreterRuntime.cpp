@@ -887,7 +887,7 @@ void InterpreterRuntime::matsa_sync_exit(JavaThread *thread, BasicObjectLock *lo
 JRT_ENTRY(void,InterpreterRuntime::matsa_method_enter(JavaThread *current))
   int tid = JavaThread::get_matsa_tid(current);
 
-  const RegisterMap reg_map(current, false);
+  RegisterMap reg_map(current, false);
   const frame sender = current->last_frame().real_sender(&reg_map);
 
 
