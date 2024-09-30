@@ -32,6 +32,10 @@ uint64_t MaTSaStack::pop(void) {
 }
 
 uint64_t MaTSaStack::top(void) {
+    if (this->_top == 0) {
+        return 0;
+    }
+    
     return this->_stack[this->_top - 1];
 }
 
