@@ -2096,12 +2096,12 @@ void InterpreterMacroAssembler::notify_method_entry() {
   // MaTSa
   {
     MATSA_ONLY(
-      // get_thread  (rthread);
+      get_thread  (rthread);
       get_method  (rarg);
       // // caller bcp is previously saved in _bcp_register by template interpreter
       // movptr      (c_rarg2, _bcp_register);
-
-      call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_method_enter), rarg);
+      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_method_enter), rthread, rarg);
+      // call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_method_enter), rarg);
     );
   }
 
@@ -2146,10 +2146,10 @@ void InterpreterMacroAssembler::notify_method_exit(
   {
     MATSA_ONLY(
       push(state);
-      // get_thread(rthread);
+      get_thread(rthread);
 
       // no need for bci and method* in method exit, they will be null/0 anyways
-      call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_method_exit));
+      call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_method_exit), rthread);
       pop(state);
     );
   }

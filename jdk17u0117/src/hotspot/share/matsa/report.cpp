@@ -159,6 +159,7 @@ void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
 
 }
 
+// potentially we can do a bit better here in the future (code is not that clean)
 bool try_print_event_trace(void *addr, int tid, ShadowCell &cell) {
     MaTSaEventTrace trace;
     bool has_trace = false;

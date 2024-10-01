@@ -885,38 +885,33 @@ void InterpreterRuntime::matsa_sync_exit(JavaThread *thread, BasicObjectLock *lo
   MaTSaThreadState::incrementEpoch(tid);
 }
 
-JRT_ENTRY(void,InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method))
+void InterpreterRuntime::matsa_prepare_method_enter(JavaThread *current, Method *method, address bcp) {
+  MaTSaStack *stack = JavaThread::get_matsa_stack(current);
+  uint16_t bci = method->bci_from(bcp);
+
+  // set the caller bci to be used by next func enter
+  stack->set_caller_bci(bci);
+}
+
+void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method) {
   int tid = JavaThread::get_matsa_tid(current);
 
-  RegisterMap reg_map(current, false);
-  const frame sender = current->last_frame().real_sender(&reg_map);
-
-  Method *sender_method = NULL;
-  uint16_t bci = 0;
-  /* 
-    bci is the bytecode index and is per method.
-    To calculate the line number which the function was called, we need the sender's method and bci.
-  */
-  if (LIKELY(sender.is_interpreted_frame())) { // cant avoid this currently
-    sender_method = sender.interpreter_frame_method();
-    bci = sender.interpreter_frame_bci();
-  }
-
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
+  uint16_t bci = stack->get_caller_bci();
   // first 48 bits are the method id, last 16 bits are the bci
   uint64_t packed_frame = ((uint64_t)method << 16) | (uint64_t)bci;
 
   Symbolizer::Symbolize(FUNC, method, bci, tid);
   stack->push(packed_frame);
-JRT_END
+}
 
-JRT_ENTRY(void,InterpreterRuntime::matsa_method_exit(JavaThread *current))
+void InterpreterRuntime::matsa_method_exit(JavaThread *current) {
   int tid = JavaThread::get_matsa_tid(current);
   // assume 0,0 means method exit
   Symbolizer::Symbolize(FUNC, 0, 0, tid);
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
   (void)stack->pop();
-JRT_END
+}
 
 //------------------------------------------------------------------------------------------------------------------------
 // Synchronization

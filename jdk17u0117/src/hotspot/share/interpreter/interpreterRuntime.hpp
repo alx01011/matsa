@@ -93,6 +93,7 @@ class InterpreterRuntime: AllStatic {
 
   // aantonak - MaTSa
   // for method entry/exit
+  static void matsa_prepare_method_enter(JavaThread *current, Method *method, address bcp);
   static void matsa_method_enter(JavaThread *current, Method *method);
   static void matsa_method_exit (JavaThread *current);
 
