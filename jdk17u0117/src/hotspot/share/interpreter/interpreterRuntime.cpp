@@ -86,6 +86,7 @@
 #include "matsa/vectorclock.hpp"
 #include "matsa/symbolizer.hpp"
 #include "matsa/matsaStack.hpp"
+#include "matsa/matsaDefs.hpp"
 #endif
 
 // Helper class to access current interpreter state
@@ -884,24 +885,22 @@ void InterpreterRuntime::matsa_sync_exit(JavaThread *thread, BasicObjectLock *lo
   MaTSaThreadState::incrementEpoch(tid);
 }
 
-JRT_ENTRY(void,InterpreterRuntime::matsa_method_enter(JavaThread *current))
+JRT_ENTRY(void,InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method))
   int tid = JavaThread::get_matsa_tid(current);
 
   RegisterMap reg_map(current, false);
   const frame sender = current->last_frame().real_sender(&reg_map);
 
-  Method *method = NULL, *sender_method = NULL;
-  uint16_t bci   = 0;
-  if (sender.is_interpreted_frame()) {
-    sender_method = sender.interpreter_frame_method();
-    bci    = sender.interpreter_frame_bci();
-  }
-
-  method = current->last_frame().interpreter_frame_method();
+  Method *sender_method = NULL;
+  uint16_t bci = 0;
   /* 
     bci is the bytecode index and is per method.
     To calculate the line number which the function was called, we need the sender's method and bci.
   */
+  if (LIKELY(sender.is_interpreted_frame())) { // cant avoid this currently
+    sender_method = sender.interpreter_frame_method();
+    bci = sender.interpreter_frame_bci();
+  }
 
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
   // first 48 bits are the method id, last 16 bits are the bci

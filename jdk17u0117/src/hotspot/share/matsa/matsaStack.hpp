@@ -14,6 +14,9 @@ class MaTSaStack : public CHeapObj<mtInternal> {
         int _size;
         uint16_t _top;
 
+        // needed so we know the line number a method got called at
+        uint16_t _caller_bci;
+
     public:
         MaTSaStack(size_t size);
         ~MaTSaStack();

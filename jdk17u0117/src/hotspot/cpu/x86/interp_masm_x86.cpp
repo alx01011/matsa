@@ -2097,11 +2097,11 @@ void InterpreterMacroAssembler::notify_method_entry() {
   {
     MATSA_ONLY(
       // get_thread  (rthread);
-      // get_method  (rarg);
+      get_method  (rarg);
       // // caller bcp is previously saved in _bcp_register by template interpreter
       // movptr      (c_rarg2, _bcp_register);
 
-      call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_method_enter));
+      call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_method_enter), rarg);
     );
   }
 
