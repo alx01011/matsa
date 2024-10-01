@@ -890,15 +890,14 @@ JRT_ENTRY(void,InterpreterRuntime::matsa_method_enter(JavaThread *current))
   RegisterMap reg_map(current, false);
   const frame sender = current->last_frame().real_sender(&reg_map);
 
-
-  Method *method = NULL;
-  uint16_t bci   = 1;
+  Method *method = NULL, *sender_method = NULL;
+  uint16_t bci   = 0;
   if (sender.is_interpreted_frame()) {
-    method = sender.interpreter_frame_method();
-    bci    = method->bci_from(sender.interpreter_frame_bcp());
+    sender_method = sender.interpreter_frame_method();
+    bci    = sender.interpreter_frame_bci();
   }
 
-  //const jmethodID m_id     = method->jmethod_id();
+  method = current->last_frame().interpreter_frame_method();
   /* 
     bci is the bytecode index and is per method.
     To calculate the line number which the function was called, we need the sender's method and bci.

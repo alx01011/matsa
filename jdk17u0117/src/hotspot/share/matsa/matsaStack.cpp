@@ -43,6 +43,7 @@ uint64_t MaTSaStack::get(size_t index) {
     return this->_stack[index];
 }
 
+
 int MaTSaStack::size(void) {
     return this->_top;
 }

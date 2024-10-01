@@ -61,6 +61,7 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
     uint64_t e = (uint64_t) event | (uint64_t)addr << 2 | (uint64_t)bci << 50;
 
     ThreadHistory *history = MaTSaThreadState::getHistory(tid);
+
     history->add_event(e);
 }
 

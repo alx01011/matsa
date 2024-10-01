@@ -126,7 +126,6 @@ void print_method_info(Method *m, int bci, int index) {
     fprintf(stderr, "  #%d %s() %s:%d\n", index, method_name, file_name, lineno);
 }
 
-
 // must hold lock else the output will be garbled
 void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
@@ -135,15 +134,25 @@ void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
     Method *mp = NULL;
     int bci = 0;
 
-    for (int i = stack_size - 1; i >= 0; i--) {
-        uint64_t raw_frame = stack->get(i);
+    // encode the current bci
+    uint64_t prev_frame = 0 | cur_bci;
+    uint64_t raw_frame  = 0;
+
+    for (int i = stack_size - 1; i >= 0; i--, prev_frame = raw_frame) {
+        raw_frame = stack->get(i);
+
         mp  = (Method*)(raw_frame >> 16);
 
-        if (mp == 0) {
-            continue;
-        }
-
-        bci = (i == stack_size - 1 ? cur_bci : raw_frame & 0xFFFF);
+        /*  
+            bci handling is a bit tricky:
+            - if we are at the top of the stack, then the bci is the current bci
+                - that is because the current bci is the bci of the access that caused the race
+                - obviously the access was made in the current method
+            - if we are not at the top of the stack, then the bci is the bci of the sender
+                - that is because the sender is the method that called the current method
+                - we want to know the line number the sender called the current method
+        */
+        bci = prev_frame & 0xFFFF;
 
         print_method_info(mp, bci, (stack_size - 1) - i);
     }
@@ -163,6 +172,10 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell) {
             
             if (!Method::is_valid_method(m)) {
                 continue;
+            }
+
+            if (i != trace.size - 1) {
+                e.bci = trace.events[i + 1].bci;
             }
 
             print_method_info(m, e.bci, (trace.size - 1) - i);
