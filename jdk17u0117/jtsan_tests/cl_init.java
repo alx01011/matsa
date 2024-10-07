@@ -2,6 +2,9 @@ class baz {
     public static int foo;
 
     static {
+        for (long i = 0; i < 100000000; i++) {
+            
+        }
         foo = 42;
     }
 
