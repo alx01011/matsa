@@ -30,5 +30,15 @@ public class cl_init {
             baz a = new baz();
             System.out.println(bar.foo);
         });
+
+        t1.start();
+        t2.start();
+
+        try {
+            t1.join();
+            t2.join();
+        } catch (InterruptedException e) {
+            System.out.println("Interrupted");
+        }
     }
 }
