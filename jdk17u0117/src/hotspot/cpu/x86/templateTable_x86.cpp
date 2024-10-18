@@ -3820,6 +3820,14 @@ void TemplateTable::prepare_invoke(int byte_no,
   // save 'interpreter return address'
   __ save_bcp();
 
+  // gets the callers bci prior to a call
+  // crucial so we know the code location of the call (i.e. callers bci)
+  MATSA_ONLY(
+    __ get_thread(c_rarg0);
+    __ get_method(c_rarg1);
+    __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_prepare_method_enter), c_rarg0, c_rarg1, rbcp);  
+  );
+
   load_invoke_cp_cache_entry(byte_no, method, index, flags, is_invokevirtual, false, is_invokedynamic);
 
   // maybe push appendix to arguments (just before return address)

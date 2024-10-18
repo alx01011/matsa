@@ -86,6 +86,7 @@
 #include "matsa/vectorclock.hpp"
 #include "matsa/symbolizer.hpp"
 #include "matsa/matsaStack.hpp"
+#include "matsa/matsaDefs.hpp"
 #endif
 
 // Helper class to access current interpreter state
@@ -884,24 +885,29 @@ void InterpreterRuntime::matsa_sync_exit(JavaThread *thread, BasicObjectLock *lo
   MaTSaThreadState::incrementEpoch(tid);
 }
 
-void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method, address bcp) {
+void InterpreterRuntime::matsa_prepare_method_enter(JavaThread *current, Method *method, address bcp) {
+  MaTSaStack *stack = JavaThread::get_matsa_stack(current);
+  uint16_t bci = method->bci_from(bcp);
+
+  // set the caller bci to be used by next func enter
+  stack->set_caller_bci(bci);
+}
+
+void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method) {
   int tid = JavaThread::get_matsa_tid(current);
 
-  //const jmethodID m_id     = method->jmethod_id();
-  const int bci = method->bci_from(bcp);
-
-  Symbolizer::Symbolize(FUNC, method, bci, tid);
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
-
+  uint16_t bci = stack->get_caller_bci();
   // first 48 bits are the method id, last 16 bits are the bci
   uint64_t packed_frame = ((uint64_t)method << 16) | (uint64_t)bci;
 
+  Symbolizer::Symbolize(FUNC, method, bci, tid);
   stack->push(packed_frame);
 }
 
-void InterpreterRuntime::matsa_method_exit(JavaThread *current, Method *method, address bcp) {
+void InterpreterRuntime::matsa_method_exit(JavaThread *current) {
   int tid = JavaThread::get_matsa_tid(current);
-
+  // assume 0,0 means method exit
   Symbolizer::Symbolize(FUNC, 0, 0, tid);
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
   (void)stack->pop();

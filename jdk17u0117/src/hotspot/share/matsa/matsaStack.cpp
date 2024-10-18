@@ -3,6 +3,7 @@
 MaTSaStack::MaTSaStack(size_t size) {
     this->_stack = NEW_C_HEAP_ARRAY(uint64_t, size, mtInternal);
     this->_top = 0;
+    this->_caller_bci = 0; // fine for the initial call from main
     this->_size = size;
 }
 
@@ -38,6 +39,7 @@ uint64_t MaTSaStack::top(void) {
 uint64_t MaTSaStack::get(size_t index) {
     return this->_stack[index];
 }
+
 
 int MaTSaStack::size(void) {
     return this->_top;

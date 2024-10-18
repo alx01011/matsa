@@ -61,6 +61,7 @@ void Symbolizer::Symbolize(Event event, void *addr, int bci, int tid) {
     uint64_t e = (uint64_t) event | (uint64_t)addr << 2 | (uint64_t)bci << 50;
 
     ThreadHistory *history = MaTSaThreadState::getHistory(tid);
+
     history->add_event(e);
 }
 
@@ -112,7 +113,8 @@ bool Symbolizer::TraceUpToAddress(MaTSaEventTrace &trace, void *addr, int tid, S
             case FUNC:
                 switch(e.pc) {
                     case 0: // method exit
-                        if (sp > 0) {
+                    // 0,0 is a method exit
+                        if (sp > 0 && e.bci == 0) {
                             sp--;
                         }
                         break;
