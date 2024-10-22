@@ -80,6 +80,20 @@ void ShadowMemory::init(size_t bytes) {
     ShadowMemory::heap_base   = base;
 }
 
+void ShadowMemory::reset(void) {
+    ShadowMemory::destroy();
+
+    void *shadow_base = os::reserve_memory(ShadowMemory::size);
+    bool protect = os::protect_memory((char*)shadow_base, ShadowMemory::size, os::MEM_PROT_RW);
+
+    if (shadow_base == nullptr || !protect) {
+        fprintf(stderr, "MATSA: Failed to reset shadow memory\n");
+        exit(1);
+    }
+
+    ShadowMemory::shadow_base = shadow_base;
+}
+
 void ShadowMemory::destroy(void) {
     os::unmap_memory((char*)ShadowMemory::shadow_base, ShadowMemory::size);
 }

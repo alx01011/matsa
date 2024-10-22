@@ -41,6 +41,7 @@
 
 #if INCLUDE_MATSA
 #include "matsa/matsaGlobals.hpp"
+#include "matsa/shadow.hpp"
 #endif
 
 // A "CollectedHeap" is an implementation of a java heap for HotSpot.  This
@@ -389,9 +390,8 @@ class CollectedHeap : public CHeapObj<mtGC> {
   // Increment total number of GC collections (started)
   void increment_total_collections(bool full = false) {
     _total_collections++;
-    // increment gc epoch
-    // atomic
-    MATSA_ONLY(increment_gc_epoch());
+   // reset shadow
+    MATSA_ONLY(ShadowMemory::reset(););
     if (full) {
       increment_total_full_collections();
     }

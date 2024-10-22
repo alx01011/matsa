@@ -32,6 +32,7 @@ class ShadowMemory : AllStatic {
         static uptr heap_base; // base address of the heap
 
         static void init(size_t bytes);
+        static void reset(void);
         static void destroy(void);
 
         static void *MemToShadow(uptr mem);
@@ -51,10 +52,9 @@ class ShadowMemory : AllStatic {
 
 // 64bit shadow cell
 struct ShadowCell {
-    uint64_t tid        : 8;
-    uint64_t epoch      : 32;
-    uint64_t offset     : 3; // 0-7 in case of 1,2 or byte access
-    uint64_t gc_epoch   : 19;
+    uint64_t tid        : 17;
+    uint64_t epoch      : 42;
+    uint64_t offset     : 3; // 0-7 in case of 1,2 or 4 byte access
     uint64_t is_write   : 1;
     uint64_t is_ignored : 1; // in case of a suppressed race
 };
