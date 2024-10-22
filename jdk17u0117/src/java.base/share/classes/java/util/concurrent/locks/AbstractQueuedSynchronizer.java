@@ -1663,11 +1663,11 @@ public abstract class AbstractQueuedSynchronizer
             if (Thread.interrupted())
                 throw new InterruptedException();
             ConditionNode node = new ConditionNode();
-            System.MaTSaLock(this);
             int savedState = enableWait(node);
             long nanos = (nanosTimeout < 0L) ? 0L : nanosTimeout;
             long deadline = System.nanoTime() + nanos;
             boolean cancelled = false, interrupted = false;
+            System.MaTSaLock(this);
             while (!canReacquire(node)) {
                 if ((interrupted |= Thread.interrupted()) ||
                     (nanos = deadline - System.nanoTime()) <= 0L) {
@@ -1676,9 +1676,9 @@ public abstract class AbstractQueuedSynchronizer
                 } else
                     LockSupport.parkNanos(this, nanos);
             }
-            System.MaTSaUnlock(this);
             node.clearStatus();
             acquire(node, savedState, false, false, false, 0L);
+            System.MaTSaUnlock(this);
             if (cancelled) {
                 unlinkCancelledWaiters(node);
                 if (interrupted)
