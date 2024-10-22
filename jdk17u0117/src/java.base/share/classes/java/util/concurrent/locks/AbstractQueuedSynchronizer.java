@@ -1667,6 +1667,7 @@ public abstract class AbstractQueuedSynchronizer
             long nanos = (nanosTimeout < 0L) ? 0L : nanosTimeout;
             long deadline = System.nanoTime() + nanos;
             boolean cancelled = false, interrupted = false;
+            System.MaTSaLock(this);
             while (!canReacquire(node)) {
                 if ((interrupted |= Thread.interrupted()) ||
                     (nanos = deadline - System.nanoTime()) <= 0L) {
@@ -1675,6 +1676,7 @@ public abstract class AbstractQueuedSynchronizer
                 } else
                     LockSupport.parkNanos(this, nanos);
             }
+            System.MaTSaUnlock(this);
             node.clearStatus();
             acquire(node, savedState, false, false, false, 0L);
             if (cancelled) {
