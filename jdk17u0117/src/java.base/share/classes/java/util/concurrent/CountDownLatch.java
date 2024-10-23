@@ -169,7 +169,11 @@ public class CountDownLatch {
         }
 
         protected int tryAcquireShared(int acquires) {
-            return (getState() == 0) ? 1 : -1;
+            if (getState() == 0) {
+                System.MaTSaLock(this);
+                return 1;
+            }
+            return -1;
         }
 
         protected boolean tryReleaseShared(int releases) {
@@ -179,8 +183,13 @@ public class CountDownLatch {
                 if (c == 0)
                     return false;
                 int nextc = c - 1;
-                if (compareAndSetState(c, nextc))
-                    return nextc == 0;
+                if (compareAndSetState(c, nextc)) {
+                    if (nextc == 0) {
+                        System.MaTSaUnlock(this);
+                        return true;
+                    }
+                    return false;
+                }
             }
         }
     }
