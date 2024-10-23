@@ -402,12 +402,14 @@ public class ReentrantReadWriteLock
                     throw new Error("Maximum lock count exceeded");
                 // Reentrant acquire
                 setState(c + acquires);
+                System.MaTSaLock(this);
                 return true;
             }
             if (writerShouldBlock() ||
                 !compareAndSetState(c, c + acquires))
                 return false;
             setExclusiveOwnerThread(current);
+            System.MaTSaLock(this);
             return true;
         }
 
@@ -489,6 +491,7 @@ public class ReentrantReadWriteLock
                         readHolds.set(rh);
                     rh.count++;
                 }
+                System.MaTSaLock(this);
                 return 1;
             }
             return fullTryAcquireShared(current);
@@ -550,6 +553,7 @@ public class ReentrantReadWriteLock
                         rh.count++;
                         cachedHoldCounter = rh; // cache for release
                     }
+                    System.MaTSaLock(this);
                     return 1;
                 }
             }
@@ -574,6 +578,7 @@ public class ReentrantReadWriteLock
             if (!compareAndSetState(c, c + 1))
                 return false;
             setExclusiveOwnerThread(current);
+            System.MaTSaLock(this);
             return true;
         }
 
@@ -608,6 +613,7 @@ public class ReentrantReadWriteLock
                             readHolds.set(rh);
                         rh.count++;
                     }
+                    System.MaTSaLock(this);
                     return true;
                 }
             }
@@ -736,7 +742,6 @@ public class ReentrantReadWriteLock
          */
         public void lock() {
             sync.acquireShared(1);
-            System.MaTSaLock(this);
         }
 
         /**
@@ -809,11 +814,6 @@ public class ReentrantReadWriteLock
          */
         public boolean tryLock() {
             boolean res = sync.tryReadLock();
-
-            if (res) {
-                System.MaTSaLock(this);
-            }
-
             return res;
         }
 
@@ -901,7 +901,6 @@ public class ReentrantReadWriteLock
          * does not hold this lock
          */
         public void unlock() {
-            System.MaTSaUnlock(this);
             sync.releaseShared(1);
         }
 
@@ -965,7 +964,6 @@ public class ReentrantReadWriteLock
          */
         public void lock() {
             sync.acquire(1);
-            System.MaTSaLock(this);
         }
 
         /**
@@ -1021,7 +1019,6 @@ public class ReentrantReadWriteLock
          */
         public void lockInterruptibly() throws InterruptedException {
             sync.acquireInterruptibly(1);
-            System.MaTSaLock(this);
         }
 
         /**
@@ -1145,11 +1142,6 @@ public class ReentrantReadWriteLock
         public boolean tryLock(long timeout, TimeUnit unit)
                 throws InterruptedException {
             boolean res = sync.tryAcquireNanos(1, unit.toNanos(timeout));
-
-            if (res) {
-                System.MaTSaLock(this);
-            }
-
             return res;
         }
 
@@ -1166,7 +1158,6 @@ public class ReentrantReadWriteLock
          * hold this lock
          */
         public void unlock() {
-            System.MaTSaUnlock(this);
             sync.release(1);
         }
 

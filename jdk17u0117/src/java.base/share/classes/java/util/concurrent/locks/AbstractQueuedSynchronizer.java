@@ -1097,6 +1097,7 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final boolean releaseShared(int arg) {
         if (tryReleaseShared(arg)) {
+            System.MaTSaUnlock(this);
             // unlock before signal to ensure next thread sees updated state
             signalNext(head);
             return true;
