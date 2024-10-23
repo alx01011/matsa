@@ -43,6 +43,8 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RejectedExecutionException;
 import jdk.internal.misc.Unsafe;
 
+import java.util.concurrent.annotation.*;
+
 /**
  * A version of {@link AbstractQueuedSynchronizer} in
  * which synchronization state is maintained as a {@code long}.
@@ -87,6 +89,7 @@ public abstract class AbstractQueuedLongSynchronizer
     abstract static class Node {
         volatile Node prev;       // initially attached via casTail
         volatile Node next;       // visibly nonnull when signallable
+        @MaTSaIgnoreField
         Thread waiter;            // visibly nonnull when enqueued
         volatile int status;      // written by owner, atomic bit ops by others
 
@@ -308,6 +311,7 @@ public abstract class AbstractQueuedLongSynchronizer
                     throw ex;
                 }
                 if (acquired) {
+                    System.MaTSaLock(this);
                     if (first) {
                         node.prev = null;
                         head = node;
@@ -637,6 +641,7 @@ public abstract class AbstractQueuedLongSynchronizer
      */
     public final boolean release(long arg) {
         if (tryRelease(arg)) {
+            System.MaTSaUnlock(this);
             signalNext(head);
             return true;
         }

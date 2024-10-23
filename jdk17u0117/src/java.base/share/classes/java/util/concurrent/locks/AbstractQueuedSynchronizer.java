@@ -43,6 +43,8 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RejectedExecutionException;
 import jdk.internal.misc.Unsafe;
 
+import java.util.concurrent.annotation.*;
+
 /**
  * Provides a framework for implementing blocking locks and related
  * synchronizers (semaphores, events, etc) that rely on
@@ -454,7 +456,8 @@ public abstract class AbstractQueuedSynchronizer
     abstract static class Node {
         volatile Node prev;       // initially attached via casTail
         volatile Node next;       // visibly nonnull when signallable
-        Thread waiter;            // visibly nonnull when enqueued
+        @MaTSaIgnoreField
+        Thread waiter;            // visibly nonnull when enqueued (MaTsa has to ignore this as it causes a false positive in signalNext)
         volatile int status;      // written by owner, atomic bit ops by others
 
         // methods for atomic operations
@@ -675,6 +678,7 @@ public abstract class AbstractQueuedSynchronizer
                     throw ex;
                 }
                 if (acquired) {
+                    System.MaTSaLock(this);
                     if (first) {
                         node.prev = null;
                         head = node;
@@ -1005,6 +1009,7 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final boolean release(int arg) {
         if (tryRelease(arg)) {
+            System.MaTSaUnlock(this);
             signalNext(head);
             return true;
         }
@@ -1093,7 +1098,6 @@ public abstract class AbstractQueuedSynchronizer
     public final boolean releaseShared(int arg) {
         if (tryReleaseShared(arg)) {
             // unlock before signal to ensure next thread sees updated state
-            System.MaTSaUnlock(this);
             signalNext(head);
             return true;
         }
@@ -1667,7 +1671,6 @@ public abstract class AbstractQueuedSynchronizer
             long nanos = (nanosTimeout < 0L) ? 0L : nanosTimeout;
             long deadline = System.nanoTime() + nanos;
             boolean cancelled = false, interrupted = false;
-            System.MaTSaLock(this);
             while (!canReacquire(node)) {
                 if ((interrupted |= Thread.interrupted()) ||
                     (nanos = deadline - System.nanoTime()) <= 0L) {
@@ -1678,7 +1681,6 @@ public abstract class AbstractQueuedSynchronizer
             }
             node.clearStatus();
             acquire(node, savedState, false, false, false, 0L);
-            System.MaTSaUnlock(this);
             if (cancelled) {
                 unlinkCancelledWaiters(node);
                 if (interrupted)

@@ -647,6 +647,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
         protected boolean tryAcquire(int unused) {
             if (compareAndSetState(0, 1)) {
                 setExclusiveOwnerThread(Thread.currentThread());
+                System.MaTSaLock(this);
                 return true;
             }
             return false;
@@ -661,19 +662,13 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
         public void lock() { 
             acquire(1); 
-            System.MaTSaLock(this);
         }
         public boolean tryLock() {
             boolean res = tryAcquire(1);
 
-            if (res) {
-                System.MaTSaLock(this);
-            }
-
             return res;
         }
         public void unlock() {
-            System.MaTSaUnlock(this); 
             release(1); 
         }
         public boolean isLocked() { return isHeldExclusively(); }
