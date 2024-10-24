@@ -311,7 +311,6 @@ public abstract class AbstractQueuedLongSynchronizer
                     throw ex;
                 }
                 if (acquired) {
-                    System.MaTSaLock(this);
                     if (first) {
                         node.prev = null;
                         head = node;

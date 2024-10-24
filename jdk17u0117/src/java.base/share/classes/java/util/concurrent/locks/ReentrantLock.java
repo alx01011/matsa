@@ -151,7 +151,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         final void lock() {
             if (!initialTryLock()) {
                 acquire(1);
-                System.MaTSaLock(this);
             }
         }
 
@@ -229,14 +228,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             Thread current = Thread.currentThread();
             if (compareAndSetState(0, 1)) { // first attempt is unguarded
                 setExclusiveOwnerThread(current);
-                System.MaTSaLock(this);
                 return true;
             } else if (getExclusiveOwnerThread() == current) {
                 int c = getState() + 1;
                 if (c < 0) // overflow
                     throw new Error("Maximum lock count exceeded");
                 setState(c);
-                System.MaTSaLock(this);
                 return true;
             } else
                 return false;
@@ -248,7 +245,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         protected final boolean tryAcquire(int acquires) {
             if (getState() == 0 && compareAndSetState(0, acquires)) {
                 setExclusiveOwnerThread(Thread.currentThread());
-                System.MaTSaLock(this);
                 return true;
             }
             return false;
@@ -270,14 +266,12 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             if (c == 0) {
                 if (!hasQueuedThreads() && compareAndSetState(0, 1)) {
                     setExclusiveOwnerThread(current);
-                    System.MaTSaLock(this);
                     return true;
                 }
             } else if (getExclusiveOwnerThread() == current) {
                 if (++c < 0) // overflow
                     throw new Error("Maximum lock count exceeded");
                 setState(c);
-                System.MaTSaLock(this);
                 return true;
             }
             return false;
@@ -290,7 +284,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             if (getState() == 0 && !hasQueuedPredecessors() &&
                 compareAndSetState(0, acquires)) {
                 setExclusiveOwnerThread(Thread.currentThread());
-                System.MaTSaLock(this);
                 return true;
             }
             return false;
@@ -331,6 +324,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public void lock() {
         sync.lock();
+        System.MaTSaLock(this);
     }
 
     /**
@@ -381,6 +375,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public void lockInterruptibly() throws InterruptedException {
         sync.lockInterruptibly();
+        System.MaTSaLock(this);
     }
 
     /**
@@ -411,6 +406,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public boolean tryLock() {
         if (sync.tryLock()) {
+            System.MaTSaLock(this);
             return true;
         }
         return false;
@@ -491,6 +487,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     public boolean tryLock(long timeout, TimeUnit unit)
             throws InterruptedException {
         if (sync.tryLockNanos(unit.toNanos(timeout))) {
+            System.MaTSaLock(this);
             return true;
         }
         return false;
@@ -508,6 +505,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      *         hold this lock
      */
     public void unlock() {
+        System.MaTSaUnlock(this);
         sync.release(1);
     }
 

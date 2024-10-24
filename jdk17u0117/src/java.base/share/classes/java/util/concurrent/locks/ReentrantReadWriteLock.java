@@ -37,6 +37,8 @@ package java.util.concurrent.locks;
 
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.annotation.MaTSaIgnoreField;
+
 import jdk.internal.vm.annotation.ReservedStackAccess;
 
 /**
@@ -312,8 +314,8 @@ public class ReentrantReadWriteLock
          * <p>Accessed via a benign data race; relies on the memory
          * model's final field and out-of-thin-air guarantees.
          */
-        private transient HoldCounter cachedHoldCounter;
-
+        @MaTSaIgnoreField
+        private transient HoldCounter cachedHoldCounter; // matsa has to ignore these as their access causes a benign data race by design
         /**
          * firstReader is the first thread to have acquired the read lock.
          * firstReaderHoldCount is firstReader's hold count.
@@ -332,7 +334,9 @@ public class ReentrantReadWriteLock
          * <p>This allows tracking of read holds for uncontended read
          * locks to be very cheap.
          */
-        private transient Thread firstReader;
+        @MaTSaIgnoreField
+        private transient Thread firstReader; // matsa has to ignore these as their access causes a benign data race by design
+        @MaTSaIgnoreField
         private transient int firstReaderHoldCount;
 
         Sync() {
@@ -402,14 +406,12 @@ public class ReentrantReadWriteLock
                     throw new Error("Maximum lock count exceeded");
                 // Reentrant acquire
                 setState(c + acquires);
-                System.MaTSaLock(this);
                 return true;
             }
             if (writerShouldBlock() ||
                 !compareAndSetState(c, c + acquires))
                 return false;
             setExclusiveOwnerThread(current);
-            System.MaTSaLock(this);
             return true;
         }
 
@@ -443,6 +445,7 @@ public class ReentrantReadWriteLock
                     // but it may allow waiting writers to proceed if
                     // both read and write locks are now free.
                     return nextc == 0;
+                
             }
         }
 
@@ -491,7 +494,6 @@ public class ReentrantReadWriteLock
                         readHolds.set(rh);
                     rh.count++;
                 }
-                System.MaTSaLock(this);
                 return 1;
             }
             return fullTryAcquireShared(current);
@@ -553,7 +555,6 @@ public class ReentrantReadWriteLock
                         rh.count++;
                         cachedHoldCounter = rh; // cache for release
                     }
-                    System.MaTSaLock(this);
                     return 1;
                 }
             }
@@ -578,7 +579,6 @@ public class ReentrantReadWriteLock
             if (!compareAndSetState(c, c + 1))
                 return false;
             setExclusiveOwnerThread(current);
-            System.MaTSaLock(this);
             return true;
         }
 
@@ -613,7 +613,6 @@ public class ReentrantReadWriteLock
                             readHolds.set(rh);
                         rh.count++;
                     }
-                    System.MaTSaLock(this);
                     return true;
                 }
             }
@@ -719,6 +718,7 @@ public class ReentrantReadWriteLock
     public static class ReadLock implements Lock, java.io.Serializable {
         private static final long serialVersionUID = -5992448646407690164L;
         private final Sync sync;
+        private final ReentrantReadWriteLock lock;
 
         /**
          * Constructor for use by subclasses.
@@ -728,6 +728,7 @@ public class ReentrantReadWriteLock
          */
         protected ReadLock(ReentrantReadWriteLock lock) {
             sync = lock.sync;
+            this.lock = lock;
         }
 
         /**
@@ -742,6 +743,7 @@ public class ReentrantReadWriteLock
          */
         public void lock() {
             sync.acquireShared(1);
+            System.MaTSaLock(lock);
         }
 
         /**
@@ -787,6 +789,7 @@ public class ReentrantReadWriteLock
          */
         public void lockInterruptibly() throws InterruptedException {
             sync.acquireSharedInterruptibly(1);
+            System.MaTSaLock(lock);
         }
 
         /**
@@ -813,8 +816,11 @@ public class ReentrantReadWriteLock
          * @return {@code true} if the read lock was acquired
          */
         public boolean tryLock() {
-            boolean res = sync.tryReadLock();
-            return res;
+            if (sync.tryReadLock()) {
+                System.MaTSaLock(lock);
+                return true;
+            }
+            return false;
         }
 
         /**
@@ -886,7 +892,12 @@ public class ReentrantReadWriteLock
          */
         public boolean tryLock(long timeout, TimeUnit unit)
                 throws InterruptedException {
-            return sync.tryAcquireSharedNanos(1, unit.toNanos(timeout));
+            if (sync.tryAcquireSharedNanos(1, unit.toNanos(timeout))) {
+                System.MaTSaLock(lock);
+                return true;
+            }
+
+            return false;
         }
 
         /**
@@ -901,6 +912,7 @@ public class ReentrantReadWriteLock
          * does not hold this lock
          */
         public void unlock() {
+            System.MaTSaUnlock(lock);
             sync.releaseShared(1);
         }
 
@@ -934,6 +946,7 @@ public class ReentrantReadWriteLock
     public static class WriteLock implements Lock, java.io.Serializable {
         private static final long serialVersionUID = -4992448646407690164L;
         private final Sync sync;
+        private final ReentrantReadWriteLock lock;
 
         /**
          * Constructor for use by subclasses.
@@ -943,6 +956,7 @@ public class ReentrantReadWriteLock
          */
         protected WriteLock(ReentrantReadWriteLock lock) {
             sync = lock.sync;
+            this.lock = lock;
         }
 
         /**
@@ -964,6 +978,7 @@ public class ReentrantReadWriteLock
          */
         public void lock() {
             sync.acquire(1);
+            System.MaTSaLock(lock);
         }
 
         /**
@@ -1019,6 +1034,7 @@ public class ReentrantReadWriteLock
          */
         public void lockInterruptibly() throws InterruptedException {
             sync.acquireInterruptibly(1);
+            System.MaTSaLock(lock);
         }
 
         /**
@@ -1051,13 +1067,11 @@ public class ReentrantReadWriteLock
          * by the current thread; and {@code false} otherwise.
          */
         public boolean tryLock() {
-            boolean res = sync.tryWriteLock();
-
-            if (res) {
-                System.MaTSaLock(this);
+            if (sync.tryWriteLock()) {
+                System.MaTSaLock(lock);
+                return true;
             }
-            
-            return res;
+            return false;
         }
 
         /**
@@ -1141,8 +1155,11 @@ public class ReentrantReadWriteLock
          */
         public boolean tryLock(long timeout, TimeUnit unit)
                 throws InterruptedException {
-            boolean res = sync.tryAcquireNanos(1, unit.toNanos(timeout));
-            return res;
+            if (sync.tryAcquireNanos(1, unit.toNanos(timeout))) {
+                System.MaTSaLock(lock);
+                return true;
+            }
+            return false;
         }
 
         /**
@@ -1158,6 +1175,7 @@ public class ReentrantReadWriteLock
          * hold this lock
          */
         public void unlock() {
+            System.MaTSaUnlock(lock);
             sync.release(1);
         }
 

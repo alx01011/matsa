@@ -678,7 +678,6 @@ public abstract class AbstractQueuedSynchronizer
                     throw ex;
                 }
                 if (acquired) {
-                    System.MaTSaLock(this);
                     if (first) {
                         node.prev = null;
                         head = node;
@@ -1009,7 +1008,6 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final boolean release(int arg) {
         if (tryRelease(arg)) {
-            System.MaTSaUnlock(this);
             signalNext(head);
             return true;
         }
@@ -1097,7 +1095,6 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final boolean releaseShared(int arg) {
         if (tryReleaseShared(arg)) {
-            System.MaTSaUnlock(this);
             // unlock before signal to ensure next thread sees updated state
             signalNext(head);
             return true;
@@ -1438,8 +1435,10 @@ public abstract class AbstractQueuedSynchronizer
     public class ConditionObject implements Condition, java.io.Serializable {
         private static final long serialVersionUID = 1173984872572414699L;
         /** First node of condition queue. */
-        private transient ConditionNode firstWaiter;
+        @MaTSaIgnoreField
+        private transient ConditionNode firstWaiter; // there seems to be a bening data race on these 2 fields by design, hence ignore it
         /** Last node of condition queue. */
+        @MaTSaIgnoreField
         private transient ConditionNode lastWaiter;
 
         /**
@@ -1516,8 +1515,9 @@ public abstract class AbstractQueuedSynchronizer
                     last.nextWaiter = node;
                 lastWaiter = node;
                 int savedState = getState();
-                if (release(savedState))
+                if (release(savedState)) {
                     return savedState;
+                }
             }
             node.status = CANCELLED; // lock not held or inconsistent
             throw new IllegalMonitorStateException();
