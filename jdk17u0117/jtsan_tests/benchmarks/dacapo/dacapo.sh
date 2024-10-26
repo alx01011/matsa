@@ -12,7 +12,7 @@
 
 # Parse options
 #JAVA_OPTS="-Xint -XX:-RewriteFrequentPairs -XX:-UseCompressedOops -XX:-UseCompressedClassPointers -XX:+UseParallelGC -XX:+JTSan"
-JAVA_OPTS="-XX:+JTSan"
+JAVA_OPTS="-XX:+MaTSa"
 JAVA_OPTS_TSAN="-XX:-UseCompressedOops -XX:-UseCompressedClassPointers -XX:+ThreadSanitizer"
 # Set up environment
 BUILD=../../../build/linux-x86_64-server-release/jdk/bin/
@@ -32,12 +32,12 @@ if [ "$1" == "-h" ]; then
 fi
 
 if [ "$1" == "-fd" ]; then
-    BUILD=../../build/linux-x86_64-server-fastdebug/jdk/bin/
+    BUILD=../../../build/linux-x86_64-server-fastdebug/jdk/bin/
     shift
 fi
 
 if [ "$1" == "-sd" ]; then
-    BUILD=../../build/linux-x86_64-server-slowdebug/jdk/bin/
+    BUILD=../../../build/linux-x86_64-server-slowdebug/jdk/bin/
     shift
 fi
 
@@ -78,15 +78,7 @@ run_benchmark() {
 
     echo "Starting benchmark: $benchmark"
 
-    # Launch the benchmark in the background
-    $BUILD/java -jar $opts dacapo-23.11-chopin.jar -p $benchmark > "${benchmark}_result.txt" 2> "${benchmark}_error.txt" &
-    local benchmark_pid=$!
-
-    # Wait for all JVM instances spawned by the benchmark to finish
-    for pid in $(pgrep -P $benchmark_pid); do
-        wait $pid
-    done
-    wait $benchmark_pid
+    $BUILD/java -jar $opts dacapo-23.11-chopin.jar -p $benchmark > "${benchmark}_result.txt" 2> "${benchmark}_error.txt"
 
     echo "Finished benchmark: $benchmark"
 }
