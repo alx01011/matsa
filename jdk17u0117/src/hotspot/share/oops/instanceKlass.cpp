@@ -820,7 +820,7 @@ void InstanceKlass::initialize(TRAPS) {
   } else {
     assert(is_initialized(), "sanity check");
     MATSA_ONLY(
-      InterpreterRuntime::matsa_cl_lock(THREAD, java_mirror());
+      InterpreterRuntime::matsa_cl_lock(THREAD, (void*)java_mirror());
     );
   }
 }

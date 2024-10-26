@@ -2814,7 +2814,8 @@ void TemplateTable::load_field_cp_cache_entry(Register obj,
 
     MATSA_ONLY(
       __ pusha();
-      __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_cl_lock), obj);
+      __ get_thread(c_rarg0);
+      __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_cl_lock), c_rarg0, obj);
       __ popa();
     );
 
