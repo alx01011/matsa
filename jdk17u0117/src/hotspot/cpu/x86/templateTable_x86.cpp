@@ -2811,6 +2811,13 @@ void TemplateTable::load_field_cp_cache_entry(Register obj,
     const int mirror_offset = in_bytes(Klass::java_mirror_offset());
     __ movptr(obj, Address(obj, mirror_offset));
     __ resolve_oop_handle(obj);
+
+    MATSA_ONLY(
+      __ pusha();
+      __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_cl_lock), obj);
+      __ popa();
+    );
+
   }
 }
 

@@ -88,6 +88,10 @@ class InterpreterRuntime: AllStatic {
   static void matsa_lock  (JavaThread *thread, void *lock_obj);
   static void matsa_unlock(JavaThread *thread, void *lock_obj);
 
+  // different api for static class initializer
+  static void matsa_cl_lock  (JavaThread *thread, void *lock_obj);
+  static void matsa_cl_unlock(JavaThread *thread, void *lock_obj);
+
   static void matsa_sync_enter(JavaThread *thread, BasicObjectLock *lock);
   static void matsa_sync_exit (JavaThread *thread, BasicObjectLock *lock);
 
