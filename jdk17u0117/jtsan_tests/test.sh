@@ -21,7 +21,7 @@ FILE=$1
 $BUILD/javac $FILE
 
 
-ARGS='-XX:+JTSan'
+ARGS='-XX:+MaTSa'
 
 # Run
 $BUILD/java $ARGS `basename $FILE .java`
