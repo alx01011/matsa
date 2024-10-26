@@ -494,6 +494,7 @@ public abstract class AbstractQueuedSynchronizer
 
     static final class ConditionNode extends Node
         implements ForkJoinPool.ManagedBlocker {
+        @MaTSaIgnoreField
         ConditionNode nextWaiter;            // link to next waiting node
 
         /**
