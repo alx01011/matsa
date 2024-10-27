@@ -7,7 +7,8 @@
 #include "memory/resourceArea.hpp"
 #include "memory/allocation.hpp"
 
-const char *def_top_frame_suppressions = "";
+const char *def_top_frame_suppressions =
+    "java.util.concurrent.*\n"; // top frames are ok since there are races within the library itself
 const char *def_frame_suppressions = 
     "java.lang.invoke.*\n";
     /*
