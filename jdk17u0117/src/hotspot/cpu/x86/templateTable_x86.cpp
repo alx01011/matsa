@@ -773,17 +773,9 @@ void TemplateTable::matsa_load_array(const Address& member, TosState state) {
   __ pusha();
   __ push_d(xmm0);
 
-  Register klass = c_rarg0;
-
   __ get_method(c_rarg1); // get the method
-  __ load_method_holder(klass, c_rarg1);
-
-  // check if class is initialized
-  __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
-  __ jcc(Assembler::notEqual, skip);
-
-
   __ leaq(c_rarg0, member);
+
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_load[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(skip);
@@ -1106,16 +1098,9 @@ void TemplateTable::matsa_store_array(const Address &member, TosState state) {
   __ pusha();
   __ push_d(xmm0);
 
-
-  Register klass = c_rarg0;
-
   __ get_method(c_rarg1); // get the method
-  __ load_method_holder(klass, c_rarg1);
-
-  __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
-  __ jcc(Assembler::notEqual, safe);
-
   __ leaq(c_rarg0, member);
+  
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_store[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(safe);
@@ -2917,18 +2902,9 @@ void TemplateTable::matsa_load_field(const Address &field, Register flags, TosSt
   __ testl(flags, f_or_v_or_ignore);
   __ jcc(Assembler::notZero, safe);
 
-  Register klass = c_rarg0;
-
   __ get_method(c_rarg1); // get the method
-  __ load_method_holder(klass, c_rarg1);
-
-  // check if class is being initialized
-  __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
-  __ jcc(Assembler::notEqual, safe);
-
   __ leaq(c_rarg0, field); // get address
 
-  //__ movptr(c_rarg0, field.base()); // get oop address
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_load[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(safe);
@@ -3236,20 +3212,13 @@ void TemplateTable::matsa_store_field(const Address &field, Register flags, TosS
   __ pusha(); // save all registers, some don't need to be saved, will be optimized later
   __ push_d(xmm0);
 
-  Register klass = c_rarg0;
-
   // volatile check
   __ testl(flags, v_or_ignore);
   __ jcc(Assembler::notZero, safe);
 
   __ get_method(c_rarg1); // get the method
-  __ load_method_holder(klass, c_rarg1);
-
-  // check if class is initialized
-  __ cmpb(Address(klass, InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
-  __ jcc(Assembler::notEqual, safe);
-
   __ leaq(c_rarg0, field); // get field address
+
   __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_store[state]), c_rarg0, c_rarg1, rbcp);
 
   __ bind(safe);
