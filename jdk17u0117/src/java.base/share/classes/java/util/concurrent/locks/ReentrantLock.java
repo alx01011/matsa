@@ -160,7 +160,6 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 throw new InterruptedException();
             if (!initialTryLock()) {
                 acquireInterruptibly(1);
-                System.MaTSaLock(this);
             }
         }
 
