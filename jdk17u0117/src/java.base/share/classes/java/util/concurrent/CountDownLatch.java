@@ -169,7 +169,10 @@ public class CountDownLatch {
         }
 
         protected int tryAcquireShared(int acquires) {
-            return (getState() == 0) ? 1 : -1;
+            if (getState() == 0) {
+                return 1;
+            }
+            return -1;
         }
 
         protected boolean tryReleaseShared(int releases) {
@@ -179,8 +182,12 @@ public class CountDownLatch {
                 if (c == 0)
                     return false;
                 int nextc = c - 1;
-                if (compareAndSetState(c, nextc))
-                    return nextc == 0;
+                if (compareAndSetState(c, nextc)) {
+                    if (nextc == 0) {
+                        return true;
+                    }
+                    return false;
+                }
             }
         }
     }
@@ -227,7 +234,9 @@ public class CountDownLatch {
      *         while waiting
      */
     public void await() throws InterruptedException {
+        // System.MaTSaUnlock(this); not sure about this
         sync.acquireSharedInterruptibly(1);
+        System.MaTSaLock(this);
     }
 
     /**
@@ -287,6 +296,7 @@ public class CountDownLatch {
      * <p>If the current count equals zero then nothing happens.
      */
     public void countDown() {
+        System.MaTSaUnlock(this);
         sync.releaseShared(1);
     }
 

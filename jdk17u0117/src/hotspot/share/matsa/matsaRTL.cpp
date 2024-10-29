@@ -18,13 +18,11 @@
 #include "utilities/decoder.hpp"
 
 bool MaTSaRTL::CheckRaces(JavaThread *thread, void *addr, address bcp, ShadowCell &cur, ShadowCell &prev) {
-    uptr addr_aligned = ((uptr)addr);
-
     bool stored   = false;
     bool isRace   = false;
 
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
-        ShadowCell cell  = ShadowBlock::load_cell(addr_aligned, i);
+        ShadowCell cell  = ShadowBlock::load_cell((uptr)addr, i);
 
         // empty cell
         if (LIKELY(cell.epoch == 0)) {
@@ -38,16 +36,6 @@ bool MaTSaRTL::CheckRaces(JavaThread *thread, void *addr, address bcp, ShadowCel
 
         // different offset means different memory location in case of 1,2 or 4 byte access
         if (LIKELY(cell.offset != cur.offset)) {
-            continue;
-        }
-
-        // different gc epoch means different memory location
-        // so we can skip
-        if (UNLIKELY(cur.gc_epoch != cell.gc_epoch)) {
-            // we can replace the cell
-            // because the memory location it points to might have been freed or moved
-            ShadowBlock::store_cell_at((uptr)addr, &cur, i);
-            stored = true;
             continue;
         }
 
@@ -115,11 +103,10 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     
     uint32_t epoch = MaTSaThreadState::getEpoch(tid, tid);
     // create a new shadow cell
-    ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), get_gc_epoch(), is_write, 0};
+    ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), is_write, 0};
 
     // race
     ShadowCell prev;
-
     bool is_race = CheckRaces(thread, addr, bcp, cur, prev);
 
     // symbolize the access

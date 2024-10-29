@@ -845,6 +845,46 @@ void InterpreterRuntime::matsa_unlock(JavaThread *thread, void *lock_obj) {
   MaTSaThreadState::incrementEpoch(tid);
 }
 
+// for static class initializers
+void InterpreterRuntime::matsa_cl_lock(JavaThread *thread, void *lock_obj)  {
+  int tid = JavaThread::get_matsa_tid(thread);
+
+  oop p = (oopDesc*)lock_obj;
+
+  /*
+    On lock acquisition we have to perform a max operation between the thread state of current thread and the lock state.
+    Store the result into the thread state.
+  */
+
+  LockShadow *obs = p->lock_state();
+  Vectorclock* ts = obs->get_cl_init_vectorclock();
+
+  Vectorclock* cur = MaTSaThreadState::getThreadState(tid);
+
+  *cur = *ts;
+}
+
+void InterpreterRuntime::matsa_cl_unlock(JavaThread *thread, void *lock_obj) {
+  int tid = JavaThread::get_matsa_tid(thread);
+
+  oop p = (oopDesc*)lock_obj;
+
+  /*
+    On lock release we have to max the thread state with the lock state.
+    Store the result into lock state.
+  */
+
+  LockShadow *obs = p->lock_state();
+
+  Vectorclock* ls = obs->get_cl_init_vectorclock();
+  Vectorclock* cur = MaTSaThreadState::getThreadState(tid);
+
+  *ls = *cur;
+
+  // increment the epoch of the current thread after the transfer
+  MaTSaThreadState::incrementEpoch(tid);
+}
+
 void InterpreterRuntime::matsa_sync_enter(JavaThread *thread, BasicObjectLock *lock) {
   int tid = JavaThread::get_matsa_tid(thread);
 

@@ -43,6 +43,8 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RejectedExecutionException;
 import jdk.internal.misc.Unsafe;
 
+import java.util.concurrent.annotation.*;
+
 /**
  * Provides a framework for implementing blocking locks and related
  * synchronizers (semaphores, events, etc) that rely on
@@ -454,7 +456,8 @@ public abstract class AbstractQueuedSynchronizer
     abstract static class Node {
         volatile Node prev;       // initially attached via casTail
         volatile Node next;       // visibly nonnull when signallable
-        Thread waiter;            // visibly nonnull when enqueued
+        @MaTSaIgnoreField
+        Thread waiter;            // visibly nonnull when enqueued (MaTsa has to ignore this as it causes a false positive in signalNext)
         volatile int status;      // written by owner, atomic bit ops by others
 
         // methods for atomic operations
@@ -491,6 +494,7 @@ public abstract class AbstractQueuedSynchronizer
 
     static final class ConditionNode extends Node
         implements ForkJoinPool.ManagedBlocker {
+        @MaTSaIgnoreField
         ConditionNode nextWaiter;            // link to next waiting node
 
         /**
@@ -1093,7 +1097,6 @@ public abstract class AbstractQueuedSynchronizer
     public final boolean releaseShared(int arg) {
         if (tryReleaseShared(arg)) {
             // unlock before signal to ensure next thread sees updated state
-            System.MaTSaUnlock(this);
             signalNext(head);
             return true;
         }
@@ -1433,8 +1436,10 @@ public abstract class AbstractQueuedSynchronizer
     public class ConditionObject implements Condition, java.io.Serializable {
         private static final long serialVersionUID = 1173984872572414699L;
         /** First node of condition queue. */
-        private transient ConditionNode firstWaiter;
+        @MaTSaIgnoreField
+        private transient ConditionNode firstWaiter; // there seems to be a bening data race on these 2 fields by design, hence ignore it
         /** Last node of condition queue. */
+        @MaTSaIgnoreField
         private transient ConditionNode lastWaiter;
 
         /**
@@ -1511,8 +1516,9 @@ public abstract class AbstractQueuedSynchronizer
                     last.nextWaiter = node;
                 lastWaiter = node;
                 int savedState = getState();
-                if (release(savedState))
+                if (release(savedState)) {
                     return savedState;
+                }
             }
             node.status = CANCELLED; // lock not held or inconsistent
             throw new IllegalMonitorStateException();

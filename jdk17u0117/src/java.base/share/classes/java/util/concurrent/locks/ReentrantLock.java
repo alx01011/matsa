@@ -158,8 +158,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         final void lockInterruptibly() throws InterruptedException {
             if (Thread.interrupted())
                 throw new InterruptedException();
-            if (!initialTryLock())
+            if (!initialTryLock()) {
                 acquireInterruptibly(1);
+            }
         }
 
         @ReservedStackAccess
@@ -175,8 +176,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             if (getExclusiveOwnerThread() != Thread.currentThread())
                 throw new IllegalMonitorStateException();
             boolean free = (c == 0);
-            if (free)
+            if (free) {
                 setExclusiveOwnerThread(null);
+            }
             setState(c);
             return free;
         }

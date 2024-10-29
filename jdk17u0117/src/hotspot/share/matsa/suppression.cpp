@@ -7,10 +7,14 @@
 #include "memory/resourceArea.hpp"
 #include "memory/allocation.hpp"
 
-const char * def_top_frame_suppressions = "";
-const char * def_frame_suppressions = 
-    "java.lang.invoke.*\n"
+const char *def_top_frame_suppressions =
+    "java.util.concurrent.*\n"; // top frames are ok since there are races within the library itself
+const char *def_frame_suppressions = 
+    "java.lang.invoke.*\n";
+    /*
+    For now we have to leave this out. It's too broad and can produce false negatives.
     "java.util.concurrent.*\n";
+    */
 
 Trie::Trie() {
     root = new TrieNode();
