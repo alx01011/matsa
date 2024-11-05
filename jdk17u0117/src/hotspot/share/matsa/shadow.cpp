@@ -16,9 +16,10 @@
 #define MAX_CAS_ATTEMPTS (100)
 #define GB_TO_BYTES(x) ((x) * 1024UL * 1024UL * 1024UL)
 
-uptr   ShadowMemory::heap_base   = 0ull;
-size_t ShadowMemory::size        = 0ull;
-void*  ShadowMemory::shadow_base = nullptr;
+uptr   ShadowMemory::heap_base          = 0ull;
+size_t ShadowMemory::size               = 0ull;
+void*  ShadowMemory::shadow_base        = nullptr;
+void* ShadowMemory::shadow_history_base = nullptr;
 
 
 void ShadowMemory::init(size_t bytes) {
