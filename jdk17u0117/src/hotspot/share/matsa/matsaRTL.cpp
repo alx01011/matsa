@@ -107,7 +107,7 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     // race
     ShadowCell prev;
     HistoryCell prev_history;
-    bool is_race = CheckRaces(addr, bci, cur, prev, prev_history, prev_history);
+    bool is_race = CheckRaces(addr, bci, cur, prev, prev_history);
 
     // symbolize the access
     // 1 is read, 2 is write
