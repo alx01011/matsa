@@ -22,7 +22,7 @@ bool MaTSaRTL::CheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &
     bool isRace   = false;
 
     // todo
-    HistoryCell cur_history = {bci, 0, 0, 0};
+    HistoryCell cur_history = {(uint64_t)bci, 0, 0, 0};
 
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell  = ShadowBlock::load_cell((uptr)addr, i);
@@ -31,7 +31,7 @@ bool MaTSaRTL::CheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &
         if (LIKELY(cell.epoch == 0)) {
             // can store
             if (!stored) {
-              ShadowBlock::store_cell_at((uptr)addr, &cur, i);
+              ShadowBlock::store_cell_at((uptr)addr, &cur, &cur_history, i);
               stored          = true;
             }
             continue;
@@ -53,7 +53,7 @@ bool MaTSaRTL::CheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &
         if (LIKELY(cell.tid == cur.tid)) {
           // if the access is stronger overwrite
           if (LIKELY(cur.is_write && !cell.is_write)) {
-              ShadowBlock::store_cell_at((uptr)addr, &cur, i);
+              ShadowBlock::store_cell_at((uptr)addr, &cur, &cur_history,i);
               stored = true;
           }
           continue;
@@ -80,7 +80,7 @@ bool MaTSaRTL::CheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &
         // so we can skip if ever encountered again
         // its fine if we miss it, we also check for previously reported races in do_report
         cur.is_ignored = 1;
-        ShadowBlock::store_cell_at((uptr)addr, &cur, i);
+        ShadowBlock::store_cell_at((uptr)addr, &cur, &cur_history, i);
         stored = true;
 
 
@@ -89,7 +89,7 @@ bool MaTSaRTL::CheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &
 
     if (UNLIKELY(!stored)) {
         // store the shadow cell
-        ShadowBlock::store_cell((uptr)addr, &cur);
+        ShadowBlock::store_cell((uptr)addr, &cur, &cur_history);
     }
 
     return isRace;
