@@ -27,6 +27,7 @@ typedef uintptr_t uptr;
 class ShadowMemory : AllStatic {
     public:
         static void *shadow_base; // starting address
+        static void *shadow_history_base; // starting address of the stack shadow memory
         static size_t size; // size in bytes
 
         static uptr heap_base; // base address of the heap
@@ -59,14 +60,19 @@ struct ShadowCell {
     uint64_t is_ignored : 1; // in case of a suppressed race
 };
 
+struct HistoryCell {
+    uint64_t bci           : 16;
+    uint64_t ring_idx      : 16;
+    uint64_t history_idx   : 16;
+    uint64_t history_epoch : 16;
+};
+
 class ShadowBlock : AllStatic {
     public:
-        static ShadowCell load_cell(uptr mem, uint8_t index);
-        static void      *store_cell(uptr mem, ShadowCell* cell); 
-        static void       store_cell_at(uptr mem, ShadowCell* cell, uint8_t index);
-    private:
-        static ShadowCell atomic_load_cell(ShadowCell *cell);
-        static void       atomic_store_cell(ShadowCell *cell, ShadowCell *val);
+        static ShadowCell  load_cell(uptr mem, uint8_t index);
+        static HistoryCell load_history(uptr mem, uint8_t index);
+        static void        store_cell(uptr mem, ShadowCell* cell, HistoryCell* history); 
+        static void        store_cell_at(uptr mem, ShadowCell* cell, HistoryCell* history, uint8_t index);
 };
 
 #endif

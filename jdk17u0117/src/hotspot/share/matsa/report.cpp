@@ -1,6 +1,7 @@
 #include "report.hpp"
 #include "matsaGlobals.hpp"
 #include "symbolizer.hpp"
+#include "suppression.hpp"
 #include "matsaStack.hpp"
 
 #include "runtime/os.hpp"
@@ -105,10 +106,7 @@ void MaTSaReportMap::clear() {
     _size = 0;
 }
 
-
-//uint8_t MaTSaReport::_report_lock;
 Mutex *MaTSaReport::_report_lock;
-
 
 void print_method_info(Method *m, int bci, int index) {
     const char *file_name = "<null>";
@@ -192,6 +190,12 @@ void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
 
     // already reported
     if (MaTSaReportMap::instance()->contains((uintptr_t)bcp)) {
+        return;
+    }
+
+    // is suppressed?
+    if (LIKELY(MaTSaSuppression::is_suppressed(thread))) {
+        MaTSaReportMap::instance()->insert((uintptr_t)bcp);
         return;
     }
 

@@ -17,9 +17,12 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
 
-bool MaTSaRTL::CheckRaces(JavaThread *thread, void *addr, address bcp, ShadowCell &cur, ShadowCell &prev) {
+bool MaTSaRTL::CheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &prev, HistoryCell &prev_history) {
     bool stored   = false;
     bool isRace   = false;
+
+    // todo
+    HistoryCell cur_history = {bci, 0, 0, 0};
 
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell  = ShadowBlock::load_cell((uptr)addr, i);
@@ -70,13 +73,8 @@ bool MaTSaRTL::CheckRaces(JavaThread *thread, void *addr, address bcp, ShadowCel
         }
 
         prev = cell;
+        prev_history = ShadowBlock::load_history((uptr)addr, i);
         isRace = true;
-
-        // its a race, so check if it is a suppressed one
-        if (LIKELY(MaTSaSuppression::is_suppressed(thread, bcp))) {
-            // ignore
-            isRace = false;
-        }
 
         // mark ignore flag and store at ith index
         // so we can skip if ever encountered again
@@ -91,7 +89,7 @@ bool MaTSaRTL::CheckRaces(JavaThread *thread, void *addr, address bcp, ShadowCel
 
     if (UNLIKELY(!stored)) {
         // store the shadow cell
-        (void)ShadowBlock::store_cell((uptr)addr, &cur);
+        ShadowBlock::store_cell((uptr)addr, &cur);
     }
 
     return isRace;
@@ -101,13 +99,15 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_matsa_tid(thread);
     
+    int32_t  bci   = m->bci_from(bcp);
     uint32_t epoch = MaTSaThreadState::getEpoch(tid, tid);
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), is_write, 0};
 
     // race
     ShadowCell prev;
-    bool is_race = CheckRaces(thread, addr, bcp, cur, prev);
+    HistoryCell prev_history;
+    bool is_race = CheckRaces(addr, bci, cur, prev, prev_history, prev_history);
 
     // symbolize the access
     // 1 is read, 2 is write
