@@ -51,7 +51,7 @@ void History::add_event(JavaThread *thread, Method *m, uint16_t bci) {
         if (h->buffer[h->buffer_idx].real_stack == nullptr) {
             // release the real stack
            h->buffer[h->buffer_idx].real_stack = (uint64_t*)os::reserve_memory(DEFAULT_STACK_SIZE * sizeof(uint64_t));
-           bool protect = os::protect_memory((char*)h->buffer[buffer_idx].real_stack,
+           bool protect = os::protect_memory((char*)h->buffer[h->buffer_idx].real_stack,
                              DEFAULT_STACK_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
 
             assert(protect && h->buffer[buffer_idx].real_stack != nullptr, "MATSA: Failed to allocate history buffer\n");
