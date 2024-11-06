@@ -32,7 +32,7 @@ class History : public CHeapObj<mtInternal> {
     public:
         static History *history;
 
-        static History *init_history(void);
+        static void init_history(void);
         // todo destroy
 
         History();
