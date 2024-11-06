@@ -87,6 +87,7 @@
 #include "matsa/symbolizer.hpp"
 #include "matsa/matsaStack.hpp"
 #include "matsa/matsaDefs.hpp"
+#include "matsa/history.hpp"
 #endif
 
 // Helper class to access current interpreter state
@@ -943,6 +944,8 @@ void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method)
 
   Symbolizer::Symbolize(FUNC, method, bci, tid);
   stack->push(packed_frame);
+  History::add_event(current, method, bci);
+
 }
 
 void InterpreterRuntime::matsa_method_exit(JavaThread *current) {
@@ -951,6 +954,8 @@ void InterpreterRuntime::matsa_method_exit(JavaThread *current) {
   Symbolizer::Symbolize(FUNC, 0, 0, tid);
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
   (void)stack->pop();
+
+  History::add_event(current, 0, 0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------

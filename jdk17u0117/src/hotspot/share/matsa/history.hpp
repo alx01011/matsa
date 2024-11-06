@@ -30,6 +30,10 @@ struct EventBuffer {
 
 class History : public CHeapObj<mtInternal> {
     public:
+        // todo instead of having an array of history objects
+        // we can store the history object inside each thread
+        // when looking for a previous stack trace we would somehow need to get the thread pointer
+        // it could be placd inside the threadpool
         static History *history;
 
         static void init_history(void);

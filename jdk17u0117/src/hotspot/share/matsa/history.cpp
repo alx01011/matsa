@@ -46,6 +46,8 @@ void History::add_event(JavaThread *thread, Method *m, uint16_t bci) {
 
     if (h->event_idx == MAX_EVENTS - 1) {
         h->buffer_idx++;
+        // increment epoch
+        h->buffer[h->buffer_idx].epoch++;
         h->event_idx = 0;
 
         if (h->buffer[h->buffer_idx].real_stack == nullptr) {
