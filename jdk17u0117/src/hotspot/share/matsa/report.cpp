@@ -173,9 +173,6 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
     History *h = History::get_history(tid);
     EventBuffer *buffer = h->get_buffer(tid, prev_history.ring_idx);
 
-    int prev_bci = prev_history.bci;
-
-
     for (uint64_t i = 0; i < prev_history.history_idx; i++) {
         if (buffer->events[i].method == 0) {
             trace_idx--;
@@ -183,14 +180,15 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
         }
 
         trace[trace_idx].m   = buffer->events[i].method;
-        trace[trace_idx].bci = prev_bci;
-
-        prev_bci = buffer->events[i].bci;
+        trace[trace_idx].bci = buffer->events[i].bci;
         trace_idx++;
     }
 
+    int prev_bci = prev_history.bci;
     for (int64_t i = trace_idx - 1; i >= 0; i--) {
-        print_method_info(trace[i].m, trace[i].bci, i);
+        print_method_info(trace[i].m, prev_bci, i);
+
+        prev_bci = trace[i].bci;
     }
 
 
