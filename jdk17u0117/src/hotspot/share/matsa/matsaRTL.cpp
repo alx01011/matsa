@@ -5,6 +5,7 @@
 #include "report.hpp"
 #include "symbolizer.hpp"
 #include "matsaDefs.hpp"
+#include "history.hpp"
 
 #include "runtime/thread.hpp"
 #include "runtime/frame.inline.hpp"
@@ -21,8 +22,8 @@ bool MaTSaRTL::CheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &
     bool stored   = false;
     bool isRace   = false;
 
-    // todo
-    HistoryCell cur_history = {(uint64_t)bci, 0, 0, 0};
+    HistoryCell cur_history = {(uint64_t)bci, History::get_ring_idx(cur.tid),
+                                 History::get_event_idx(cur.tid), History::get_cur_epoch(cur.tid)};
 
     for (uint8_t i = 0; i < SHADOW_CELLS; i++) {
         ShadowCell cell  = ShadowBlock::load_cell((uptr)addr, i);
