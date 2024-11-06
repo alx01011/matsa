@@ -14,10 +14,7 @@ void History::init_history(void) {
     assert(history != nullptr && protect, "MATSA: Failed to allocate history buffer\n");
 
     for (int i = 0; i < MAX_THREADS; i++) {
-        history[i] = (History*)os::reserve_memory(sizeof(History));
-        protect = os::protect_memory((char*)history[i], sizeof(History), os::MEM_PROT_RW);
-
-        assert(history[i] != nullptr && protect, "MATSA: Failed to allocate history buffer\n");
+        history[i] = new History();
     }
 }
 
