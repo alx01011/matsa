@@ -115,17 +115,23 @@ void* ShadowMemory::MemToShadow(uptr mem) {
     return (void*)((uptr)ShadowMemory::shadow_base + shadow_offset);
 }
 
-HistoryCell ShadowBlock::load_history(uptr mem, uint8_t index) {
-    void *shadow_addr = ShadowMemory::MemToShadow(mem);
+void* ShadowMemory::MemToHistory(uptr mem) {
+    uptr index = ((uptr)mem - (uptr)ShadowMemory::heap_base) / 8; // index in heap
+    uptr shadow_offset = index * 32; // Each metadata entry is 8 bytes
 
-    uint64_t raw_history = __atomic_load_n((uint64_t*)((uptr)ShadowMemory::shadow_history_base 
-                            + (index * sizeof(HistoryCell))), __ATOMIC_RELAXED);
+    return (void*)((uptr)ShadowMemory::shadow_history_base + shadow_offset);
+}
+
+HistoryCell ShadowBlock::load_history(uptr mem, uint8_t index) {
+    void *shadow_addr = ShadowMemory::MemToHistory(mem);
+
+    uint64_t raw_history = __atomic_load_n((uint64_t*)((uptr)shadow_addr + (index * sizeof(HistoryCell))), __ATOMIC_RELAXED);
+
     return *(HistoryCell*)&raw_history;
 }
 
 ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
     void *shadow_addr = ShadowMemory::MemToShadow(mem);
-
 
     uint64_t raw_cell = __atomic_load_n((uint64_t*)((uptr)shadow_addr + (index * sizeof(ShadowCell))), __ATOMIC_RELAXED);
     return *(ShadowCell*)&raw_cell;
@@ -149,6 +155,7 @@ void ShadowBlock::store_cell_at(uptr mem, ShadowCell* cell, HistoryCell* history
     __atomic_store_n((uint64_t*)store_addr, *(uint64_t*)cell, __ATOMIC_RELAXED);
 
     // store history
-    void *history_addr = (void*)((uptr)ShadowMemory::shadow_history_base + (index * sizeof(HistoryCell)));
+    shadow_addr = ShadowMemory::MemToHistory(mem);
+    void *history_addr = (void*)((uptr)shadow_addr + (index * sizeof(HistoryCell)));
     __atomic_store_n((uint64_t*)history_addr, *(uint64_t*)history, __ATOMIC_RELAXED);
 }

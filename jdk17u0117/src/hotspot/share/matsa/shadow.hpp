@@ -37,6 +37,7 @@ class ShadowMemory : AllStatic {
         static void destroy(void);
 
         static void *MemToShadow(uptr mem);
+        static void *MemToHistory(uptr mem);
 };
 
 /*
