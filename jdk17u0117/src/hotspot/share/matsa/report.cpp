@@ -3,6 +3,7 @@
 #include "symbolizer.hpp"
 #include "suppression.hpp"
 #include "matsaStack.hpp"
+#include "history.hpp"
 
 #include "runtime/os.hpp"
 #include "runtime/mutexLocker.hpp"
@@ -157,35 +158,61 @@ void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
 
 }
 
+struct EventTrace {
+    Method *m;
+    uint16_t bci;
+};
+
 // potentially we can do a bit better here in the future (code is not that clean)
-bool try_print_event_trace(void *addr, int tid, ShadowCell &cell) {
-    MaTSaEventTrace trace;
+bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &prev_history) {
+    // MaTSaEventTrace trace;
+    EventTrace *trace = NEW_C_HEAP_ARRAY(EventTrace, MAX_EVENTS + DEFAULT_STACK_SIZE, mtInternal);
+    uint64_t    trace_idx = 0;
     bool has_trace = false;
 
-    has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, cell);
+    History *h = History::get_history(tid);
+    EventBuffer *buffer = h->get_buffer(tid, prev_history.ring_idx);
 
-    if (has_trace) {
-        for (int i = trace.size - 1; i >= 0; i--) {
-            MaTSaEvent e = trace.events[i];
-            Method *m    = (Method*)((uintptr_t)e.pc);
-            
-            if (!Method::is_valid_method(m)) {
-                continue;
-            }
-
-            if (i != trace.size - 1) {
-                e.bci = trace.events[i + 1].bci;
-            }
-
-            print_method_info(m, e.bci, (trace.size - 1) - i);
+    for (uint64_t i = 0; i < prev_history.history_idx; i++) {
+        if (buffer->events[i].method == 0) {
+            trace_idx--;
+            continue;
         }
+
+        trace[trace_idx].m   = buffer->events[i].method;
+        trace[trace_idx].bci = buffer->events[i].bci;
     }
+
+    for (uint64_t i = 0; i < trace_idx; i++) {
+        print_method_info(trace[i].m, trace[i].bci, i);
+    }
+
+
+
+    // has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, cell);
+
+    // if (has_trace) {
+    //     for (int i = trace.size - 1; i >= 0; i--) {
+    //         MaTSaEvent e = trace.events[i];
+    //         Method *m    = (Method*)((uintptr_t)e.pc);
+            
+    //         if (!Method::is_valid_method(m)) {
+    //             continue;
+    //         }
+
+    //         if (i != trace.size - 1) {
+    //             e.bci = trace.events[i + 1].bci;
+    //         }
+
+    //         print_method_info(m, e.bci, (trace.size - 1) - i);
+    //     }
+    // }
 
     return has_trace;
 }
 
 void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
-                            ShadowCell &cur, ShadowCell &prev) {
+                            ShadowCell &cur, ShadowCell &prev, HistoryCell &prev_history) {
     MutexLocker ml(MaTSaReport::_report_lock, Mutex::_no_safepoint_check_flag);
 
     // already reported
@@ -214,7 +241,7 @@ void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
     
     fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%u:" RESET"\n", prev.is_write ? "write" : "read", 
             size, addr, (uint32_t)prev.tid);
-    if (!try_print_event_trace(addr, prev.tid, prev)) {
+    if (!try_print_event_trace(addr, prev.tid, prev, prev_history)) {
         fprintf(stderr, "  <no stack trace available>\n");
     }
 

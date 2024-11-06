@@ -115,6 +115,6 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     Symbolizer::Symbolize((Event)(is_write + 1), addr, m->bci_from(bcp), tid);
 
     if (is_race && !MaTSaSilent) {
-        MaTSaReport::do_report_race(thread, addr, access_size, bcp, m, cur, prev);
+        MaTSaReport::do_report_race(thread, addr, access_size, bcp, m, cur, prev, prev_history);
     }
 }
