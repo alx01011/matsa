@@ -34,7 +34,7 @@ class History : public CHeapObj<mtInternal> {
         // we can store the history object inside each thread
         // when looking for a previous stack trace we would somehow need to get the thread pointer
         // it could be placd inside the threadpool
-        static History *history;
+        static History **history;
 
         static void init_history(void);
         // todo destroy

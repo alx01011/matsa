@@ -9,10 +9,16 @@ History* History::history = nullptr;
 
 void History::init_history(void) {
     assert(history == nullptr, "MATSA: History already initialized\n");
-    history = (History*)os::reserve_memory(MAX_THREADS * sizeof(History));
-    bool protect = os::protect_memory((char*)history, MAX_THREADS * sizeof(History), os::MEM_PROT_RW);
-
+    history = (History**)os::reserve_memory(MAX_THREADS * sizeof(History*));
+    bool protect = os::protect_memory((char*)history, MAX_THREADS * sizeof(History*), os::MEM_PROT_RW);
     assert(history != nullptr && protect, "MATSA: Failed to allocate history buffer\n");
+
+    for (int i = 0; i < MAX_THREADS; i++) {
+        history[i] = (History*)os::reserve_memory(sizeof(History));
+        protect = os::protect_memory((char*)history[i], sizeof(History), os::MEM_PROT_RW);
+        
+        assert(history[i] != nullptr && protect, "MATSA: Failed to allocate history buffer\n");
+    }
 }
 
 History::History() {
@@ -42,7 +48,7 @@ History::~History() {
 
 void History::add_event(JavaThread *thread, Method *m, uint16_t bci) {
     uint64_t tid = JavaThread::get_matsa_tid(thread);
-    History *h = &history[tid];
+    History *h = history[tid];
 
     if (h->event_idx == MAX_EVENTS - 1) {
         h->buffer_idx++;
