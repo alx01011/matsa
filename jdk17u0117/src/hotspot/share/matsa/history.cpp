@@ -5,7 +5,7 @@
 #include <cstring>
 #include "runtime/os.hpp"
 
-History* History::history = nullptr;
+History** History::history = nullptr;
 
 void History::init_history(void) {
     assert(history == nullptr, "MATSA: History already initialized\n");
@@ -16,7 +16,7 @@ void History::init_history(void) {
     for (int i = 0; i < MAX_THREADS; i++) {
         history[i] = (History*)os::reserve_memory(sizeof(History));
         protect = os::protect_memory((char*)history[i], sizeof(History), os::MEM_PROT_RW);
-        
+
         assert(history[i] != nullptr && protect, "MATSA: Failed to allocate history buffer\n");
     }
 }
@@ -81,6 +81,6 @@ void History::add_event(JavaThread *thread, Method *m, uint16_t bci) {
 
 EventBuffer *History::get_buffer(uint64_t tid, uint64_t idx) {
     assert(idx < MAX_BUFFERS, "MATSA: Invalid buffer index\n");
-    return &history[tid].buffer[idx];
+    return history[tid]->buffer[idx];
 }
 
