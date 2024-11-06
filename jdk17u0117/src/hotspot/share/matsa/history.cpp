@@ -92,3 +92,7 @@ uint64_t History::get_event_idx(uint64_t tid) {
 uint64_t History::get_cur_epoch(uint64_t tid) {
     return history[tid]->buffer[history[tid]->buffer_idx].epoch;
 }
+
+History *History::get_history(uint64_t tid) {
+    return history[tid];
+}

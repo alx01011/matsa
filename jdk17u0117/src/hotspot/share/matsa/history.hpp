@@ -45,6 +45,8 @@ class History : public CHeapObj<mtInternal> {
         static void add_event(JavaThread *thread, Method *m, uint16_t bci);
         static EventBuffer *get_buffer(uint64_t tid, uint64_t idx);
 
+        static History *get_history(uint64_t tid);
+
         static uint64_t get_ring_idx(uint64_t tid);
         static uint64_t get_event_idx(uint64_t tid);
         static uint64_t get_cur_epoch(uint64_t tid);
