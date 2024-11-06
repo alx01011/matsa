@@ -24,7 +24,7 @@ struct EventBuffer {
     } *events;
 
     uint64_t *real_stack;
-    uint64_t *real_stack_size;
+    uint64_t real_stack_size;
     uint64_t epoch : MAX_EPOCH_BITS;
 };
 
