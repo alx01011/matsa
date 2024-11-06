@@ -161,7 +161,7 @@ jint init_globals() {
     }
     env_event_buffer_size = 1 << history_size_width;
 
-    MaTSaThreadState::init()
+    MaTSaThreadState::init();
     History::init_history();
     );
   MATSA_ONLY(MaTSaThreadPool::matsa_threadpool_init());
