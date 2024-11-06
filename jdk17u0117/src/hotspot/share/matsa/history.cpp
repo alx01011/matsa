@@ -81,6 +81,6 @@ void History::add_event(JavaThread *thread, Method *m, uint16_t bci) {
 
 EventBuffer *History::get_buffer(uint64_t tid, uint64_t idx) {
     assert(idx < MAX_BUFFERS, "MATSA: Invalid buffer index\n");
-    return history[tid]->buffer[idx];
+    return &history[tid]->buffer[idx];
 }
 
