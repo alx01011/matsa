@@ -48,9 +48,9 @@ void History::add_event(JavaThread *thread, Method *m, uint16_t bci) {
         h->buffer_idx++;
         h->event_idx = 0;
 
-        if (h->buffer[buffer_idx].real_stack == nullptr) {
+        if (h->buffer[h->buffer_idx].real_stack == nullptr) {
             // release the real stack
-           h->buffer[buffer_idx].real_stack = (uint64_t*)os::reserve_memory(DEFAULT_STACK_SIZE * sizeof(uint64_t));
+           h->buffer[h->buffer_idx].real_stack = (uint64_t*)os::reserve_memory(DEFAULT_STACK_SIZE * sizeof(uint64_t));
            bool protect = os::protect_memory((char*)h->buffer[buffer_idx].real_stack,
                              DEFAULT_STACK_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
 
