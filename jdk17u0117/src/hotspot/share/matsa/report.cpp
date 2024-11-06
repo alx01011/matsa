@@ -173,6 +173,8 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
     History *h = History::get_history(tid);
     EventBuffer *buffer = h->get_buffer(tid, prev_history.ring_idx);
 
+    fprintf(stderr, "prev_history:\n\t history_idx: %llu\n\thistory_rind_idx: %llu\n", prev_history.history_idx, prev_history.ring_idx);
+
     for (uint64_t i = 0; i < prev_history.history_idx; i++) {
         if (buffer->events[i].method == 0) {
             trace_idx--;
