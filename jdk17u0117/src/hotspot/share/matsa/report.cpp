@@ -181,6 +181,7 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
 
         trace[trace_idx].m   = buffer->events[i].method;
         trace[trace_idx].bci = buffer->events[i].bci;
+        trace_idx++;
     }
 
     for (uint64_t i = 0; i < trace_idx; i++) {
