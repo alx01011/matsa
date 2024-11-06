@@ -58,8 +58,8 @@ void History::add_event(JavaThread *thread, Method *m, uint16_t bci) {
         }
 
         MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
-        memcpy(h->buffer[h->buffer_idx].real_stack, stack->_stack, stack->_top * sizeof(uint64_t));
-        h->buffer[h->buffer_idx].real_stack_size = stack->_top;
+        memcpy(h->buffer[h->buffer_idx].real_stack, stack->get(), stack->_top * sizeof(uint64_t));
+        h->buffer[h->buffer_idx].real_stack_size = stack->size();
     }
 
     EventBuffer *current_buffer = &h->buffer[h->buffer_idx];

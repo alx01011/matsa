@@ -27,6 +27,8 @@ class MaTSaStack : public CHeapObj<mtInternal> {
         uint64_t top(void);
         uint64_t get(size_t index);
 
+        uint64_t *get(void);
+
         uint16_t get_caller_bci(void) { return _caller_bci; }
         void set_caller_bci(uint16_t bci) { _caller_bci = bci; }
 
