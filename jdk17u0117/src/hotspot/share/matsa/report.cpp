@@ -212,7 +212,7 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
     //     }
     // }
 
-    return has_trace;
+    return trace_idx != 0;
 }
 
 void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
