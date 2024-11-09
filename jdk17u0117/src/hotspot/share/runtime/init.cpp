@@ -57,7 +57,6 @@
 #include "matsa/matsaGlobals.hpp"
 #include "gc/shared/gc_globals.hpp"
 #include "matsa/matsaThreadPool.hpp"
-#include "matsa/symbolizer.hpp"
 #include "matsa/suppression.hpp"
 #include "matsa/report.hpp"
 #include "matsa/history.hpp"
