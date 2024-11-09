@@ -159,8 +159,8 @@ void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
 }
 
 struct EventTrace {
-    Method *m;
-    uint16_t bci;
+    Method *m    : 48;
+    uint64_t bci : 16;
 };
 
 // potentially we can do a bit better here in the future (code is not that clean)
@@ -171,16 +171,14 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
     bool has_trace = false;
 
     History *h = History::get_history(tid);
-    EventBuffer *buffer = h->get_buffer(tid, prev_history.ring_idx);
+    Part *part = h->get_buffer(tid, prev_history.ring_idx);
 
-    if (prev_history.history_epoch != buffer->epoch) {
+    if (prev_history.history_epoch != part->epoch) {
         return false;
     }
 
     uint64_t *real_stack = buffer->real_stack;
-
-    // includes the stack of the buffer in the trace (in case of history overflow the buffer wont be copied on history but kept separately)
-    for (uint64_t i = 0; i < buffer->real_stack_size; i++) {
+    for (uint64_t i = 0; i < part->real_stack_idx; i++) {
         Method *m = (Method*)(real_stack[i] >> 16);
 
         trace[trace_idx].m   = m;
@@ -189,43 +187,21 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
     }
 
     for (uint64_t i = 0; i < prev_history.history_idx; i++) {
-        if (buffer->events[i].method == 0 && trace_idx > 0) {
+        if (part->events[i].method == 0 && trace_idx > 0) {
             trace_idx--;
             continue;
         }
 
-        trace[trace_idx].m   = buffer->events[i].method;
-        trace[trace_idx].bci = buffer->events[i].bci;
+        trace[trace_idx].m   = part->events[i].method;
+        trace[trace_idx].bci = part->events[i].bci;
         trace_idx++;
     }
 
     int prev_bci = prev_history.bci;
     for (int64_t i = trace_idx - 1; i >= 0; i--) {
         print_method_info(trace[i].m, prev_bci, i);
-
         prev_bci = trace[i].bci;
     }
-
-
-
-    // has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, cell);
-
-    // if (has_trace) {
-    //     for (int i = trace.size - 1; i >= 0; i--) {
-    //         MaTSaEvent e = trace.events[i];
-    //         Method *m    = (Method*)((uintptr_t)e.pc);
-            
-    //         if (!Method::is_valid_method(m)) {
-    //             continue;
-    //         }
-
-    //         if (i != trace.size - 1) {
-    //             e.bci = trace.events[i + 1].bci;
-    //         }
-
-    //         print_method_info(m, e.bci, (trace.size - 1) - i);
-    //     }
-    // }
 
     return trace_idx != 0;
 }

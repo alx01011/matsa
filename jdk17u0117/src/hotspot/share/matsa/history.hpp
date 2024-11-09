@@ -3,9 +3,11 @@
 
 #define MAX_EPOCH_BITS  (16)
 #define MAX_EVENT_BITS  (16)
-#define MAX_BUFFER_BITS (6)
-#define MAX_BUFFERS (1 << MAX_BUFFER_BITS)
+#define MAX_PART_BITS   (6)
+#define MAX_PARTS   (1 << MAX_PART_BITS)
 #define MAX_EVENTS  (1 << MAX_EVENT_BITS)
+
+#include "matsaDefs.hpp"
 
 #include "runtime/thread.hpp"
 #include "oops/method.hpp"
@@ -18,15 +20,17 @@
     * Each event buffer keeps function enter and exit events along with their BCI
 */
 
-struct EventBuffer {
-    struct Event {
-        Method *method;
-        uint16_t bci;
-    } *events;
+struct Event {
+    Method *method : MAX_ADDRESS_BITS;
+    uint64_t bci   : MAX_BCI_BITS;
+};
 
-    uint64_t *real_stack;
-    uint64_t real_stack_size;
-    uint64_t epoch : MAX_EPOCH_BITS;
+struct Part {
+    Event *events            : MAX_ADDRESS_BITS;
+    uint64_t event_idx       : MAX_EVENT_BITS;
+    uint64_t epoch           : MAX_EPOCH_BITS;
+    uint64_t *real_stack     : MAX_ADDRESS_BITS;
+    uint64_t real_stack_idx  : MAX_STACK_BITS;
 };
 
 class History : public CHeapObj<mtInternal> {
@@ -44,18 +48,17 @@ class History : public CHeapObj<mtInternal> {
         ~History();
 
         static void add_event(JavaThread *thread, Method *m, uint16_t bci);
-        static EventBuffer *get_buffer(uint64_t tid, uint64_t idx);
+        static Part *get_part(uint64_t tid, uint64_t idx);
 
         static History *get_history(uint64_t tid);
         static void     clear_history(uint64_t tid);
 
-        static uint64_t get_ring_idx(uint64_t tid);
+        static uint64_t get_part_idx(uint64_t tid);
         static uint64_t get_event_idx(uint64_t tid);
         static uint64_t get_cur_epoch(uint64_t tid);
     private:
-        EventBuffer *buffer;
-        uint64_t buffer_idx : MAX_BUFFER_BITS;
-        uint64_t event_idx : MAX_EVENT_BITS;
+        Part *parts       : MAX_ADDRESS_BITS;
+        uint64_t part_idx : MAX_PART_BITS;
 };
 
 #endif
