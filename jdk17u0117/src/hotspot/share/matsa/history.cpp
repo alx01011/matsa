@@ -32,6 +32,7 @@ History::History() {
 
         // allocate the real stack
         buffer[i].real_stack = (uint64_t*)os::reserve_memory(DEFAULT_STACK_SIZE * sizeof(uint64_t));
+        buffer[i].real_stack_size = 0;
         protect = os::protect_memory((char*)buffer[i].real_stack, DEFAULT_STACK_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
 
         assert(buffer[i].real_stack != nullptr && protect, "MATSA: Failed to allocate history buffer real stack\n");
