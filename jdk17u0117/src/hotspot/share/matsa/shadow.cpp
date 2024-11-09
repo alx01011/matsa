@@ -1,6 +1,7 @@
 #include "shadow.hpp"
 #include "threadState.hpp"
 #include "matsaDefs.hpp"
+#include "history.hpp"
 
 #include <cstdlib>
 #include <cstdio>
@@ -140,7 +141,8 @@ ShadowCell ShadowBlock::load_cell(uptr mem, uint8_t index) {
 void ShadowBlock::store_cell(uptr mem, ShadowCell* cell, HistoryCell* history) {
     // if we reach here, all the cells are occupied
     // just pick one at random and overwrite it
-    uint8_t ci = MaTSaThreadState::getHistory(cell->tid)->index % SHADOW_CELLS;
+    // os next random might be a tad slow
+    uint8_t ci = (History::get_event_idx(cell->tid)) % SHADOW_CELLS;
     store_cell_at(mem, cell, history, ci);
     return;
 }

@@ -21,8 +21,8 @@
 */
 
 struct Event {
-    Method *method;
-    uint64_t bci   : MAX_BCI_BITS;
+    uint64_t method : MAX_ADDRESS_BITS;
+    uint64_t bci    : MAX_BCI_BITS;
 };
 
 struct Part {
@@ -30,7 +30,7 @@ struct Part {
     uint64_t event_idx       : MAX_EVENT_BITS;
     uint64_t epoch           : MAX_EPOCH_BITS;
     uint64_t real_stack      : MAX_ADDRESS_BITS;
-    uint64_t real_stack_idx  : MAX_STACK_BITS;
+    uint64_t real_stack_size : MAX_STACK_BITS;
 };
 
 class History : public CHeapObj<mtInternal> {
@@ -58,7 +58,8 @@ class History : public CHeapObj<mtInternal> {
         static uint64_t get_cur_epoch(uint64_t tid);
     private:
         Part *parts;
-        uint64_t part_idx : MAX_PART_BITS;
+        uint64_t part_idx  : MAX_PART_BITS;
+        uint64_t event_idx : MAX_EVENT_BITS;
 };
 
 #endif

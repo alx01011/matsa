@@ -26,9 +26,6 @@ void MaTSaThreadState::init(void) {
         exit(1);
     }
 
-    for (size_t i = 0; i < MAX_THREADS; i++) {
-        MaTSaThreadState::history[i] = new ThreadHistory();
-    }
 }
 
 void MaTSaThreadState::destroy(void) {

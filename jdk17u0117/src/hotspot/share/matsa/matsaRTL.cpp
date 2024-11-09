@@ -3,7 +3,6 @@
 #include "matsaGlobals.hpp"
 #include "suppression.hpp"
 #include "report.hpp"
-#include "symbolizer.hpp"
 #include "matsaDefs.hpp"
 #include "history.hpp"
 

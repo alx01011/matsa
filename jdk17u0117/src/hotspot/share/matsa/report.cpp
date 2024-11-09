@@ -1,6 +1,5 @@
 #include "report.hpp"
 #include "matsaGlobals.hpp"
-#include "symbolizer.hpp"
 #include "suppression.hpp"
 #include "matsaStack.hpp"
 #include "history.hpp"
@@ -171,15 +170,15 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
     bool has_trace = false;
 
     History *h = History::get_history(tid);
-    Part *part = h->get_buffer(tid, prev_history.ring_idx);
+    Part *part = h->get_part(tid, prev_history.ring_idx);
 
     if (prev_history.history_epoch != part->epoch) {
         return false;
     }
 
-    uint64_t *real_stack = buffer->real_stack;
+    uint64_t *real_stack = (uint64_t*)((uint64_t)part->real_stack);
 
-    for (uint64_t i = 0; i < part->real_stack_idx; i++) {
+    for (uint64_t i = 0; i < part->real_stack_size; i++) {
         Method *m = (Method*)(real_stack[i] >> 16);
 
         trace[trace_idx].m   = m;
@@ -193,14 +192,14 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
             continue;
         }
 
-        trace[trace_idx].m   = part->events[i].method;
+        trace[trace_idx].m   = (Method*)((uint64_t)part->events[i].method);
         trace[trace_idx].bci = part->events[i].bci;
         trace_idx++;
     }
 
     int prev_bci = prev_history.bci;
     for (int64_t i = trace_idx - 1; i >= 0; i--) {
-        print_method_info(trace[i].m, prev_bci, i);
+        print_method_info(trace[i].m, prev_bci, (trace_idx - 1) - i);
         prev_bci = trace[i].bci;
     }
 
