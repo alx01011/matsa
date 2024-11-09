@@ -21,15 +21,15 @@
 */
 
 struct Event {
-    Method *method : MAX_ADDRESS_BITS;
+    Method *method;
     uint64_t bci   : MAX_BCI_BITS;
 };
 
 struct Part {
-    Event *events            : MAX_ADDRESS_BITS;
+    Event *events;
     uint64_t event_idx       : MAX_EVENT_BITS;
     uint64_t epoch           : MAX_EPOCH_BITS;
-    uint64_t *real_stack     : MAX_ADDRESS_BITS;
+    uint64_t real_stack      : MAX_ADDRESS_BITS;
     uint64_t real_stack_idx  : MAX_STACK_BITS;
 };
 
@@ -57,7 +57,7 @@ class History : public CHeapObj<mtInternal> {
         static uint64_t get_event_idx(uint64_t tid);
         static uint64_t get_cur_epoch(uint64_t tid);
     private:
-        Part *parts       : MAX_ADDRESS_BITS;
+        Part *parts;
         uint64_t part_idx : MAX_PART_BITS;
 };
 

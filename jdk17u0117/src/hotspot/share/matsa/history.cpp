@@ -67,7 +67,7 @@ void History::add_event(JavaThread *thread, Method *m, uint16_t bci) {
     Part *current_part = &h->parts[h->part_idx];
     Event *event = &current_part->events[current_part->event_idx];
 
-    event->method = m;
+    event->method = (uint64_t)m;
     event->bci = bci;
 
     current_part->event_idx++;

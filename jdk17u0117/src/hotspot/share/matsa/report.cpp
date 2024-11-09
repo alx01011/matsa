@@ -159,7 +159,7 @@ void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
 }
 
 struct EventTrace {
-    Method *m    : 48;
+    Method *m;
     uint64_t bci : 16;
 };
 
@@ -178,6 +178,7 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
     }
 
     uint64_t *real_stack = buffer->real_stack;
+
     for (uint64_t i = 0; i < part->real_stack_idx; i++) {
         Method *m = (Method*)(real_stack[i] >> 16);
 
