@@ -9,7 +9,6 @@
 
 Vectorclock*   MaTSaThreadState::epoch                = nullptr;
 size_t         MaTSaThreadState::size                 = 0;
-ThreadHistory* MaTSaThreadState::history[MAX_THREADS] = {nullptr};
 
 void MaTSaThreadState::init(void) {
     MaTSaThreadState::size = MAX_THREADS * sizeof(Vectorclock);
@@ -72,11 +71,4 @@ void MaTSaThreadState::transferEpoch(size_t from_tid, size_t to_tid) {
     assert(to_tid < MaTSaThreadState::size, "MATSA: OtherThread id out of bounds");
     
     MaTSaThreadState::epoch[to_tid] = MaTSaThreadState::epoch[from_tid];
-}
-
-
-ThreadHistory* MaTSaThreadState::getHistory(int threadId) {
-    assert(threadId < MAX_THREADS, "MATSA: Thread id out of bounds");
-
-    return MaTSaThreadState::history[threadId];
 }

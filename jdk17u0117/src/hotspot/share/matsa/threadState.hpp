@@ -5,7 +5,6 @@
 #include "runtime/mutex.hpp"
 
 #include "vectorclock.hpp"
-#include "symbolizer.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -19,7 +18,6 @@ class MaTSaThreadState : AllStatic {
         static Vectorclock *epoch;
         static size_t   size;
 
-        static ThreadHistory *history[MAX_THREADS];
     public:
         static void init(void);
         static void destroy(void);
@@ -35,8 +33,6 @@ class MaTSaThreadState : AllStatic {
         static uint32_t getEpoch(size_t threadId, size_t otherThreadId);
 
         static void     transferEpoch(size_t from_tid, size_t to_tid);
-
-        static ThreadHistory *getHistory(int threadId);
 };
 
 #endif
