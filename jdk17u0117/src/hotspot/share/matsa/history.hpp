@@ -2,9 +2,10 @@
 #define HISTORY_HPP
 
 #define MAX_EPOCH_BITS  (16)
-#define MAX_BUFFER_BITS (16)
+#define MAX_EVENT_BITS  (16)
+#define MAX_BUFFER_BITS (6)
 #define MAX_BUFFERS (1 << MAX_BUFFER_BITS)
-#define MAX_EVENTS  (1 << MAX_BUFFER_BITS)
+#define MAX_EVENTS  (1 << MAX_EVENT_BITS)
 
 #include "runtime/thread.hpp"
 #include "oops/method.hpp"
@@ -46,6 +47,7 @@ class History : public CHeapObj<mtInternal> {
         static EventBuffer *get_buffer(uint64_t tid, uint64_t idx);
 
         static History *get_history(uint64_t tid);
+        static void     clear_history(uint64_t tid);
 
         static uint64_t get_ring_idx(uint64_t tid);
         static uint64_t get_event_idx(uint64_t tid);
@@ -53,7 +55,7 @@ class History : public CHeapObj<mtInternal> {
     private:
         EventBuffer *buffer;
         uint64_t buffer_idx : MAX_BUFFER_BITS;
-        uint64_t event_idx : MAX_EPOCH_BITS;
+        uint64_t event_idx : MAX_EVENT_BITS;
 };
 
 #endif

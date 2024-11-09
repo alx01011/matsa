@@ -173,8 +173,23 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
     History *h = History::get_history(tid);
     EventBuffer *buffer = h->get_buffer(tid, prev_history.ring_idx);
 
+    if (prev_history.history_epoch != buffer->epoch) {
+        return false;
+    }
+
+    uint64_t *real_stack = buffer->real_stack;
+
+    // includes the stack of the buffer in the trace (in case of history overflow the buffer wont be copied on history but kept separately)
+    for (uint64_t i = 0; i < buffer->real_stack_size; i++) {
+        Method *m = (Method*)(real_stack[i] >> 16);
+
+        trace[trace_idx].m   = m;
+        trace[trace_idx].bci = real_stack[i] & 0xFFFF;
+        trace_idx++;
+    }
+
     for (uint64_t i = 0; i < prev_history.history_idx; i++) {
-        if (buffer->events[i].method == 0) {
+        if (buffer->events[i].method == 0 && trace_idx > 0) {
             trace_idx--;
             continue;
         }

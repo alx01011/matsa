@@ -139,6 +139,7 @@
 #include "matsa/lockState.hpp"
 #include "matsa/matsaGlobals.hpp"
 #include "matsa/matsaThreadPool.hpp"
+#include "matsa/history.hpp"
 #include "interpreter/interpreterRuntime.hpp"
 #endif
 #if INCLUDE_JVMCI
@@ -588,6 +589,7 @@ void Thread::start(Thread* thread) {
 
         // we might as well clear the event trace
         Symbolizer::ClearThreadHistory(new_tid);
+        History::clear_history(new_tid);
       }
   );
 

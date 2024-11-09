@@ -9,17 +9,17 @@
 
 ThreadHistory::ThreadHistory() {
     index  = 0;
-    events = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
+    // events = (uint64_t*)os::reserve_memory(EVENT_BUFFER_SIZE * sizeof(uint64_t));
 
-    if (!events) {
-        fatal("MaTSa Symbolizer: Failed to mmap");
-    }
+    // if (!events) {
+    //     fatal("MaTSa Symbolizer: Failed to mmap");
+    // }
 
-    bool protect = os::protect_memory((char*)events, EVENT_BUFFER_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
+    // bool protect = os::protect_memory((char*)events, EVENT_BUFFER_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
 
-    if (!protect) {
-        fatal("MaTSa Symbolizer: Failed to protect memory");
-    }
+    // if (!protect) {
+    //     fatal("MaTSa Symbolizer: Failed to protect memory");
+    // }
 }
 
 void ThreadHistory::add_event(uint64_t event) {

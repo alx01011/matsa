@@ -29,6 +29,12 @@ History::History() {
         protect = os::protect_memory((char*)buffer[i].events, MAX_EVENTS * sizeof(EventBuffer::Event), os::MEM_PROT_RW);
 
         assert(buffer[i].events != nullptr && protect, "MATSA: Failed to allocate history buffer\n");
+
+        // allocate the real stack
+        buffer[i].real_stack = (uint64_t*)os::reserve_memory(DEFAULT_STACK_SIZE * sizeof(uint64_t));
+        protect = os::protect_memory((char*)buffer[i].real_stack, DEFAULT_STACK_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
+
+        assert(buffer[i].real_stack != nullptr && protect, "MATSA: Failed to allocate history buffer real stack\n");
     }
 
     event_idx  = 0;
@@ -52,15 +58,6 @@ void History::add_event(JavaThread *thread, Method *m, uint16_t bci) {
         // increment epoch
         h->buffer[h->buffer_idx].epoch++;
         h->event_idx = 0;
-
-        if (h->buffer[h->buffer_idx].real_stack == nullptr) {
-            // release the real stack
-           h->buffer[h->buffer_idx].real_stack = (uint64_t*)os::reserve_memory(DEFAULT_STACK_SIZE * sizeof(uint64_t));
-           bool protect = os::protect_memory((char*)h->buffer[h->buffer_idx].real_stack,
-                             DEFAULT_STACK_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
-
-            assert(protect && h->buffer[buffer_idx].real_stack != nullptr, "MATSA: Failed to allocate history buffer\n");
-        }
 
         MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
         memcpy(h->buffer[h->buffer_idx].real_stack, stack->get(), stack->size() * sizeof(uint64_t));
@@ -95,4 +92,15 @@ uint64_t History::get_cur_epoch(uint64_t tid) {
 
 History *History::get_history(uint64_t tid) {
     return history[tid];
+}
+
+void History::clear_history(uint64_t tid) {
+    History *h = history[tid];
+
+    for (int i = 0; i < h->buffer_idx; i++) {
+        h->buffer[i].epoch = 0;
+    }
+
+    h->buffer_idx = 0;
+    h->event_idx = 0;
 }
