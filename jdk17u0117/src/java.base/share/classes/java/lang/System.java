@@ -89,6 +89,7 @@ import sun.security.util.SecurityConstants;
 
 // for MaTSa methods
 import jdk.internal.vm.annotation.Hidden;
+import java.util.concurrent.annotation.*;
 
 /**
  * The {@code System} class contains several useful class fields
@@ -186,6 +187,7 @@ public final class System {
     // indicates if a security manager is possible
     private static final int NEVER = 1;
     private static final int MAYBE = 2;
+    @MaTSaIgnoreField
     private static @Stable int allowSecurityManager;
 
     // current security manager
