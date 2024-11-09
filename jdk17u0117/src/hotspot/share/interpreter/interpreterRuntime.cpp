@@ -84,7 +84,6 @@
 #include "matsa/matsaRTL.hpp"
 #include "matsa/matsaGlobals.hpp"
 #include "matsa/vectorclock.hpp"
-#include "matsa/symbolizer.hpp"
 #include "matsa/matsaStack.hpp"
 #include "matsa/matsaDefs.hpp"
 #include "matsa/history.hpp"
