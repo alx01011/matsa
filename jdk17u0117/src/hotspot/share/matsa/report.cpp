@@ -109,7 +109,7 @@ void MaTSaReportMap::clear() {
 Mutex *MaTSaReport::_report_lock;
 
 void print_method_info(Method *m, int bci, int index) {
-    const char *file_name = "<null>";
+    const char *file_name = "??";
     InstanceKlass *holder = m->method_holder();
     Symbol *source_file   = nullptr;
 
@@ -120,6 +120,11 @@ void print_method_info(Method *m, int bci, int index) {
     const char *method_name = m->external_name_as_fully_qualified();
     const int  lineno       = m->line_number_from_bci(bci);
 
+
+    if (lineno == -1) {
+        fprintf(stderr, "  #%d %s() %s:??\n", index, method_name, file_name);
+        return;
+    }
 
     fprintf(stderr, "  #%d %s() %s:%d\n", index, method_name, file_name, lineno);
 }
