@@ -2956,7 +2956,7 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
         if (FLAG_SET_CMDLINE(MaTSaSilent, true) != JVMFlag::SUCCESS) {
           return JNI_EINVAL;
         }
-      } else if (match_option(option, "-XX:MaTSaHistorySize=", &tail)) { // aantonak - MaTSa 
+      } else if (match_option(option, "-XX:MaTSaHist=", &tail)) { // aantonak - MaTSa 
         puts("MaTSaHistorySize");
         if (!MaTSa) {
           jio_fprintf(defaultStream::error_stream(),
