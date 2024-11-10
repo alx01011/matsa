@@ -2947,7 +2947,7 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
           return JNI_EINVAL;
         }
       }  else if (match_option(option, "-XX:+MaTSaHistory", &tail)) { // aantonak - MaTSa 
-        puts("MaTSaHistorySize");
+        fprintf(stderr, "MaTSaHistorySize: %d\n", -1);
         if (!MaTSa) {
           jio_fprintf(defaultStream::error_stream(),
             "MaTSaHistorySize can only be used with MaTSa\n");
