@@ -3,8 +3,8 @@
 
 #define MAX_EPOCH_BITS  (16)
 #define MAX_EVENT_BITS  (16)
-#define MAX_PART_BITS   (6)
-#define MAX_PARTS   (1 << MAX_PART_BITS)
+#define MAX_PART_BITS   (16)
+#define MAX_PARTS   (1 << MaTSaHistorySize)
 #define MAX_EVENTS  (1 << MAX_EVENT_BITS)
 
 #include "matsaDefs.hpp"

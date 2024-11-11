@@ -2105,6 +2105,8 @@ const intx ObjectAlignmentInBytes = 8;
           range(0, UINT_MAX)                                                \
   product(bool, MaTSa, false, "Enable Managed Thread Sanitizer.")              \
   product(bool, MaTSaSilent, false, "Silent mode for Managed Thread Sanitizer.") \
+  product(uint, MaTSaHistorySize, 6, "Size of the history buffer for Managed Thread Sanitizer.") \
+        range(1, 16)\
 
 // end of RUNTIME_FLAGS
 

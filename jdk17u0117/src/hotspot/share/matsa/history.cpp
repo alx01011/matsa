@@ -56,7 +56,7 @@ void History::add_event(JavaThread *thread, Method *m, uint16_t bci) {
 
     if (h->event_idx == MAX_EVENTS - 1) {
         h->event_idx = 0;
-        h->part_idx++;
+        h->part_idx = (h->part_idx + 1) & (MAX_PARTS - 1); // its a power of 2
         // increment epoch
         h->parts[h->part_idx].epoch++;
 

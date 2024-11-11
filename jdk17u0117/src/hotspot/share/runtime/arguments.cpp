@@ -2942,44 +2942,7 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
           return JNI_EINVAL;
         }
       }
-    } else if (match_option(option, "-XX:+MaTSa", &tail)) { // aantonak - MaTSa
-        if (FLAG_SET_CMDLINE(MaTSa, true) != JVMFlag::SUCCESS) {
-          return JNI_EINVAL;
-        }
-      }  else if (match_option(option, "-XX:+MaTSaHistory", &tail)) { // aantonak - MaTSa 
-        fprintf(stderr, "MaTSaHistorySize: %d\n", -1);
-        if (!MaTSa) {
-          jio_fprintf(defaultStream::error_stream(),
-            "MaTSaHistorySize can only be used with MaTSa\n");
-          return JNI_EINVAL;
-        }
-        // Parse the history size
-        uintx history_size = 0;
-        if (!parse_uintx(tail, &history_size, 0)) {
-          jio_fprintf(defaultStream::error_stream(),
-            "Improperly specified VM option \'MaTSaHistorySize=%s\'\n", tail);
-          return JNI_EINVAL;
-        }
-
-        if (history_size > 8) {
-          history_size = 8;
-        }
-
-        matsa_history_size = history_size;
-        fprintf(stderr, "MaTSaHistorySize: %d\n", matsa_history_size);
-        
-         // Unknown option
-      } else if (match_option(option, "-XX:+MaTSaSilent", &tail)) { // aantonak - MaTSa 
-        if (!MaTSa) {
-          jio_fprintf(defaultStream::error_stream(),
-            "MaTSa can only be used with MaTSa\n");
-          return JNI_EINVAL;
-        }
-
-        if (FLAG_SET_CMDLINE(MaTSaSilent, true) != JVMFlag::SUCCESS) {
-          return JNI_EINVAL;
-        }
-      }
+    }
      else if (is_bad_option(option, args->ignoreUnrecognized)) {
       return JNI_ERR;
     }
