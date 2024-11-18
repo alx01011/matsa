@@ -15,7 +15,7 @@ def read_and_filter_file(name):
     with open(name, 'r') as f:
         lines = f.readlines()
         for line in lines:
-            if 'WARNING: ThreadSanitizer: data race (pid=10350)' in line:
+            if 'WARNING: ThreadSanitizer: data race' in line:
                 in_block = True
             elif 'Location is' in line:
                 in_block = False
