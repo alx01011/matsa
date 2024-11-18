@@ -134,11 +134,11 @@
 #include "utilities/vmError.hpp"
 #if INCLUDE_MATSA
 #include "matsa/shadow.hpp"
-#include "matsa/symbolizer.hpp"
 #include "matsa/threadState.hpp"
 #include "matsa/lockState.hpp"
 #include "matsa/matsaGlobals.hpp"
 #include "matsa/matsaThreadPool.hpp"
+#include "matsa/history.hpp"
 #include "interpreter/interpreterRuntime.hpp"
 #endif
 #if INCLUDE_JVMCI
@@ -586,8 +586,7 @@ void Thread::start(Thread* thread) {
         // increment epoch of the current thread
         MaTSaThreadState::incrementEpoch(cur_tid);
 
-        // we might as well clear the event trace
-        Symbolizer::ClearThreadHistory(new_tid);
+        History::clear_history(new_tid);
       }
   );
 

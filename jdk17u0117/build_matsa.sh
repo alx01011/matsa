@@ -50,4 +50,3 @@ fi
 
 make CONF=$CONF clean
 make CONF=$CONF images
-

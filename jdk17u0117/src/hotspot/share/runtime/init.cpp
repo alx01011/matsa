@@ -57,9 +57,9 @@
 #include "matsa/matsaGlobals.hpp"
 #include "gc/shared/gc_globals.hpp"
 #include "matsa/matsaThreadPool.hpp"
-#include "matsa/symbolizer.hpp"
 #include "matsa/suppression.hpp"
 #include "matsa/report.hpp"
+#include "matsa/history.hpp"
 #include <cstdlib> // getenv
 #endif
 
@@ -160,7 +160,8 @@ jint init_globals() {
     }
     env_event_buffer_size = 1 << history_size_width;
 
-    MaTSaThreadState::init()
+    MaTSaThreadState::init();
+    History::init_history();
     );
   MATSA_ONLY(MaTSaThreadPool::matsa_threadpool_init());
   // init the main thread

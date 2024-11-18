@@ -1,7 +1,8 @@
 #include "report.hpp"
 #include "matsaGlobals.hpp"
-#include "symbolizer.hpp"
+#include "suppression.hpp"
 #include "matsaStack.hpp"
+#include "history.hpp"
 
 #include "runtime/os.hpp"
 #include "runtime/mutexLocker.hpp"
@@ -105,13 +106,10 @@ void MaTSaReportMap::clear() {
     _size = 0;
 }
 
-
-//uint8_t MaTSaReport::_report_lock;
 Mutex *MaTSaReport::_report_lock;
 
-
 void print_method_info(Method *m, int bci, int index) {
-    const char *file_name = "<null>";
+    const char *file_name = "??";
     InstanceKlass *holder = m->method_holder();
     Symbol *source_file   = nullptr;
 
@@ -122,6 +120,11 @@ void print_method_info(Method *m, int bci, int index) {
     const char *method_name = m->external_name_as_fully_qualified();
     const int  lineno       = m->line_number_from_bci(bci);
 
+
+    if (lineno == -1) {
+        fprintf(stderr, "  #%d %s() %s:??\n", index, method_name, file_name);
+        return;
+    }
 
     fprintf(stderr, "  #%d %s() %s:%d\n", index, method_name, file_name, lineno);
 }
@@ -159,39 +162,67 @@ void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
 
 }
 
+struct EventTrace {
+    Method *m;
+    uint64_t bci : 16;
+};
+
 // potentially we can do a bit better here in the future (code is not that clean)
-bool try_print_event_trace(void *addr, int tid, ShadowCell &cell) {
-    MaTSaEventTrace trace;
+bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &prev_history) {
+    // MaTSaEventTrace trace;
+    EventTrace *trace = NEW_C_HEAP_ARRAY(EventTrace, MAX_EVENTS + DEFAULT_STACK_SIZE, mtInternal);
+    uint64_t    trace_idx = 0;
     bool has_trace = false;
 
-    has_trace = Symbolizer::TraceUpToAddress(trace, addr, tid, cell);
+    History *h = History::get_history(tid);
+    Part *part = h->get_part(tid, prev_history.ring_idx);
 
-    if (has_trace) {
-        for (int i = trace.size - 1; i >= 0; i--) {
-            MaTSaEvent e = trace.events[i];
-            Method *m    = (Method*)((uintptr_t)e.pc);
-            
-            if (!Method::is_valid_method(m)) {
-                continue;
-            }
-
-            if (i != trace.size - 1) {
-                e.bci = trace.events[i + 1].bci;
-            }
-
-            print_method_info(m, e.bci, (trace.size - 1) - i);
-        }
+    if (prev_history.history_epoch != part->epoch) {
+        return false;
     }
 
-    return has_trace;
+    uint64_t *real_stack = (uint64_t*)((uint64_t)part->real_stack);
+
+    for (uint64_t i = 0; i < part->real_stack_size; i++) {
+        Method *m = (Method*)(real_stack[i] >> 16);
+
+        trace[trace_idx].m   = m;
+        trace[trace_idx].bci = real_stack[i] & 0xFFFF;
+        trace_idx++;
+    }
+
+    for (uint64_t i = 0; i < prev_history.history_idx; i++) {
+        if (part->events[i].method == 0 && trace_idx > 0) {
+            trace_idx--;
+            continue;
+        }
+
+        trace[trace_idx].m   = (Method*)((uint64_t)part->events[i].method);
+        trace[trace_idx].bci = part->events[i].bci;
+        trace_idx++;
+    }
+
+    int prev_bci = prev_history.bci;
+    for (int64_t i = trace_idx - 1; i >= 0; i--) {
+        print_method_info(trace[i].m, prev_bci, (trace_idx - 1) - i);
+        prev_bci = trace[i].bci;
+    }
+
+    return trace_idx != 0;
 }
 
 void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
-                            ShadowCell &cur, ShadowCell &prev) {
+                            ShadowCell &cur, ShadowCell &prev, HistoryCell &prev_history) {
     MutexLocker ml(MaTSaReport::_report_lock, Mutex::_no_safepoint_check_flag);
 
     // already reported
     if (MaTSaReportMap::instance()->contains((uintptr_t)bcp)) {
+        return;
+    }
+
+    // is suppressed?
+    if (LIKELY(MaTSaSuppression::is_suppressed(thread))) {
+        MaTSaReportMap::instance()->insert((uintptr_t)bcp);
         return;
     }
 
@@ -210,7 +241,7 @@ void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
     
     fprintf(stderr, BLUE "\n Previous %s of size %u at %p by thread T%u:" RESET"\n", prev.is_write ? "write" : "read", 
             size, addr, (uint32_t)prev.tid);
-    if (!try_print_event_trace(addr, prev.tid, prev)) {
+    if (!try_print_event_trace(addr, prev.tid, prev, prev_history)) {
         fprintf(stderr, "  <no stack trace available>\n");
     }
 

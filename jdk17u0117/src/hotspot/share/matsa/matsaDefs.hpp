@@ -4,15 +4,11 @@
 // 256 threads
 #define MAX_THREADS (1 << 8)
 
-/*
-    Fallback to 38 bits if not defined.
-    This allows for heaps up to 2^38 bytes -> 256GiB
-    We can compress the address to 38 bits and restore it later
-    since the heap is contiguous and we know the base address its easy to restore
-*/
-#ifndef COMPRESSED_ADDR_BITS
-#define COMPRESSED_ADDR_BITS 38
-#endif
+
+#define MAX_ADDRESS_BITS (48)
+#define MAX_BCI_BITS     (16) // per spec
+#define MAX_STACK_BITS   (16)
+
 
 // TODO: this has to be done at compile time
 // because we have to check if avx is supported

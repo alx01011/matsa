@@ -43,7 +43,7 @@ namespace MaTSaReport {
     //extern uint8_t _report_lock;
 
     void do_report_race   (JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
-                            ShadowCell &cur, ShadowCell &prev);
+                            ShadowCell &cur, ShadowCell &prev, HistoryCell &prev_history);
     void print_current_stack(JavaThread *thread, int cur_bci);
 }
 

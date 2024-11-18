@@ -63,6 +63,10 @@
 #include "jfr/jfr.hpp"
 #endif
 
+#if INCLUDE_MATSA
+#include "matsa/matsaGlobals.hpp"
+#endif
+
 #define DEFAULT_JAVA_LAUNCHER  "generic"
 
 char*  Arguments::_jvm_flags_file               = NULL;
@@ -2938,23 +2942,7 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
           return JNI_EINVAL;
         }
       }
-    } else if (match_option(option, "-XX:+MaTSa", &tail)) { // aantonak - MaTSa
-        if (FLAG_SET_CMDLINE(MaTSa, true) != JVMFlag::SUCCESS) {
-          return JNI_EINVAL;
-        }
-         // Unknown option
-      } else if (match_option(option, "-XX:+MaTSaSilent", &tail)) { // aantonak - MaTSa 
-        if (!MaTSa) {
-          jio_fprintf(defaultStream::error_stream(),
-            "MaTSa can only be used with MaTSa\n");
-          return JNI_EINVAL;
-        }
-
-        if (FLAG_SET_CMDLINE(MaTSaSilent, true) != JVMFlag::SUCCESS) {
-          return JNI_EINVAL;
-        }
-         // Unknown option
-      }
+    }
      else if (is_bad_option(option, args->ignoreUnrecognized)) {
       return JNI_ERR;
     }

@@ -98,7 +98,7 @@ void MaTSaSuppression::init(void) {
     add_suppressions(frame_suppressions    , def_frame_suppressions);
 }
 
-bool MaTSaSuppression::is_suppressed(JavaThread *thread, address bcp) {
+bool MaTSaSuppression::is_suppressed(JavaThread *thread) {
     ResourceMark rm;
 
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
