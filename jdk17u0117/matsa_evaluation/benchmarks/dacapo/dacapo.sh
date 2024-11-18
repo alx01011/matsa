@@ -62,10 +62,11 @@ if [ "$1" == "-s" ]; then
     shift
     shift
 fi
-#h2o,spring dnf
+# h2o,spring dnf
 # trade* crash
-#h2,tomcat,cassandra oom
-BENCHMARKS="avrora batik biojava eclipse fop graphchi jme jython kafka luindex lusearch pmd sunflow xalan zxing"
+# h2,tomcat,cassandra oom
+# kafka way too many error (in the benchmark itself)
+BENCHMARKS="avrora batik biojava eclipse fop graphchi jme jython luindex lusearch pmd sunflow xalan zxing"
 
 #BENCHMARKS="lusearch pmd sunflow tomcat tradebeans tradesoap xalan zxing"
 
@@ -78,10 +79,24 @@ run_benchmark() {
 
     echo "Starting benchmark: $benchmark"
 
-    $BUILD/java -jar $opts dacapo-23.11-chopin.jar -p $benchmark > "${benchmark}_result.txt" 2> "${benchmark}_error.txt"
+    $BUILD/java -jar $opts dacapo-23.11-chopin.jar -p $benchmark > "${benchmark}_out.txt" 2> "${benchmark}_error.txt"
 
     echo "Finished benchmark: $benchmark"
 }
+
+# do you have dacapo?
+if [ ! -f dacapo-23.11-chopin.jar ]; then
+    echo "DaCapo jar not found."
+    echo "Do you want to download it? (y/n)"
+    read answer
+
+    if [ "$answer" == "y" ]; then
+        wget https://download.dacapobench.org/chopin/dacapo-23.11-chopin.zip
+    else
+        echo "Exiting (got $answer)."
+        exit 1
+    fi
+fi
 
 
 if [ "$1" == "-a" ]; then
