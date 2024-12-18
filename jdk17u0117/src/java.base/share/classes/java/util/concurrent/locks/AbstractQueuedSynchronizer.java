@@ -1442,10 +1442,14 @@ public abstract class AbstractQueuedSynchronizer
         @MaTSaIgnoreField
         private transient ConditionNode lastWaiter;
 
+        @MaTSaIgnoreField
+        private final AbstractQueuedSynchronizer parentSync; // parent synchronization object used by matsa 
+
         /**
          * Creates a new {@code ConditionObject} instance.
+         * @param parentSync the parent synchronization object used to keep track of parent by matsa
          */
-        public ConditionObject() { }
+        public ConditionObject(AbstractQueuedSynchronizer parentSync) { this.parentSync = parentSync; }
 
         // Signalling methods
 
@@ -1639,9 +1643,11 @@ public abstract class AbstractQueuedSynchronizer
                 } else
                     Thread.onSpinWait();    // awoke while enqueuing
             }
+            System.MaTSaUnlock(parentSync);
             LockSupport.setCurrentBlocker(null);
             node.clearStatus();
             acquire(node, savedState, false, false, false, 0L);
+            System.MaTSaLock(parentSync);
             if (interrupted) {
                 if (cancelled) {
                     unlinkCancelledWaiters(node);

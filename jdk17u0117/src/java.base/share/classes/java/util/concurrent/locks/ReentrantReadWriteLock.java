@@ -627,7 +627,7 @@ public class ReentrantReadWriteLock
         // Methods relayed to outer class
 
         final ConditionObject newCondition() {
-            return new ConditionObject();
+            return new ConditionObject(this);
         }
 
         final Thread getOwner() {
@@ -743,7 +743,7 @@ public class ReentrantReadWriteLock
          */
         public void lock() {
             sync.acquireShared(1);
-            System.MaTSaLock(lock);
+            System.MaTSaLock(sync);
         }
 
         /**
@@ -789,7 +789,7 @@ public class ReentrantReadWriteLock
          */
         public void lockInterruptibly() throws InterruptedException {
             sync.acquireSharedInterruptibly(1);
-            System.MaTSaLock(lock);
+            System.MaTSaLock(sync);
         }
 
         /**
@@ -817,7 +817,7 @@ public class ReentrantReadWriteLock
          */
         public boolean tryLock() {
             if (sync.tryReadLock()) {
-                System.MaTSaLock(lock);
+                System.MaTSaLock(sync);
                 return true;
             }
             return false;
@@ -893,7 +893,7 @@ public class ReentrantReadWriteLock
         public boolean tryLock(long timeout, TimeUnit unit)
                 throws InterruptedException {
             if (sync.tryAcquireSharedNanos(1, unit.toNanos(timeout))) {
-                System.MaTSaLock(lock);
+                System.MaTSaLock(sync);
                 return true;
             }
 
@@ -912,7 +912,7 @@ public class ReentrantReadWriteLock
          * does not hold this lock
          */
         public void unlock() {
-            System.MaTSaUnlock(lock);
+            System.MaTSaUnlock(sync);
             sync.releaseShared(1);
         }
 
@@ -978,7 +978,7 @@ public class ReentrantReadWriteLock
          */
         public void lock() {
             sync.acquire(1);
-            System.MaTSaLock(lock);
+            System.MaTSaLock(sync);
         }
 
         /**
@@ -1034,7 +1034,7 @@ public class ReentrantReadWriteLock
          */
         public void lockInterruptibly() throws InterruptedException {
             sync.acquireInterruptibly(1);
-            System.MaTSaLock(lock);
+            System.MaTSaLock(sync);
         }
 
         /**
@@ -1068,7 +1068,7 @@ public class ReentrantReadWriteLock
          */
         public boolean tryLock() {
             if (sync.tryWriteLock()) {
-                System.MaTSaLock(lock);
+                System.MaTSaLock(sync);
                 return true;
             }
             return false;
@@ -1156,7 +1156,7 @@ public class ReentrantReadWriteLock
         public boolean tryLock(long timeout, TimeUnit unit)
                 throws InterruptedException {
             if (sync.tryAcquireNanos(1, unit.toNanos(timeout))) {
-                System.MaTSaLock(lock);
+                System.MaTSaLock(sync);
                 return true;
             }
             return false;
@@ -1175,7 +1175,7 @@ public class ReentrantReadWriteLock
          * hold this lock
          */
         public void unlock() {
-            System.MaTSaUnlock(lock);
+            System.MaTSaUnlock(sync);
             sync.release(1);
         }
 
