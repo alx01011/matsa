@@ -190,7 +190,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         }
 
         final ConditionObject newCondition() {
-            return new ConditionObject();
+            return new ConditionObject(sync);
         }
 
         // Methods relayed from outer class

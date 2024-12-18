@@ -627,7 +627,7 @@ public class ReentrantReadWriteLock
         // Methods relayed to outer class
 
         final ConditionObject newCondition() {
-            return new ConditionObject();
+            return new ConditionObject(sync);
         }
 
         final Thread getOwner() {
