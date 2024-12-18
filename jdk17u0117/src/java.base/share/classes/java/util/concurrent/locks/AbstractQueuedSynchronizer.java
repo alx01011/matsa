@@ -1447,6 +1447,7 @@ public abstract class AbstractQueuedSynchronizer
 
         /**
          * Creates a new {@code ConditionObject} instance.
+         * @param parentSync the parent synchronization object used to keep track of parent from matsa
          */
         public ConditionObject(AbstractQueuedSynchronizer parentSync) { this.parentSync = parentSync; }
 
