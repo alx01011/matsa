@@ -323,7 +323,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public void lock() {
         sync.lock();
-        System.MaTSaLock(this);
+        System.MaTSaLock(sync);
     }
 
     /**
@@ -374,7 +374,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public void lockInterruptibly() throws InterruptedException {
         sync.lockInterruptibly();
-        System.MaTSaLock(this);
+        System.MaTSaLock(sync);
     }
 
     /**
@@ -405,7 +405,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      */
     public boolean tryLock() {
         if (sync.tryLock()) {
-            System.MaTSaLock(this);
+            System.MaTSaLock(sync);
             return true;
         }
         return false;
@@ -486,7 +486,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     public boolean tryLock(long timeout, TimeUnit unit)
             throws InterruptedException {
         if (sync.tryLockNanos(unit.toNanos(timeout))) {
-            System.MaTSaLock(this);
+            System.MaTSaLock(sync);
             return true;
         }
         return false;
@@ -504,7 +504,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      *         hold this lock
      */
     public void unlock() {
-        System.MaTSaUnlock(this);
+        System.MaTSaUnlock(sync);
         sync.release(1);
     }
 

@@ -1639,9 +1639,11 @@ public abstract class AbstractQueuedSynchronizer
                 } else
                     Thread.onSpinWait();    // awoke while enqueuing
             }
+            System.MaTSaUnlock(this);
             LockSupport.setCurrentBlocker(null);
             node.clearStatus();
             acquire(node, savedState, false, false, false, 0L);
+            System.MaTSaLock(this);
             if (interrupted) {
                 if (cancelled) {
                     unlinkCancelledWaiters(node);
