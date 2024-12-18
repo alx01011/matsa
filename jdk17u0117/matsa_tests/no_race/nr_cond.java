@@ -39,17 +39,29 @@ public class nr_cond {
         nr_cond trafficLight = new nr_cond();
 
         // Car threads waiting for the green light
-        Runnable car = (name) -> {
+        Thread car1 = new Thread(() -> {
             try {
-                trafficLight.waitForGreen((String) name);
+                trafficLight.waitForGreen("Car 1");
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-        };
+        });
 
-        Thread car1 = new Thread(() -> car.run("Car 1"));
-        Thread car2 = new Thread(() -> car.run("Car 2"));
-        Thread car3 = new Thread(() -> car.run("Car 3"));
+        Thread car2 = new Thread(() -> {
+            try {
+                trafficLight.waitForGreen("Car 2");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+
+        Thread car3 = new Thread(() -> {
+            try {
+                trafficLight.waitForGreen("Car 3");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
 
         car1.start();
         car2.start();
