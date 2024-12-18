@@ -1071,10 +1071,14 @@ public abstract class AbstractQueuedLongSynchronizer
         /** Last node of condition queue. */
         private transient ConditionNode lastWaiter;
 
+        @MaTSaIgnoreField
+        private final AbstractQueuedLongSynchronizer parentSync;
+
         /**
          * Creates a new {@code ConditionObject} instance.
+         * @param parentSync parent synchronization object used by matsa
          */
-        public ConditionObject() { }
+        public ConditionObject(AbstractQueuedLongSynchronizer parentSync) { this.parentSync = parentSync; }
 
         // Signalling methods
 
