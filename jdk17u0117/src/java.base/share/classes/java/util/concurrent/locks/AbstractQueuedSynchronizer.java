@@ -1443,12 +1443,12 @@ public abstract class AbstractQueuedSynchronizer
         private transient ConditionNode lastWaiter;
 
         @MaTSaIgnoreField
-        private final Sync parentSync; // for matsa to keep track of this os sync
+        private final AbstractQueuedSynchronizer parentSync; // for matsa to keep track of this os sync
 
         /**
          * Creates a new {@code ConditionObject} instance.
          */
-        public ConditionObject(Sync parentSync) { this.parentSync = parentSync; }
+        public ConditionObject(AbstractQueuedSynchronizer parentSync) { this.parentSync = parentSync; }
 
         // Signalling methods
 
