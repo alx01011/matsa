@@ -234,9 +234,8 @@ public class CountDownLatch {
      *         while waiting
      */
     public void await() throws InterruptedException {
-        // System.MaTSaUnlock(this); not sure about this
         sync.acquireSharedInterruptibly(1);
-        System.MaTSaLock(this);
+        System.MaTSaLock(sync);
     }
 
     /**
@@ -296,7 +295,7 @@ public class CountDownLatch {
      * <p>If the current count equals zero then nothing happens.
      */
     public void countDown() {
-        System.MaTSaUnlock(this);
+        System.MaTSaUnlock(sync);
         sync.releaseShared(1);
     }
 

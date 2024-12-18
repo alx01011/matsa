@@ -318,7 +318,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public void acquire() throws InterruptedException {
         sync.acquireSharedInterruptibly(1);
-        System.MaTSaLock(this);
+        System.MaTSaLock(sync);
     }
 
     /**
@@ -432,7 +432,7 @@ public class Semaphore implements java.io.Serializable {
      * in the application.
      */
     public void release() {
-        System.MaTSaUnlock(this);
+        System.MaTSaUnlock(sync);
         sync.releaseShared(1);
     }
 
@@ -477,7 +477,7 @@ public class Semaphore implements java.io.Serializable {
     public void acquire(int permits) throws InterruptedException {
         if (permits < 0) throw new IllegalArgumentException();
         sync.acquireSharedInterruptibly(permits);
-        System.MaTSaLock(this);
+        System.MaTSaLock(sync);
     }
 
     /**
@@ -541,7 +541,7 @@ public class Semaphore implements java.io.Serializable {
         boolean res = sync.nonfairTryAcquireShared(permits) >= 0;
 
         if (res) {
-            System.MaTSaLock(this);
+            System.MaTSaLock(sync);
         }
 
         return res;
@@ -627,7 +627,7 @@ public class Semaphore implements java.io.Serializable {
      */
     public void release(int permits) {
         if (permits < 0) throw new IllegalArgumentException();
-        System.MaTSaUnlock(this);
+        System.MaTSaUnlock(sync);
         sync.releaseShared(permits);
     }
 

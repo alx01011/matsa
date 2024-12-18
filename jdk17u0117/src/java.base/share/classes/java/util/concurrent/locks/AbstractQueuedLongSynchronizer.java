@@ -640,7 +640,6 @@ public abstract class AbstractQueuedLongSynchronizer
      */
     public final boolean release(long arg) {
         if (tryRelease(arg)) {
-            System.MaTSaUnlock(this);
             signalNext(head);
             return true;
         }
