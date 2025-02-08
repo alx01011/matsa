@@ -47,7 +47,7 @@ void BarrierSetAssembler::load_at(MacroAssembler* masm, DecoratorSet decorators,
 
   MATSA_ONLY(
     //if (in_heap) {
-      __ call(RuntimeAddress(MaTSaRTL::matsa_should_be_called()));
+      __ call(RuntimeAddress(MaTSaRTL::matsa_should_be_called));
     //}
   );
 
@@ -118,7 +118,7 @@ void BarrierSetAssembler::store_at(MacroAssembler* masm, DecoratorSet decorators
 
   MATSA_ONLY(
     //if (in_heap) {
-      __ call(RuntimeAddress(MaTSaRTL::matsa_should_be_called()));
+      __ call(RuntimeAddress(MaTSaRTL::matsa_should_be_called));
     //}
   );
 
