@@ -40,6 +40,8 @@
 #include "gc/g1/c1/g1BarrierSetC1.hpp"
 #endif
 
+#include "matsa/matsaRTL.hpp"
+
 #define __ masm->
 
 void G1BarrierSetAssembler::gen_write_ref_array_pre_barrier(MacroAssembler* masm, DecoratorSet decorators,
@@ -150,6 +152,12 @@ void G1BarrierSetAssembler::g1_write_barrier_pre(MacroAssembler* masm,
   // If expand_call is true then we expand the call_VM_leaf macro
   // directly to skip generating the check by
   // InterpreterMacroAssembler::call_VM_leaf_base that checks _last_sp.
+
+  MATSA_ONLY(
+    //if (in_heap) {
+      __ call(RuntimeAddress(MaTSaRTL::matsa_should_be_called()));
+    //}
+  );
 
 #ifdef _LP64
   assert(thread == r15_thread, "must be");

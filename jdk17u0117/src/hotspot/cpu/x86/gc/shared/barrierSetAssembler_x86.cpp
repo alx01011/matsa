@@ -34,6 +34,7 @@
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.hpp"
+#include "matsa/matsaRTL.hpp"
 
 #define __ masm->
 
@@ -43,6 +44,12 @@ void BarrierSetAssembler::load_at(MacroAssembler* masm, DecoratorSet decorators,
   bool in_native = (decorators & IN_NATIVE) != 0;
   bool is_not_null = (decorators & IS_NOT_NULL) != 0;
   bool atomic = (decorators & MO_RELAXED) != 0;
+
+  MATSA_ONLY(
+    //if (in_heap) {
+      __ call(RuntimeAddress(MaTSaRTL::matsa_should_be_called()));
+    //}
+  );
 
   switch (type) {
   case T_OBJECT:
@@ -108,6 +115,12 @@ void BarrierSetAssembler::store_at(MacroAssembler* masm, DecoratorSet decorators
   bool in_native = (decorators & IN_NATIVE) != 0;
   bool is_not_null = (decorators & IS_NOT_NULL) != 0;
   bool atomic = (decorators & MO_RELAXED) != 0;
+
+  MATSA_ONLY(
+    //if (in_heap) {
+      __ call(RuntimeAddress(MaTSaRTL::matsa_should_be_called()));
+    //}
+  );
 
   switch (type) {
   case T_OBJECT:

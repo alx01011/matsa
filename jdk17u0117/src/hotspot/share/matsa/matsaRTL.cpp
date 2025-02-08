@@ -117,3 +117,7 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
         MaTSaReport::do_report_race(thread, addr, access_size, bcp, m, cur, prev, prev_history);
     }
 }
+
+void MaTSaRTL::matsa_should_be_called(void) {
+    return; // dummy function
+}
