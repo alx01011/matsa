@@ -153,11 +153,11 @@ void G1BarrierSetAssembler::g1_write_barrier_pre(MacroAssembler* masm,
   // directly to skip generating the check by
   // InterpreterMacroAssembler::call_VM_leaf_base that checks _last_sp.
 
-  MATSA_ONLY(
+  //MATSA_ONLY(
     //if (in_heap) {
       __ call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_should_be_called));
     //}
-  );
+  //);
 
 #ifdef _LP64
   assert(thread == r15_thread, "must be");
