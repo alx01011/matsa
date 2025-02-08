@@ -121,6 +121,6 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
 }
 
 void MaTSaRTL::matsa_should_be_called(void) {
-    putchar('%');
+    fputc('%', stderr);
     return; // dummy function
 }
