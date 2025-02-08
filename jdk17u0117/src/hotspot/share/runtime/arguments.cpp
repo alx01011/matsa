@@ -3992,7 +3992,7 @@ jint Arguments::parse(const JavaVMInitArgs* initial_cmd_args) {
 
   MATSA_ONLY(
     // no jit until masters
-    set_mode_flags(_int);
+    // set_mode_flags(_int);
 
     // no rewrite bytecodes optimization
     FLAG_SET_ERGO(RewriteBytecodes, false);
