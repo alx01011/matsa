@@ -934,12 +934,6 @@ Node* LoadNode::make(PhaseGVN& gvn, Node* ctl, Node* mem, Node* adr, const TypeP
     return new DecodeNNode(ld, ld->bottom_type()->make_ptr());
   }
 
-  MATSA_ONLY(
-    // if its a field
-    if (adr_type->isa_instance_field()) {
-    }
-  );
-
   return load;
 }
 
