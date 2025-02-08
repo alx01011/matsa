@@ -6,6 +6,8 @@
 #include "matsaDefs.hpp"
 #include "history.hpp"
 
+#include <cstdio>
+
 #include "runtime/thread.hpp"
 #include "runtime/frame.inline.hpp"
 #include "runtime/osThread.hpp"
