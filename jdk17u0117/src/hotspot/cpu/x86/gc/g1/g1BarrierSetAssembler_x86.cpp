@@ -155,7 +155,7 @@ void G1BarrierSetAssembler::g1_write_barrier_pre(MacroAssembler* masm,
 
   //MATSA_ONLY(
     //if (in_heap) {
-      __ call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_should_be_called));
+      __ call(RuntimeAddress(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_should_be_called)));
     //}
   //);
 
