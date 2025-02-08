@@ -118,7 +118,7 @@ void BarrierSetAssembler::store_at(MacroAssembler* masm, DecoratorSet decorators
 
   MATSA_ONLY(
     //if (in_heap) {
-      __ call(RuntimeAddress(MaTSaRTL::matsa_should_be_called));
+      __ call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_should_be_called));
     //}
   );
 
