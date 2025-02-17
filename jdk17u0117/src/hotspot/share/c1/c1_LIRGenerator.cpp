@@ -1639,7 +1639,7 @@ void LIRGenerator::do_StoreField(StoreField* x) {
     signature.append(T_VOID);
     signature.append(T_ADDRESS);
 
-    CallingConventionc *cc = NULL;
+    CallingConvention *cc = NULL;
     cc = frame_map()->c_calling_convention(&signature);
 
     __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_store_x), getThreadTemp(), LIR_OprFact::illegalOpr, cc->args());
@@ -1858,7 +1858,7 @@ void LIRGenerator::do_LoadField(LoadField* x) {
     signature.append(T_VOID);
     signature.append(T_ADDRESS);
 
-    CallingConventionc *cc = NULL;
+    CallingConvention *cc = NULL;
     cc = frame_map()->c_calling_convention(&signature);
 
     __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_load_x), getThreadTemp(), LIR_OprFact::illegalOpr, cc->args());
