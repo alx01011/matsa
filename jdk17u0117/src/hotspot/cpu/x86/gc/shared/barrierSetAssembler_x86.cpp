@@ -34,6 +34,7 @@
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.hpp"
+
 #include "matsa/matsaRTL.hpp"
 
 #define __ masm->
@@ -47,7 +48,7 @@ void BarrierSetAssembler::load_at(MacroAssembler* masm, DecoratorSet decorators,
 
   //MATSA_ONLY(
     //if (in_heap) {
-      __ call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_should_be_called));
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_should_be_called), dst);
     //}
   //);
 
@@ -116,11 +117,7 @@ void BarrierSetAssembler::store_at(MacroAssembler* masm, DecoratorSet decorators
   bool is_not_null = (decorators & IS_NOT_NULL) != 0;
   bool atomic = (decorators & MO_RELAXED) != 0;
 
-  //MATSA_ONLY(
-    //if (in_heap) {
-      __ call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_should_be_called));
-    //}
-  //);
+  __ call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_should_be_called), dst);
 
   switch (type) {
   case T_OBJECT:
