@@ -19,6 +19,8 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
 
+#include "runtime/interfaceSupport.inline.hpp"
+
 bool MaTSaRTL::CheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &prev, HistoryCell &prev_history) {
     bool stored   = false;
     bool isRace   = false;
@@ -120,12 +122,10 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     }
 }
 
-void MaTSaRTL::matsa_store_x(int x) {
-    // fputc('%', stderr);
-    return; // dummy function
-}
+JRT_LEAF(void, MaTSaRTL::matsa_store_x(int *x))
+    return;
+JRT_END
 
-void MaTSaRTL::matsa_load_x(int x) {
-    // fputc('%', stderr);
-    return; // dummy function
-}
+JRT_LEAF(void, MaTSaRTL::matsa_load_x(int *x))
+    return;
+JRT_END
