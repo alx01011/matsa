@@ -1634,7 +1634,7 @@ void LIRGenerator::do_StoreField(StoreField* x) {
   LIRItem object(x->obj(), this);
   LIRItem value(x->value(),  this);
 
-  __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_store_x), 1);
+  __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_store_x), getThreadTemp(), LIR_OprFact::illegalOpr, 0);
 
   object.load_item();
 
@@ -1844,7 +1844,7 @@ void LIRGenerator::do_LoadField(LoadField* x) {
 
   LIRItem object(x->obj(), this);
 
-  __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_load_x), 1);
+  __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_load_x), getThreadTemp(), LIR_OprFact::illegalOpr, 0);
 
   object.load_item();
 
