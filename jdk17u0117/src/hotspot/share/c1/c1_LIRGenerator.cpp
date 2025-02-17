@@ -1635,14 +1635,8 @@ void LIRGenerator::do_StoreField(StoreField* x) {
   LIRItem value(x->value(),  this);
 
   MATSA_ONLY(
-    BasicTypeList signature(2);
-    signature.append(T_VOID);
-    signature.append(T_ADDRESS);
-
-    CallingConvention *cc = NULL;
-    cc = frame_map()->c_calling_convention(&signature);
-
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_store_x), getThreadTemp(), LIR_OprFact::illegalOpr, cc->args());
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_store_x), getThreadTemp(),
+       LIR_OprFact::illegalOpr, new LIR_OprList());
   );
 
   object.load_item();
@@ -1854,14 +1848,8 @@ void LIRGenerator::do_LoadField(LoadField* x) {
   LIRItem object(x->obj(), this);
 
   MATSA_ONLY(
-    BasicTypeList signature(2);
-    signature.append(T_VOID);
-    signature.append(T_ADDRESS);
-
-    CallingConvention *cc = NULL;
-    cc = frame_map()->c_calling_convention(&signature);
-
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_load_x), getThreadTemp(), LIR_OprFact::illegalOpr, cc->args());
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_load_x), getThreadTemp(),
+       LIR_OprFact::illegalOpr, new LIR_OprList());
   );
 
   object.load_item();
