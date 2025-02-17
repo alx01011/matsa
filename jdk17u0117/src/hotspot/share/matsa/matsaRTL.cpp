@@ -120,7 +120,12 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     }
 }
 
-void MaTSaRTL::matsa_should_be_called(int x) {
+void MaTSaRTL::matsa_store_x(int x) {
+    // fputc('%', stderr);
+    return; // dummy function
+}
+
+void MaTSaRTL::matsa_load_x(int x) {
     // fputc('%', stderr);
     return; // dummy function
 }

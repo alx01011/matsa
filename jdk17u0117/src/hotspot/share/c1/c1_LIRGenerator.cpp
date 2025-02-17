@@ -44,6 +44,8 @@
 #include "utilities/macros.hpp"
 #include "utilities/powerOfTwo.hpp"
 
+#include "matsa/matsaRTL.hpp"
+
 #ifdef ASSERT
 #define __ gen()->lir(__FILE__, __LINE__)->
 #else
@@ -1632,6 +1634,8 @@ void LIRGenerator::do_StoreField(StoreField* x) {
   LIRItem object(x->obj(), this);
   LIRItem value(x->value(),  this);
 
+  __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_should_be_called), 1);
+
   object.load_item();
 
   if (is_volatile || needs_patching) {
@@ -1839,6 +1843,8 @@ void LIRGenerator::do_LoadField(LoadField* x) {
   }
 
   LIRItem object(x->obj(), this);
+
+  __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_should_be_called), 1);
 
   object.load_item();
 
