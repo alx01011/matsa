@@ -426,11 +426,11 @@ class Instruction: public CompilationResourceObj {
 
   // accessors
   int id() const                                 { return _id; }
-#ifndef PRODUCT
+// #ifndef PRODUCT
   bool has_printable_bci() const                 { return _printable_bci != -99; }
   int printable_bci() const                      { assert(has_printable_bci(), "_printable_bci should have been set"); return _printable_bci; }
   void set_printable_bci(int bci)                { _printable_bci = bci; }
-#endif
+// #endif
   int dominator_depth();
   int use_count() const                          { return _use_count; }
   int pin_state() const                          { return _pin_state; }
