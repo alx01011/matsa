@@ -1635,8 +1635,21 @@ void LIRGenerator::do_StoreField(StoreField* x) {
   LIRItem value(x->value(),  this);
 
   MATSA_ONLY(
+    BasicTypeList signature;
+    signature.append(T_VOID);
+    CallingConvention* cc = frame_map()->c_calling_convention(&signature);
+
+    // push the address of the field being stored
+    int bci = x->printable_bci();
+    cc->args()->append(LIR_OprFact::intConst(x->offset()));
+    cc->args()->append(LIR_OprFact::intConst(bci));
+
+  // also push the current method
+  Method *m = compilation()->method()->get_Method();
+  cc->args()->append(LIR_OprFact::metadataConst(m));
+
     __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_store_x), getThreadTemp(),
-       LIR_OprFact::illegalOpr, new LIR_OprList());
+       LIR_OprFact::illegalOpr, cc->args());
   );
 
   object.load_item();
