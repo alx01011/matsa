@@ -405,9 +405,9 @@ class Instruction: public CompilationResourceObj {
   // creation
   Instruction(ValueType* type, ValueStack* state_before = NULL, bool type_is_constant = false)
   : _id(Compilation::current()->get_next_id()),
-#ifndef PRODUCT
+// #ifndef PRODUCT
   _printable_bci(-99),
-#endif
+// #endif
     _use_count(0)
   , _pin_state(0)
   , _type(type)
@@ -477,9 +477,9 @@ class Instruction: public CompilationResourceObj {
   }
 
   Instruction* set_next(Instruction* next, int bci) {
-#ifndef PRODUCT
+// #ifndef PRODUCT
     next->set_printable_bci(bci);
-#endif
+// #endif
     return set_next(next);
   }
 
@@ -500,9 +500,9 @@ class Instruction: public CompilationResourceObj {
   }
 
   Instruction *insert_after_same_bci(Instruction *i) {
-#ifndef PRODUCT
+// #ifndef PRODUCT
     i->set_printable_bci(printable_bci());
-#endif
+// #endif
     return insert_after(i);
   }
 
@@ -647,7 +647,8 @@ LEAF(Phi, Instruction)
   , _index(index)
   {
     _block = b;
-    NOT_PRODUCT(set_printable_bci(Value(b)->printable_bci()));
+    // NOT_PRODUCT(set_printable_bci(Value(b)->printable_bci()));
+    (set_printable_bci(Value(b)->printable_bci()));
     if (type->is_illegal()) {
       make_illegal();
     }
@@ -704,7 +705,8 @@ LEAF(Local, Instruction)
     , _is_receiver(receiver)
     , _declared_type(declared)
   {
-    NOT_PRODUCT(set_printable_bci(-1));
+    // NOT_PRODUCT(set_printable_bci(-1));
+    (set_printable_bci(-1));
   }
 
   // accessors
@@ -1676,9 +1678,9 @@ LEAF(BlockBegin, StateSplit)
   , _last_lir_instruction_id(-1)
   {
     _block = this;
-#ifndef PRODUCT
+// #ifndef PRODUCT
     set_printable_bci(bci);
-#endif
+// #endif
   }
 
   // accessors
