@@ -127,7 +127,7 @@ JRT_LEAF(void, MaTSaRTL::matsa_store_x(int offset, int bci, void *addr, Method *
     uintptr_t true_addr = (uintptr_t)addr + offset;
     int lineno = m->line_number_from_bci(bci);
 
-    if (lineno != 660) {
+    if (lineno != 64) {
         return;
     }
 
