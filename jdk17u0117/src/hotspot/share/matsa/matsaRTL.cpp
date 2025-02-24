@@ -139,7 +139,8 @@ JRT_LEAF(void, MaTSaRTL::matsa_store_x(int offset, int bci, void *addr, Method *
 
     const char *method_name = m->external_name_as_fully_qualified();
     if (strstr(method_name, "InterThreadLatency") != NULL) {
-        fprintf(stderr, "matsa_store %p, method: %s, line: %d\n", (void*)true_addr, method_name, lineno);
+        fprintf(stderr, "matsa_store %p(%p), method: %s, line: %d\n", (void*)true_addr, addr, method_name, lineno);
+
     }
 
     return;
