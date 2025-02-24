@@ -1636,17 +1636,23 @@ void LIRGenerator::do_StoreField(StoreField* x) {
 
   MATSA_ONLY(
     BasicTypeList signature;
-    signature.append(T_VOID);
+    signature.append(T_INT);
+    signature.append(T_INT);
+    signature.append(T_ADDRESS);
     CallingConvention* cc = frame_map()->c_calling_convention(&signature);
 
-    // push the address of the field being stored
-    int bci = x->printable_bci();
-    cc->args()->append(LIR_OprFact::intConst(69));
-    cc->args()->append(LIR_OprFact::intConst(-69));
+    // // push the address of the field being stored
+    // int bci = x->printable_bci();
+    // cc->args()->append(LIR_OprFact::intConst(69));
+    // cc->args()->append(LIR_OprFact::intConst(-69));
 
   // also push the current method
   Method *m = compilation()->method()->get_Method();
-  cc->args()->append(LIR_OprFact::intptrConst(m));
+  // cc->args()->append(LIR_OprFact::intptrConst(m));
+
+    __ move(LIR_OprFact::intConst(69), cc->args()->at(0));
+    __ move(LIR_OprFact::intConst(-69), cc->args()->at(1));
+    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(2));
 
     __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_store_x), getThreadTemp(),
        LIR_OprFact::illegalOpr, cc->args());
