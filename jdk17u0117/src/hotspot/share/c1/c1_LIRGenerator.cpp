@@ -1641,8 +1641,8 @@ void LIRGenerator::do_StoreField(StoreField* x) {
 
     // push the address of the field being stored
     int bci = x->printable_bci();
-    cc->args()->append(LIR_OprFact::intConst(x->offset()));
-    cc->args()->append(LIR_OprFact::intConst(bci));
+    cc->args()->append(LIR_OprFact::intConst(69));
+    cc->args()->append(LIR_OprFact::intConst(-69));
 
   // also push the current method
   Method *m = compilation()->method()->get_Method();
