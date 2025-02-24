@@ -115,9 +115,12 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
 
     int lineno = m->line_number_from_bci(bci);
 
-    if (lineno == 7 || lineno == 8) {
+    if (1) {
         ResourceMark rm;
-        fprintf(stderr, "interpreter store %p, method: %s, line: %d\n", addr, m->external_name_as_fully_qualified(), lineno);
+        const char *method_name = m->external_name_as_fully_qualified();
+        if (strstr(method_name, "InterThreadLatency") != NULL) {
+            fprintf(stderr, "interpreter store %p, method: %s, line: %d\n", addr, method_name, lineno);
+        }
     }
 
     // symbolize the access
@@ -134,12 +137,11 @@ JRT_LEAF(void, MaTSaRTL::matsa_store_x(int offset, int bci, void *addr, Method *
     uintptr_t true_addr = (uintptr_t)addr + offset;
     int lineno = m->line_number_from_bci(bci);
 
-    if (lineno != 79) {
-        return;
+    const char *method_name = m->external_name_as_fully_qualified();
+    if (strstr(method_name, "InterThreadLatency") != NULL) {
+        fprintf(stderr, "matsa_store %p, method: %s, line: %d\n", (void*)true_addr, method_name, lineno);
     }
 
-    fprintf(stderr, "matsa_store %p, method: %s, line: %d\n", (void*)true_addr, m->external_name_as_fully_qualified(), m->line_number_from_bci(bci));
-    // fprintf(stderr, "matsa_store: method -> %p, bci -> %d\n", m, bci);
     return;
 JRT_END
 
