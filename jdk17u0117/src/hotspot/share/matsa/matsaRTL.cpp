@@ -122,9 +122,16 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     }
 }
 
-JRT_LEAF(void, MaTSaRTL::matsa_store_x(int offset, int bci, Method *m))
+JRT_LEAF(void, MaTSaRTL::matsa_store_x(int offset, int bci, void *addr, Method *m))
     ResourceMark rm;
-    fprintf(stderr, "matsa_store in method: %s, line: %d\n", m->external_name_as_fully_qualified(), m->line_number_from_bci(bci));
+    uintptr_t true_addr = (uintptr_t)addr + offset;
+    int lineno = m->line_number_from_bci(bci);
+
+    if (lineno != 660) {
+        return;
+    }
+
+    fprintf(stderr, "matsa_store %p, method: %s, line: %d\n", (void*)true_addr, m->external_name_as_fully_qualified(), m->line_number_from_bci(bci));
     // fprintf(stderr, "matsa_store: method -> %p, bci -> %d\n", m, bci);
     return;
 JRT_END
