@@ -1634,10 +1634,13 @@ void LIRGenerator::do_StoreField(StoreField* x) {
   LIRItem object(x->obj(), this);
   LIRItem value(x->value(),  this);
 
+  object.load_item();
+
   MATSA_ONLY(
     BasicTypeList signature;
     signature.append(T_INT);
     signature.append(T_INT);
+    signature.append(T_ADDRESS);
     signature.append(T_ADDRESS);
     CallingConvention* cc = frame_map()->c_calling_convention(&signature);
 
@@ -1650,15 +1653,16 @@ void LIRGenerator::do_StoreField(StoreField* x) {
   Method *m = compilation()->method()->get_Method();
   // cc->args()->append(LIR_OprFact::intptrConst(m));
 
-    __ move(LIR_OprFact::intConst(0), cc->args()->at(0));
+  // get base address
+
+    __ move(LIR_OprFact::intConst(x->offset()), cc->args()->at(0));
     __ move(LIR_OprFact::intConst(bci), cc->args()->at(1));
-    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(2));
+    __ move(object.result(), cc->args()->at(2));
+    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(3));
 
     __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_store_x), getThreadTemp(),
        LIR_OprFact::illegalOpr, cc->args());
   );
-
-  object.load_item();
 
   if (is_volatile || needs_patching) {
     // load item if field is volatile (fewer special cases for volatiles)
