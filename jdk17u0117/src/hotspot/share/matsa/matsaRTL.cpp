@@ -115,7 +115,7 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
 
     int lineno = m->line_number_from_bci(bci);
 
-    if (lineno == 79) {
+    if (lineno == 7 || lineno == 8) {
         ResourceMark rm;
         fprintf(stderr, "interpreter store %p, method: %s, line: %d\n", addr, m->external_name_as_fully_qualified(), lineno);
     }
