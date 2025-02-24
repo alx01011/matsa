@@ -113,6 +113,13 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     HistoryCell prev_history;
     bool is_race = CheckRaces(addr, bci, cur, prev, prev_history);
 
+    int lineno = m->line_number_from_bci(bci);
+
+    if (lineno == 79) {
+        ResourceMark rm;
+        fprintf(stderr, "interpreter store %p, method: %s, line: %d\n", addr, m->external_name_as_fully_qualified(), lineno);
+    }
+
     // symbolize the access
     // 1 is read, 2 is write
     //Symbolizer::Symbolize((Event)(is_write + 1), addr, m->bci_from(bcp), tid);
