@@ -1646,7 +1646,7 @@ void LIRGenerator::do_StoreField(StoreField* x) {
 
   // also push the current method
   Method *m = compilation()->method()->get_Method();
-  cc->args()->append(LIR_OprFact::address(m));
+  cc->args()->append(LIR_OprFact::intptrConst(m));
 
     __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_store_x), getThreadTemp(),
        LIR_OprFact::illegalOpr, cc->args());
