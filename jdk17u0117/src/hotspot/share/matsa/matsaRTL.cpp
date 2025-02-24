@@ -124,7 +124,7 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
 
 JRT_LEAF(void, MaTSaRTL::matsa_store_x(int offset, int bci, Method *m))
     ResourceMark rm;
-    fprintf(stderr, "matsa_store in method: %s, line: %d\n", m->name()->as_C_string(), m->line_number_from_bci(bci));
+    fprintf(stderr, "matsa_store in method: %s, line: %d\n", m->external_name_as_fully_qualified(), m->line_number_from_bci(bci));
     // fprintf(stderr, "matsa_store: method -> %p, bci -> %d\n", m, bci);
     return;
 JRT_END
