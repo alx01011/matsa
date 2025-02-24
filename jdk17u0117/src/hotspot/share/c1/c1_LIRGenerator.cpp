@@ -1642,7 +1642,7 @@ void LIRGenerator::do_StoreField(StoreField* x) {
     CallingConvention* cc = frame_map()->c_calling_convention(&signature);
 
     // // push the address of the field being stored
-    // int bci = x->printable_bci();
+    int bci = x->printable_bci();
     // cc->args()->append(LIR_OprFact::intConst(69));
     // cc->args()->append(LIR_OprFact::intConst(-69));
 
@@ -1650,7 +1650,7 @@ void LIRGenerator::do_StoreField(StoreField* x) {
   Method *m = compilation()->method()->get_Method();
   // cc->args()->append(LIR_OprFact::intptrConst(m));
 
-    __ move(LIR_OprFact::intConst(69), cc->args()->at(0));
+    __ move(LIR_OprFact::intConst(bci), cc->args()->at(0));
     __ move(LIR_OprFact::intConst(-69), cc->args()->at(1));
     __ move(LIR_OprFact::intptrConst(m), cc->args()->at(2));
 
