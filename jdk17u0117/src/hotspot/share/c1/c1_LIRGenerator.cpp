@@ -1650,8 +1650,8 @@ void LIRGenerator::do_StoreField(StoreField* x) {
   Method *m = compilation()->method()->get_Method();
   // cc->args()->append(LIR_OprFact::intptrConst(m));
 
-    __ move(LIR_OprFact::intConst(bci), cc->args()->at(0));
-    __ move(LIR_OprFact::intConst(-69), cc->args()->at(1));
+    __ move(LIR_OprFact::intConst(0), cc->args()->at(0));
+    __ move(LIR_OprFact::intConst(bci), cc->args()->at(1));
     __ move(LIR_OprFact::intptrConst(m), cc->args()->at(2));
 
     __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_store_x), getThreadTemp(),
