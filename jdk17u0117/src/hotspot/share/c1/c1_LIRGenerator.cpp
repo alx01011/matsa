@@ -640,6 +640,7 @@ void LIRGenerator::monitor_exit(LIR_Opr object, LIR_Opr lock, LIR_Opr new_hdr, L
   LIR_Opr hdr = lock;
   lock = new_hdr;
   CodeStub* slow_path = new MonitorExitStub(lock, UseFastLocking, monitor_no);
+  ((MonitorExitStub*)slow_path)->set_compilation(compilation());
   __ load_stack_address_monitor(monitor_no, lock);
   __ unlock_object(hdr, object, lock, scratch, slow_path);
 }

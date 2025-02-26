@@ -1481,6 +1481,7 @@ void LIR_List::unlock_object(LIR_Opr hdr, LIR_Opr obj, LIR_Opr lock, LIR_Opr scr
     BasicTypeList signature;
     signature.append(T_ADDRESS);
 
+    CallingConvention *cc = ((MonitorExitStub*)stub)->compilation()->frame_map()->c_calling_convention(&signature);
     // pass the lock object to the runtime call
     move(LIR_OprFact::intptrConst(obj), cc->args()->at(0));
     call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_sync_exit), LIR_OprFact::illegalOpr,
