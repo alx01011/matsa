@@ -1463,8 +1463,8 @@ void LIR_List::lock_object(LIR_Opr hdr, LIR_Opr obj, LIR_Opr lock, LIR_Opr scrat
     signature.append(T_ADDRESS);
     signature.append(T_ADDRESS);
 
-    CallingConvention *cc = ((MonitorEnterStub*)stub)->info()->->frame_map()->c_calling_convention(&signature);
-    Method *m = ((MonitorEnterStub*)stub)->info()->->compilation()->method()->get_Method();
+    CallingConvention *cc = ((MonitorEnterStub*)stub)->info()->frame_map()->c_calling_convention(&signature);
+    Method *m = ((MonitorEnterStub*)stub)->info()->compilation()->method()->get_Method();
 
     // pass the lock object to the runtime call
     move(LIR_OprFact::intptrConst(obj), cc->args()->at(0));
