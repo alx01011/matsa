@@ -1458,36 +1458,9 @@ void LIR_List::lock_object(LIR_Opr hdr, LIR_Opr obj, LIR_Opr lock, LIR_Opr scrat
                     scratch,
                     stub,
                     info));
-  MATSA_ONLY(
-    BasicTypeList signature;
-    signature.append(T_ADDRESS);
-    signature.append(T_ADDRESS);
-
-    CallingConvention *cc = ((MonitorEnterStub*)stub)->info()->frame_map()->c_calling_convention(&signature);
-    Method *m = ((MonitorEnterStub*)stub)->info()->compilation()->method()->get_Method();
-
-    // pass the lock object to the runtime call
-    move((obj), cc->args()->at(0));
-    move(LIR_OprFact::intptrConst(m), cc->args()->at(1));
-
-
-    call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_sync_enter), LIR_OprFact::illegalOpr,
-       LIR_OprFact::illegalOpr, cc->args());
-  );
 }
 
 void LIR_List::unlock_object(LIR_Opr hdr, LIR_Opr obj, LIR_Opr lock, LIR_Opr scratch, CodeStub* stub) {
-  MATSA_ONLY(
-    BasicTypeList signature;
-    signature.append(T_ADDRESS);
-
-    CallingConvention *cc = ((MonitorExitStub*)stub)->compilation()->frame_map()->c_calling_convention(&signature);
-    // pass the lock object to the runtime call
-    move((obj), cc->args()->at(0));
-    call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_sync_exit), LIR_OprFact::illegalOpr,
-       LIR_OprFact::illegalOpr, cc->args());
-  );
-
   append(new LIR_OpLock(
                     lir_unlock,
                     hdr,
