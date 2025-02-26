@@ -17,7 +17,7 @@ namespace MaTSaRTL {
     void matsa_store_x(int, int, void*, Method*);
     void matsa_load_x(int *);
 
-    void matsa_sync_enter(BasicObjectLock *lock);
+    void matsa_sync_enter(BasicObjectLock *lock, Method *m);
     void matsa_sync_exit(BasicObjectLock *lock);
 };
 
