@@ -640,7 +640,7 @@ void LIRGenerator::monitor_enter(LIR_Opr object, LIR_Opr lock, LIR_Opr hdr, LIR_
     Method *m = info->compilation()->method()->get_Method();
 
     // pass the lock object to the runtime call
-    __ move((object), cc->args()->at(0));
+    __ move((lock), cc->args()->at(0));
     __ move(LIR_OprFact::intptrConst(m), cc->args()->at(1));
 
     __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_sync_enter), getThreadTemp(),
@@ -662,7 +662,7 @@ void LIRGenerator::monitor_exit(LIR_Opr object, LIR_Opr lock, LIR_Opr new_hdr, L
 
     CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
     // pass the lock object to the runtime call
-    __ move((obj), cc->args()->at(0));
+    __ move((lock), cc->args()->at(0));
     __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_sync_exit), getThreadTemp(),
        LIR_OprFact::illegalOpr, cc->args());
   );
@@ -2880,7 +2880,7 @@ void LIRGenerator::do_Base(Base* x) {
         Method *m = info->compilation()->method()->get_Method();
     
         // pass the lock object to the runtime call
-        __ move((obj), cc->args()->at(0));
+        __ move((lock), cc->args()->at(0));
         __ move(LIR_OprFact::intptrConst(m), cc->args()->at(1));
     
         __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_sync_enter), getThreadTemp(),
