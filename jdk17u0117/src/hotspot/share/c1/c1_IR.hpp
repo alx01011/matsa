@@ -264,7 +264,7 @@ class CodeEmitInfo: public CompilationResourceObj {
   bool              _is_method_handle_invoke;    // true if the associated call site is a MethodHandle call site.
   bool              _deoptimize_on_exception;
   bool              _force_reexecute;            // force the reexecute flag on, used for patching stub
-
+  public: // MATSA
   FrameMap*     frame_map() const                { return scope()->compilation()->frame_map(); }
   Compilation*  compilation() const              { return scope()->compilation(); }
 

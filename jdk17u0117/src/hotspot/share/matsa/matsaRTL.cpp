@@ -139,15 +139,29 @@ JRT_LEAF(void, MaTSaRTL::matsa_store_x(int offset, int bci, void *addr, Method *
     uintptr_t true_addr = (uintptr_t)addr + offset;
     int lineno = m->line_number_from_bci(bci);
 
-    const char *method_name = m->external_name_as_fully_qualified();
-    if (strstr(method_name, "InterThreadLatency") != NULL) {
-        fprintf(stderr, "matsa_store %p(%p), method: %s, line: %d\n", (void*)true_addr, addr, method_name, lineno);
+    // const char *method_name = m->external_name_as_fully_qualified();
+    // if (strstr(method_name, "InterThreadLatency") != NULL) {
+    //     fprintf(stderr, "matsa_store %p(%p), method: %s, line: %d\n", (void*)true_addr, addr, method_name, lineno);
 
-    }
+    // }
 
     return;
 JRT_END
 
 JRT_LEAF(void, MaTSaRTL::matsa_load_x(int *x))
+    return;
+JRT_END
+
+JRT_LEAF(void, MaTSaRTL::matsa_sync_enter(BasicObjectLock *lock, Method *m))
+    ResourceMark rm;
+
+    oop obj = lock->obj();
+    fprintf(stderr, "matsa_sync_enter: obj -> %s, method -> %s\n", 
+        obj->klass()->external_name(), m->external_name_as_fully_qualified());
+
+    return;
+JRT_END
+
+JRT_LEAF(void, MaTSaRTL::matsa_sync_exit(BasicObjectLock *lock))
     return;
 JRT_END

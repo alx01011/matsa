@@ -3,6 +3,7 @@
 
 #include "oops/method.hpp"
 #include "utilities/globalDefinitions.hpp"
+#include "runtime/basicLock.hpp"
 
 #include "shadow.hpp"
 
@@ -15,6 +16,9 @@ namespace MaTSaRTL {
     bool CheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &prev, HistoryCell &prev_history);
     void matsa_store_x(int, int, void*, Method*);
     void matsa_load_x(int *);
+
+    void matsa_sync_enter(BasicObjectLock *lock);
+    void matsa_sync_exit(BasicObjectLock *lock);
 };
 
 #endif
