@@ -2863,7 +2863,7 @@ void LIRGenerator::do_Base(Base* x) {
     // pass the method to the runtime call
     __ move(LIR_OprFact::intptrConst(m), cc->args()->at(0));
 
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_method_entry), getThreadTemp(),
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_method_enter), getThreadTemp(),
                          LIR_OprFact::illegalOpr, cc->args());
   );
 
