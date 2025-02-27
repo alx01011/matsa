@@ -3034,8 +3034,8 @@ void LIRGenerator::do_Invoke(Invoke* x) {
     signature.append(T_ADDRESS);
     signature.append(T_INT);   
 
-    CallingConvention *cc = frame_map()->c_calling_convention(&signature);
-    Method *m = compilation()->method()->get_Method();
+    CallingConvention *cc = info->frame_map()->c_calling_convention(&signature);
+    Method *m = info->compilation()->method()->get_Method();
 
     __ move(LIR_OprFact::intptrConst(m), cc->args()->at(0));
     __ move(LIR_OprFact::intConst(bci), cc->args()->at(1));
