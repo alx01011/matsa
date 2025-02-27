@@ -3004,6 +3004,24 @@ void LIRGenerator::do_Invoke(Invoke* x) {
 
   CodeEmitInfo* info = state_for(x, x->state());
 
+  MATSA_ONLY(
+    int bci = x->printable_bci(); 
+    
+    BasicTypeList signature;
+    signature.append(T_ADDRESS);
+    signature.append(T_INT);   
+
+    CallingConvention *cc = info->frame_map()->c_calling_convention(&signature);
+    Method *m = info->compilation()->method()->get_Method();
+
+    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(0));
+    __ move(LIR_OprFact::intConst(bci), cc->args()->at(1));
+
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_pre_method_enter), getThreadTemp(),
+       LIR_OprFact::illegalOpr, cc->args());
+  );
+
+
   invoke_load_arguments(x, args, arg_list);
 
   if (x->has_receiver()) {
@@ -3026,23 +3044,6 @@ void LIRGenerator::do_Invoke(Invoke* x) {
         __ move(FrameMap::stack_pointer(), FrameMap::method_handle_invoke_SP_save_opr());
     }
   }
-
-  MATSA_ONLY(
-    int bci = x->printable_bci(); 
-    
-    BasicTypeList signature;
-    signature.append(T_ADDRESS);
-    signature.append(T_INT);   
-
-    CallingConvention *cc = info->frame_map()->c_calling_convention(&signature);
-    Method *m = info->compilation()->method()->get_Method();
-
-    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(0));
-    __ move(LIR_OprFact::intConst(bci), cc->args()->at(1));
-
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_pre_method_enter), getThreadTemp(),
-       LIR_OprFact::illegalOpr, cc->args());
-  );
 
   switch (x->code()) {
     case Bytecodes::_invokestatic:
