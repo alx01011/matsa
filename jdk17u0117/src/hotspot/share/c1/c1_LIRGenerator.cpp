@@ -3027,6 +3027,23 @@ void LIRGenerator::do_Invoke(Invoke* x) {
     }
   }
 
+  MATSA_ONLY(
+    int bci = x->printable_bci(); 
+    
+    BasicTypeList signature;
+    signature.append(T_ADDRESS);
+    signature.append(T_INT);   
+
+    CallingConvention *cc = frame_map()->c_calling_convention(&signature);
+    Method *m = compilation()->method()->get_Method();
+
+    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(0));
+    __ move(LIR_OprFact::intConst(bci), cc->args()->at(1));
+
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_pre_method_enter), getThreadTemp(),
+       LIR_OprFact::illegalOpr, cc->args());
+  );
+
   switch (x->code()) {
     case Bytecodes::_invokestatic:
       __ call_static(target, result_register,

@@ -153,3 +153,11 @@ JRT_END
 JRT_LEAF(void, MaTSaRTL::matsa_sync_exit(BasicObjectLock *lock))
     return;
 JRT_END
+
+JRT_LEAF(void, MaTSaRTL::matsa_pre_method_enter(Method *m, int bci)) 
+    ResourceMark rm;
+    
+    fprintf(stderr, "About to call new method from: %s, at line %d\n", m->external_name_as_fully_qualified(), m->line_number_from_bci(bci));
+
+    return;
+JRT_END
