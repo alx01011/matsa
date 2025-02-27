@@ -21,6 +21,9 @@ namespace MaTSaRTL {
     void matsa_sync_exit(BasicObjectLock *lock);
 
     void matsa_pre_method_enter(Method *m, int bci);
+
+    void matsa_method_enter(Method *m);
+    void matsa_method_exit(Method *m);
 };
 
 #endif

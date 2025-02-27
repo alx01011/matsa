@@ -144,8 +144,8 @@ JRT_LEAF(void, MaTSaRTL::matsa_sync_enter(BasicObjectLock *lock, Method *m))
     ResourceMark rm;
 
     oop obj = lock->obj();
-    fprintf(stderr, "matsa_sync_enter: obj -> %s, method -> %s\n", 
-        obj->klass()->external_name(), m->external_name_as_fully_qualified());
+    // fprintf(stderr, "matsa_sync_enter: obj -> %s, method -> %s\n", 
+    //     obj->klass()->external_name(), m->external_name_as_fully_qualified());
 
     return;
 JRT_END
@@ -155,9 +155,20 @@ JRT_LEAF(void, MaTSaRTL::matsa_sync_exit(BasicObjectLock *lock))
 JRT_END
 
 JRT_LEAF(void, MaTSaRTL::matsa_pre_method_enter(Method *m, int bci)) 
-    ResourceMark rm;
+    // ResourceMark rm;
     
-    fprintf(stderr, "About to call new method from: %s, at line %d\n", m->external_name_as_fully_qualified(), m->line_number_from_bci(bci));
-
+    // fprintf(stderr, "About to call new method from: %s, at line %d\n", m->external_name_as_fully_qualified(), m->line_number_from_bci(bci));
     return;
 JRT_END
+
+
+JRT_LEAF(void, MaTSaRTL::matsa_method_enter(Method *m))
+    ResourceMark rm;
+    fprintf(stderr, "Entered method: %s\n", m->external_name_as_fully_qualified());
+    return;
+JRT_END
+
+JRT_LEAF(void, MaTSaRTL::matsa_method_exit(Method *m))
+    ResourceMark rm;
+    fprintf(stderr, "Exited method: %s\n", m->external_name_as_fully_qualified());
+    return;

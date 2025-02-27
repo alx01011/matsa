@@ -1219,6 +1219,21 @@ void LIRGenerator::do_Return(Return* x) {
     call_runtime(&signature, args, CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit), voidType, NULL);
   }
 
+  MATSA_ONLY(
+    Method *m = compilation()->method()->get_Method();
+
+    BasicTypeList signature;
+    signature.append(T_ADDRESS);
+
+    CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
+
+    // pass the method to the runtime call
+    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(0));
+
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_method_exit), getThreadTemp(),
+       LIR_OprFact::illegalOpr, cc->args());
+  );
+
   if (x->type()->is_void()) {
     __ return_op(LIR_OprFact::illegalOpr);
   } else {
@@ -2837,6 +2852,20 @@ void LIRGenerator::do_Base(Base* x) {
     _instruction_for_operand.at_put_grow(dest->vreg_number(), local, NULL);
     java_index += type2size[t];
   }
+
+  MATSA_ONLY(
+    BasicTypeList signature;
+    signature.append(T_ADDRESS);
+
+    Method *m = compilation()->method()->get_Method();
+    CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
+
+    // pass the method to the runtime call
+    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(0));
+
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_method_entry), getThreadTemp(),
+                         LIR_OprFact::illegalOpr, cc->args());
+  );
 
   if (compilation()->env()->dtrace_method_probes()) {
     BasicTypeList signature;
