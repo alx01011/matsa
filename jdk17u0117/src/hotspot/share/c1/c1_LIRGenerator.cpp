@@ -1778,6 +1778,7 @@ void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {
     signature.append(T_ADDRESS);
     signature.append(T_ADDRESS);
     signature.append(T_INT);
+    signature.append(T_INT);
 
     CallingConvention* cc = frame_map()->c_calling_convention(&signature);
 
@@ -1790,6 +1791,7 @@ void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {
     __ move(LIR_OprFact::intptrConst(m), cc->args()->at(2));
     // need the type to calculate offset
     __ move(LIR_OprFact::intConst(x->elt_type()), cc->args()->at(3));
+    __ move(index.result(), cc->args()->at(4));
 
     __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_load_array), getThreadTemp(),
       LIR_OprFact::illegalOpr, cc->args());
