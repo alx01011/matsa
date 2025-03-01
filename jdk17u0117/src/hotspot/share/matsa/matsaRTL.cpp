@@ -136,7 +136,19 @@ JRT_LEAF(void, MaTSaRTL::matsa_store_x(int offset, int bci, void *addr, Method *
     return;
 JRT_END
 
-JRT_LEAF(void, MaTSaRTL::matsa_load_x(int *x))
+JRT_LEAF(void, MaTSaRTL::matsa_load_x(int offset, int bci, void *address, Method *m))
+    return;
+JRT_END
+
+JRT_LEAF(void, MaTSaRTL::matsa_load_array(int bci, void *address, Method *m))
+    ResourceMark rm;
+
+    int lineno = m->line_number_from_bci(bci);
+    const char *method_name = m->external_name_as_fully_qualified();
+    if (strstr(method_name, "InterThreadLatency") != NULL) {
+        fprintf(stderr, "matsa_store_array %p, method: %s, line: %d\n", address, method_name, lineno);
+    }
+
     return;
 JRT_END
 

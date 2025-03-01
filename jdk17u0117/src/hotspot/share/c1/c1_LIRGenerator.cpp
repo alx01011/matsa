@@ -1677,24 +1677,27 @@ void LIRGenerator::do_StoreField(StoreField* x) {
   object.load_item();
 
   MATSA_ONLY(
-    BasicTypeList signature;
-    signature.append(T_INT);
-    signature.append(T_INT);
-    signature.append(T_ADDRESS);
-    signature.append(T_ADDRESS);
-    CallingConvention* cc = frame_map()->c_calling_convention(&signature);
+    // TODO: have to also check if the field is ignored
+    if (!is_volatile) {
+      BasicTypeList signature;
+      signature.append(T_INT);
+      signature.append(T_INT);
+      signature.append(T_ADDRESS);
+      signature.append(T_ADDRESS);
+      CallingConvention* cc = frame_map()->c_calling_convention(&signature);
 
-    int bci = x->printable_bci();
-    Method *m = compilation()->method()->get_Method();
+      int bci = x->printable_bci();
+      Method *m = compilation()->method()->get_Method();
 
-    __ move(LIR_OprFact::intConst(x->offset()), cc->args()->at(0));
-    __ move(LIR_OprFact::intConst(bci), cc->args()->at(1));
-    // gets base address
-    __ move(object.result(), cc->args()->at(2));
-    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(3));
+      __ move(LIR_OprFact::intConst(x->offset()), cc->args()->at(0));
+      __ move(LIR_OprFact::intConst(bci), cc->args()->at(1));
+      // gets base address
+      __ move(object.result(), cc->args()->at(2));
+      __ move(LIR_OprFact::intptrConst(m), cc->args()->at(3));
 
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_store_x), getThreadTemp(),
-       LIR_OprFact::illegalOpr, cc->args());
+      __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_load_x), getThreadTemp(),
+        LIR_OprFact::illegalOpr, cc->args());
+    }
   );
 
   if (is_volatile || needs_patching) {
@@ -1768,6 +1771,26 @@ void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {
   } else {
     value.load_for_store(x->elt_type());
   }
+
+  MATSA_ONLY(
+    BasicTypeList signature;
+    signature.append(T_INT);
+    signature.append(T_ADDRESS);
+    signature.append(T_ADDRESS);
+    CallingConvention* cc = frame_map()->c_calling_convention(&signature);
+
+    int bci = x->printable_bci();
+    Method *m = compilation()->method()->get_Method();
+
+    __ move(LIR_OprFact::intConst(bci), cc->args()->at(0));
+    // gets address
+    __ move(value.result(), cc->args()->at(1));
+    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(2));
+
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_load_array), getThreadTemp(),
+      LIR_OprFact::illegalOpr, cc->args());
+
+  );
 
   set_no_result(x);
 
@@ -1903,12 +1926,32 @@ void LIRGenerator::do_LoadField(LoadField* x) {
 
   LIRItem object(x->obj(), this);
 
-  MATSA_ONLY(
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_load_x), getThreadTemp(),
-       LIR_OprFact::illegalOpr, new LIR_OprList());
-  );
 
   object.load_item();
+
+  MATSA_ONLY(
+    // TODO: have to also check if the field is ignored
+    if (!is_volatile) {
+      BasicTypeList signature;
+      signature.append(T_INT);
+      signature.append(T_INT);
+      signature.append(T_ADDRESS);
+      signature.append(T_ADDRESS);
+      CallingConvention* cc = frame_map()->c_calling_convention(&signature);
+
+      int bci = x->printable_bci();
+      Method *m = compilation()->method()->get_Method();
+
+      __ move(LIR_OprFact::intConst(x->offset()), cc->args()->at(0));
+      __ move(LIR_OprFact::intConst(bci), cc->args()->at(1));
+      // gets base address
+      __ move(object.result(), cc->args()->at(2));
+      __ move(LIR_OprFact::intptrConst(m), cc->args()->at(3));
+
+      __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_load_x), getThreadTemp(),
+        LIR_OprFact::illegalOpr, cc->args());
+    }
+  );
 
 #ifndef PRODUCT
   if (PrintNotLoaded && needs_patching) {
@@ -2103,6 +2146,22 @@ void LIRGenerator::do_Throw(Throw* x) {
   if (info->exception_handlers()->length() == 0) {
     // this throw is not inside an xhandler
     unwind = true;
+    MATSA_ONLY(
+      // There are cases where an exception is not caught (e.g "throws" in the method signature)
+      // in those cases the method is exited so we have to notify matsa of that
+      Method *m = compilation()->method()->get_Method();
+  
+      BasicTypeList signature;
+      signature.append(T_ADDRESS);
+  
+      CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
+  
+      // pass the method to the runtime call
+      __ move(LIR_OprFact::intptrConst(m), cc->args()->at(0));
+  
+      __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_method_exit), getThreadTemp(),
+         LIR_OprFact::illegalOpr, cc->args());
+    );
   } else {
     // get some idea of the throw type
     bool type_is_exact = true;
