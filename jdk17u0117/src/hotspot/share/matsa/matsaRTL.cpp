@@ -108,15 +108,7 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
     uint32_t epoch = MaTSaThreadState::getEpoch(tid, tid);
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), is_write, 0};
-
-    int lineno = m->line_number_from_bci(bci);
-    if (lineno == 108 && access_size == 4) {
-        const char *method_name = m->external_name_as_fully_qualified();
-        if (strstr(method_name, "InterThreadLatency") != NULL) {
-            fprintf(stderr, "(interpreter) array store %p, method: %s, line: %d\n", addr, method_name, lineno);
-        }
-    }
-
+    
     // race
     ShadowCell prev;
     HistoryCell prev_history;
