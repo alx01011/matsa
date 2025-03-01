@@ -1784,7 +1784,7 @@ void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {
 
     __ move(LIR_OprFact::intConst(bci), cc->args()->at(0));
     // gets address
-    __ move(index.result(), cc->args()->at(1));
+    __ move(value.result(), cc->args()->at(1));
     __ move(LIR_OprFact::intptrConst(m), cc->args()->at(2));
 
     __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_load_array), getThreadTemp(),
