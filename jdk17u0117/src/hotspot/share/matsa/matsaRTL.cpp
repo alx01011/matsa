@@ -155,7 +155,7 @@ JRT_LEAF(void, MaTSaRTL::matsa_load_array(int bci, void *address, Method *m, Bas
     int elem_size = type2aelembytes(type);
     uint64_t disp = ((uint64_t)idx * elem_size) + offset_in_bytes;
 
-    void *true_address = (void*)((uintptr_t)address + offset_in_bytes );
+    void *true_address = (void*)((uintptr_t)address + disp);
 
     int lineno = m->line_number_from_bci(bci);
     const char *method_name = m->external_name_as_fully_qualified();
