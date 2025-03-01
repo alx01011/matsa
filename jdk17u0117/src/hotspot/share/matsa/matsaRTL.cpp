@@ -18,6 +18,7 @@
 #include "oops/oopsHierarchy.hpp"
 #include "oops/oop.inline.hpp"
 #include "utilities/decoder.hpp"
+#include "utilities/globalDefinitions.hpp"
 
 #include "runtime/interfaceSupport.inline.hpp"
 
@@ -148,13 +149,15 @@ JRT_LEAF(void, MaTSaRTL::matsa_load_x(int offset, int bci, void *address, Method
     return;
 JRT_END
 
-JRT_LEAF(void, MaTSaRTL::matsa_load_array(int bci, void *address, Method *m))
+JRT_LEAF(void, MaTSaRTL::matsa_load_array(int bci, void *address, Method *m, BasicType type))
     ResourceMark rm;
+    int offset_in_bytes = arrayOopDesc::base_offset_in_bytes(type);
+    void *true_address = (void*)((uintptr_t)address + offset_in_bytes);
 
     int lineno = m->line_number_from_bci(bci);
     const char *method_name = m->external_name_as_fully_qualified();
     if (strstr(method_name, "InterThreadLatency") != NULL) {
-        fprintf(stderr, "matsa_store_array %p, method: %s, line: %d\n", address, method_name, lineno);
+        fprintf(stderr, "matsa_store_array %p, method: %s, line: %d\n", true_address, method_name, lineno);
     }
 
     return;
