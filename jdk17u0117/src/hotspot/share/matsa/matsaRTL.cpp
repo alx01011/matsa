@@ -175,13 +175,13 @@ JRT_END
 
 
 JRT_LEAF(void, MaTSaRTL::matsa_method_enter(Method *m))
-    ResourceMark rm;
-    fprintf(stderr, "Entered method: %s\n", m->external_name_as_fully_qualified());
+    // ResourceMark rm;
+    // fprintf(stderr, "Entered method: %s\n", m->external_name_as_fully_qualified());
     return;
 JRT_END
 
 JRT_LEAF(void, MaTSaRTL::matsa_method_exit(Method *m))
-    ResourceMark rm;
-    fprintf(stderr, "Exited method: %s\n", m->external_name_as_fully_qualified());
+    // ResourceMark rm;
+    // fprintf(stderr, "Exited method: %s\n", m->external_name_as_fully_qualified());
     return;
 JRT_END
