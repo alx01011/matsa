@@ -1777,6 +1777,8 @@ void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {
     signature.append(T_INT);
     signature.append(T_ADDRESS);
     signature.append(T_ADDRESS);
+    signature.append(T_INT);
+
     CallingConvention* cc = frame_map()->c_calling_convention(&signature);
 
     int bci = x->printable_bci();
