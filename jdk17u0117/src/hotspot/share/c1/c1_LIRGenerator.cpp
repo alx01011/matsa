@@ -1937,7 +1937,7 @@ void LIRGenerator::do_LoadField(LoadField* x) {
 
   MATSA_ONLY(
     AccessFlags flags(x->field()->flags().as_int());
-    bool is_matsa_ignored = flags.is_matsa_ignore_field() | flags.is_matsa_ignore_class();
+    bool is_matsa_ignored = flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class();
     if (!is_volatile) {
       BasicTypeList signature;
       signature.append(T_INT);
