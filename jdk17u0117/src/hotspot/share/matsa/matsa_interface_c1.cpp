@@ -44,3 +44,6 @@ MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 4, write);
 
 MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, read);
 MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, write);
+
+#undef MATSA_MEMORY_ACCESS_C1
+#undef MATSA_ARRAY_ACCESS_C1
