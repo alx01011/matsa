@@ -74,12 +74,10 @@ void MaTSaC1::method_enter(JavaThread *thread, Method *method) {
 
 void MaTSaC1::method_exit(JavaThread *thread) {
     int tid = JavaThread::get_matsa_tid(thread);
-    // assume 0,0 means method exit
-    // Symbolizer::Symbolize(FUNC, 0, 0, tid);
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
     (void)stack->pop();
   
-    History::add_event(current, 0, 0);
+    History::add_event(thread, 0, 0);
 }
 
 void MaTSaC1::pre_method_enter(JavaThread *thread, Method *method, int bci) {
