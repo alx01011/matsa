@@ -1224,17 +1224,14 @@ void LIRGenerator::do_Return(Return* x) {
   }
 
   MATSA_ONLY(
-    Method *m = compilation()->method()->get_Method();
-
     BasicTypeList signature;
     signature.append(T_ADDRESS);
 
     CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
 
-    // pass the method to the runtime call
-    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(0));
+    __ move(getThreadPointer(), cc->args()->at(0));
 
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_method_exit), getThreadTemp(),
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), getThreadTemp(),
        LIR_OprFact::illegalOpr, cc->args());
   );
 
@@ -2188,18 +2185,16 @@ void LIRGenerator::do_Throw(Throw* x) {
     unwind = true;
     MATSA_ONLY(
       // There are cases where an exception is not caught (e.g "throws" in the method signature)
-      // in those cases the method is exited so we have to notify matsa of that
-      Method *m = compilation()->method()->get_Method();
-  
+      // in those cases the method is exited so we have to notify matsa of that  
       BasicTypeList signature;
       signature.append(T_ADDRESS);
   
       CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
   
       // pass the method to the runtime call
-      __ move(LIR_OprFact::intptrConst(m), cc->args()->at(0));
+      __ move(getThreadPointer(), cc->args()->at(0));
   
-      __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_method_exit), getThreadTemp(),
+      __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), getThreadTemp(),
          LIR_OprFact::illegalOpr, cc->args());
     );
   } else {
@@ -2955,14 +2950,15 @@ void LIRGenerator::do_Base(Base* x) {
   MATSA_ONLY(
     BasicTypeList signature;
     signature.append(T_ADDRESS);
+    signature.append(T_ADDRESS);
 
     Method *m = compilation()->method()->get_Method();
     CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
 
-    // pass the method to the runtime call
-    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(0));
+    __ move(getThreadPointer(), cc->args()->at(0));
+    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(1));
 
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_method_enter), getThreadTemp(),
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::method_enter), getThreadTemp(),
                          LIR_OprFact::illegalOpr, cc->args());
   );
 
@@ -3130,20 +3126,21 @@ void LIRGenerator::do_Invoke(Invoke* x) {
 
   CodeEmitInfo* info = state_for(x, x->state());
 
-  MATSA_ONLY(
-    int bci = x->printable_bci(); 
-    
+  MATSA_ONLY(    
     BasicTypeList signature;
+    signature.append(T_ADDRESS);
     signature.append(T_ADDRESS);
     signature.append(T_INT);   
 
     CallingConvention *cc = info->frame_map()->c_calling_convention(&signature);
     Method *m = info->compilation()->method()->get_Method();
+    int bci = x->printable_bci(); 
 
-    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(0));
-    __ move(LIR_OprFact::intConst(bci), cc->args()->at(1));
+    __ move(getThreadPointer(), cc->args()->at(0));
+    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(1));
+    __ move(LIR_OprFact::intConst(bci), cc->args()->at(2));
 
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_pre_method_enter), getThreadTemp(),
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::pre_method_enter), getThreadTemp(),
        LIR_OprFact::illegalOpr, cc->args());
   );
 
