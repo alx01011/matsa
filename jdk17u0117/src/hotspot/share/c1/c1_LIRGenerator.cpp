@@ -1776,29 +1776,29 @@ void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {
   }
 
   MATSA_ONLY(
+    int elt_size = type2aelembytes(x->elt_type());
+
     BasicTypeList signature;
-    signature.append(T_INT);
-    signature.append(T_ADDRESS);
     signature.append(T_ADDRESS);
     signature.append(T_INT);
     signature.append(T_INT);
+    signature.append(T_INT);
+    signature.append(T_ADDRESS);
 
     CallingConvention* cc = frame_map()->c_calling_convention(&signature);
 
     int bci = x->printable_bci();
     Method *m = compilation()->method()->get_Method();
 
-    __ move(LIR_OprFact::intConst(bci), cc->args()->at(0));
     // gets address
-    __ move(array.result(), cc->args()->at(1));
-    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(2));
-    // need the type to calculate offset
-    __ move(LIR_OprFact::intConst(x->elt_type()), cc->args()->at(3));
-    __ move(index.result(), cc->args()->at(4));
+    __ move(array.result(), cc->args()->at(0));
+    __ move(index.result(), cc->args()->at(1));
+    __ move(LIR_OprFact::intConst(x->elt_type()), cc->args()->at(2));
+    __ move(LIR_OprFact::intConst(bci), cc->args()->at(3));
+    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(4));
 
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_load_array), getThreadTemp(),
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::matsa_array_access[1][elt_size]), getThreadTemp(),
       LIR_OprFact::illegalOpr, cc->args());
-
   );
 
   set_no_result(x);
@@ -2080,6 +2080,32 @@ void LIRGenerator::do_LoadIndexed(LoadIndexed* x) {
   } else {
     index.load_item();
   }
+
+  MATSA_ONLY(
+    int elt_size = type2aelembytes(x->elt_type());
+
+    BasicTypeList signature;
+    signature.append(T_ADDRESS);
+    signature.append(T_INT);
+    signature.append(T_INT);
+    signature.append(T_INT);
+    signature.append(T_ADDRESS);
+
+    CallingConvention* cc = frame_map()->c_calling_convention(&signature);
+
+    int bci = x->printable_bci();
+    Method *m = compilation()->method()->get_Method();
+
+    // gets address
+    __ move(array.result(), cc->args()->at(0));
+    __ move(index.result(), cc->args()->at(1));
+    __ move(LIR_OprFact::intConst(x->elt_type()), cc->args()->at(2));
+    __ move(LIR_OprFact::intConst(bci), cc->args()->at(3));
+    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(4));
+
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::matsa_array_access[0][elt_size]), getThreadTemp(),
+      LIR_OprFact::illegalOpr, cc->args());
+  );
 
   CodeEmitInfo* range_check_info = state_for(x);
   CodeEmitInfo* null_check_info = NULL;
