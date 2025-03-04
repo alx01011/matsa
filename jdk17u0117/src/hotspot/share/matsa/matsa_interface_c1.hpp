@@ -26,17 +26,17 @@ namespace MaTSaC1 {
     MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 8, read);
     MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 8, write);
 
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 1, load);
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 1, store);
+    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 1, read);
+    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 1, write);
 
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 2, load);
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 2, store);
+    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 2, read);
+    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 2, write);
 
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 4, load);
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 4, store);
+    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 4, read);
+    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 4, write);
 
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, load);
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, store);
+    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, read);
+    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, write);
 }
 
 #undef MATSA_MEMORY_ACCESS_C1
