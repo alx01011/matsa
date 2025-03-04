@@ -26,6 +26,8 @@ namespace MaTSaC1 {
     MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 8, read);
     MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 8, write);
 
+    void (*matsa_memory_access[2][9])(void *addr, int offset, int bci, Method *method);
+
     MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 1, read);
     MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 1, write);
 
@@ -37,6 +39,8 @@ namespace MaTSaC1 {
 
     MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, read);
     MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, write);
+
+    void (*matsa_array_access[2][9])(void *addr, int idx, BasicType array_type, int bci, Method *method);
 }
 
 #undef MATSA_MEMORY_ACCESS_C1

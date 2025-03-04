@@ -45,6 +45,7 @@
 #include "utilities/powerOfTwo.hpp"
 
 #include "matsa/matsaRTL.hpp"
+#include "matsa/matsa_interface_c1.hpp"
 
 #ifdef ASSERT
 #define __ gen()->lir(__FILE__, __LINE__)->
@@ -1679,23 +1680,25 @@ void LIRGenerator::do_StoreField(StoreField* x) {
   MATSA_ONLY(
     // TODO: have to also check if the field is ignored
     if (!is_volatile) {
+      int size = x->field()->size_in_bytes();
+
       BasicTypeList signature;
-      signature.append(T_INT);
-      signature.append(T_INT);
       signature.append(T_ADDRESS);
+      signature.append(T_INT);
+      signature.append(T_INT);
       signature.append(T_ADDRESS);
       CallingConvention* cc = frame_map()->c_calling_convention(&signature);
 
       int bci = x->printable_bci();
       Method *m = compilation()->method()->get_Method();
 
-      __ move(LIR_OprFact::intConst(x->offset()), cc->args()->at(0));
-      __ move(LIR_OprFact::intConst(bci), cc->args()->at(1));
-      // gets base address
-      __ move(object.result(), cc->args()->at(2));
+      // addr, offset, bci, method
+      __ move(object.result(), cc->args()->at(0));
+      __ move(LIR_OprFact::intConst(x->offset()), cc->args()->at(1));
+      __ move(LIR_OprFact::intConst(bci), cc->args()->at(2));
       __ move(LIR_OprFact::intptrConst(m), cc->args()->at(3));
 
-      __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_load_x), getThreadTemp(),
+      __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::matsa_memory_access[1][size]), getThreadTemp(),
         LIR_OprFact::illegalOpr, cc->args());
     }
   );
@@ -1942,22 +1945,21 @@ void LIRGenerator::do_LoadField(LoadField* x) {
       int size = x->field()->size_in_bytes();
 
       BasicTypeList signature;
-      signature.append(T_INT);
-      signature.append(T_INT);
       signature.append(T_ADDRESS);
+      signature.append(T_INT);
+      signature.append(T_INT);
       signature.append(T_ADDRESS);
       CallingConvention* cc = frame_map()->c_calling_convention(&signature);
 
       int bci = x->printable_bci();
       Method *m = compilation()->method()->get_Method();
 
-      __ move(LIR_OprFact::intConst(x->offset()), cc->args()->at(0));
-      __ move(LIR_OprFact::intConst(bci), cc->args()->at(1));
-      // gets base address
-      __ move(object.result(), cc->args()->at(2));
+      __ move(object.result(), cc->args()->at(0));
+      __ move(LIR_OprFact::intConst(x->offset()), cc->args()->at(1));
+      __ move(LIR_OprFact::intConst(bci), cc->args()->at(2));
       __ move(LIR_OprFact::intptrConst(m), cc->args()->at(3));
 
-      __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_load_x), getThreadTemp(),
+      __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::matsa_memory_access[0][size]), getThreadTemp(),
         LIR_OprFact::illegalOpr, cc->args());
     }
   );

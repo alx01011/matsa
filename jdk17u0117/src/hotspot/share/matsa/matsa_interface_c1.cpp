@@ -44,5 +44,15 @@ MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 4, write, true);
 MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, read, false);
 MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, write, true);
 
+void (*MaTSaC1::matsa_memory_access[2][9])(void *addr, int offset, int bci, Method *method) = {
+    {0, matsa_read_1, matsa_read_2, 0, matsa_read_4, 0, 0, 0, matsa_read_8},
+    {0, matsa_write_1, matsa_write_2, 0, matsa_write_4, 0, 0, 0, matsa_write_8}
+};
+
+void (*MaTSaC1::matsa_array_access[2][9])(void *addr, int idx, BasicType array_type, int bci, Method *method) = {
+    {0, matsa_array_read_1, matsa_array_read_2, 0, matsa_array_read_4, 0, 0, 0, matsa_array_read_8},
+    {0, matsa_array_write_1, matsa_array_write_2, 0, matsa_array_write_4, 0, 0, 0, matsa_array_write_8}
+};
+
 #undef MATSA_MEMORY_ACCESS_C1
 #undef MATSA_ARRAY_ACCESS_C1
