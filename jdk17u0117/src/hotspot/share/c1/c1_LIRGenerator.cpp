@@ -650,11 +650,7 @@ void LIRGenerator::monitor_enter(LIR_Opr object, LIR_Opr lock, LIR_Opr hdr, LIR_
 
 void LIRGenerator::monitor_exit(LIR_Opr object, LIR_Opr lock, LIR_Opr new_hdr, LIR_Opr scratch, int monitor_no) {
   if (!GenerateSynchronizationCode) return;
-  // setup registers
-  LIR_Opr hdr = lock;
-  lock = new_hdr;
-  CodeStub* slow_path = new MonitorExitStub(lock, UseFastLocking, monitor_no);
-  __ load_stack_address_monitor(monitor_no, lock);
+
   MATSA_ONLY(
     BasicTypeList signature;
     signature.append(T_ADDRESS);
@@ -662,13 +658,18 @@ void LIRGenerator::monitor_exit(LIR_Opr object, LIR_Opr lock, LIR_Opr new_hdr, L
 
     CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
   
-
     __ move(getThreadPointer(), cc->args()->at(0));
     __ move((lock), cc->args()->at(1));
 
     __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), getThreadTemp(),
        LIR_OprFact::illegalOpr, cc->args());
   );
+
+  // setup registers
+  LIR_Opr hdr = lock;
+  lock = new_hdr;
+  CodeStub* slow_path = new MonitorExitStub(lock, UseFastLocking, monitor_no);
+  __ load_stack_address_monitor(monitor_no, lock);
   __ unlock_object(hdr, object, lock, scratch, slow_path);
 }
 
