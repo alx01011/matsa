@@ -1939,6 +1939,8 @@ void LIRGenerator::do_LoadField(LoadField* x) {
     AccessFlags flags(x->field()->flags().as_int());
     bool is_matsa_ignored = flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class();
     if (!is_volatile) {
+      int size = x->field()->size_in_bytes();
+
       BasicTypeList signature;
       signature.append(T_INT);
       signature.append(T_INT);
