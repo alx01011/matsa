@@ -101,7 +101,7 @@ void MaTSaC1::sync_enter(JavaThread *thread, BasicObjectLock *lock) {
     LockShadow *sls = p->lock_state();
     Vectorclock* ts = sls->get_vectorclock();
 
-    Vectorclock* cur = MaTSaThreadState::getThreadState(tid);
+    Vectorclock* cur = MaTSaThreadState:: State(tid);
 
     *cur = *ts;
 }
