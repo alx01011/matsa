@@ -10,6 +10,7 @@
 
 #define MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, size, type, is_write)\
     void MaTSaC1::matsa_##type##_##size(void *addr, int offset, int bci, Method *method){\
+        if (addr == NULL) return;\
         void *true_addr = (void*)((uintptr_t)addr + offset);\
         address bcp = method->bcp_from(bci);\
         MaTSaRTL::MemoryAccess(true_addr, method, bcp, size, is_write);\
