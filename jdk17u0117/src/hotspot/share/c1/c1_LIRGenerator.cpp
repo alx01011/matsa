@@ -666,8 +666,8 @@ void LIRGenerator::monitor_exit(LIR_Opr object, LIR_Opr lock, LIR_Opr new_hdr, L
     __ move(getThreadPointer(), cc->args()->at(0));
     __ move((lock), cc->args()->at(1));
 
-    // __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), getThreadTemp(),
-    //    LIR_OprFact::illegalOpr, cc->args());
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), getThreadTemp(),
+       LIR_OprFact::illegalOpr, cc->args());
   );
   __ unlock_object(hdr, object, lock, scratch, slow_path);
 }
