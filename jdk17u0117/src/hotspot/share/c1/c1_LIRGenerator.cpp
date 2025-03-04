@@ -638,13 +638,11 @@ void LIRGenerator::monitor_enter(LIR_Opr object, LIR_Opr lock, LIR_Opr hdr, LIR_
     signature.append(T_ADDRESS);
 
     CallingConvention *cc = info->frame_map()->c_calling_convention(&signature);
-    Method *m = info->compilation()->method()->get_Method();
 
-    // pass the lock object to the runtime call
-    __ move((lock), cc->args()->at(0));
-    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(1));
+    __ move(getThreadPointer(), cc->args()->at(0));
+    __ move((lock), cc->args()->at(1));
 
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_sync_enter), getThreadTemp(),
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), getThreadTemp(),
        LIR_OprFact::illegalOpr, cc->args());
   );
 }
@@ -660,11 +658,14 @@ void LIRGenerator::monitor_exit(LIR_Opr object, LIR_Opr lock, LIR_Opr new_hdr, L
   MATSA_ONLY(
     BasicTypeList signature;
     signature.append(T_ADDRESS);
+    signature.append(T_ADDRESS);
 
     CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
-    // pass the lock object to the runtime call
-    __ move((lock), cc->args()->at(0));
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_sync_exit), getThreadTemp(),
+  
+    __ move(getThreadPointer(), cc->args()->at(0));
+    __ move((lock), cc->args()->at(1));
+
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), getThreadTemp(),
        LIR_OprFact::illegalOpr, cc->args());
   );
   __ unlock_object(hdr, object, lock, scratch, slow_path);
@@ -3002,13 +3003,11 @@ void LIRGenerator::do_Base(Base* x) {
         signature.append(T_ADDRESS);
     
         CallingConvention *cc = info->frame_map()->c_calling_convention(&signature);
-        Method *m = info->compilation()->method()->get_Method();
+
+        __ move(getThreadPointer(), cc->args()->at(0));
+        __ move((lock), cc->args()->at(1));
     
-        // pass the lock object to the runtime call
-        __ move((lock), cc->args()->at(0));
-        __ move(LIR_OprFact::intptrConst(m), cc->args()->at(1));
-    
-        __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_sync_enter), getThreadTemp(),
+        __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), getThreadTemp(),
            LIR_OprFact::illegalOpr, cc->args());
       );
     }

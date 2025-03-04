@@ -2,6 +2,7 @@
 #define MATSA_INTERFACE_C1_HPP
 
 #include "oops/method.hpp"
+#include "runtime/thread.hpp"
 #include "utilities/globalDefinitions.hpp"
 
 // matsa_typesize_c1
@@ -41,6 +42,14 @@ namespace MaTSaC1 {
     MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, write);
 
     extern void (*matsa_array_access[2][9])(void *addr, int idx, BasicType array_type, int bci, Method *method);
+
+    void method_enter(JavaThread *thread, Method *method);
+    void method_exit(JavaThread *thread);
+
+    void pre_method_enter(JavaThread *current, Method *method, int bci);
+
+    void sync_enter(JavaThread *thread, BasicObjectLock *lock);
+    void sync_exit(JavaThread *thread, BasicObjectLock *lock);
 }
 
 #undef MATSA_MEMORY_ACCESS_C1

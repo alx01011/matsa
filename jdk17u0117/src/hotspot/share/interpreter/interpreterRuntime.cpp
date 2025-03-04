@@ -944,7 +944,6 @@ void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method)
   // Symbolizer::Symbolize(FUNC, method, bci, tid);
   stack->push(packed_frame);
   History::add_event(current, method, bci);
-
 }
 
 void InterpreterRuntime::matsa_method_exit(JavaThread *current) {
