@@ -2216,6 +2216,7 @@ void LIRGenerator::do_Throw(Throw* x) {
   __ move(exception_opr, exceptionOopOpr());
 
   if (unwind) {
+    __ unwind_exception(exceptionOopOpr());
     MATSA_ONLY(
       // There are cases where an exception is not caught (e.g "throws" in the method signature)
       // in those cases the method is exited so we have to notify matsa of that  
@@ -2229,8 +2230,6 @@ void LIRGenerator::do_Throw(Throw* x) {
       __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), getThreadTemp(),
          LIR_OprFact::illegalOpr, cc->args());
     );
-
-    __ unwind_exception(exceptionOopOpr());
   } else {
     __ throw_exception(exceptionPcOpr(), exceptionOopOpr(), info);
   }
