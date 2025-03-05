@@ -1562,13 +1562,15 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
     // released before we jump to the continuation block.
     if (method()->is_synchronized()) {
       assert(state()->locks_size() == 1, "receiver must be locked here");
+
       MATSA_ONLY(
         // notify matsa of an inlined sync_exit (monitor exit)
         Values* args = new Values(1);
         // push lock
         args->push(state()->lock_at(0));
-        append(new RuntimeCall(voidType, "sync_exit", CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), args));
+        append_with_bci(new RuntimeCall(voidType, "sync_exit", CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), args), SynchronizationEntryBCI);
       );
+
       monitorexit(state()->lock_at(0), SynchronizationEntryBCI);
     }
 
@@ -3704,7 +3706,7 @@ void GraphBuilder::inline_sync_entry(Value lock, BlockBegin* sync_handler) {
     Values* args = new Values(1);
     // push lock
     args->push(lock);
-    append(new RuntimeCall(voidType, "sync_enter", CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), args));
+    append_with_bci(new RuntimeCall(voidType, "sync_enter", CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), args), SynchronizationEntryBCI);
   );
 
   assert(_last->as_MonitorEnter() != NULL, "monitor enter expected");
@@ -3764,6 +3766,14 @@ void GraphBuilder::fill_sync_handler(Value lock, BlockBegin* sync_handler, bool 
     if (!lock->is_linked()) {
       lock = append_with_bci(lock, bci);
     }
+
+    MATSA_ONLY(
+      // notify matsa of an inlined sync_exit (monitor exit)
+      Values* args = new Values(1);
+      // push lock
+      args->push(lock);
+      append_with_bci(new RuntimeCall(voidType, "sync_exit", CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), args), bci);
+    );
 
     // exit the monitor in the context of the synchronized method
     monitorexit(lock, bci);
