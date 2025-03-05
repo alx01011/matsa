@@ -1709,6 +1709,17 @@ void LIRGenerator::do_StoreField(StoreField* x) {
     __ null_check(object.result(), new CodeEmitInfo(info), /* deoptimize */ needs_patching);
   }
 
+  DecoratorSet decorators = IN_HEAP;
+  if (is_volatile) {
+    decorators |= MO_SEQ_CST;
+  }
+  if (needs_patching) {
+    decorators |= C1_NEEDS_PATCHING;
+  }
+
+  access_store_at(decorators, field_type, object, LIR_OprFact::intConst(x->offset()),
+                  value.result(), info != NULL ? new CodeEmitInfo(info) : NULL, info);
+
   MATSA_ONLY(
     AccessFlags flags(x->field()->flags().as_int());
     bool is_matsa_ignored = flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class();
@@ -1735,18 +1746,7 @@ void LIRGenerator::do_StoreField(StoreField* x) {
       __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::matsa_memory_access[1][size]), getThreadTemp(),
         LIR_OprFact::illegalOpr, cc->args());
     }
-  );
-
-  DecoratorSet decorators = IN_HEAP;
-  if (is_volatile) {
-    decorators |= MO_SEQ_CST;
-  }
-  if (needs_patching) {
-    decorators |= C1_NEEDS_PATCHING;
-  }
-
-  access_store_at(decorators, field_type, object, LIR_OprFact::intConst(x->offset()),
-                  value.result(), info != NULL ? new CodeEmitInfo(info) : NULL, info);
+  );                
 }
 
 void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {
@@ -1963,6 +1963,18 @@ void LIRGenerator::do_LoadField(LoadField* x) {
     __ null_check(obj, new CodeEmitInfo(info), /* deoptimize */ needs_patching);
   }
 
+  DecoratorSet decorators = IN_HEAP;
+  if (is_volatile) {
+    decorators |= MO_SEQ_CST;
+  }
+  if (needs_patching) {
+    decorators |= C1_NEEDS_PATCHING;
+  }
+
+  LIR_Opr result = rlock_result(x, field_type);
+  access_load_at(decorators, field_type,
+                 object, LIR_OprFact::intConst(x->offset()), result,
+                 info ? new CodeEmitInfo(info) : NULL, info);
   MATSA_ONLY(
     AccessFlags flags(x->field()->flags().as_int());
     bool is_matsa_ignored = flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class();
@@ -1989,19 +2001,6 @@ void LIRGenerator::do_LoadField(LoadField* x) {
         LIR_OprFact::illegalOpr, cc->args());
     }
   );
-
-  DecoratorSet decorators = IN_HEAP;
-  if (is_volatile) {
-    decorators |= MO_SEQ_CST;
-  }
-  if (needs_patching) {
-    decorators |= C1_NEEDS_PATCHING;
-  }
-
-  LIR_Opr result = rlock_result(x, field_type);
-  access_load_at(decorators, field_type,
-                 object, LIR_OprFact::intConst(x->offset()), result,
-                 info ? new CodeEmitInfo(info) : NULL, info);
 }
 
 
