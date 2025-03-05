@@ -1966,7 +1966,6 @@ void LIRGenerator::do_LoadField(LoadField* x) {
   MATSA_ONLY(
     AccessFlags flags(x->field()->flags().as_int());
     bool is_matsa_ignored = flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class();
-    bool is_null = x
 
     if (!is_volatile && !is_matsa_ignored) {
       int size = x->field()->size_in_bytes();
