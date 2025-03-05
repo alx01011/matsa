@@ -1940,9 +1940,33 @@ void LIRGenerator::do_LoadField(LoadField* x) {
 
   object.load_item();
 
+#ifndef PRODUCT
+  if (PrintNotLoaded && needs_patching) {
+    tty->print_cr("   ###class not loaded at load_%s bci %d",
+                  x->is_static() ?  "static" : "field", x->printable_bci());
+  }
+#endif
+
+  bool stress_deopt = StressLoopInvariantCodeMotion && info && info->deoptimize_on_exception();
+  if (x->needs_null_check() &&
+      (needs_patching ||
+       MacroAssembler::needs_explicit_null_check(x->offset()) ||
+       stress_deopt)) {
+    LIR_Opr obj = object.result();
+    if (stress_deopt) {
+      obj = new_register(T_OBJECT);
+      __ move(LIR_OprFact::oopConst(NULL), obj);
+    }
+    // Emit an explicit null check because the offset is too large.
+    // If the class is not loaded and the object is NULL, we need to deoptimize to throw a
+    // NoClassDefFoundError in the interpreter instead of an implicit NPE from compiled code.
+    __ null_check(obj, new CodeEmitInfo(info), /* deoptimize */ needs_patching);
+  }
+
   MATSA_ONLY(
     AccessFlags flags(x->field()->flags().as_int());
     bool is_matsa_ignored = flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class();
+    bool is_null = x
 
     if (!is_volatile && !is_matsa_ignored) {
       int size = x->field()->size_in_bytes();
@@ -1966,29 +1990,6 @@ void LIRGenerator::do_LoadField(LoadField* x) {
         LIR_OprFact::illegalOpr, cc->args());
     }
   );
-
-#ifndef PRODUCT
-  if (PrintNotLoaded && needs_patching) {
-    tty->print_cr("   ###class not loaded at load_%s bci %d",
-                  x->is_static() ?  "static" : "field", x->printable_bci());
-  }
-#endif
-
-  bool stress_deopt = StressLoopInvariantCodeMotion && info && info->deoptimize_on_exception();
-  if (x->needs_null_check() &&
-      (needs_patching ||
-       MacroAssembler::needs_explicit_null_check(x->offset()) ||
-       stress_deopt)) {
-    LIR_Opr obj = object.result();
-    if (stress_deopt) {
-      obj = new_register(T_OBJECT);
-      __ move(LIR_OprFact::oopConst(NULL), obj);
-    }
-    // Emit an explicit null check because the offset is too large.
-    // If the class is not loaded and the object is NULL, we need to deoptimize to throw a
-    // NoClassDefFoundError in the interpreter instead of an implicit NPE from compiled code.
-    __ null_check(obj, new CodeEmitInfo(info), /* deoptimize */ needs_patching);
-  }
 
   DecoratorSet decorators = IN_HEAP;
   if (is_volatile) {
