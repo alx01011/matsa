@@ -3752,7 +3752,7 @@ void GraphBuilder::fill_sync_handler(Value lock, BlockBegin* sync_handler, bool 
   MATSA_ONLY(
     // exit from inline method if exception is thrown
     Values* args = new Values(0);
-    append(new RuntimeCall(voidType, "method_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args));
+    append_with_bci(new RuntimeCall(voidType, "method_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args), bci);
   );
 
   if (lock) {
