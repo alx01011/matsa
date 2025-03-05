@@ -1551,7 +1551,7 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
       // exit from inline method 
       Values* args = new Values(0);
       append(new RuntimeCall(voidType, "matsa_c1_m_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args));
-    )
+    );
 
     if (compilation()->env()->dtrace_method_probes()) {
       // Report exit from inline methods
