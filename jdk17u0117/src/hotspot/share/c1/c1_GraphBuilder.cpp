@@ -1550,7 +1550,7 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
     MATSA_ONLY(
       // exit from inline method 
       Values* args = new Values(0);
-      append(new RuntimeCall(voidType, "matsa_c1_m_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args));
+      append(new RuntimeCall(voidType, "method_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args));
     );
 
     if (compilation()->env()->dtrace_method_probes()) {
@@ -3700,7 +3700,7 @@ void GraphBuilder::inline_sync_entry(Value lock, BlockBegin* sync_handler) {
     Values* args = new Values(1);
     // push lock
     args->push(lock);
-    append(new RuntimeCall(voidType, "matsa_c1_inline_sync", CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), args));
+    append(new RuntimeCall(voidType, "sync_enter", CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), args));
   );
 
   assert(_last->as_MonitorEnter() != NULL, "monitor enter expected");
@@ -3752,7 +3752,7 @@ void GraphBuilder::fill_sync_handler(Value lock, BlockBegin* sync_handler, bool 
   MATSA_ONLY(
     // exit from inline method if exception is thrown
     Values* args = new Values(0);
-    append(new RuntimeCall(voidType, "matsa_c1_m_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args));
+    append(new RuntimeCall(voidType, "method_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args));
   );
 
   if (lock) {
@@ -3766,7 +3766,7 @@ void GraphBuilder::fill_sync_handler(Value lock, BlockBegin* sync_handler, bool 
       Values* args = new Values(1);
       // push lock
       args->push(lock);
-      append(new RuntimeCall(voidType, "matsa_c1_sync_exit_inline", CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), args));
+      append(new RuntimeCall(voidType, "sync_exit", CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), args));
     );
 
     // exit the monitor in the context of the synchronized method
@@ -3977,7 +3977,7 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
   MATSA_ONLY(
     Values* args = new Values(1);
     args->push(append(new Constant(new MethodConstant(method()))));
-    append(new RuntimeCall(voidType, "matsa_c1_m_entry", CAST_FROM_FN_PTR(address, MaTSaC1::method_enter), args));
+    append(new RuntimeCall(voidType, "method_enter", CAST_FROM_FN_PTR(address, MaTSaC1::method_enter), args));
   );
 
   if (compilation()->env()->dtrace_method_probes()) {

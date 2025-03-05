@@ -75,6 +75,8 @@
 #include "utilities/copy.hpp"
 #include "utilities/events.hpp"
 
+#include "matsa/matsa_interface_c1.hpp"
+
 
 // Implementation of StubAssembler
 
@@ -339,6 +341,12 @@ const char* Runtime1::name_for_address(address entry) {
   FUNCTION_CASE(entry, StubRoutines::dsin());
   FUNCTION_CASE(entry, StubRoutines::dcos());
   FUNCTION_CASE(entry, StubRoutines::dtan());
+
+  // MATSA
+  FUNCTION_CASE(entry, MaTSaC1::method_enter);
+  FUNCTION_CASE(entry, MaTSaC1::method_exit);
+  FUNCTION_CASE(entry, MaTSaC1::sync_enter);
+  FUNCTION_CASE(entry, MaTSaC1::sync_exit);
 
 #undef FUNCTION_CASE
 
