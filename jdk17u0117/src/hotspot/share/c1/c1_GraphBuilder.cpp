@@ -46,6 +46,8 @@
 #include "utilities/bitMap.inline.hpp"
 #include "utilities/powerOfTwo.hpp"
 
+#include "matsa/matsa_interface_c1.hpp"
+
 class BlockListBuilder {
  private:
   Compilation* _compilation;
@@ -1542,6 +1544,14 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
     }
 
     assert(!method()->is_synchronized() || InlineSynchronizedMethods, "can not inline synchronized methods yet");
+
+
+    
+    MATSA_ONLY(
+      // exit from inline method 
+      Values* args = new Values(0);
+      append(new RuntimeCall(voidType, "matsa_c1_m_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args));
+    )
 
     if (compilation()->env()->dtrace_method_probes()) {
       // Report exit from inline methods
@@ -3683,6 +3693,16 @@ void GraphBuilder::inline_sync_entry(Value lock, BlockBegin* sync_handler) {
   assert(lock != NULL && sync_handler != NULL, "lock or handler missing");
 
   monitorenter(lock, SynchronizationEntryBCI);
+
+
+  MATSA_ONLY(
+    // notify matsa of an inlined sync_entry (monitor enter)
+    Values* args = new Values(1);
+    // push lock
+    args->push(lock);
+    append(new RuntimeCall(voidType, "matsa_c1_inline_sync", CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), args));
+  );
+
   assert(_last->as_MonitorEnter() != NULL, "monitor enter expected");
   _last->set_needs_null_check(false);
 
@@ -3729,11 +3749,25 @@ void GraphBuilder::fill_sync_handler(Value lock, BlockBegin* sync_handler, bool 
     append_with_bci(new RuntimeCall(voidType, "dtrace_method_exit", CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit), args), bci);
   }
 
+  MATSA_ONLY(
+    // exit from inline method if exception is thrown
+    Values* args = new Values(0);
+    append(new RuntimeCall(voidType, "matsa_c1_m_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args));
+  );
+
   if (lock) {
     assert(state()->locks_size() > 0 && state()->lock_at(state()->locks_size() - 1) == lock, "lock is missing");
     if (!lock->is_linked()) {
       lock = append_with_bci(lock, bci);
     }
+
+    MATSA_ONLY(
+      // notify matsa of an inlined sync_entry (monitor enter)
+      Values* args = new Values(1);
+      // push lock
+      args->push(lock);
+      append(new RuntimeCall(voidType, "matsa_c1_sync_exit_inline", CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), args));
+    );
 
     // exit the monitor in the context of the synchronized method
     monitorexit(lock, bci);
@@ -3939,6 +3973,12 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
     sync_handler = new BlockBegin(SynchronizationEntryBCI);
     inline_sync_entry(lock, sync_handler);
   }
+
+  MATSA_ONLY(
+    Values* args = new Values(1);
+    args->push(append(new Constant(new MethodConstant(method()))));
+    append(new RuntimeCall(voidType, "matsa_c1_m_entry", CAST_FROM_FN_PTR(address, MaTSaC1::method_enter), args));
+  );
 
   if (compilation()->env()->dtrace_method_probes()) {
     Values* args = new Values(1);

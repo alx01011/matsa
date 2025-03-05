@@ -2183,20 +2183,6 @@ void LIRGenerator::do_Throw(Throw* x) {
   if (info->exception_handlers()->length() == 0) {
     // this throw is not inside an xhandler
     unwind = true;
-    MATSA_ONLY(
-      // There are cases where an exception is not caught (e.g "throws" in the method signature)
-      // in those cases the method is exited so we have to notify matsa of that  
-      BasicTypeList signature;
-      signature.append(T_ADDRESS);
-  
-      CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
-  
-      // pass the thread pointer
-      __ move(getThreadPointer(), cc->args()->at(0));
-  
-      __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), getThreadTemp(),
-         LIR_OprFact::illegalOpr, cc->args());
-    );
   } else {
     // get some idea of the throw type
     bool type_is_exact = true;
@@ -2230,6 +2216,20 @@ void LIRGenerator::do_Throw(Throw* x) {
   __ move(exception_opr, exceptionOopOpr());
 
   if (unwind) {
+    MATSA_ONLY(
+      // There are cases where an exception is not caught (e.g "throws" in the method signature)
+      // in those cases the method is exited so we have to notify matsa of that  
+      BasicTypeList signature;
+      signature.append(T_ADDRESS);
+  
+      CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
+      // pass the thread pointer
+      __ move(getThreadPointer(), cc->args()->at(0));
+
+      __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), getThreadTemp(),
+         LIR_OprFact::illegalOpr, cc->args());
+    );
+
     __ unwind_exception(exceptionOopOpr());
   } else {
     __ throw_exception(exceptionPcOpr(), exceptionOopOpr(), info);
