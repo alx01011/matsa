@@ -1677,34 +1677,6 @@ void LIRGenerator::do_StoreField(StoreField* x) {
 
   object.load_item();
 
-  MATSA_ONLY(
-    AccessFlags flags(x->field()->flags().as_int());
-    bool is_matsa_ignored = flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class();
-
-    if (!is_volatile && !is_matsa_ignored) {
-      int size = x->field()->size_in_bytes();
-
-      BasicTypeList signature;
-      signature.append(T_ADDRESS);
-      signature.append(T_INT);
-      signature.append(T_INT);
-      signature.append(T_ADDRESS);
-      CallingConvention* cc = frame_map()->c_calling_convention(&signature);
-
-      int bci = x->printable_bci();
-      Method *m = compilation()->method()->get_Method();
-
-      // addr, offset, bci, method
-      __ move(object.result(), cc->args()->at(0));
-      __ move(LIR_OprFact::intConst(x->offset()), cc->args()->at(1));
-      __ move(LIR_OprFact::intConst(bci), cc->args()->at(2));
-      __ move(LIR_OprFact::intptrConst(m), cc->args()->at(3));
-
-      __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::matsa_memory_access[1][size]), getThreadTemp(),
-        LIR_OprFact::illegalOpr, cc->args());
-    }
-  );
-
   if (is_volatile || needs_patching) {
     // load item if field is volatile (fewer special cases for volatiles)
     // load item if field not initialized
@@ -1736,6 +1708,34 @@ void LIRGenerator::do_StoreField(StoreField* x) {
     // NoClassDefFoundError in the interpreter instead of an implicit NPE from compiled code.
     __ null_check(object.result(), new CodeEmitInfo(info), /* deoptimize */ needs_patching);
   }
+
+  MATSA_ONLY(
+    AccessFlags flags(x->field()->flags().as_int());
+    bool is_matsa_ignored = flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class();
+
+    if (!is_volatile && !is_matsa_ignored) {
+      int size = x->field()->size_in_bytes();
+
+      BasicTypeList signature;
+      signature.append(T_ADDRESS);
+      signature.append(T_INT);
+      signature.append(T_INT);
+      signature.append(T_ADDRESS);
+      CallingConvention* cc = frame_map()->c_calling_convention(&signature);
+
+      int bci = x->printable_bci();
+      Method *m = compilation()->method()->get_Method();
+
+      // addr, offset, bci, method
+      __ move(object.result(), cc->args()->at(0));
+      __ move(LIR_OprFact::intConst(x->offset()), cc->args()->at(1));
+      __ move(LIR_OprFact::intConst(bci), cc->args()->at(2));
+      __ move(LIR_OprFact::intptrConst(m), cc->args()->at(3));
+
+      __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::matsa_memory_access[1][size]), getThreadTemp(),
+        LIR_OprFact::illegalOpr, cc->args());
+    }
+  );
 
   DecoratorSet decorators = IN_HEAP;
   if (is_volatile) {
