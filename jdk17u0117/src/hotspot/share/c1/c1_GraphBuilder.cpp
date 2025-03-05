@@ -3985,10 +3985,10 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
     int caller_bci = caller_state->bci();
 
     Values *args = new Values(2);
-    args->push(append(new Constant(new MethodConstant(method()))));
+    args->push(append(new Constant(new MethodConstant(scope()->caller()->method()))));
     args->push(append(new Constant(new IntConstant(caller_bci))));
 
-    append(new RuntimeCall(voidType, "method_enter", CAST_FROM_FN_PTR(address, MaTSaC1::pre_method_enter), args));
+    append(new RuntimeCall(voidType, "pre_method_enter", CAST_FROM_FN_PTR(address, MaTSaC1::pre_method_enter), args));
   );
 
   MATSA_ONLY(
