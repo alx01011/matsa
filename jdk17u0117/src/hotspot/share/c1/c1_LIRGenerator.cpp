@@ -2191,7 +2191,7 @@ void LIRGenerator::do_Throw(Throw* x) {
   
       CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
   
-      // pass the method to the runtime call
+      // pass the thread pointer
       __ move(getThreadPointer(), cc->args()->at(0));
   
       __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), getThreadTemp(),
@@ -2955,6 +2955,7 @@ void LIRGenerator::do_Base(Base* x) {
     Method *m = compilation()->method()->get_Method();
     CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
 
+    // thread and method pointers
     __ move(getThreadPointer(), cc->args()->at(0));
     __ move(LIR_OprFact::intptrConst(m), cc->args()->at(1));
 
@@ -3136,6 +3137,7 @@ void LIRGenerator::do_Invoke(Invoke* x) {
     Method *m = info->compilation()->method()->get_Method();
     int bci = x->printable_bci(); 
 
+    // thread, method prior to call and bci of the call
     __ move(getThreadPointer(), cc->args()->at(0));
     __ move(LIR_OprFact::intptrConst(m), cc->args()->at(1));
     __ move(LIR_OprFact::intConst(bci), cc->args()->at(2));
