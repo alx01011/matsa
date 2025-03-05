@@ -3765,7 +3765,7 @@ void GraphBuilder::fill_sync_handler(Value lock, BlockBegin* sync_handler, bool 
       // notify matsa of an inlined sync_entry (monitor enter)
       Values* args = new Values(1);
       // push lock
-      args->push(append(new Constant(lock)));
+      args->push(append(lock));
       append(new RuntimeCall(voidType, "sync_exit", CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), args));
     );
 
