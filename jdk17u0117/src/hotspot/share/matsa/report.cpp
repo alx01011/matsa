@@ -16,6 +16,9 @@
 #define BLUE  "\033[1;34m"
 #define RESET "\033[0m"
 
+// print up to 64 frames
+#define MAX_FRAMES (64)
+
 
 MaTSaReportMap *MaTSaReportMap::_instance = nullptr;
 
@@ -141,7 +144,7 @@ void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
     uint64_t prev_frame = 0 | cur_bci;
     uint64_t raw_frame  = 0;
 
-    for (int i = stack_size - 1; i >= 0; i--, prev_frame = raw_frame) {
+    for (int i = stack_size - 1, count = 0; i >= 0 && count < MAX_FRAMES; i--, prev_frame = raw_frame, count++) {
         raw_frame = stack->get(i);
 
         mp  = (Method*)(raw_frame >> 16);
@@ -158,6 +161,10 @@ void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
         bci = prev_frame & 0xFFFF;
 
         print_method_info(mp, bci, (stack_size - 1) - i);
+    }
+
+    if (stack_size > MAX_FRAMES) {
+        fprintf(stderr, "  <truncated>\n");
     }
 
 }
@@ -203,9 +210,13 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
     }
 
     int prev_bci = prev_history.bci;
-    for (int64_t i = trace_idx - 1; i >= 0; i--) {
+    for (int64_t i = trace_idx - 1, count = 0; i >= 0 && count < MAX_FRAMES; i--, count++) {
         print_method_info(trace[i].m, prev_bci, (trace_idx - 1) - i);
         prev_bci = trace[i].bci;
+    }
+
+    if (trace_idx > MAX_FRAMES) {
+        fprintf(stderr, "  <truncated>\n");
     }
 
     return trace_idx != 0;

@@ -45,6 +45,8 @@
 #include "utilities/powerOfTwo.hpp"
 #include "vmreg_x86.inline.hpp"
 
+#include "matsa/matsa_interface_c1.hpp"
+
 
 // These masks are used to provide 128-bit aligned bitmasks to the XMM
 // instructions, to allow sign-masking or sign-bit flipping.  They allow
@@ -476,6 +478,13 @@ int LIR_Assembler::emit_unwind_handler() {
 #endif
     __ call(RuntimeAddress(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit)));
   }
+
+  MATSA_ONLY(
+    __ pusha();
+    __ get_thread(c_rarg0);
+    __ call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), c_rarg0);
+    __ popa();
+  );
 
   if (method()->is_synchronized() || compilation()->env()->dtrace_method_probes()) {
     __ mov(rax, rbx);  // Restore the exception

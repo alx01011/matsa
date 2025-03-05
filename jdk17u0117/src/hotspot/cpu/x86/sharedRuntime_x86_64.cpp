@@ -2035,6 +2035,18 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     restore_args(masm, total_c_args, c_arg, out_regs);
   }
 
+  
+  MATSA_ONLY(
+    save_args(masm, total_c_args, c_arg, out_regs);
+    __ mov_metadata(c_rarg1, method());
+    __ call_VM_leaf(
+      CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_method_enter),
+      r15_thread, c_rarg1);
+    restore_args(masm, total_c_args, c_arg, out_regs);
+  );
+  
+    
+
   // RedefineClasses() tracing support for obsolete method entry
   if (log_is_enabled(Trace, redefine, class, obsolete)) {
     // protect the args we've loaded
@@ -2113,6 +2125,12 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     // Slow path will re-enter here
 
     __ bind(lock_done);
+
+    MATSA_ONLY(
+      __ pusha();
+      __ call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_lock), r15_thread, obj_reg);
+      __ popa();
+    );
   }
 
   // Finally just about ready to make the JNI call
@@ -2227,11 +2245,11 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     // Get locked oop from the handle we passed to jni
     __ movptr(obj_reg, Address(oop_handle_reg, 0));
 
-    // MATSA_ONLY(
-    //   __ pusha();
-    //   __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_oop_unlock), obj_reg);
-    //   __ popa();
-    // );
+    MATSA_ONLY(
+      __ pusha();
+      __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_unlock), r15_thread, obj_reg);
+      __ popa();
+    );
 
     Label done;
 
@@ -2278,6 +2296,14 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
          r15_thread, c_rarg1);
     restore_native_result(masm, ret_type, stack_slots);
   }
+
+  MATSA_ONLY(
+    save_native_result(masm, ret_type, stack_slots);
+    __ call_VM_leaf(
+      CAST_FROM_FN_PTR(address, InterpreterRuntime::matsa_method_exit),
+      r15_thread);
+    restore_native_result(masm, ret_type, stack_slots);
+    );
 
   __ reset_last_Java_frame(false);
 
