@@ -1777,32 +1777,6 @@ void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {
     value.load_for_store(x->elt_type());
   }
 
-  MATSA_ONLY(
-    int elt_size = type2aelembytes(x->elt_type());
-
-    BasicTypeList signature;
-    signature.append(T_ADDRESS);
-    signature.append(T_INT);
-    signature.append(T_INT);
-    signature.append(T_INT);
-    signature.append(T_ADDRESS);
-
-    CallingConvention* cc = frame_map()->c_calling_convention(&signature);
-
-    int bci = x->printable_bci();
-    Method *m = compilation()->method()->get_Method();
-
-    // gets address
-    __ move(array.result(), cc->args()->at(0));
-    __ move(index.result(), cc->args()->at(1));
-    __ move(LIR_OprFact::intConst(x->elt_type()), cc->args()->at(2));
-    __ move(LIR_OprFact::intConst(bci), cc->args()->at(3));
-    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(4));
-
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::matsa_array_access[1][elt_size]), getThreadTemp(),
-      LIR_OprFact::illegalOpr, cc->args());
-  );
-
   set_no_result(x);
 
   // the CodeEmitInfo must be duplicated for each different
@@ -1837,6 +1811,32 @@ void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {
 
   access_store_at(decorators, x->elt_type(), array, index.result(), value.result(),
                   NULL, null_check_info);
+
+  MATSA_ONLY(
+    int elt_size = type2aelembytes(x->elt_type());
+
+    BasicTypeList signature;
+    signature.append(T_ADDRESS);
+    signature.append(T_INT);
+    signature.append(T_INT);
+    signature.append(T_INT);
+    signature.append(T_ADDRESS);
+
+    CallingConvention* cc = frame_map()->c_calling_convention(&signature);
+
+    int bci = x->printable_bci();
+    Method *m = compilation()->method()->get_Method();
+
+    // gets address
+    __ move(array.result(), cc->args()->at(0));
+    __ move(index.result(), cc->args()->at(1));
+    __ move(LIR_OprFact::intConst(x->elt_type()), cc->args()->at(2));
+    __ move(LIR_OprFact::intConst(bci), cc->args()->at(3));
+    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(4));
+
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::matsa_array_access[1][elt_size]), getThreadTemp(),
+      LIR_OprFact::illegalOpr, cc->args());
+  );                  
 }
 
 void LIRGenerator::access_load_at(DecoratorSet decorators, BasicType type,
@@ -1936,7 +1936,6 @@ void LIRGenerator::do_LoadField(LoadField* x) {
   }
 
   LIRItem object(x->obj(), this);
-
 
   object.load_item();
 
@@ -2083,32 +2082,6 @@ void LIRGenerator::do_LoadIndexed(LoadIndexed* x) {
     index.load_item();
   }
 
-  MATSA_ONLY(
-    int elt_size = type2aelembytes(x->elt_type());
-
-    BasicTypeList signature;
-    signature.append(T_ADDRESS);
-    signature.append(T_INT);
-    signature.append(T_INT);
-    signature.append(T_INT);
-    signature.append(T_ADDRESS);
-
-    CallingConvention* cc = frame_map()->c_calling_convention(&signature);
-
-    int bci = x->printable_bci();
-    Method *m = compilation()->method()->get_Method();
-
-    // gets address
-    __ move(array.result(), cc->args()->at(0));
-    __ move(index.result(), cc->args()->at(1));
-    __ move(LIR_OprFact::intConst(x->elt_type()), cc->args()->at(2));
-    __ move(LIR_OprFact::intConst(bci), cc->args()->at(3));
-    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(4));
-
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::matsa_array_access[0][elt_size]), getThreadTemp(),
-      LIR_OprFact::illegalOpr, cc->args());
-  );
-
   CodeEmitInfo* range_check_info = state_for(x);
   CodeEmitInfo* null_check_info = NULL;
   if (x->needs_null_check()) {
@@ -2146,6 +2119,31 @@ void LIRGenerator::do_LoadIndexed(LoadIndexed* x) {
   access_load_at(decorators, x->elt_type(),
                  array, index.result(), result,
                  NULL, null_check_info);
+  MATSA_ONLY(
+    int elt_size = type2aelembytes(x->elt_type());
+
+    BasicTypeList signature;
+    signature.append(T_ADDRESS);
+    signature.append(T_INT);
+    signature.append(T_INT);
+    signature.append(T_INT);
+    signature.append(T_ADDRESS);
+
+    CallingConvention* cc = frame_map()->c_calling_convention(&signature);
+
+    int bci = x->printable_bci();
+    Method *m = compilation()->method()->get_Method();
+
+    // gets address
+    __ move(array.result(), cc->args()->at(0));
+    __ move(index.result(), cc->args()->at(1));
+    __ move(LIR_OprFact::intConst(x->elt_type()), cc->args()->at(2));
+    __ move(LIR_OprFact::intConst(bci), cc->args()->at(3));
+    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(4));
+
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::matsa_array_access[0][elt_size]), getThreadTemp(),
+      LIR_OprFact::illegalOpr, cc->args());
+  );
 }
 
 
