@@ -35,7 +35,7 @@ History::History() {
         parts[i].real_stack_size = 0;
         protect = os::protect_memory((char*)((uint64_t)parts[i].real_stack), DEFAULT_STACK_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
 
-        assert(buffer[i].real_stack != nullptr && protect, "MATSA: Failed to allocate history buffer real stack\n");
+        assert(protect, "MATSA: Failed to allocate history buffer real stack\n");
     }
 
     event_idx  = 0;
@@ -75,7 +75,6 @@ void History::add_event(JavaThread *thread, Method *m, uint16_t bci) {
 }
 
 Part *History::get_part(uint64_t tid, uint64_t idx) {
-    assert(idx < MAX_BUFFERS, "MATSA: Invalid buffer index\n");
     return &history[tid]->parts[idx];
 }
 

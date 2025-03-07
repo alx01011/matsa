@@ -100,7 +100,7 @@ bool MaTSaRTL::CheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &
     return isRace;
 }
 
-void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write) {
+void MaTSaRTL::MemoryAccess(void *addr, Method *m, address bcp, uint8_t access_size, bool is_write) {
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_matsa_tid(thread);
     
@@ -122,6 +122,30 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_
         MaTSaReport::do_report_race(thread, addr, access_size, bcp, m, cur, prev, prev_history);
     }
 }
+
+JRT_LEAF(void, MaTSaRTL::C1MemoryAccess(void *addr, Method *m, int bci, uint8_t access_size, bool is_write))
+    JavaThread *thread = JavaThread::current();
+    uint16_t tid       = JavaThread::get_matsa_tid(thread);
+
+    address bcp = m->code_base() + bci;
+
+    uint32_t epoch = MaTSaThreadState::getEpoch(tid, tid);
+    // create a new shadow cell
+    ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), is_write, 0};
+
+    // race
+    ShadowCell prev;
+    HistoryCell prev_history;
+    bool is_race = CheckRaces(addr, bci, cur, prev, prev_history);
+
+    // symbolize the access
+    // 1 is read, 2 is write
+    //Symbolizer::Symbolize((Event)(is_write + 1), addr, m->bci_from(bcp), tid);
+
+    if (is_race && !MaTSaSilent) {
+        MaTSaReport::do_report_race(thread, addr, access_size, bcp, m, cur, prev, prev_history);
+    }
+JRT_END
 
 JRT_LEAF(void, MaTSaRTL::matsa_store_x(int offset, int bci, void *addr, Method *m))
     ResourceMark rm;

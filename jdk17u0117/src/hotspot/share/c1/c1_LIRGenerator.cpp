@@ -634,7 +634,7 @@ void LIRGenerator::monitor_enter(LIR_Opr object, LIR_Opr lock, LIR_Opr hdr, LIR_
   __ lock_object(hdr, object, lock, scratch, slow_path, info_for_exception);
   MATSA_ONLY(
     BasicTypeList signature;
-    signature.append(T_ADDRESS);
+    signature.append(T_LONG);
     signature.append(T_ADDRESS);
 
     CallingConvention *cc = info->frame_map()->c_calling_convention(&signature);
@@ -653,13 +653,13 @@ void LIRGenerator::monitor_exit(LIR_Opr object, LIR_Opr lock, LIR_Opr new_hdr, L
 
   MATSA_ONLY(
     BasicTypeList signature;
-    signature.append(T_ADDRESS);
-    signature.append(T_ADDRESS);
+    signature.append(T_LONG);
+    signature.append(T_METADATA);
 
     CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
   
     __ move(getThreadPointer(), cc->args()->at(0));
-    __ move((lock), cc->args()->at(1));
+    __ move(lock, cc->args()->at(1));
 
     __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), getThreadTemp(),
        LIR_OprFact::illegalOpr, cc->args());
@@ -1225,7 +1225,7 @@ void LIRGenerator::do_Return(Return* x) {
 
   MATSA_ONLY(
     BasicTypeList signature;
-    signature.append(T_ADDRESS);
+    signature.append(T_LONG);
 
     CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
 
@@ -1728,10 +1728,10 @@ void LIRGenerator::do_StoreField(StoreField* x) {
       int size = x->field()->size_in_bytes();
 
       BasicTypeList signature;
-      signature.append(T_ADDRESS);
+      signature.append(T_LONG);
       signature.append(T_INT);
       signature.append(T_INT);
-      signature.append(T_ADDRESS);
+      signature.append(T_LONG);
       CallingConvention* cc = frame_map()->c_calling_convention(&signature);
 
       int bci = x->printable_bci();
@@ -1816,15 +1816,15 @@ void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {
     int elt_size = type2aelembytes(x->elt_type());
 
     BasicTypeList signature;
-    signature.append(T_ADDRESS);
+    signature.append(T_LONG);
     signature.append(T_INT);
     signature.append(T_INT);
     signature.append(T_INT);
-    signature.append(T_ADDRESS);
+    signature.append(T_LONG);
 
     CallingConvention* cc = frame_map()->c_calling_convention(&signature);
 
-    int bci = x->printable_bci();
+    int bci = 0;
     Method *m = compilation()->method()->get_Method();
 
     // gets address
@@ -1982,10 +1982,10 @@ void LIRGenerator::do_LoadField(LoadField* x) {
       int size = x->field()->size_in_bytes();
 
       BasicTypeList signature;
-      signature.append(T_ADDRESS);
+      signature.append(T_LONG);
       signature.append(T_INT);
       signature.append(T_INT);
-      signature.append(T_ADDRESS);
+      signature.append(T_LONG);
       CallingConvention* cc = frame_map()->c_calling_convention(&signature);
 
       int bci = x->printable_bci();
@@ -2123,15 +2123,15 @@ void LIRGenerator::do_LoadIndexed(LoadIndexed* x) {
     int elt_size = type2aelembytes(x->elt_type());
 
     BasicTypeList signature;
-    signature.append(T_ADDRESS);
+    signature.append(T_LONG);
     signature.append(T_INT);
     signature.append(T_INT);
     signature.append(T_INT);
-    signature.append(T_ADDRESS);
+    signature.append(T_LONG);
 
     CallingConvention* cc = frame_map()->c_calling_convention(&signature);
 
-    int bci = x->printable_bci();
+    int bci = 0;
     Method *m = compilation()->method()->get_Method();
 
     // gets address
@@ -2935,8 +2935,8 @@ void LIRGenerator::do_Base(Base* x) {
 
   MATSA_ONLY(
     BasicTypeList signature;
-    signature.append(T_ADDRESS);
-    signature.append(T_ADDRESS);
+    signature.append(T_LONG);
+    signature.append(T_LONG);
 
     Method *m = compilation()->method()->get_Method();
     CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
@@ -2984,13 +2984,16 @@ void LIRGenerator::do_Base(Base* x) {
       __ lock_object(syncTempOpr(), obj, lock, new_register(T_OBJECT), slow_path, NULL);
       MATSA_ONLY(
         BasicTypeList signature;
-        signature.append(T_ADDRESS);
+        signature.append(T_LONG);
         signature.append(T_ADDRESS);
     
         CallingConvention *cc = info->frame_map()->c_calling_convention(&signature);
 
+        // LIR_Opr lock_reg = new_register(T_ADDRESS);
+        // __ move(lock, lock_reg);
+
         __ move(getThreadPointer(), cc->args()->at(0));
-        __ move((lock), cc->args()->at(1));
+        __ move(lock, cc->args()->at(1));
     
         __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), getThreadTemp(),
            LIR_OprFact::illegalOpr, cc->args());
@@ -3115,8 +3118,8 @@ void LIRGenerator::do_Invoke(Invoke* x) {
 
   MATSA_ONLY(    
     BasicTypeList signature;
-    signature.append(T_ADDRESS);
-    signature.append(T_ADDRESS);
+    signature.append(T_LONG);
+    signature.append(T_LONG);
     signature.append(T_INT);   
 
     CallingConvention *cc = info->frame_map()->c_calling_convention(&signature);

@@ -12,7 +12,8 @@
 typedef uintptr_t uptr;
 
 namespace MaTSaRTL {
-    void MemoryAccess(void *addr, Method *m, address &bcp, uint8_t access_size, bool is_write);
+    void MemoryAccess(void *addr, Method *m, address bcp, uint8_t access_size, bool is_write);
+    void C1MemoryAccess(void *addr, Method *m, int bci, uint8_t access_size, bool is_write);
     bool CheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &prev, HistoryCell &prev_history);
     void matsa_store_x(int, int, void*, Method*);
     void matsa_load_x(int, int, void*, Method*);
