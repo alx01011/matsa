@@ -11,8 +11,6 @@
 
 #include <cstdint>
 
-// JRT_LEAF(void, MaTSaRTL::matsa_store_x(int offset, int bci, void *addr, Method *m))
-
 #define MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, size, type, is_write)\
 JRT_LEAF(void, MaTSaC1::matsa_##type##_##size(void *addr, int offset, int bci, Method *method))\
         void *true_addr = (void*)((uintptr_t)addr + offset);\
@@ -31,28 +29,26 @@ JRT_LEAF(void, MaTSaC1::matsa_array_##type##_##size(void *addr, int idx, BasicTy
 JRT_END
 
 MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 1, read, false);
-MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 1, write, true);
-
 MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 2, read, false);
-MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 2, write, true);
-
 MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 4, read, false);
-MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 4, write, true);
-
 MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 8, read, false);
+
+MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 1, write, true);
+MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 2, write, true);
+MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 4, write, true);
 MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 8, write, true);
 
+
 MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 1, read, false);
-MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 1, write, true);
-
 MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 2, read, false);
-MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 2, write, true);
-
 MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 4, read, false);
-MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 4, write, true);
-
 MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, read, false);
+
+MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 1, write, true);
+MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 2, write, true);
+MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 4, write, true);
 MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, write, true);
+
 
 void (*MaTSaC1::matsa_memory_access[2][9])(void *addr, int offset, int bci, Method *method) = {
     {0, matsa_read_1, matsa_read_2, 0, matsa_read_4, 0, 0, 0, matsa_read_8},
