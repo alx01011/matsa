@@ -741,7 +741,7 @@ JRT_BLOCK_ENTRY(void, Runtime1::monitorenter(JavaThread* current, oopDesc* obj, 
   assert(obj == lock->obj(), "must match");
   SharedRuntime::monitor_enter_helper(obj, lock->lock(), current);
   MATSA_ONLY(
-    MaTSaC1::sync_enter(current, lock);
+    MaTSaC1::sync_enter(current, lock->obj());
   );
 JRT_END
 
@@ -751,7 +751,7 @@ JRT_LEAF(void, Runtime1::monitorexit(JavaThread* current, BasicObjectLock* lock)
   assert(current->last_Java_sp(), "last_Java_sp must be set");
 
   MATSA_ONLY(
-    MaTSaC1::sync_exit(current, lock);
+    MaTSaC1::sync_exit(current, lock->obj());
   );
 
   oop obj = lock->obj();

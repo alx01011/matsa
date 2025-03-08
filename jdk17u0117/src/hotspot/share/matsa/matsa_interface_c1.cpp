@@ -87,19 +87,17 @@ JRT_LEAF(void, MaTSaC1::pre_method_enter(JavaThread *thread, Method *method, int
     stack->set_caller_bci((uint16_t)bci);
 JRT_END
 
-JRT_LEAF(void, MaTSaC1::sync_enter(JavaThread *thread, BasicObjectLock *lock))
+JRT_LEAF(void, MaTSaC1::sync_enter(JavaThread *thread, oop obj))
     int tid = JavaThread::get_matsa_tid(thread);
 
-    oop p = lock->obj();
-
-    assert(oopDesc::is_oop(p), "must be a valid oop");
+    assert(oopDesc::is_oop(obj), "must be a valid oop");
 
     /*
         On lock acquisition we have to perform a max operation between the thread state of current thread and the lock state.
         Store the result into the thread state.
     */
 
-    LockShadow *sls = p->lock_state();
+    LockShadow *sls = obj->lock_state();
     Vectorclock* ts = sls->get_vectorclock();
 
     Vectorclock* cur = MaTSaThreadState::getThreadState(tid);
@@ -107,17 +105,14 @@ JRT_LEAF(void, MaTSaC1::sync_enter(JavaThread *thread, BasicObjectLock *lock))
     *cur = *ts;
 JRT_END
 
-JRT_LEAF(void, MaTSaC1::sync_exit(JavaThread *thread, BasicObjectLock *lock))
-    int tid = JavaThread::get_matsa_tid(thread);
-
-    oop p = lock->obj();
-  
+JRT_LEAF(void, MaTSaC1::sync_exit(JavaThread *thread, oop obj))
+    int tid = JavaThread::get_matsa_tid(thread);  
     /*
       On lock release we have to max the thread state with the lock state.
       Store the result into lock state.
     */
   
-    LockShadow* sls = p->lock_state();
+    LockShadow* sls = obj->lock_state();
     Vectorclock* ls = sls->get_vectorclock();
     Vectorclock* cur = MaTSaThreadState::getThreadState(tid);
   

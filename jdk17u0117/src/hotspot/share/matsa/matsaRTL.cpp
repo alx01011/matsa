@@ -119,7 +119,7 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address bcp, uint8_t access_s
     //Symbolizer::Symbolize((Event)(is_write + 1), addr, m->bci_from(bcp), tid);
 
     if (is_race && !MaTSaSilent) {
-        MaTSaReport::do_report_race(thread, addr, access_size, bcp, m, cur, prev, prev_history);
+        MaTSaReport::do_report_race(thread, addr, access_size, bcp, bci, m, cur, prev, prev_history);
     }
 }
 
@@ -143,7 +143,7 @@ JRT_LEAF(void, MaTSaRTL::C1MemoryAccess(void *addr, Method *m, int bci, uint8_t 
     //Symbolizer::Symbolize((Event)(is_write + 1), addr, m->bci_from(bcp), tid);
 
     if (is_race && !MaTSaSilent) {
-        MaTSaReport::do_report_race(thread, addr, access_size, bcp, m, cur, prev, prev_history);
+        MaTSaReport::do_report_race(thread, addr, access_size, bcp, bci, m, cur, prev, prev_history);
     }
 JRT_END
 

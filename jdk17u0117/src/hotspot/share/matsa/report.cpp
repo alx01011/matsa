@@ -222,7 +222,7 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
     return trace_idx != 0;
 }
 
-void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
+void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, address bcp, int cur_bci, Method *m, 
                             ShadowCell &cur, ShadowCell &prev, HistoryCell &prev_history) {
     MutexLocker ml(MaTSaReport::_report_lock, Mutex::_no_safepoint_check_flag);
 
@@ -239,7 +239,6 @@ void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
 
     
     int pid = os::current_process_id();
-    int cur_bci = m->bci_from(bcp);
     ResourceMark rm;
 
     fprintf(stderr, "==================\n");

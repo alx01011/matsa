@@ -38,6 +38,8 @@
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/stubRoutines.hpp"
 
+#include "matsa/matsa_interface_c1.hpp"
+
 int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr, Register scratch, Label& slow_case) {
   const Register rklass_decode_tmp = LP64_ONLY(rscratch1) NOT_LP64(noreg);
   const int aligned_mask = BytesPerWord -1;
@@ -48,6 +50,8 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   int null_check_offset = -1;
 
   verify_oop(obj);
+
+  MATSA_ONLY(push_ptr(obj)); // save obj
 
   // save object being locked into the BasicObjectLock
   movptr(Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()), obj);
@@ -105,6 +109,21 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   jcc(Assembler::notZero, slow_case);
   // done
   bind(done);
+
+  // restore lock_reg
+  MATSA_ONLY(pop_ptr(obj));
+  MATSA_ONLY(
+    pusha();
+
+    // get obj and thread pointers
+    movptr(c_rarg1, obj);
+    get_thread(c_rarg0);
+
+    call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), c_rarg0, c_rarg1);
+  
+    popa();
+  )
+
   return null_check_offset;
 }
 
@@ -115,6 +134,18 @@ void C1_MacroAssembler::unlock_object(Register hdr, Register obj, Register disp_
   assert(disp_hdr == rax, "disp_hdr must be rax, for the cmpxchg instruction");
   assert(hdr != obj && hdr != disp_hdr && obj != disp_hdr, "registers must be different");
   Label done;
+
+  MATSA_ONLY(
+    pusha();
+
+    // get obj and thread pointers
+    movptr(c_rarg1, obj);
+    get_thread(c_rarg0);
+
+    call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), c_rarg0, c_rarg1);
+  
+    popa();
+  )
 
   if (UseBiasedLocking) {
     // load object
