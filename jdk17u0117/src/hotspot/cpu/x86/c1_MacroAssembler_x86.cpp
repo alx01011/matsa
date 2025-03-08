@@ -134,18 +134,6 @@ void C1_MacroAssembler::unlock_object(Register hdr, Register obj, Register disp_
   assert(hdr != obj && hdr != disp_hdr && obj != disp_hdr, "registers must be different");
   Label done;
 
-  MATSA_ONLY(
-    pusha();
-
-    // get obj and thread pointers
-    movptr(c_rarg1, obj);
-    get_thread(c_rarg0);
-
-    call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), c_rarg0, c_rarg1);
-  
-    popa();
-  );
-
   if (UseBiasedLocking) {
     // load object
     movptr(obj, Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()));
@@ -163,6 +151,19 @@ void C1_MacroAssembler::unlock_object(Register hdr, Register obj, Register disp_
     movptr(obj, Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()));
   }
   verify_oop(obj);
+
+  MATSA_ONLY(
+    pusha();
+
+    // get obj and thread pointers
+    movptr(c_rarg1, obj);
+    get_thread(c_rarg0);
+
+    call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), c_rarg0, c_rarg1);
+  
+    popa();
+  );
+
   // test if object header is pointing to the displaced header, and if so, restore
   // the displaced header in the object - if the object header is not pointing to
   // the displaced header, get the object header instead
