@@ -122,7 +122,7 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
     call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), c_rarg0, c_rarg1);
   
     popa();
-  )
+  );
 
   return null_check_offset;
 }
@@ -145,7 +145,7 @@ void C1_MacroAssembler::unlock_object(Register hdr, Register obj, Register disp_
     call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), c_rarg0, c_rarg1);
   
     popa();
-  )
+  );
 
   if (UseBiasedLocking) {
     // load object
