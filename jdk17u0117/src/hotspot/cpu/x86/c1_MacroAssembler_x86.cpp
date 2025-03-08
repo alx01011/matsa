@@ -51,7 +51,7 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
 
   verify_oop(obj);
 
-  MATSA_ONLY(pushptr(obj)); // save obj
+  MATSA_ONLY(push(obj)); // save obj
 
   // save object being locked into the BasicObjectLock
   movptr(Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()), obj);
@@ -112,8 +112,7 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
 
   // restore lock_reg
   MATSA_ONLY(
-    popptr(obj);
-    pop_ptr(obj);
+    pop(obj);
     pusha();
 
     // get obj and thread pointers
