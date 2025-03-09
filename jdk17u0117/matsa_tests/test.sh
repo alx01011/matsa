@@ -10,7 +10,7 @@
 # Parse options
 JAVA_OPTS="-XX:+MaTSa"
 # Set up environment
-BUILD=../../build/linux-x86_64-server-release/jdk/bin/
+BUILD=../build/linux-x86_64-server-release/jdk/bin/
 
 if [ "$1" == "-h" ]; then
     echo "Usage: test.sh [options]"
