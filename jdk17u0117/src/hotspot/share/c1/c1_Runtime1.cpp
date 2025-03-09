@@ -757,8 +757,6 @@ JRT_LEAF(void, Runtime1::monitorexit(JavaThread* current, BasicObjectLock* lock)
       * slowcase is handled in macroassembler's unlock_object.
       * That is because unlock by matsa must be performed before the actual unlock
     */
-
-    MaTSaC1::sync_exit(current, lock);
   );
 
   oop obj = lock->obj();
