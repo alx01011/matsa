@@ -47,21 +47,34 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   assert(hdr == rax, "hdr must be rax, for the cmpxchg instruction");
   assert(hdr != obj && hdr != disp_hdr && obj != disp_hdr, "registers must be different");
   Label done;
+  Label matsa_slow_case;
   int null_check_offset = -1;
 
   verify_oop(obj);
 
   // save object being locked into the BasicObjectLock
   movptr(Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()), obj);
-  
-  MATSA_ONLY(movptr(c_rarg1, obj);); // save obj
 
+  MATSA_ONLY(
+      // preserve disp_hdr
+      /* 
+        * for some weird reason which i don't understand
+        * directly pushing disp_hdr causes mayhem:)
+        * so we have to move it to c_rarg5 and then push that instead
+      */
+      movptr(c_rarg5, disp_hdr);
+      push(c_rarg5);
+  );
+  
   null_check_offset = offset();
 
   if (DiagnoseSyncOnValueBasedClasses != 0) {
     load_klass(hdr, obj, rklass_decode_tmp);
     movl(hdr, Address(hdr, Klass::access_flags_offset()));
     testl(hdr, JVM_ACC_IS_VALUE_BASED_CLASS);
+    MATSA_ONLY(
+      jcc(Assembler::notZero, matsa_slow_case);
+    );
     jcc(Assembler::notZero, slow_case);
   }
 
@@ -106,20 +119,32 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   // location (NULL in the displaced hdr location indicates recursive locking)
   movptr(Address(disp_hdr, 0), hdr);
   // otherwise we don't care about the result and handle locking via runtime call
+  MATSA_ONLY(
+    jcc(Assembler::notZero, matsa_slow_case);
+    jmp(done); // skip matsa_slow_case block
+  );
   jcc(Assembler::notZero, slow_case);
+  MATSA_ONLY(
+    jmp(done); // skip matsa_slow_case block
+  );
+
+  MATSA_ONLY(
+    // we have to pop c_rarg5 before the slow case block
+    // no clear documentation but i'm guessing that slow case never comes back to done
+    // so we have to pop before slow case
+    bind(matsa_slow_case);
+    pop(c_rarg5);
+    jmp(slow_case);
+  );
+
   // done
   bind(done);
 
-  // restore lock_reg
   MATSA_ONLY(
-    // pop(obj);
+    pop(c_rarg5);
     pusha();
-
-    // get obj and thread pointers
     get_thread(c_rarg0);
-
-    call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), c_rarg0, c_rarg1);
-  
+    call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), c_rarg0, c_rarg5);
     popa();
   );
 
@@ -133,6 +158,13 @@ void C1_MacroAssembler::unlock_object(Register hdr, Register obj, Register disp_
   assert(disp_hdr == rax, "disp_hdr must be rax, for the cmpxchg instruction");
   assert(hdr != obj && hdr != disp_hdr && obj != disp_hdr, "registers must be different");
   Label done;
+
+  MATSA_ONLY(
+    pusha();
+    get_thread(c_rarg0);
+    call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), c_rarg0, disp_hdr);
+    popa();
+  );
 
   if (UseBiasedLocking) {
     // load object
@@ -150,19 +182,8 @@ void C1_MacroAssembler::unlock_object(Register hdr, Register obj, Register disp_
     // load object
     movptr(obj, Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()));
   }
+
   verify_oop(obj);
-
-  MATSA_ONLY(
-    pusha();
-
-    // get obj and thread pointers
-    movptr(c_rarg1, obj);
-    get_thread(c_rarg0);
-
-    call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), c_rarg0, c_rarg1);
-  
-    popa();
-  );
 
   // test if object header is pointing to the displaced header, and if so, restore
   // the displaced header in the object - if the object header is not pointing to

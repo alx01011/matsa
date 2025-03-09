@@ -632,38 +632,11 @@ void LIRGenerator::monitor_enter(LIR_Opr object, LIR_Opr lock, LIR_Opr hdr, LIR_
   __ load_stack_address_monitor(monitor_no, lock);
   // for handling NullPointerException, use debug info representing just the lock stack before this monitorenter
   __ lock_object(hdr, object, lock, scratch, slow_path, info_for_exception);
-  MATSA_ONLY(
-    BasicTypeList signature;
-    signature.append(T_LONG);
-    signature.append(T_ADDRESS);
-
-    CallingConvention *cc = info->frame_map()->c_calling_convention(&signature);
-
-    __ move(getThreadPointer(), cc->args()->at(0));
-    __ move((lock), cc->args()->at(1));
-
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), getThreadTemp(),
-       LIR_OprFact::illegalOpr, cc->args());
-  );
 }
 
 
 void LIRGenerator::monitor_exit(LIR_Opr object, LIR_Opr lock, LIR_Opr new_hdr, LIR_Opr scratch, int monitor_no) {
   if (!GenerateSynchronizationCode) return;
-
-  // MATSA_ONLY(
-  //   BasicTypeList signature;
-  //   signature.append(T_LONG);
-  //   signature.append(T_METADATA);
-
-  //   CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
-  
-  //   __ move(getThreadPointer(), cc->args()->at(0));
-  //   __ move(lock, cc->args()->at(1));
-
-  //   __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_exit), getThreadTemp(),
-  //      LIR_OprFact::illegalOpr, cc->args());
-  // );
 
   // setup registers
   LIR_Opr hdr = lock;
@@ -2982,22 +2955,6 @@ void LIRGenerator::do_Base(Base* x) {
 
       // receiver is guaranteed non-NULL so don't need CodeEmitInfo
       __ lock_object(syncTempOpr(), obj, lock, new_register(T_OBJECT), slow_path, NULL);
-      MATSA_ONLY(
-        BasicTypeList signature;
-        signature.append(T_LONG);
-        signature.append(T_ADDRESS);
-    
-        CallingConvention *cc = info->frame_map()->c_calling_convention(&signature);
-
-        // LIR_Opr lock_reg = new_register(T_ADDRESS);
-        // __ move(lock, lock_reg);
-
-        __ move(getThreadPointer(), cc->args()->at(0));
-        __ move(lock, cc->args()->at(1));
-    
-        __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), getThreadTemp(),
-           LIR_OprFact::illegalOpr, cc->args());
-      );
     }
   }
   if (compilation()->age_code()) {

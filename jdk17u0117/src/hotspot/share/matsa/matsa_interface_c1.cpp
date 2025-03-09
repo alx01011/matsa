@@ -60,7 +60,8 @@ void (*MaTSaC1::matsa_array_access[2][9])(void *addr, int idx, BasicType array_t
     {0, matsa_array_write_1, matsa_array_write_2, 0, matsa_array_write_4, 0, 0, 0, matsa_array_write_8}
 };
 
-JRT_LEAF(void, MaTSaC1::method_enter(JavaThread *thread, Method *method))
+// JRT_LEAF(void, MaTSaC1::method_enter(JavaThread *thread, Method *method))
+void MaTSaC1::method_enter(JavaThread *thread, Method *method) {
     int tid = JavaThread::get_matsa_tid(thread);
 
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
@@ -71,15 +72,18 @@ JRT_LEAF(void, MaTSaC1::method_enter(JavaThread *thread, Method *method))
     // Symbolizer::Symbolize(FUNC, method, bci, tid);
     stack->push(packed_frame);
     History::add_event(thread, method, bci);
-JRT_END
+}
+// JRT_END
 
-JRT_LEAF(void, MaTSaC1::method_exit(JavaThread *thread))
+// JRT_LEAF(void, MaTSaC1::method_exit(JavaThread *thread))
+void MaTSaC1::method_exit(JavaThread *thread) {
     int tid = JavaThread::get_matsa_tid(thread);
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
     (void)stack->pop();
   
     History::add_event(thread, 0, 0);
-JRT_END
+}
+// JRT_END
 
 JRT_LEAF(void, MaTSaC1::pre_method_enter(JavaThread *thread, Method *method, int bci))
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
@@ -87,9 +91,11 @@ JRT_LEAF(void, MaTSaC1::pre_method_enter(JavaThread *thread, Method *method, int
     stack->set_caller_bci((uint16_t)bci);
 JRT_END
 
-JRT_LEAF(void, MaTSaC1::sync_enter(JavaThread *thread, oop obj))
-    int tid = JavaThread::get_matsa_tid(thread);
+JRT_LEAF(void, MaTSaC1::sync_enter(JavaThread *thread, BasicObjectLock *lock))
+    int tid = JavaThread::get_matsa_tid(thread);  
 
+    oop obj = lock->obj();
+    
     assert(oopDesc::is_oop(obj), "must be a valid oop");
 
     /*
@@ -105,8 +111,13 @@ JRT_LEAF(void, MaTSaC1::sync_enter(JavaThread *thread, oop obj))
     *cur = *ts;
 JRT_END
 
-JRT_LEAF(void, MaTSaC1::sync_exit(JavaThread *thread, oop obj))
+JRT_LEAF(void, MaTSaC1::sync_exit(JavaThread *thread, BasicObjectLock *lock))
     int tid = JavaThread::get_matsa_tid(thread);  
+
+    oop obj = lock->obj();
+    
+    assert(oopDesc::is_oop(obj), "must be a valid oop");
+
     /*
       On lock release we have to max the thread state with the lock state.
       Store the result into lock state.
@@ -122,10 +133,12 @@ JRT_LEAF(void, MaTSaC1::sync_exit(JavaThread *thread, oop obj))
     MaTSaThreadState::incrementEpoch(tid);
 JRT_END
 
-JRT_LEAF(void, MaTSaC1::unlock(JavaThread *thread, void *lock_obj))
+// JRT_LEAF(void, MaTSaC1::unlock(JavaThread *thread, void *lock_obj))
+void MaTSaC1::unlock(JavaThread *thread, void *lock_obj) {
     int tid = JavaThread::get_matsa_tid(thread);
   
     oop p = (oopDesc*)lock_obj;
+    assert(oopDesc::is_oop(p), "must be a valid oop");
   
     /*
       On lock release we have to max the thread state with the lock state.
@@ -141,7 +154,8 @@ JRT_LEAF(void, MaTSaC1::unlock(JavaThread *thread, void *lock_obj))
   
     // increment the epoch of the current thread after the transfer
     MaTSaThreadState::incrementEpoch(tid);
-JRT_END
+}
+// JRT_END
 
 #undef MATSA_MEMORY_ACCESS_C1
 #undef MATSA_ARRAY_ACCESS_C1

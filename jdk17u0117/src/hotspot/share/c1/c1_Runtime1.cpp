@@ -740,9 +740,10 @@ JRT_BLOCK_ENTRY(void, Runtime1::monitorenter(JavaThread* current, oopDesc* obj, 
   }
   assert(obj == lock->obj(), "must match");
   SharedRuntime::monitor_enter_helper(obj, lock->lock(), current);
-  // MATSA_ONLY(
-  //   MaTSaC1::sync_enter(current, lock->obj());
-  // );
+  
+  MATSA_ONLY(
+    MaTSaC1::sync_enter(current, lock);
+  );
 JRT_END
 
 
@@ -750,9 +751,15 @@ JRT_LEAF(void, Runtime1::monitorexit(JavaThread* current, BasicObjectLock* lock)
   NOT_PRODUCT(_monitorexit_slowcase_cnt++;)
   assert(current->last_Java_sp(), "last_Java_sp must be set");
 
-  // MATSA_ONLY(
-  //   MaTSaC1::sync_exit(current, lock->obj());
-  // );
+  MATSA_ONLY(
+    /* 
+      * We dont really have to do anything here
+      * slowcase is handled in macroassembler's unlock_object.
+      * That is because unlock by matsa must be performed before the actual unlock
+    */
+
+    MaTSaC1::sync_exit(current, lock);
+  );
 
   oop obj = lock->obj();
   assert(oopDesc::is_oop(obj), "must be NULL or an object");

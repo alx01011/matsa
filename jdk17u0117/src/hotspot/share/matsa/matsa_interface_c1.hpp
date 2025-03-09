@@ -46,8 +46,8 @@ namespace MaTSaC1 {
 
     void pre_method_enter(JavaThread *current, Method *method, int bci);
 
-    void sync_enter(JavaThread *thread, oop obj);
-    void sync_exit(JavaThread *thread, oop obj);
+    void sync_enter(JavaThread *thread, BasicObjectLock *lock);
+    void sync_exit(JavaThread *thread, BasicObjectLock *lock);
 
     void unlock(JavaThread *thread, void *obj);
 }
