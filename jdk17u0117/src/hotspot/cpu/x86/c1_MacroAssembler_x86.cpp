@@ -47,7 +47,7 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   assert(hdr == rax, "hdr must be rax, for the cmpxchg instruction");
   assert(hdr != obj && hdr != disp_hdr && obj != disp_hdr, "registers must be different");
   Label done;
-  Label matsa_slow_case;
+  Label prep_slow_case; // matsa
   int null_check_offset = -1;
 
   verify_oop(obj);
@@ -56,14 +56,16 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   movptr(Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()), obj);
 
   MATSA_ONLY(
-      // preserve disp_hdr
-      /* 
-        * for some weird reason which i don't understand
-        * directly pushing disp_hdr causes mayhem:)
-        * so we have to move it to c_rarg5 and then push that instead
-      */
-      movptr(c_rarg5, disp_hdr);
-      push(c_rarg5);
+    /*
+     * preserve disp_hdr (BasicObjectLock*) in r12
+     * per x86-64 calling conventions, r12 is a callee-saved register
+     * so we have to push it to preserve whatever value it had before
+     * the code looks a bit ugly but its the only way to preserve and restore r12
+     * if we jmp to slow_case r12 wont be restored, hence we need the extra label
+    */
+      assert(hdr != r12 && obj != r12 && disp_hdr != r12, "matsa needs r12 for displacement");
+      push(r12);
+      movptr(r12, disp_hdr);
   );
   
   null_check_offset = offset();
@@ -72,10 +74,7 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
     load_klass(hdr, obj, rklass_decode_tmp);
     movl(hdr, Address(hdr, Klass::access_flags_offset()));
     testl(hdr, JVM_ACC_IS_VALUE_BASED_CLASS);
-    MATSA_ONLY(
-      jcc(Assembler::notZero, matsa_slow_case);
-    );
-    jcc(Assembler::notZero, slow_case);
+    jcc(Assembler::notZero, prep_slow_case);
   }
 
   if (UseBiasedLocking) {
@@ -119,33 +118,24 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   // location (NULL in the displaced hdr location indicates recursive locking)
   movptr(Address(disp_hdr, 0), hdr);
   // otherwise we don't care about the result and handle locking via runtime call
-  MATSA_ONLY(
-    jcc(Assembler::notZero, matsa_slow_case);
-    jmp(done); // skip matsa_slow_case block
-  );
-  jcc(Assembler::notZero, slow_case);
-  MATSA_ONLY(
-    jmp(done); // skip matsa_slow_case block
-  );
+  jcc(Assembler::notZero, prep_slow_case);
+  jmp(done); // skip matsa's slow case jump
 
+  bind(prep_slow_case);
   MATSA_ONLY(
-    // we have to pop c_rarg5 before the slow case block
-    // no clear documentation but i'm guessing that slow case never comes back to done
-    // so we have to pop before slow case
-    bind(matsa_slow_case);
-    pop(c_rarg5);
-    jmp(slow_case);
+    pop(r12);
   );
+  jmp(slow_case);
 
   // done
   bind(done);
 
   MATSA_ONLY(
-    pop(c_rarg5);
     pusha();
     get_thread(c_rarg0);
-    call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), c_rarg0, c_rarg5);
+    call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::sync_enter), c_rarg0, r12);
     popa();
+    pop(r12);
   );
 
   return null_check_offset;
