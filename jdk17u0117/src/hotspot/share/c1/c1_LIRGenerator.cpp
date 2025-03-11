@@ -1700,10 +1700,12 @@ void LIRGenerator::do_StoreField(StoreField* x) {
         BasicTypeList signature;
         signature.append(T_LONG);
         signature.append(T_OBJECT);
+
+        jobject j_mirror = x->field()->holder()->java_mirror()->constant_encoding();
       
         LIR_OprList* args = new LIR_OprList();
         LIR_Opr thread = getThreadPointer();
-        LIR_Opr klass = object.result();
+        LIR_Opr klass = LIR_OprFact::oopConst(j_mirror);
         args->append(thread);
         args->append(klass);
         
@@ -1969,10 +1971,12 @@ void LIRGenerator::do_LoadField(LoadField* x) {
         BasicTypeList signature;
         signature.append(T_LONG);
         signature.append(T_OBJECT);
+
+        jobject j_mirror = x->field()->holder()->java_mirror()->constant_encoding();
       
         LIR_OprList* args = new LIR_OprList();
         LIR_Opr thread = getThreadPointer();
-        LIR_Opr klass = object.result();
+        LIR_Opr klass = LIR_OprFact::oopConst(j_mirror);
         args->append(thread);
         args->append(klass);
         
