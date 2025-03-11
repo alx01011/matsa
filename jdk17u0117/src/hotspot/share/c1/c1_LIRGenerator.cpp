@@ -1696,7 +1696,7 @@ void LIRGenerator::do_StoreField(StoreField* x) {
     bool is_matsa_ignored = flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class();
 
     if (!is_volatile && !is_matsa_ignored) {
-      if (x->is_static()) {
+      if (x->is_static() && !needs_patching) {
         BasicTypeList signature;
         signature.append(T_LONG);
         signature.append(T_OBJECT);
@@ -1967,7 +1967,9 @@ void LIRGenerator::do_LoadField(LoadField* x) {
     bool is_matsa_ignored = flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class();
 
     if (!is_volatile && !is_matsa_ignored) {
-      if (x->is_static()) {
+      // needs_patching means the class is not loaded
+      // so acquiring the lock is meaningless anyway
+      if (x->is_static() && !needs_patching) {
         BasicTypeList signature;
         signature.append(T_LONG);
         signature.append(T_OBJECT);
