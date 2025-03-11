@@ -1200,12 +1200,10 @@ void LIRGenerator::do_Return(Return* x) {
     BasicTypeList signature;
     signature.append(T_LONG);
 
-    CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
+    LIR_OprList* args = new LIR_OprList();
+    args->append(getThreadPointer());
 
-    __ move(getThreadPointer(), cc->args()->at(0));
-
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), getThreadTemp(),
-       LIR_OprFact::illegalOpr, cc->args());
+    call_runtime(&signature, args, CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), voidType, NULL);
   );
 
   if (x->type()->is_void()) {
@@ -1698,26 +1696,40 @@ void LIRGenerator::do_StoreField(StoreField* x) {
     bool is_matsa_ignored = flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class();
 
     if (!is_volatile && !is_matsa_ignored) {
+      if (x->is_static()) {
+        BasicTypeList signature;
+        signature.append(T_LONG);
+        signature.append(T_OBJECT);
+      
+        LIR_OprList* args = new LIR_OprList();
+        LIR_Opr thread = getThreadPointer();
+        LIR_Opr klass = object.result();
+        args->append(thread);
+        args->append(klass);
+        
+        call_runtime(&signature, args, CAST_FROM_FN_PTR(address, MaTSaC1::cl_init_acquire), voidType, NULL);
+      }
+
       int size = x->field()->size_in_bytes();
 
       BasicTypeList signature;
-      signature.append(T_LONG);
+      signature.append(T_OBJECT);
       signature.append(T_INT);
       signature.append(T_INT);
-      signature.append(T_LONG);
-      CallingConvention* cc = frame_map()->c_calling_convention(&signature);
+      signature.append(T_METADATA);
 
-      int bci = x->printable_bci();
-      Method *m = compilation()->method()->get_Method();
+      LIR_OprList* args = new LIR_OprList();
+      LIR_Opr addr = object.result();
+      LIR_Opr offset = LIR_OprFact::intConst(x->offset());
+      LIR_Opr bci = LIR_OprFact::intConst(x->printable_bci());
+      LIR_Opr method = new_register(T_METADATA);
+      __ metadata2reg(compilation()->method()->constant_encoding(), method);
 
-      // addr, offset, bci, method
-      __ move(object.result(), cc->args()->at(0));
-      __ move(LIR_OprFact::intConst(x->offset()), cc->args()->at(1));
-      __ move(LIR_OprFact::intConst(bci), cc->args()->at(2));
-      __ move(LIR_OprFact::intptrConst(m), cc->args()->at(3));
-
-      __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::matsa_memory_access[1][size]), getThreadTemp(),
-        LIR_OprFact::illegalOpr, cc->args());
+      args->append(addr);
+      args->append(offset);
+      args->append(bci);
+      args->append(method);
+      call_runtime(&signature, args, CAST_FROM_FN_PTR(address, MaTSaC1::matsa_memory_access[1][size]), voidType, NULL);
     }
   );                
 }
@@ -1789,26 +1801,27 @@ void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {
     int elt_size = type2aelembytes(x->elt_type());
 
     BasicTypeList signature;
-    signature.append(T_LONG);
+    signature.append(T_OBJECT);
     signature.append(T_INT);
     signature.append(T_INT);
     signature.append(T_INT);
-    signature.append(T_LONG);
+    signature.append(T_METADATA);
 
-    CallingConvention* cc = frame_map()->c_calling_convention(&signature);
+    LIR_OprList* args = new LIR_OprList();
+    LIR_Opr addr = array.result();
+    LIR_Opr idx  = index.result();
+    LIR_Opr elt_type = LIR_OprFact::intConst(x->elt_type());
+    LIR_Opr bci = LIR_OprFact::intConst(x->printable_bci());
+    LIR_Opr method = new_register(T_METADATA);
+    __ metadata2reg(compilation()->method()->constant_encoding(), method);
 
-    int bci = 0;
-    Method *m = compilation()->method()->get_Method();
+    args->append(addr);
+    args->append(idx);
+    args->append(elt_type);
+    args->append(bci);
+    args->append(method);
 
-    // gets address
-    __ move(array.result(), cc->args()->at(0));
-    __ move(index.result(), cc->args()->at(1));
-    __ move(LIR_OprFact::intConst(x->elt_type()), cc->args()->at(2));
-    __ move(LIR_OprFact::intConst(bci), cc->args()->at(3));
-    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(4));
-
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::matsa_array_access[1][elt_size]), getThreadTemp(),
-      LIR_OprFact::illegalOpr, cc->args());
+    call_runtime(&signature, args, CAST_FROM_FN_PTR(address, MaTSaC1::matsa_array_access[1][elt_size]), voidType, NULL);
   );                  
 }
 
@@ -1952,25 +1965,40 @@ void LIRGenerator::do_LoadField(LoadField* x) {
     bool is_matsa_ignored = flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class();
 
     if (!is_volatile && !is_matsa_ignored) {
+      if (x->is_static()) {
+        BasicTypeList signature;
+        signature.append(T_LONG);
+        signature.append(T_OBJECT);
+      
+        LIR_OprList* args = new LIR_OprList();
+        LIR_Opr thread = getThreadPointer();
+        LIR_Opr klass = object.result();
+        args->append(thread);
+        args->append(klass);
+        
+        call_runtime(&signature, args, CAST_FROM_FN_PTR(address, MaTSaC1::cl_init_acquire), voidType, NULL);
+      }
+
       int size = x->field()->size_in_bytes();
 
       BasicTypeList signature;
-      signature.append(T_LONG);
+      signature.append(T_OBJECT);
       signature.append(T_INT);
       signature.append(T_INT);
-      signature.append(T_LONG);
-      CallingConvention* cc = frame_map()->c_calling_convention(&signature);
+      signature.append(T_METADATA);
 
-      int bci = x->printable_bci();
-      Method *m = compilation()->method()->get_Method();
+      LIR_OprList* args = new LIR_OprList();
+      LIR_Opr addr = object.result();
+      LIR_Opr offset = LIR_OprFact::intConst(x->offset());
+      LIR_Opr bci = LIR_OprFact::intConst(x->printable_bci());
+      LIR_Opr method = new_register(T_METADATA);
+      __ metadata2reg(compilation()->method()->constant_encoding(), method);
 
-      __ move(object.result(), cc->args()->at(0));
-      __ move(LIR_OprFact::intConst(x->offset()), cc->args()->at(1));
-      __ move(LIR_OprFact::intConst(bci), cc->args()->at(2));
-      __ move(LIR_OprFact::intptrConst(m), cc->args()->at(3));
-
-      __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::matsa_memory_access[0][size]), getThreadTemp(),
-        LIR_OprFact::illegalOpr, cc->args());
+      args->append(addr);
+      args->append(offset);
+      args->append(bci);
+      args->append(method);
+      call_runtime(&signature, args, CAST_FROM_FN_PTR(address, MaTSaC1::matsa_memory_access[0][size]), voidType, NULL);
     }
   );
 }
@@ -2096,26 +2124,27 @@ void LIRGenerator::do_LoadIndexed(LoadIndexed* x) {
     int elt_size = type2aelembytes(x->elt_type());
 
     BasicTypeList signature;
-    signature.append(T_LONG);
+    signature.append(T_OBJECT);
     signature.append(T_INT);
     signature.append(T_INT);
     signature.append(T_INT);
-    signature.append(T_LONG);
+    signature.append(T_METADATA);
 
-    CallingConvention* cc = frame_map()->c_calling_convention(&signature);
+    LIR_OprList* args = new LIR_OprList();
+    LIR_Opr addr = array.result();
+    LIR_Opr idx  = index.result();
+    LIR_Opr elt_type = LIR_OprFact::intConst(x->elt_type());
+    LIR_Opr bci = LIR_OprFact::intConst(x->printable_bci());
+    LIR_Opr method = new_register(T_METADATA);
+    __ metadata2reg(compilation()->method()->constant_encoding(), method);
 
-    int bci = 0;
-    Method *m = compilation()->method()->get_Method();
+    args->append(addr);
+    args->append(idx);
+    args->append(elt_type);
+    args->append(bci);
+    args->append(method);
 
-    // gets address
-    __ move(array.result(), cc->args()->at(0));
-    __ move(index.result(), cc->args()->at(1));
-    __ move(LIR_OprFact::intConst(x->elt_type()), cc->args()->at(2));
-    __ move(LIR_OprFact::intConst(bci), cc->args()->at(3));
-    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(4));
-
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::matsa_array_access[0][elt_size]), getThreadTemp(),
-      LIR_OprFact::illegalOpr, cc->args());
+    call_runtime(&signature, args, CAST_FROM_FN_PTR(address, MaTSaC1::matsa_array_access[0][elt_size]), voidType, NULL);
   );
 }
 
@@ -2909,17 +2938,16 @@ void LIRGenerator::do_Base(Base* x) {
   MATSA_ONLY(
     BasicTypeList signature;
     signature.append(T_LONG);
-    signature.append(T_LONG);
+    signature.append(T_METADATA);
 
-    Method *m = compilation()->method()->get_Method();
-    CallingConvention *cc = compilation()->frame_map()->c_calling_convention(&signature);
+    LIR_OprList* args = new LIR_OprList();
+    LIR_Opr meth = new_register(T_METADATA);
+    __ metadata2reg(method()->constant_encoding(), meth);
 
-    // thread and method pointers
-    __ move(getThreadPointer(), cc->args()->at(0));
-    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(1));
+    args->append(getThreadPointer());
+    args->append(meth);
 
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::method_enter), getThreadTemp(),
-                         LIR_OprFact::illegalOpr, cc->args());
+    call_runtime(&signature, args, CAST_FROM_FN_PTR(address, MaTSaC1::method_enter), voidType, NULL);
   );
 
   if (compilation()->env()->dtrace_method_probes()) {
@@ -3073,23 +3101,23 @@ void LIRGenerator::do_Invoke(Invoke* x) {
 
   CodeEmitInfo* info = state_for(x, x->state());
 
-  MATSA_ONLY(    
+  MATSA_ONLY(
     BasicTypeList signature;
     signature.append(T_LONG);
-    signature.append(T_LONG);
-    signature.append(T_INT);   
+    signature.append(T_METADATA);
+    signature.append(T_INT);
 
-    CallingConvention *cc = info->frame_map()->c_calling_convention(&signature);
-    Method *m = info->compilation()->method()->get_Method();
-    int bci = x->printable_bci(); 
+    LIR_OprList* args = new LIR_OprList();
+    LIR_Opr thread = getThreadPointer();
+    LIR_Opr meth = new_register(T_METADATA);
+    __ metadata2reg(method()->constant_encoding(), meth);
+    LIR_Opr bci = LIR_OprFact::intConst(x->printable_bci());
 
-    // thread, method prior to call and bci of the call
-    __ move(getThreadPointer(), cc->args()->at(0));
-    __ move(LIR_OprFact::intptrConst(m), cc->args()->at(1));
-    __ move(LIR_OprFact::intConst(bci), cc->args()->at(2));
+    args->append(thread);
+    args->append(meth);
+    args->append(bci);
 
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::pre_method_enter), getThreadTemp(),
-       LIR_OprFact::illegalOpr, cc->args());
+    call_runtime(&signature, args, CAST_FROM_FN_PTR(address, MaTSaC1::pre_method_enter), voidType, NULL);
   );
 
 

@@ -355,7 +355,7 @@ const char* Runtime1::name_for_address(address entry) {
   FUNCTION_CASE(entry, MaTSaC1::method_exit);
   FUNCTION_CASE(entry, MaTSaC1::sync_enter);
   FUNCTION_CASE(entry, MaTSaC1::sync_exit);
-  FUNCTION_CASE(entry, MaTSaC1::unlock);
+  FUNCTION_CASE(entry, MaTSaC1::cl_init_acquire);
   FUNCTION_CASE(entry, MATSA_MEMORY_ACCESS_C1(1, read));
   FUNCTION_CASE(entry, MATSA_MEMORY_ACCESS_C1(1, write));
   FUNCTION_CASE(entry, MATSA_MEMORY_ACCESS_C1(2, read));

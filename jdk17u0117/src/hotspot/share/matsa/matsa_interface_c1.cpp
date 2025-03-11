@@ -9,6 +9,9 @@
 #include "utilities/globalDefinitions.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
 
+#include "memory/resourceArea.hpp"
+
+
 #include <cstdint>
 
 #define MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, size, type, is_write)\
@@ -133,29 +136,19 @@ JRT_LEAF(void, MaTSaC1::sync_exit(JavaThread *thread, BasicObjectLock *lock))
     MaTSaThreadState::incrementEpoch(tid);
 JRT_END
 
-// JRT_LEAF(void, MaTSaC1::unlock(JavaThread *thread, void *lock_obj))
-void MaTSaC1::unlock(JavaThread *thread, void *lock_obj) {
+JRT_LEAF(void, MaTSaC1::cl_init_acquire(JavaThread *thread, void *holder))
     int tid = JavaThread::get_matsa_tid(thread);
-  
-    oop p = (oopDesc*)lock_obj;
-    assert(oopDesc::is_oop(p), "must be a valid oop");
-  
-    /*
-      On lock release we have to max the thread state with the lock state.
-      Store the result into lock state.
-    */
-  
-    LockShadow *obs = p->lock_state();
-  
-    Vectorclock* ls = obs->get_vectorclock();
+
+    oop lock_obj = (oopDesc*)holder;
+    assert(oopDesc::is_oop(lock_obj), "must be a valid oop");
+
+    LockShadow *obs = lock_obj->lock_state();
+    Vectorclock* ts = obs->get_cl_init_vectorclock();
+
     Vectorclock* cur = MaTSaThreadState::getThreadState(tid);
-  
-    *ls = *cur;
-  
-    // increment the epoch of the current thread after the transfer
-    MaTSaThreadState::incrementEpoch(tid);
-}
-// JRT_END
+
+    *cur = *ts;
+JRT_END
 
 #undef MATSA_MEMORY_ACCESS_C1
 #undef MATSA_ARRAY_ACCESS_C1

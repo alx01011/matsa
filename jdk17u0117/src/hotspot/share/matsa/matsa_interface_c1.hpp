@@ -49,7 +49,7 @@ namespace MaTSaC1 {
     void sync_enter(JavaThread *thread, BasicObjectLock *lock);
     void sync_exit(JavaThread *thread, BasicObjectLock *lock);
 
-    void unlock(JavaThread *thread, void *obj);
+    void cl_init_acquire(JavaThread *thread, void *holder);
 }
 
 #undef MATSA_MEMORY_ACCESS_C1
