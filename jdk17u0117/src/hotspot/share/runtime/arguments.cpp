@@ -3991,11 +3991,12 @@ jint Arguments::parse(const JavaVMInitArgs* initial_cmd_args) {
   apply_debugger_ergo();
 
   MATSA_ONLY(
-    if (MaTSaExperimental) {
-      FLAG_SET_ERGO(TieredStopAtLevel, 1);
-    } else {
-      set_mode_flags(_int);
-    }
+    // currently c2 aswell
+    // if (MaTSaExperimental) {
+    //   FLAG_SET_ERGO(TieredStopAtLevel, 1);
+    // } else {
+    //   set_mode_flags(_int);
+    // }
 
     // no rewrite bytecodes optimization
     FLAG_SET_ERGO(RewriteBytecodes, false);
