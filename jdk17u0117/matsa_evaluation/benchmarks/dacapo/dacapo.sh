@@ -92,6 +92,7 @@ if [ ! -f dacapo-23.11-chopin.jar ]; then
 
     if [ "$answer" == "y" ]; then
         wget https://download.dacapobench.org/chopin/dacapo-23.11-chopin.zip
+        unzip dacapo-23.11-chopin.zip
     else
         echo "Exiting (got $answer)."
         exit 1
