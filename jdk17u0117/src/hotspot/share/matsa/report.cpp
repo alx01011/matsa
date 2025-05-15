@@ -33,8 +33,8 @@ MaTSaReportMap::~MaTSaReportMap() {
 
 // we will use simple fnv1a hash
 uint64_t MaTSaReportMap::hash(uint64_t method) {
-    assert(sizeof(method) == 8, "MaTSa Hash: bcp must be 64 bits");
-    assert(method, "MaTSa Hash: bcp must be non-zero");
+    assert(sizeof(method) == 8, "MaTSa Hash: method pointer must be 64 bits");
+    assert(method, "MaTSa Hash: method pointer must be non-zero");
 
     uint64_t hash  = 0xcbf29ce484222325ull; // offset basis
     uint64_t prime = 0x00000100000001B3ull; // prime 
@@ -222,8 +222,8 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
     return trace_idx != 0;
 }
 
-void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, address bcp, int cur_bci, Method *m, 
-                            ShadowCell &cur, ShadowCell &prev, HistoryCell &prev_history) {
+void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, int cur_bci, Method *m, ShadowCell &cur, 
+                                ShadowCell &prev, HistoryCell &prev_history) {
     MutexLocker ml(MaTSaReport::_report_lock, Mutex::_no_safepoint_check_flag);
 
     // already reported

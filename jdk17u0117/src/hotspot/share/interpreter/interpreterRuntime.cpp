@@ -737,19 +737,19 @@ void InterpreterRuntime::resolve_get_put(JavaThread* current, Bytecodes::Code by
 // MaTSa instrumentation
 
 void InterpreterRuntime::matsa_load1(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 1, false);
+  MaTSaRTL::MemoryAccessInt(addr, m, bcp, 1, false);
 }
 
 void InterpreterRuntime::matsa_load2(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 2, false);
+  MaTSaRTL::MemoryAccessInt(addr, m, bcp, 2, false);
 }
 
 void InterpreterRuntime::matsa_load4(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 4, false);
+  MaTSaRTL::MemoryAccessInt(addr, m, bcp, 4, false);
 }
 
 void InterpreterRuntime::matsa_load8(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 8, false);
+  MaTSaRTL::MemoryAccessInt(addr, m, bcp, 8, false);
 }
 
 void matsa_vtos(void *addr, Method *m, address bcp) {
@@ -776,19 +776,19 @@ void (*InterpreterRuntime::matsa_load[]) (void *addr, Method *m, address bcp) = 
 
 // Store instrumentation
 void InterpreterRuntime::matsa_store1(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 1, true);
+  MaTSaRTL::MemoryAccessInt(addr, m, bcp, 1, true);
 }
 
 void InterpreterRuntime::matsa_store2(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 2, true);
+  MaTSaRTL::MemoryAccessInt(addr, m, bcp, 2, true);
 }
 
 void InterpreterRuntime::matsa_store4(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 4, true);
+  MaTSaRTL::MemoryAccessInt(addr, m, bcp, 4, true);
 }
 
 void InterpreterRuntime::matsa_store8(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 8, true);
+  MaTSaRTL::MemoryAccessInt(addr, m, bcp, 8, true);
 }
 
 

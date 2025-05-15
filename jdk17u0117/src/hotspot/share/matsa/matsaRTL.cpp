@@ -100,7 +100,7 @@ bool MaTSaRTL::CheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &
     return isRace;
 }
 
-void MaTSaRTL::MemoryAccess(void *addr, Method *m, address bcp, uint8_t access_size, bool is_write) {
+void MaTSaRTL::MemoryAccessInt(void *addr, Method *m, address bcp, uint8_t access_size, bool is_write) {
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_matsa_tid(thread);
     
@@ -119,7 +119,7 @@ void MaTSaRTL::MemoryAccess(void *addr, Method *m, address bcp, uint8_t access_s
     //Symbolizer::Symbolize((Event)(is_write + 1), addr, m->bci_from(bcp), tid);
 
     if (is_race && !MaTSaSilent) {
-        MaTSaReport::do_report_race(thread, addr, access_size, bcp, bci, m, cur, prev, prev_history);
+        MaTSaReport::do_report_race(thread, addr, access_size, bci, m, cur, prev, prev_history);
     }
 }
 
@@ -127,8 +127,6 @@ JRT_LEAF(void, MaTSaRTL::C1MemoryAccess(void *addr, Method *m, int bci, uint8_t 
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_matsa_tid(thread);
 
-    address bcp = m->code_base() + bci;
-
     uint32_t epoch = MaTSaThreadState::getEpoch(tid, tid);
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), is_write, 0};
@@ -143,7 +141,7 @@ JRT_LEAF(void, MaTSaRTL::C1MemoryAccess(void *addr, Method *m, int bci, uint8_t 
     //Symbolizer::Symbolize((Event)(is_write + 1), addr, m->bci_from(bcp), tid);
 
     if (is_race && !MaTSaSilent) {
-        MaTSaReport::do_report_race(thread, addr, access_size, bcp, bci, m, cur, prev, prev_history);
+        MaTSaReport::do_report_race(thread, addr, access_size, bci, m, cur, prev, prev_history);
     }
 JRT_END
 
@@ -151,8 +149,6 @@ JRT_LEAF(void, MaTSaRTL::C2MemoryAccess(void *addr, Method *m, int bci, uint8_t 
     JavaThread *thread = JavaThread::current();
     uint16_t tid       = JavaThread::get_matsa_tid(thread);
 
-    address bcp = nullptr;
-
     uint32_t epoch = MaTSaThreadState::getEpoch(tid, tid);
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), is_write, 0};
@@ -167,7 +163,7 @@ JRT_LEAF(void, MaTSaRTL::C2MemoryAccess(void *addr, Method *m, int bci, uint8_t 
     //Symbolizer::Symbolize((Event)(is_write + 1), addr, m->bci_from(bcp), tid);
 
     if (is_race && !MaTSaSilent) {
-        MaTSaReport::do_report_race(thread, addr, access_size, bcp, bci, m, cur, prev, prev_history);
+        MaTSaReport::do_report_race(thread, addr, access_size, bci, m, cur, prev, prev_history);
     }
 JRT_END
 
