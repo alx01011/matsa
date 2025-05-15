@@ -496,6 +496,10 @@ void Parse::do_call() {
   // our contribution to it is cleaned up right here.
   kill_dead_locals();
 
+  MATSA_ONLY(
+    make_matsa_pre_method_enter(bci());
+  );
+
   C->print_inlining_assert_ready();
 
   // Set frequently used booleans

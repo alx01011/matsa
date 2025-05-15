@@ -34,6 +34,9 @@
 #include "opto/runtime.hpp"
 #include "runtime/sharedRuntime.hpp"
 
+#include "matsa/matsaRTL.hpp"
+#include "matsa/matsa_interface_c2.hpp"
+
 //------------------------------make_dtrace_method_entry_exit ----------------
 // Dtrace -- record entry or exit of a method if compiled with dtrace support
 void GraphKit::make_dtrace_method_entry_exit(ciMethod* method, bool is_entry) {
@@ -58,6 +61,117 @@ void GraphKit::make_dtrace_method_entry_exit(ciMethod* method, bool is_entry) {
                     call_name, raw_adr_type,
                     thread, method_node);
 }
+
+// MaTSa support
+void GraphKit::make_matsa_load_store(Node *addr, ciMethod *m, int bci, uint8_t access_size, bool is_write) {
+  const TypeFunc *call_type = OptoRuntime::matsa_load_store_Type();
+  address         call_address = CAST_FROM_FN_PTR(address, MaTSaRTL::C2MemoryAccess);
+  const char     *call_name = "matsa_rt_call";
+  
+  // // Get base of thread-local storage area
+  // Node* thread = _gvn.transform( new ThreadLocalNode() );
+  // Get method
+  const TypePtr* method_type = TypeMetadataPtr::make(m);
+  Node *method_node = _gvn.transform(ConNode::make(method_type));
+
+  // Get bci
+  const TypeInt* bci_type = TypeInt::make(bci);
+  Node* bci_node = _gvn.transform(ConNode::make(bci_type));
+  // Get access size
+  const TypeInt* access_size_type = TypeInt::make(access_size);
+  Node* access_size_node = _gvn.transform(ConNode::make(access_size_type));
+  // Get is_write
+  const TypeInt* is_write_type = TypeInt::make(is_write);
+  Node* is_write_node = _gvn.transform(ConNode::make(is_write_type));
+
+  // kill dead locals necessary?
+  kill_dead_locals();
+
+  const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
+  make_runtime_call(RC_LEAF | RC_NARROW_MEM,
+                    call_type, call_address,
+                    call_name, raw_adr_type,
+                    addr, method_node, bci_node, access_size_node, is_write_node);
+}
+
+void GraphKit::make_matsa_cl_init_acq(Node *oop) {
+  const TypeFunc *call_type = OptoRuntime::matsa_cl_init_Type();
+  address         call_address = CAST_FROM_FN_PTR(address, MaTSaC2::cl_init_acquire);
+  const char     *call_name = "matsa_rt_call";
+
+  // Get base of thread-local storage area
+  Node* thread = _gvn.transform( new ThreadLocalNode() );
+
+  kill_dead_locals();
+
+  const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
+  make_runtime_call(RC_LEAF | RC_NARROW_MEM,
+                    call_type, call_address,
+                    call_name, raw_adr_type,
+                    thread, oop);
+}
+
+void GraphKit:: make_matsa_method_enter_exit(ciMethod* method, bool is_entry) {
+  const TypeFunc *call_type    = OptoRuntime::matsa_method_enter_exit_Type();
+  address         call_address = is_entry ? CAST_FROM_FN_PTR(address, MaTSaC2::method_enter) :
+                                            CAST_FROM_FN_PTR(address, MaTSaC2::method_exit);
+  const char     *call_name    = "matsa_rt_call";
+
+  // Get base of thread-local storage area
+  Node* thread = _gvn.transform( new ThreadLocalNode() );
+
+  // Get method
+  const TypePtr* method_type = TypeMetadataPtr::make(method);
+  Node *method_node = _gvn.transform(ConNode::make(method_type));
+
+  kill_dead_locals();
+
+  const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
+  make_runtime_call(RC_LEAF | RC_NARROW_MEM,
+                    call_type, call_address,
+                    call_name, raw_adr_type,
+                    thread, method_node);
+}
+
+void GraphKit::make_matsa_pre_method_enter(int bci) {
+  const TypeFunc *call_type = OptoRuntime::matsa_pre_method_enter_Type();
+  address         call_address = CAST_FROM_FN_PTR(address, MaTSaC2::pre_method_enter);
+  const char     *call_name = "matsa_rt_call";
+
+  // Get base of thread-local storage area
+  Node* thread = _gvn.transform( new ThreadLocalNode() );
+
+  // Get bci
+  const TypeInt* bci_type = TypeInt::make(bci);
+  Node* bci_node = _gvn.transform(ConNode::make(bci_type));
+
+  kill_dead_locals();
+
+  const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
+  make_runtime_call(RC_LEAF | RC_NARROW_MEM,
+                    call_type, call_address,
+                    call_name, raw_adr_type,
+                    thread, bci_node);
+}
+
+void GraphKit::make_matsa_lock_unlock(Node *obj, bool is_locking) {
+  const TypeFunc *call_type = OptoRuntime::matsa_lock_unlock_Type();
+  address         call_address = is_locking ? CAST_FROM_FN_PTR(address, MaTSaC2::sync_enter) :
+                                                CAST_FROM_FN_PTR(address, MaTSaC2::sync_exit);
+  const char     *call_name = "matsa_rt_call";
+
+  // Get base of thread-local storage area
+  Node* thread = _gvn.transform( new ThreadLocalNode() );
+
+  kill_dead_locals();
+
+  const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
+  make_runtime_call(RC_LEAF | RC_NARROW_MEM,
+                    call_type, call_address,
+                    call_name, raw_adr_type,
+                    thread, obj);
+}
+
 
 
 //=============================================================================

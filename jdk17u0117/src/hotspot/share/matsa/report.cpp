@@ -32,15 +32,15 @@ MaTSaReportMap::~MaTSaReportMap() {
 }
 
 // we will use simple fnv1a hash
-uint64_t MaTSaReportMap::hash(uintptr_t bcp) {
-    assert(sizeof(bcp) == 8, "MaTSa Hash: bcp must be 64 bits");
-    assert(bcp, "MaTSa Hash: bcp must be non-zero");
+uint64_t MaTSaReportMap::hash(uint64_t method) {
+    assert(sizeof(method) == 8, "MaTSa Hash: bcp must be 64 bits");
+    assert(method, "MaTSa Hash: bcp must be non-zero");
 
     uint64_t hash  = 0xcbf29ce484222325ull; // offset basis
     uint64_t prime = 0x00000100000001B3ull; // prime 
-    uint8_t *ptr = (uint8_t*)&bcp;
+    uint8_t *ptr = (uint8_t*)&method;
 
-    for (size_t i = 0; i < sizeof(bcp); i++) {
+    for (size_t i = 0; i < sizeof(method); i++) {
         hash ^= ptr[i];
         hash *= prime;
     }
@@ -66,13 +66,13 @@ void MaTSaReportMap::destroy() {
     _instance = nullptr;
 }
 
-bool MaTSaReportMap::contains(uintptr_t bcp) {
-    uint64_t hash_val = hash(bcp);
+bool MaTSaReportMap::contains(uint64_t method, uint64_t bci) {
+    uint64_t hash_val = hash(method);
     uint64_t bucket   = hash_val % BUCKETS;
 
     ReportEntry *entry = _table[bucket];
     while (entry != nullptr) {
-        if (entry->bcp == bcp) {
+        if (entry->bci == bci) {
             return true;
         }
 
@@ -82,14 +82,14 @@ bool MaTSaReportMap::contains(uintptr_t bcp) {
     return false;
 }
 
-void MaTSaReportMap::insert(uintptr_t bcp) {
-    uint64_t hash_val = hash(bcp);
+void MaTSaReportMap::insert(uint64_t method, uint64_t bci) {
+    uint64_t hash_val = hash(method);
     uint64_t bucket   = hash_val % BUCKETS;
 
     ReportEntry *entry = _table[bucket];
 
     ReportEntry *new_entry = NEW_C_HEAP_OBJ(ReportEntry, mtInternal);
-    new_entry->bcp  = bcp;
+    new_entry->bci  = bci;
     new_entry->next = entry;
 
     _table[bucket] = new_entry;
@@ -227,13 +227,13 @@ void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
     MutexLocker ml(MaTSaReport::_report_lock, Mutex::_no_safepoint_check_flag);
 
     // already reported
-    if (MaTSaReportMap::instance()->contains((uintptr_t)bcp)) {
+    if (MaTSaReportMap::instance()->contains((uint64_t)m, (uint64_t)cur_bci)) {
         return;
     }
 
     // is suppressed?
     if (LIKELY(MaTSaSuppression::is_suppressed(thread))) {
-        MaTSaReportMap::instance()->insert((uintptr_t)bcp);
+        MaTSaReportMap::instance()->insert((uint64_t)m, (uint64_t)cur_bci);
         return;
     }
 
@@ -269,7 +269,7 @@ void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
     fprintf(stderr, "==================\n");
 
     // store it in the report map
-    MaTSaReportMap::instance()->insert((uintptr_t)bcp);
+    MaTSaReportMap::instance()->insert((uint64_t)m, (uint64_t)cur_bci);
 
     COUNTER_INC(race);
 }

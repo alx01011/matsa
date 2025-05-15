@@ -76,6 +76,8 @@
 #include "utilities/events.hpp"
 
 #include "matsa/matsa_interface_c1.hpp"
+#include "matsa/matsaRTL.hpp"
+
 
 
 // Implementation of StubAssembler
@@ -372,6 +374,7 @@ const char* Runtime1::name_for_address(address entry) {
   FUNCTION_CASE(entry, MATSA_ARRAY_ACCESS_C1(4, write));
   FUNCTION_CASE(entry, MATSA_ARRAY_ACCESS_C1(8, read));
   FUNCTION_CASE(entry, MATSA_ARRAY_ACCESS_C1(8, write));
+  FUNCTION_CASE(entry, MaTSaRTL::matsa_load_x);
 
   #undef MATSA_MEMORY_ACCESS_C1
   #undef MATSA_ARRAY_ACCESS_C1

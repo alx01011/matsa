@@ -106,6 +106,7 @@ JRT_LEAF(void, MaTSaC1::sync_enter(JavaThread *thread, BasicObjectLock *lock))
         Store the result into the thread state.
     */
 
+
     LockShadow *sls = obj->lock_state();
     Vectorclock* ts = sls->get_vectorclock();
 

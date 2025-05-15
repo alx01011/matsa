@@ -147,6 +147,30 @@ JRT_LEAF(void, MaTSaRTL::C1MemoryAccess(void *addr, Method *m, int bci, uint8_t 
     }
 JRT_END
 
+JRT_LEAF(void, MaTSaRTL::C2MemoryAccess(void *addr, Method *m, int bci, uint8_t access_size, bool is_write))
+    JavaThread *thread = JavaThread::current();
+    uint16_t tid       = JavaThread::get_matsa_tid(thread);
+
+    address bcp = nullptr;
+
+    uint32_t epoch = MaTSaThreadState::getEpoch(tid, tid);
+    // create a new shadow cell
+    ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), is_write, 0};
+
+    // race
+    ShadowCell prev;
+    HistoryCell prev_history;
+    bool is_race = CheckRaces(addr, bci, cur, prev, prev_history);
+
+    // symbolize the access
+    // 1 is read, 2 is write
+    //Symbolizer::Symbolize((Event)(is_write + 1), addr, m->bci_from(bcp), tid);
+
+    if (is_race && !MaTSaSilent) {
+        MaTSaReport::do_report_race(thread, addr, access_size, bcp, bci, m, cur, prev, prev_history);
+    }
+JRT_END
+
 JRT_LEAF(void, MaTSaRTL::matsa_store_x(int offset, int bci, void *addr, Method *m))
     ResourceMark rm;
     uintptr_t true_addr = (uintptr_t)addr + offset;
@@ -161,26 +185,33 @@ JRT_LEAF(void, MaTSaRTL::matsa_store_x(int offset, int bci, void *addr, Method *
     return;
 JRT_END
 
-JRT_LEAF(void, MaTSaRTL::matsa_load_x(int offset, int bci, void *address, Method *m))
-    return;
-JRT_END
-
-JRT_LEAF(void, MaTSaRTL::matsa_load_array(int bci, void *address, Method *m, BasicType type, int idx))
+JRT_LEAF(void, MaTSaRTL::matsa_load_x(void *addr, int x, address bcp, Method *m))
     ResourceMark rm;
-    int offset_in_bytes = arrayOopDesc::base_offset_in_bytes(type);
-    int elem_size = type2aelembytes(type);
-    uint64_t disp = ((uint64_t)idx * elem_size) + offset_in_bytes;
-
-    void *true_address = (void*)((uintptr_t)address + disp);
-
+    int bci = m->bci_from(bcp);
     int lineno = m->line_number_from_bci(bci);
     const char *method_name = m->external_name_as_fully_qualified();
-    if (strstr(method_name, "InterThreadLatency") != NULL) {
-        fprintf(stderr, "matsa_store_array %p, method: %s, line: %d\n", true_address, method_name, lineno);
-    }
 
-    return;
+    if (strstr(method_name, "InterThreadLatency") != NULL) {
+        fprintf(stderr, "matsa_load %p(%p), method: %s, line: %d\n", addr, (void*)((uintptr_t)addr + x), method_name, lineno);
+    }
 JRT_END
+
+// JRT_LEAF(void, MaTSaRTL::matsa_load_array(int bci, void *address, Method *m, BasicType type, int idx))
+//     ResourceMark rm;
+//     int offset_in_bytes = arrayOopDesc::base_offset_in_bytes(type);
+//     int elem_size = type2aelembytes(type);
+//     uint64_t disp = ((uint64_t)idx * elem_size) + offset_in_bytes;
+
+//     void *true_address = (void*)((uintptr_t)address + disp);
+
+//     int lineno = m->line_number_from_bci(bci);
+//     const char *method_name = m->external_name_as_fully_qualified();
+//     if (strstr(method_name, "InterThreadLatency") != NULL) {
+//         fprintf(stderr, "matsa_store_array %p, method: %s, line: %d\n", true_address, method_name, lineno);
+//     }
+
+//     return;
+// JRT_END
 
 JRT_LEAF(void, MaTSaRTL::matsa_sync_enter(BasicObjectLock *lock, Method *m))
     ResourceMark rm;

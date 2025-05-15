@@ -960,6 +960,8 @@ void Parse::throw_to_exit(SafePointNode* ex_map) {
 
 //------------------------------do_exits---------------------------------------
 void Parse::do_exits() {
+
+
   set_parse_bci(InvocationEntryBci);
 
   // Now peephole on the return bits
@@ -1087,6 +1089,7 @@ void Parse::do_exits() {
       if (C->env()->dtrace_method_probes()) {
         kit.make_dtrace_method_exit(method());
       }
+      // Should matsa be notified here too?
       if (_replaced_nodes_for_exceptions) {
         kit.map()->apply_replaced_nodes(_new_idx);
       }
@@ -1194,6 +1197,10 @@ void Parse::do_method_entry() {
   if (C->env()->dtrace_method_probes()) {
     make_dtrace_method_entry(method());
   }
+
+  MATSA_ONLY(
+    make_matsa_method_enter_exit(method(), true);
+  );
 
 #ifdef ASSERT
   // Narrow receiver type when it is too broad for the method being parsed.
@@ -2214,6 +2221,11 @@ void Parse::return_current(Node* value) {
   if (C->env()->dtrace_method_probes()) {
     make_dtrace_method_exit(method());
   }
+
+  MATSA_ONLY(
+    make_matsa_method_enter_exit(method(), false);
+  );
+
   SafePointNode* exit_return = _exits.map();
   exit_return->in( TypeFunc::Control  )->add_req( control() );
   exit_return->in( TypeFunc::I_O      )->add_req( i_o    () );

@@ -1563,6 +1563,89 @@ const TypeFunc *OptoRuntime::dtrace_object_alloc_Type() {
   return TypeFunc::make(domain,range);
 }
 
+const TypeFunc *OptoRuntime::matsa_load_store_Type() {
+  // void *addr, Method *m, int bci, uint8_t access_size, bool is_write
+  const Type **fields = TypeTuple::fields(5);
+  fields[TypeFunc::Parms+0] = TypeRawPtr::BOTTOM; // addr
+  fields[TypeFunc::Parms+1] = TypeMetadataPtr::BOTTOM; // method we are in
+  fields[TypeFunc::Parms+2] = TypeInt::INT; // bci
+  fields[TypeFunc::Parms+3] = TypeInt::INT; // access_size
+  fields[TypeFunc::Parms+4] = TypeInt::BOOL; // is_write
+
+  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+5, fields);
+
+  // create result type (range)
+  fields = TypeTuple::fields(0);
+
+  const TypeTuple *range = TypeTuple::make(TypeFunc::Parms+0,fields);
+
+  return TypeFunc::make(domain,range);
+}
+
+const TypeFunc *OptoRuntime::matsa_cl_init_Type() {
+  // JavaThread *thread, void *oop
+  const Type **fields = TypeTuple::fields(2);
+  fields[TypeFunc::Parms+0] = TypeRawPtr::NOTNULL; // thread
+  fields[TypeFunc::Parms+1] = TypeRawPtr::NOTNULL; // oop
+
+  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+2, fields);
+
+  // create result type (range)
+  fields = TypeTuple::fields(0);
+
+  const TypeTuple *range = TypeTuple::make(TypeFunc::Parms+0, fields);
+
+  return TypeFunc::make(domain, range);
+}
+
+const TypeFunc *OptoRuntime::matsa_method_enter_exit_Type() {
+  // JavaThread *thread, void *method
+  const Type **fields = TypeTuple::fields(2);
+  fields[TypeFunc::Parms+0] = TypeRawPtr::NOTNULL; // thread
+  fields[TypeFunc::Parms+1] = TypeMetadataPtr::BOTTOM; // method
+
+  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+2, fields);
+
+  // create result type (range)
+  fields = TypeTuple::fields(0);
+
+  const TypeTuple *range = TypeTuple::make(TypeFunc::Parms+0, fields);
+
+  return TypeFunc::make(domain, range);
+}
+
+const TypeFunc *OptoRuntime::matsa_pre_method_enter_Type() {
+  // JavaThread *thread, int bci
+  const Type **fields = TypeTuple::fields(2);
+  fields[TypeFunc::Parms+0] = TypeRawPtr::NOTNULL; // thread
+  fields[TypeFunc::Parms+1] = TypeInt::INT; // bci
+
+  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+2, fields);
+
+  // create result type (range)
+  fields = TypeTuple::fields(0);
+
+  const TypeTuple *range = TypeTuple::make(TypeFunc::Parms+0, fields);
+  
+  return TypeFunc::make(domain, range);
+}
+
+const TypeFunc *OptoRuntime::matsa_lock_unlock_Type() {
+    // JavaThread *thread, oop obj
+    const Type **fields = TypeTuple::fields(2);
+    fields[TypeFunc::Parms+0] = TypeRawPtr::NOTNULL; // thread
+    fields[TypeFunc::Parms+1] = TypeInstPtr::NOTNULL; // obj
+
+    const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+2, fields);
+
+    // create result type (range)
+    fields = TypeTuple::fields(0);
+
+    const TypeTuple *range = TypeTuple::make(TypeFunc::Parms+0, fields);
+
+    return TypeFunc::make(domain, range);
+}
+
 
 JRT_ENTRY_NO_ASYNC(void, OptoRuntime::register_finalizer(oopDesc* obj, JavaThread* current))
   assert(oopDesc::is_oop(obj), "must be a valid oop");

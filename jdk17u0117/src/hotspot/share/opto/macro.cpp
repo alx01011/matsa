@@ -1678,6 +1678,12 @@ PhaseMacroExpand::initialize_object(AllocateNode* alloc,
   rawmem = make_store(control, rawmem, object, oopDesc::mark_offset_in_bytes(), mark_node, TypeX_X->basic_type());
 
   rawmem = make_store(control, rawmem, object, oopDesc::klass_offset_in_bytes(), klass_node, T_METADATA);
+
+  MATSA_ONLY(
+    Node *lock_state_node = longcon(0);
+    rawmem = make_store(control, rawmem, object, oopDesc::lock_state_offset_in_bytes(), lock_state_node, T_LONG);
+  );
+
   int header_size = alloc->minimum_header_size();  // conservatively small
 
   // Array length

@@ -678,6 +678,13 @@ class GraphKit : public Phase {
     make_dtrace_method_entry_exit(method, false);
   }
 
+  // MaTSa support
+void make_matsa_load_store(Node *addr, ciMethod *m, int bci, uint8_t access_size, bool is_write);
+void make_matsa_cl_init_acq(Node *oop);
+void make_matsa_method_enter_exit(ciMethod *m, bool is_enter);
+void make_matsa_pre_method_enter(int bci);
+void make_matsa_lock_unlock(Node *obj, bool is_locking);
+
   //--------------- stub generation -------------------
  public:
   void gen_stub(address C_function,
