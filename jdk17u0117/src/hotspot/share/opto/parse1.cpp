@@ -960,8 +960,6 @@ void Parse::throw_to_exit(SafePointNode* ex_map) {
 
 //------------------------------do_exits---------------------------------------
 void Parse::do_exits() {
-
-
   set_parse_bci(InvocationEntryBci);
 
   // Now peephole on the return bits
@@ -1065,7 +1063,7 @@ void Parse::do_exits() {
   bool do_synch = method()->is_synchronized() && GenerateSynchronizationCode;
 
   // record exit from a method if compiled while Dtrace is turned on.
-  if (do_synch || C->env()->dtrace_method_probes() || _replaced_nodes_for_exceptions) {
+  if (do_synch || C->env()->dtrace_method_probes() || _replaced_nodes_for_exceptions || MaTSa) {
     // First move the exception list out of _exits:
     GraphKit kit(_exits.transfer_exceptions_into_jvms());
     SafePointNode* normal_map = kit.map();  // keep this guy safe
@@ -1090,6 +1088,9 @@ void Parse::do_exits() {
         kit.make_dtrace_method_exit(method());
       }
       // Should matsa be notified here too?
+      MATSA_ONLY(
+        make_matsa_method_enter_exit(method(), false);
+      );
       if (_replaced_nodes_for_exceptions) {
         kit.map()->apply_replaced_nodes(_new_idx);
       }

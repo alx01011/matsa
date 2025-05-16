@@ -1163,7 +1163,14 @@ void ConnectionGraph::process_call_arguments(CallNode *call) {
                   strcmp(call->as_CallLeaf()->_name, "bigIntegerLeftShiftWorker") == 0 ||
                   strcmp(call->as_CallLeaf()->_name, "vectorizedMismatch") == 0 ||
                   strcmp(call->as_CallLeaf()->_name, "get_class_id_intrinsic") == 0 ||
-                  strcmp(call->as_CallLeaf()->_name, "matsa_rt_call") == 0)
+                  strcmp(call->as_CallLeaf()->_name, "matsa_rt_store") == 0 ||
+                  strcmp(call->as_CallLeaf()->_name, "matsa_rt_load") == 0 ||
+                  strcmp(call->as_CallLeaf()->_name, "matsa_rt_method_enter") == 0 ||
+                  strcmp(call->as_CallLeaf()->_name, "matsa_rt_method_exit") == 0 ||
+                  strcmp(call->as_CallLeaf()->_name, "matsa_rt_pre_method_enter") == 0 ||
+                  strcmp(call->as_CallLeaf()->_name, "matsa_rt_sync_enter") == 0 ||
+                  strcmp(call->as_CallLeaf()->_name, "matsa_rt_sync_exit") == 0 ||
+                  strcmp(call->as_CallLeaf()->_name, "matsa_rt_cl_init_acq") == 0) 
                  ))) {
             call->dump();
             fatal("EA unexpected CallLeaf %s", call->as_CallLeaf()->_name);

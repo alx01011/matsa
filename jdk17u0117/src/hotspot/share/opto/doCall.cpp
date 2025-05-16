@@ -84,6 +84,10 @@ CallGenerator* Compile::call_generator(ciMethod* callee, int vtable_index, bool 
     allow_inline = false;
   }
 
+  MATSA_ONLY(
+    allow_inline = false;
+  );
+
   // Note: When we get profiling during stage-1 compiles, we want to pull
   // from more specific profile data which pertains to this inlining.
   // Right now, ignore the information in jvms->caller(), and do method[bci].
