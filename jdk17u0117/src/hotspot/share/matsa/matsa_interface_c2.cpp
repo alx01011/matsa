@@ -14,7 +14,7 @@
 #include <cstdint>
 
 
-JRT_LEAF(void, MaTSaC2::method_enter(JavaThread *thread, Method *method))
+void MaTSaC2::method_enter(JavaThread *thread, Method *method) {
     int tid = JavaThread::get_matsa_tid(thread);
 
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
@@ -25,21 +25,21 @@ JRT_LEAF(void, MaTSaC2::method_enter(JavaThread *thread, Method *method))
     // Symbolizer::Symbolize(FUNC, method, bci, tid);
     stack->push(packed_frame);
     History::add_event(thread, method, bci);
-JRT_END
+}
 
-JRT_LEAF(void, MaTSaC2::method_exit(JavaThread *thread, Method *method))
+void MaTSaC2::method_exit(JavaThread *thread, Method *method) {
     int tid = JavaThread::get_matsa_tid(thread);
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
     (void)stack->pop();
   
     History::add_event(thread, 0, 0);
-JRT_END
+}
 
-JRT_LEAF(void, MaTSaC2::pre_method_enter(JavaThread *thread, int bci))
+void MaTSaC2::pre_method_enter(JavaThread *thread, int bci) {
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
     // set the caller bci to be used by next func enter
     stack->set_caller_bci((uint16_t)bci);
-JRT_END
+}
 
 JRT_LEAF(void, MaTSaC2::sync_enter(JavaThread *thread, oopDesc *obj))
     int tid = JavaThread::get_matsa_tid(thread);

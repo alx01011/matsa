@@ -1564,22 +1564,21 @@ const TypeFunc *OptoRuntime::dtrace_object_alloc_Type() {
 }
 
 const TypeFunc *OptoRuntime::matsa_load_store_Type() {
-  // void *addr, Method *m, int bci, uint8_t access_size, bool is_write
-  const Type **fields = TypeTuple::fields(5);
-  fields[TypeFunc::Parms+0] = TypeRawPtr::BOTTOM; // addr
-  fields[TypeFunc::Parms+1] = TypeMetadataPtr::BOTTOM; // method we are in
+  // void *addr, int offset, int bci, method* method
+  const Type **fields = TypeTuple::fields(4);
+  fields[TypeFunc::Parms+0] = TypeRawPtr::NOTNULL; // addr
+  fields[TypeFunc::Parms+1] = TypeInt::INT; // offset
   fields[TypeFunc::Parms+2] = TypeInt::INT; // bci
-  fields[TypeFunc::Parms+3] = TypeInt::INT; // access_size
-  fields[TypeFunc::Parms+4] = TypeInt::BOOL; // is_write
+  fields[TypeFunc::Parms+3] = TypeMetadataPtr::BOTTOM; // method
 
-  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+5, fields);
-
+  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+4, fields);
   // create result type (range)
+
   fields = TypeTuple::fields(0);
 
-  const TypeTuple *range = TypeTuple::make(TypeFunc::Parms+0,fields);
+  const TypeTuple *range = TypeTuple::make(TypeFunc::Parms+0, fields);
 
-  return TypeFunc::make(domain,range);
+  return TypeFunc::make(domain, range);
 }
 
 const TypeFunc *OptoRuntime::matsa_cl_init_Type() {

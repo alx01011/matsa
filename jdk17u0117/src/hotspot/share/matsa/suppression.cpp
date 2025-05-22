@@ -99,7 +99,7 @@ void MaTSaSuppression::init(void) {
 }
 
 bool MaTSaSuppression::is_suppressed(JavaThread *thread) {
-    ResourceMark rm;
+    // ResourceMark rm;
 
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
 
@@ -109,9 +109,11 @@ bool MaTSaSuppression::is_suppressed(JavaThread *thread) {
 
     // first 48bits are the method pointer
     mp = (Method*)((uintptr_t)(raw_frame >> 16));
-    const char *fname = mp->external_name_as_fully_qualified();
 
-    if (top_frame_suppressions->search(fname)) {
+    char methodname_buf[256] = {"??"};
+
+    mp->name_and_sig_as_C_string(methodname_buf, sizeof(methodname_buf));
+    if (top_frame_suppressions->search(methodname_buf)) {
         return true;
     }
 
@@ -121,13 +123,13 @@ bool MaTSaSuppression::is_suppressed(JavaThread *thread) {
         raw_frame = stack->get(i);
         mp = (Method*)((uintptr_t)(raw_frame >> 16));
 
-        // its possible on non interpreted frame senders
-        if (mp == 0) {
-            continue;
-        }
+        // should not be possible
+        // if (mp == 0) {
+        //     continue;
+        // }
 
-        fname = mp->external_name_as_fully_qualified();
-        if (frame_suppressions->search(fname)) {
+        mp->name_and_sig_as_C_string(methodname_buf, sizeof(methodname_buf));
+        if (frame_suppressions->search(methodname_buf)) {
             return true;
         }
     }

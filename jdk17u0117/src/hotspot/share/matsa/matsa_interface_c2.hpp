@@ -1,5 +1,5 @@
-#ifndef MATSA_INTERFACE_C1_HPP
-#define MATSA_INTERFACE_C1_HPP
+#ifndef MATSA_INTERFACE_C2_HPP
+#define MATSA_INTERFACE_C2_HPP
 
 #include "oops/method.hpp"
 #include "runtime/thread.hpp"

@@ -112,24 +112,25 @@ void MaTSaReportMap::clear() {
 Mutex *MaTSaReport::_report_lock;
 
 void print_method_info(Method *m, int bci, int index) {
-    const char *file_name = "??";
+    char methodname_buf[256] = {"??"};
+    char filename_buf[128] = {"??"};
     InstanceKlass *holder = m->method_holder();
     Symbol *source_file   = nullptr;
 
     if (holder != nullptr && (source_file = holder->source_file_name()) != nullptr) {
-        file_name = source_file->as_C_string();
+        source_file->as_C_string(filename_buf, sizeof(filename_buf));
     }
 
-    const char *method_name = m->external_name_as_fully_qualified();
-    const int  lineno       = m->line_number_from_bci(bci);
+    m->name_and_sig_as_C_string(methodname_buf, sizeof(methodname_buf));
 
+    int lineno = m->line_number_from_bci(bci);
 
     if (lineno == -1) {
-        fprintf(stderr, "  #%d %s() %s:??\n", index, method_name, file_name);
+        fprintf(stderr, "  #%d %s %s:??\n", index, methodname_buf, filename_buf);
         return;
     }
 
-    fprintf(stderr, "  #%d %s() %s:%d\n", index, method_name, file_name, lineno);
+    fprintf(stderr, "  #%d %s %s:%d\n", index, methodname_buf, filename_buf, lineno);
 }
 
 // must hold lock else the output will be garbled
@@ -241,7 +242,7 @@ void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, i
 
     
     int pid = os::current_process_id();
-    ResourceMark rm;
+    // ResourceMark rm;
 
     fprintf(stderr, "==================\n");
 
@@ -257,17 +258,22 @@ void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, i
         fprintf(stderr, "  <no stack trace available>\n");
     }
 
-    const char *file_name   = "<null>";
-    const char *method_name = m->external_name_as_fully_qualified();
+    
+
+    char methodname_buf[256] = {"??"};
+    char filename_buf[128] = {"??"};
+
     const int lineno        = m->line_number_from_bci(cur_bci);
 
     InstanceKlass *holder = m->method_holder();
     Symbol *source_file   = nullptr;
     if (holder != nullptr && (source_file = holder->source_file_name()) != nullptr) {
-        file_name = source_file->as_C_string();
+        source_file->as_C_string(filename_buf, sizeof(filename_buf));
     }
 
-    fprintf(stderr, "\nSUMMARY: ThreadSanitizer: data race %s:%d in %s()\n", file_name, lineno, method_name);
+    m->name_and_sig_as_C_string(methodname_buf, sizeof(methodname_buf));
+
+    fprintf(stderr, "\nSUMMARY: ThreadSanitizer: data race %s:%d in %s\n", filename_buf, lineno, methodname_buf);
     fprintf(stderr, "==================\n");
 
     // store it in the report map

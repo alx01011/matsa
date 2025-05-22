@@ -87,7 +87,7 @@ void GraphKit::make_matsa_load_store(Node *addr, ciMethod *m, int bci, uint8_t a
   // kill_dead_locals();
 
   const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
-  make_runtime_call(RC_LEAF,
+  make_runtime_call(RC_NO_FP,
                     call_type, call_address,
                     call_name, raw_adr_type,
                     addr, method_node, bci_node, access_size_node, is_write_node);
@@ -104,7 +104,7 @@ void GraphKit::make_matsa_cl_init_acq(Node *oop) {
   // kill_dead_locals();
 
   const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
-  make_runtime_call(RC_LEAF,
+  make_runtime_call(RC_NO_FP,
                     call_type, call_address,
                     call_name, raw_adr_type,
                     thread, oop);
@@ -126,7 +126,7 @@ void GraphKit:: make_matsa_method_enter_exit(ciMethod* method, bool is_entry) {
   // kill_dead_locals();
 
   const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
-  make_runtime_call(RC_LEAF,
+  make_runtime_call(RC_NO_FP,
                     call_type, call_address,
                     call_name, raw_adr_type,
                     thread, method_node);
@@ -146,7 +146,7 @@ void GraphKit::make_matsa_pre_method_enter(int bci) {
   // kill_dead_locals();
 
   const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
-  make_runtime_call(RC_LEAF,
+  make_runtime_call(RC_NO_FP,
                     call_type, call_address,
                     call_name, raw_adr_type,
                     thread, bci_node);
@@ -164,7 +164,7 @@ void GraphKit::make_matsa_lock_unlock(Node *obj, bool is_locking) {
   // kill_dead_locals();
 
   const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
-  make_runtime_call(RC_LEAF,
+  make_runtime_call(RC_NO_FP,
                     call_type, call_address,
                     call_name, raw_adr_type,
                     thread, obj);
