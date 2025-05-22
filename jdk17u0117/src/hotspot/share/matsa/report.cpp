@@ -185,6 +185,7 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
     Part *part = h->get_part(tid, prev_history.ring_idx);
 
     if (prev_history.history_epoch != part->epoch) {
+        FREE_C_HEAP_ARRAY(EventTrace, trace);
         return false;
     }
 
@@ -199,8 +200,8 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
     }
 
     for (uint64_t i = 0; i < prev_history.history_idx; i++) {
-        if (part->events[i].method == 0 && trace_idx > 0) {
-            trace_idx--;
+        if (part->events[i].method == 0) {
+            trace_idx -= trace_idx > 0;
             continue;
         }
 
@@ -219,6 +220,7 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
         fprintf(stderr, "  <truncated>\n");
     }
 
+    FREE_C_HEAP_ARRAY(EventTrace, trace);
     return trace_idx != 0;
 }
 
