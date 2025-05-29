@@ -1088,9 +1088,9 @@ void Parse::do_exits() {
         kit.make_dtrace_method_exit(method());
       }
       // Should matsa be notified here too?
-      MATSA_ONLY(
-        make_matsa_method_enter_exit(method(), false);
-      );
+      // MATSA_ONLY(
+      //   make_matsa_method_enter_exit(method(), false);
+      // );
       if (_replaced_nodes_for_exceptions) {
         kit.map()->apply_replaced_nodes(_new_idx);
       }
@@ -1199,9 +1199,9 @@ void Parse::do_method_entry() {
     make_dtrace_method_entry(method());
   }
 
-  MATSA_ONLY(
-    make_matsa_method_enter_exit(method(), true);
-  );
+  // MATSA_ONLY(
+  //   make_matsa_method_enter_exit(method(), true);
+  // );
 
 #ifdef ASSERT
   // Narrow receiver type when it is too broad for the method being parsed.
@@ -2223,9 +2223,9 @@ void Parse::return_current(Node* value) {
     make_dtrace_method_exit(method());
   }
 
-  MATSA_ONLY(
-    make_matsa_method_enter_exit(method(), false);
-  );
+  // MATSA_ONLY(
+  //   make_matsa_method_enter_exit(method(), false);
+  // );
 
   SafePointNode* exit_return = _exits.map();
   exit_return->in( TypeFunc::Control  )->add_req( control() );

@@ -84,9 +84,9 @@ CallGenerator* Compile::call_generator(ciMethod* callee, int vtable_index, bool 
     allow_inline = false;
   }
 
-  MATSA_ONLY(
-    allow_inline = false;
-  );
+  // MATSA_ONLY(
+  //   allow_inline = false;
+  // );
 
   // Note: When we get profiling during stage-1 compiles, we want to pull
   // from more specific profile data which pertains to this inlining.
@@ -500,9 +500,9 @@ void Parse::do_call() {
   // our contribution to it is cleaned up right here.
   kill_dead_locals();
 
-  MATSA_ONLY(
-    make_matsa_pre_method_enter(bci());
-  );
+  // MATSA_ONLY(
+  //   make_matsa_pre_method_enter(bci());
+  // );
 
   C->print_inlining_assert_ready();
 

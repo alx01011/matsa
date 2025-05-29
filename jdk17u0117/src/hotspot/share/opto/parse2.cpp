@@ -65,12 +65,13 @@ void Parse::array_load(BasicType bt) {
   }
   const TypeAryPtr* adr_type = TypeAryPtr::get_array_body_type(bt);
 
-  MATSA_ONLY(
-    make_matsa_load_store(adr, method(), bci(), type2aelembytes(bt), false);
-  );
-
   Node* ld = access_load_at(array, adr, adr_type, elemtype, bt,
                             IN_HEAP | IS_ARRAY | C2_CONTROL_DEPENDENT_LOAD);
+
+  // MATSA_ONLY(
+  //   make_matsa_load_store(adr, method(), bci(), type2aelembytes(bt), false);
+  // );
+                            
   if (big_val) {
     push_pair(ld);
   } else {
@@ -104,13 +105,13 @@ void Parse::array_store(BasicType bt) {
     bt = T_BOOLEAN;
   }
 
-  MATSA_ONLY(
-    make_matsa_load_store(adr, method(), bci(), type2aelembytes(bt), true);
-  );
-
   const TypeAryPtr* adr_type = TypeAryPtr::get_array_body_type(bt);
 
   access_store_at(array, adr, adr_type, val, elemtype, bt, MO_UNORDERED | IN_HEAP | IS_ARRAY);
+
+  // MATSA_ONLY(
+  //   make_matsa_load_store(adr, method(), bci(), type2aelembytes(bt), true);
+  // );
 }
 
 

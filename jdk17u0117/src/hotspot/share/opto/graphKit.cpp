@@ -3579,9 +3579,9 @@ FastLockNode* GraphKit::shared_lock(Node* obj) {
   // Add this to the worklist so that the lock can be eliminated
   record_for_igvn(lock);
 
-  MATSA_ONLY(
-    make_matsa_lock_unlock(obj, true);
-  );
+  // MATSA_ONLY(
+  //   make_matsa_lock_unlock(obj, true);
+  // );
 
 #ifndef PRODUCT
   if (PrintLockStatistics) {
@@ -3610,9 +3610,9 @@ void GraphKit::shared_unlock(Node* box, Node* obj) {
     return;
   }
 
-  MATSA_ONLY(
-    make_matsa_lock_unlock(obj, false);
-  );
+  // MATSA_ONLY(
+  //   make_matsa_lock_unlock(obj, false);
+  // );
 
   // Memory barrier to avoid floating things down past the locked region
   insert_mem_bar(Op_MemBarReleaseLock);
