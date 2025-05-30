@@ -938,11 +938,9 @@ void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method)
 
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
   uint16_t bci = stack->get_caller_bci();
-  // first 48 bits are the method id, last 16 bits are the bci
-  uint64_t packed_frame = ((uint64_t)method << 16) | (uint64_t)bci;
 
   // Symbolizer::Symbolize(FUNC, method, bci, tid);
-  stack->push(packed_frame);
+  stack->push(method, bci);
   History::add_event(current, method, bci);
 }
 

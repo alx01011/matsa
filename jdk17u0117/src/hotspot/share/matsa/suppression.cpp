@@ -104,11 +104,8 @@ bool MaTSaSuppression::is_suppressed(JavaThread *thread) {
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
 
     // first check the top frame
-    Method *mp = NULL;
-    uint64_t raw_frame = stack->top();
-
-    // first 48bits are the method pointer
-    mp = (Method*)((uintptr_t)(raw_frame >> 16));
+    MaTSaStackElem raw_frame = stack->top();
+    Method *mp = (Method*)((uint64_t)(raw_frame.method));
 
     char methodname_buf[256] = {"??"};
 
@@ -121,7 +118,7 @@ bool MaTSaSuppression::is_suppressed(JavaThread *thread) {
     // now check the rest of the frames
     for (int i = stack_size - 1; i >= 0; i--) {
         raw_frame = stack->get(i);
-        mp = (Method*)((uintptr_t)(raw_frame >> 16));
+        mp = (Method*)((uint64_t)(raw_frame.method));
 
         // should not be possible
         // if (mp == 0) {

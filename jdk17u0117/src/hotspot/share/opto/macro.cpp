@@ -58,6 +58,7 @@
 #include "gc/g1/g1ThreadLocalData.hpp"
 #endif // INCLUDE_G1GC
 
+#include "matsa/matsaRTL.hpp"
 
 //
 // Replace any references to "oldref" in inputs to "use" with "newref".
@@ -2549,6 +2550,9 @@ void PhaseMacroExpand::eliminate_macro_nodes() {
       bool success = false;
       DEBUG_ONLY(int old_macro_count = C->macro_count();)
       switch (n->class_id()) {
+      case Node::Class_MaTSaLoadStore: {
+        break;
+      }
       case Node::Class_Allocate:
       case Node::Class_AllocateArray:
         success = eliminate_allocate_node(n->as_Allocate());
@@ -2598,6 +2602,62 @@ bool PhaseMacroExpand::expand_macro_nodes() {
       Node* n = C->macro_node(i-1);
       bool success = false;
       DEBUG_ONLY(int old_macro_count = C->macro_count();)
+
+      if (n->Opcode() == Op_MaTSaLoadStore) {
+        C->remove_macro_node(n);
+
+        // _igvn._worklist.push(n);
+        // _igvn.replace_node(n, C->top());
+        success = true;
+
+        const TypeFunc* slow_call_type = OptoRuntime::matsa_load_store_Type();
+        address matsa_rtl_adr = CAST_FROM_FN_PTR(address, MaTSaRTL::C2MemoryAccess);
+        CallNode *call = (CallNode*)new CallLeafNode(slow_call_type, matsa_rtl_adr, "matsa_load_store_C", TypeRawPtr::BOTTOM);
+
+        /*
+          load_node->init_req( TypeFunc::Control, control() );
+          load_node->init_req( TypeFunc::Memory , mem );
+          load_node->init_req( TypeFunc::I_O    , top() );   // does no i/o
+          load_node->init_req( TypeFunc::FramePtr, frameptr() );
+          load_node->init_req( TypeFunc::ReturnAdr, top() );
+        */
+        copy_predefined_input_for_runtime_call(n->in(TypeFunc::Control), (CallNode*)n, call);
+
+        /*
+          load_node->init_req(TypeFunc::Parms + 0, adr);
+          load_node->init_req(TypeFunc::Parms + 1, method_node);
+          load_node->init_req(TypeFunc::Parms + 2, intcon(bci()));
+          load_node->init_req(TypeFunc::Parms + 3, intcon(field->size_in_bytes()));
+          load_node->init_req(TypeFunc::Parms + 4, intcon(0)); // is_write = false
+        */
+
+        call->init_req(TypeFunc::Parms + 0, n->in(TypeFunc::Parms + 0)); // adr
+        call->init_req(TypeFunc::Parms + 1, n->in(TypeFunc::Parms + 1)); // method_node
+        call->init_req(TypeFunc::Parms + 2, n->in(TypeFunc::Parms + 2)); // bci
+        call->init_req(TypeFunc::Parms + 3, n->in(TypeFunc::Parms + 3)); // field size
+        call->init_req(TypeFunc::Parms + 4, n->in(TypeFunc::Parms + 4)); // is_write
+
+        /*
+          call->copy_call_debug_info(&_igvn, oldcall);
+          call->set_cnt(PROB_UNLIKELY_MAG(4));  // Same effect as RC_UNCOMMON.
+          _igvn.replace_node(oldcall, call);
+          transform_later(call);
+        */
+
+        call->copy_call_debug_info(&_igvn, (CallNode*)n);
+        _igvn.replace_node(n, call);
+        transform_later(call);
+
+
+
+        // transform_later(n);
+
+        // bool is_membar = n->Opcode() == Op_MaTSaMemBar;
+
+        // fprintf(stderr, "matsa macro(%s) getting expanded: %p\n",
+        //         is_membar ? "membar" : "load/store", (void*)n);
+      }
+      
       if (n->Opcode() == Op_LoopLimit) {
         // Remove it from macro list and put on IGVN worklist to optimize.
         C->remove_macro_node(n);
@@ -2682,6 +2742,9 @@ bool PhaseMacroExpand::expand_macro_nodes() {
     Node * n = C->macro_node(macro_count-1);
     assert(n->is_macro(), "only macro nodes expected here");
     if (_igvn.type(n) == Type::TOP || (n->in(0) != nullptr && n->in(0)->is_top())) {
+      if (n->class_id() == Node::Class_MaTSaLoadStore) {
+        puts("matso macro getting deleted:(");
+      }
       // node is unreachable, so don't try to expand it
       C->remove_macro_node(n);
       continue;
@@ -2693,6 +2756,7 @@ bool PhaseMacroExpand::expand_macro_nodes() {
     // Worst case is a macro node gets expanded into about 200 nodes.
     // Allow 50% more for optimization.
     if (C->check_node_count(300, "out of nodes before macro expansion")) {
+      puts("matsa is messing me up!");
       return true;
     }
 
@@ -2710,6 +2774,10 @@ bool PhaseMacroExpand::expand_macro_nodes() {
     case Node::Class_SubTypeCheck:
       expand_subtypecheck_node(n->as_SubTypeCheck());
       break;
+    case Node::Class_MaTSaLoadStore: {
+      fprintf(stderr, "FINALLY I FOUND A MATSALOADSTORE IN MACROEXPAND!!!\n");
+      break;
+    }
     default:
       assert(false, "unknown node type in macro list");
     }

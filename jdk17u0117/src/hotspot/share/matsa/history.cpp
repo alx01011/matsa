@@ -61,6 +61,7 @@ void History::add_event(JavaThread *thread, Method *m, uint16_t bci) {
         h->parts[h->part_idx].epoch++;
 
         MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
+        // this memcpy is ok as the matsastackelem itself is 64bits
         memcpy((uint64_t*)((uint64_t)h->parts[h->part_idx].real_stack), stack->get(), stack->size() * sizeof(uint64_t));
         h->parts[h->part_idx].real_stack_size = stack->size();
     }

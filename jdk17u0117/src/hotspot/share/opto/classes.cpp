@@ -53,6 +53,8 @@
 #include "gc/shenandoah/c2/shenandoahBarrierSetC2.hpp"
 #endif
 
+#include "opto/matsanode.hpp"
+
 // ----------------------------------------------------------------------------
 // Build a table of virtual functions to map from Nodes to dense integer
 // opcode names.

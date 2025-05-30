@@ -7,7 +7,7 @@
 
 #define MAX_ADDRESS_BITS (48)
 #define MAX_BCI_BITS     (16) // per spec
-#define MAX_STACK_BITS   (16)
+#define MAX_STACK_BITS   (18)
 
 
 // TODO: this has to be done at compile time

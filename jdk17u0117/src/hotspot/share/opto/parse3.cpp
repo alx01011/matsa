@@ -37,6 +37,8 @@
 #include "runtime/deoptimization.hpp"
 #include "runtime/handles.inline.hpp"
 
+#include "opto/matsanode.hpp"
+
 //=============================================================================
 // Helper methods for _get* and _put* bytecodes
 //=============================================================================
@@ -171,12 +173,45 @@ void Parse::do_get_xxx(Node* obj, ciField* field, bool is_field) {
   //   bool skip = is_vol || (flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class());
   //   if (!skip) {
   //     if (field->is_static()) {
-  //       make_matsa_cl_init_acq(obj);
+  //       //make_matsa_cl_init_acq(obj);
   //     }
 
   //     make_matsa_load_store(adr, method(), bci(), field->size_in_bytes(), false);
   //   }
   // );
+
+  MATSA_ONLY(
+      MaTSaLoadStoreNode *load_node = new MaTSaLoadStoreNode(C);
+      Node *mem = reset_memory();
+
+      MaTSaLoadStoreNode *tmp = load_node;
+
+      load_node->init_req( TypeFunc::Control, control() );
+      load_node->init_req( TypeFunc::Memory , mem );
+      load_node->init_req( TypeFunc::I_O    , top() );   // does no i/o
+      load_node->init_req( TypeFunc::FramePtr, frameptr() );
+      load_node->init_req( TypeFunc::ReturnAdr, top() );
+
+      const TypePtr* method_type = TypeMetadataPtr::make(method());
+      Node *method_node = _gvn.transform(ConNode::make(method_type));
+
+      load_node->init_req(TypeFunc::Parms + 0, adr);
+      load_node->init_req(TypeFunc::Parms + 1, method_node);
+      load_node->init_req(TypeFunc::Parms + 2, intcon(bci()));
+      load_node->init_req(TypeFunc::Parms + 3, intcon(field->size_in_bytes()));
+      load_node->init_req(TypeFunc::Parms + 4, intcon(0)); // is_write = false
+      // add_safepoint_edges(load_node);
+
+      load_node = _gvn.transform(load_node)->as_MaTSaLoadStore();
+      set_predefined_output_for_runtime_call(load_node, mem, TypeRawPtr::BOTTOM);
+
+      // insert_mem_bar(Op_MaTSaMemBar);
+
+      record_for_igvn(load_node);
+      C->add_macro_node(load_node);
+
+      assert(load_node == tmp, "should not change");
+  );
 
   // Adjust Java stack
   if (type2size[bt] == 1)
@@ -239,12 +274,42 @@ void Parse::do_put_xxx(Node* obj, ciField* field, bool is_field) {
   }
   access_store_at(obj, adr, adr_type, val, field_type, bt, decorators);
 
+  MATSA_ONLY(
+      MaTSaLoadStoreNode *store_node = new MaTSaLoadStoreNode(C);
+      Node *mem = reset_memory();
+
+      MaTSaLoadStoreNode *tmp = store_node;
+
+      store_node->init_req( TypeFunc::Control, control() );
+      store_node->init_req( TypeFunc::Memory , mem );
+      store_node->init_req( TypeFunc::I_O    , top() );   // does no i/o
+      store_node->init_req( TypeFunc::FramePtr, frameptr() );
+      store_node->init_req( TypeFunc::ReturnAdr, top() );
+
+      const TypePtr* method_type = TypeMetadataPtr::make(method());
+      Node *method_node = _gvn.transform(ConNode::make(method_type));
+
+      store_node->init_req(TypeFunc::Parms + 0, adr);
+      store_node->init_req(TypeFunc::Parms + 1, method_node);
+      store_node->init_req(TypeFunc::Parms + 2, intcon(bci()));
+      store_node->init_req(TypeFunc::Parms + 3, intcon(field->size_in_bytes()));
+      store_node->init_req(TypeFunc::Parms + 4, intcon(0)); // is_write = false
+
+      store_node = _gvn.transform(store_node)->as_MaTSaLoadStore();
+      set_predefined_output_for_runtime_call(store_node, mem, TypeRawPtr::BOTTOM);
+
+      record_for_igvn(store_node);
+      C->add_macro_node(store_node);
+
+      assert(store_node == tmp, "should not change");
+  );
+
   // MATSA_ONLY(
   //   AccessFlags flags(field->flags().as_int());
   //   bool skip = is_vol || (flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class());
   //   if (!skip) {
   //     if (field->is_static()) {
-  //       make_matsa_cl_init_acq(obj);
+  //       //make_matsa_cl_init_acq(obj);
   //     }
   //     make_matsa_load_store(adr, method(), bci(), field->size_in_bytes(), true);
   //   }

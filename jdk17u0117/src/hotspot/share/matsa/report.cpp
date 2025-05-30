@@ -142,13 +142,14 @@ void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
     int bci = 0;
 
     // encode the current bci
-    uint64_t prev_frame = 0 | cur_bci;
-    uint64_t raw_frame  = 0;
+    MaTSaStackElem prev_frame = {0, 0};
+    MaTSaStackElem raw_frame;
 
     for (int i = stack_size - 1, count = 0; i >= 0 && count < MAX_FRAMES; i--, prev_frame = raw_frame, count++) {
+        assert(i >= 0, "MaTSaReport: stack underflow");
         raw_frame = stack->get(i);
 
-        mp  = (Method*)(raw_frame >> 16);
+        mp  = (Method*)((uint64_t)raw_frame.method);
 
         /*  
             bci handling is a bit tricky:
@@ -159,8 +160,7 @@ void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
                 - that is because the sender is the method that called the current method
                 - we want to know the line number the sender called the current method
         */
-        bci = prev_frame & 0xFFFF;
-
+        bci = prev_frame.bci;
         print_method_info(mp, bci, (stack_size - 1) - i);
     }
 
@@ -190,13 +190,13 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
         return false;
     }
 
-    uint64_t *real_stack = (uint64_t*)((uint64_t)part->real_stack);
+    MaTSaStackElem *real_stack = (MaTSaStackElem*)((uint64_t)part->real_stack);
 
     for (uint64_t i = 0; i < part->real_stack_size; i++) {
-        Method *m = (Method*)(real_stack[i] >> 16);
+        Method *m = (Method*)((uint64_t)real_stack[i].method);
 
         trace[trace_idx].m   = m;
-        trace[trace_idx].bci = real_stack[i] & 0xFFFF;
+        trace[trace_idx].bci = real_stack[i].bci;
         trace_idx++;
     }
 

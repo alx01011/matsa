@@ -174,6 +174,8 @@ class StoreVectorScatterNode;
 class VectorMaskCmpNode;
 class VectorSet;
 
+class MaTSaLoadStoreNode;
+
 // The type of all node counts and indexes.
 // It must hold at least 16 bits, but must also be fast to load and store.
 // This type, if less than 32 bits, could limit the number of possible nodes.
@@ -651,6 +653,7 @@ public:
             DEFINE_CLASS_ID(Unlock,           AbstractLock, 1)
           DEFINE_CLASS_ID(ArrayCopy,        Call, 4)
           DEFINE_CLASS_ID(CallNative,       Call, 5)
+          DEFINE_CLASS_ID(MaTSaLoadStore, Call, 6)
       DEFINE_CLASS_ID(MultiBranch, Multi, 1)
         DEFINE_CLASS_ID(PCTable,     MultiBranch, 0)
           DEFINE_CLASS_ID(Catch,       PCTable, 0)
@@ -910,6 +913,7 @@ public:
   DEFINE_CLASS_QUERY(MachTemp)
   DEFINE_CLASS_QUERY(MachMemBar)
   DEFINE_CLASS_QUERY(MachMerge)
+  DEFINE_CLASS_QUERY(MaTSaLoadStore)
   DEFINE_CLASS_QUERY(Mem)
   DEFINE_CLASS_QUERY(MemBar)
   DEFINE_CLASS_QUERY(MemBarStoreStore)

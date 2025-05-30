@@ -1,18 +1,26 @@
 #ifndef MATSA_STACK_HPP
 #define MATSA_STACK_HPP
 
-// 65k entries
-#define DEFAULT_STACK_SIZE (1 << 16)
+// 260k stack size by default
+// should be enough for most cases
+#define DEFAULT_STACK_SIZE (1 << 18)
 
 #include <cstdint>
 
 #include "memory/allocation.hpp"
 
+class Method;
+
+struct MaTSaStackElem {
+    uint64_t method : 48; // method pointer
+    uint64_t bci    : 16; // bci in the method
+};
+
 class MaTSaStack : public CHeapObj<mtInternal> {
     private:
-        uint64_t *_stack;
+        MaTSaStackElem *_stack;
         int _size;
-        uint16_t _top;
+        int _top;
 
         // needed so we know the line number a method got called at
         uint16_t _caller_bci;
@@ -21,13 +29,13 @@ class MaTSaStack : public CHeapObj<mtInternal> {
         MaTSaStack(size_t size);
         ~MaTSaStack();
 
-        void push(uint64_t value);
-        uint64_t pop(void);
+        void push(Method *m, uint16_t bci);
+        MaTSaStackElem pop(void);
 
-        uint64_t top(void);
-        uint64_t get(size_t index);
+        MaTSaStackElem top(void);
+        MaTSaStackElem get(int index);
 
-        uint64_t *get(void);
+        MaTSaStackElem *get(void);
 
         uint16_t get_caller_bci(void) { return _caller_bci; }
         void set_caller_bci(uint16_t bci) { _caller_bci = bci; }

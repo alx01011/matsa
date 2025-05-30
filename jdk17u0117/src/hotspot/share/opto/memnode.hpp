@@ -1248,6 +1248,14 @@ public:
   virtual int Opcode() const;
 };
 
+class MaTSaMemBarNode: public MemBarNode {
+public:
+  MaTSaMemBarNode(Compile* C, int alias_idx, Node* precedent)
+    : MemBarNode(C, alias_idx, precedent) {}
+  virtual int Opcode() const;
+};
+
+
 // "Acquire" - no following ref can move before (but earlier refs can
 // follow, like an early Load stalled in cache).  Requires multi-cpu
 // visibility.  Inserted independ of any load, as required

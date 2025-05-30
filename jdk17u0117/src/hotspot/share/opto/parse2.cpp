@@ -71,6 +71,39 @@ void Parse::array_load(BasicType bt) {
   // MATSA_ONLY(
   //   make_matsa_load_store(adr, method(), bci(), type2aelembytes(bt), false);
   // );
+
+  //   MATSA_ONLY(
+  //     MaTSaLoadStoreNode *load_node = new MaTSaLoadStoreNode(C);
+  //     Node *mem = reset_memory();
+
+  //     MaTSaLoadStoreNode *tmp = load_node;
+
+  //     load_node->init_req( TypeFunc::Control, control() );
+  //     load_node->init_req( TypeFunc::Memory , mem );
+  //     load_node->init_req( TypeFunc::I_O    , top() );   // does no i/o
+  //     load_node->init_req( TypeFunc::FramePtr, frameptr() );
+  //     load_node->init_req( TypeFunc::ReturnAdr, top() );
+
+  //     const TypePtr* method_type = TypeMetadataPtr::make(method());
+  //     Node *method_node = _gvn.transform(ConNode::make(method_type));
+
+  //     load_node->init_req(TypeFunc::Parms + 0, adr);
+  //     load_node->init_req(TypeFunc::Parms + 1, method_node);
+  //     load_node->init_req(TypeFunc::Parms + 2, intcon(bci()));
+  //     load_node->init_req(TypeFunc::Parms + 3, intcon(field->size_in_bytes()));
+  //     load_node->init_req(TypeFunc::Parms + 4, intcon(0)); // is_write = false
+  //     // add_safepoint_edges(load_node);
+
+  //     load_node = _gvn.transform(load_node)->as_MaTSaLoadStore();
+  //     set_predefined_output_for_runtime_call(load_node, mem, TypeRawPtr::BOTTOM);
+
+  //     // insert_mem_bar(Op_MaTSaMemBar);
+
+  //     record_for_igvn(load_node);
+  //     C->add_macro_node(load_node);
+
+  //     assert(load_node == tmp, "should not change");
+  // );
                             
   if (big_val) {
     push_pair(ld);

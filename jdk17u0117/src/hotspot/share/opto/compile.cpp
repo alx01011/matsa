@@ -3592,6 +3592,11 @@ void Compile::final_graph_reshaping_main_switch(Node* n, Final_Reshape_Counts& f
     }
     break;
   }
+  case Op_MaTSaLoadStore:
+    fprintf(stderr, "MaTSaLoadStore node %p\n", (void*)n);
+    // add it to dead nodes
+    dead_nodes.push(n);
+    break;
   default:
     assert(!n->is_Call(), "");
     assert(!n->is_Mem(), "");
