@@ -208,7 +208,7 @@ void Parse::do_get_xxx(Node* obj, ciField* field, bool is_field) {
       // insert_mem_bar(Op_MaTSaMemBar);
 
       record_for_igvn(load_node);
-      C->add_macro_node(load_node);
+      // C->add_macro_node(load_node);
 
       assert(load_node == tmp, "should not change");
   );
@@ -293,13 +293,13 @@ void Parse::do_put_xxx(Node* obj, ciField* field, bool is_field) {
       store_node->init_req(TypeFunc::Parms + 1, method_node);
       store_node->init_req(TypeFunc::Parms + 2, intcon(bci()));
       store_node->init_req(TypeFunc::Parms + 3, intcon(field->size_in_bytes()));
-      store_node->init_req(TypeFunc::Parms + 4, intcon(0)); // is_write = false
+      store_node->init_req(TypeFunc::Parms + 4, intcon(1)); // is_write = true
 
       store_node = _gvn.transform(store_node)->as_MaTSaLoadStore();
       set_predefined_output_for_runtime_call(store_node, mem, TypeRawPtr::BOTTOM);
 
       record_for_igvn(store_node);
-      C->add_macro_node(store_node);
+      // C->add_macro_node(store_node);
 
       assert(store_node == tmp, "should not change");
   );

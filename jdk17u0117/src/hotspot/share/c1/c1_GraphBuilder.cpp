@@ -1545,11 +1545,11 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
 
     assert(!method()->is_synchronized() || InlineSynchronizedMethods, "can not inline synchronized methods yet");
     
-    MATSA_ONLY(
-      // exit from inline method 
-      Values* args = new Values(0);
-      append(new RuntimeCall(voidType, "method_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args));
-    );
+    // MATSA_ONLY(
+    //   // exit from inline method 
+    //   Values* args = new Values(0);
+    //   append(new RuntimeCall(voidType, "method_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args));
+    // );
 
     if (compilation()->env()->dtrace_method_probes()) {
       // Report exit from inline methods
@@ -3739,11 +3739,11 @@ void GraphBuilder::fill_sync_handler(Value lock, BlockBegin* sync_handler, bool 
     append_with_bci(new RuntimeCall(voidType, "dtrace_method_exit", CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit), args), bci);
   }
 
-  MATSA_ONLY(
-    // exit from inline method if exception is thrown
-    Values* args = new Values(0);
-    append_with_bci(new RuntimeCall(voidType, "method_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args), bci);
-  );
+  // MATSA_ONLY(
+  //   // exit from inline method if exception is thrown
+  //   Values* args = new Values(0);
+  //   append_with_bci(new RuntimeCall(voidType, "method_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args), bci);
+  // );
 
   if (lock) {
     assert(state()->locks_size() > 0 && state()->lock_at(state()->locks_size() - 1) == lock, "lock is missing");
@@ -3956,28 +3956,28 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
     inline_sync_entry(lock, sync_handler);
   }
 
-  MATSA_ONLY(
-    // pre method enter
-    int caller_bci = caller_state->bci();
+  // MATSA_ONLY(
+  //   // pre method enter
+  //   int caller_bci = caller_state->bci();
 
-    Values *args = new Values(2);
-    args->push(append(new Constant(new MethodConstant(scope()->caller()->method()))));
-    args->push(append(new Constant(new IntConstant(caller_bci))));
+  //   Values *args = new Values(2);
+  //   args->push(append(new Constant(new MethodConstant(scope()->caller()->method()))));
+  //   args->push(append(new Constant(new IntConstant(caller_bci))));
 
-    append(new RuntimeCall(voidType, "pre_method_enter", CAST_FROM_FN_PTR(address, MaTSaC1::pre_method_enter), args));
-  );
+  //   append(new RuntimeCall(voidType, "pre_method_enter", CAST_FROM_FN_PTR(address, MaTSaC1::pre_method_enter), args));
+  // );
 
-  MATSA_ONLY(
-    Values* args = new Values(1);
-    args->push(append(new Constant(new MethodConstant(method()))));
-    append(new RuntimeCall(voidType, "method_enter", CAST_FROM_FN_PTR(address, MaTSaC1::method_enter), args));
-  );
+  // MATSA_ONLY(
+  //   Values* args = new Values(1);
+  //   args->push(append(new Constant(new MethodConstant(method()))));
+  //   append(new RuntimeCall(voidType, "method_enter", CAST_FROM_FN_PTR(address, MaTSaC1::method_enter), args));
+  // );
 
-  if (compilation()->env()->dtrace_method_probes()) {
-    Values* args = new Values(1);
-    args->push(append(new Constant(new MethodConstant(method()))));
-    append(new RuntimeCall(voidType, "dtrace_method_entry", CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_entry), args));
-  }
+  // if (compilation()->env()->dtrace_method_probes()) {
+  //   Values* args = new Values(1);
+  //   args->push(append(new Constant(new MethodConstant(method()))));
+  //   append(new RuntimeCall(voidType, "dtrace_method_entry", CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_entry), args));
+  // }
 
   if (profile_inlined_calls()) {
     profile_invocation(callee, copy_state_before_with_bci(SynchronizationEntryBCI));

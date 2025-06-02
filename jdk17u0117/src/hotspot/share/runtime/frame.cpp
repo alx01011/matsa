@@ -55,6 +55,8 @@
 #include "utilities/decoder.hpp"
 #include "utilities/formatBuffer.hpp"
 
+#include "matsa/matsa_interface_c2.hpp"
+
 RegisterMap::RegisterMap(JavaThread *thread, bool update_map, bool process_frames) {
   _thread         = thread;
   _update_map     = update_map;

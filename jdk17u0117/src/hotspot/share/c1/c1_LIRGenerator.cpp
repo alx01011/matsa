@@ -2198,6 +2198,7 @@
        unwind = !x->exception_handlers()->could_catch(throw_klass, type_is_exact);
      }
    }
+
  
    // do null check before moving exception oop into fixed register
    // to avoid a fixed interval with an oop during the null check.

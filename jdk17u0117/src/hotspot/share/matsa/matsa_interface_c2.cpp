@@ -14,18 +14,17 @@
 #include <cstdint>
 
 
-void MaTSaC2::method_enter(JavaThread *thread, Method *method) {
+void MaTSaC2::method_enter(JavaThread *thread, Method *method, int bci) {
     int tid = JavaThread::get_matsa_tid(thread);
 
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
-    uint16_t bci = stack->get_caller_bci();
 
     // Symbolizer::Symbolize(FUNC, method, bci, tid);
-    stack->push(method, bci);
-    History::add_event(thread, method, bci);
+    stack->push(method, (uint16_t)bci);
+    History::add_event(thread, method, (uint16_t)bci);
 }
 
-void MaTSaC2::method_exit(JavaThread *thread, Method *method) {
+void MaTSaC2::method_exit(JavaThread *thread, Method *method, int bci) {
     int tid = JavaThread::get_matsa_tid(thread);
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
     (void)stack->pop();

@@ -1600,11 +1600,12 @@ const TypeFunc *OptoRuntime::matsa_cl_init_Type() {
 
 const TypeFunc *OptoRuntime::matsa_method_enter_exit_Type() {
   // JavaThread *thread, void *method
-  const Type **fields = TypeTuple::fields(2);
+  const Type **fields = TypeTuple::fields(3);
   fields[TypeFunc::Parms+0] = TypeRawPtr::NOTNULL; // thread
   fields[TypeFunc::Parms+1] = TypeMetadataPtr::BOTTOM; // method
+  fields[TypeFunc::Parms+2] = TypeInt::INT; // bci
 
-  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+2, fields);
+  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+3, fields);
 
   // create result type (range)
   fields = TypeTuple::fields(0);

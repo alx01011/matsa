@@ -81,6 +81,8 @@
 #include "utilities/macros.hpp"
 #include "utilities/resourceHash.hpp"
 
+#include "opto/matsanode.hpp"
+
 
 // -------------------- Compile::mach_constant_base_node -----------------------
 // Constant table base node singleton.
@@ -697,6 +699,7 @@ Compile::Compile( ciEnv* ci_env, ciMethod* target, int osr_bci,
       StartNode* s = new StartNode(root(), tf()->domain());
       initial_gvn()->set_type_bottom(s);
       init_start(s);
+
       if (method()->intrinsic_id() == vmIntrinsics::_Reference_get) {
         // With java.lang.ref.reference.get() we must go through the
         // intrinsic - even when get() is the root

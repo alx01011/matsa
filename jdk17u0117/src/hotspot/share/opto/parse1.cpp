@@ -44,6 +44,8 @@
 #include "utilities/bitMap.inline.hpp"
 #include "utilities/copy.hpp"
 
+#include "opto/matsanode.hpp"
+
 // Static array so we can figure out which bytecodes stop us from compiling
 // the most. Some of the non-static variables are needed in bytecodeInfo.cpp
 // and eventually should be encapsulated in a proper class (gri 8/18/98).
@@ -1091,6 +1093,34 @@ void Parse::do_exits() {
       // MATSA_ONLY(
       //   make_matsa_method_enter_exit(method(), false);
       // );
+
+      MATSA_ONLY(
+        MaTSaMethodNode *method_node = new MaTSaMethodNode(C, false);
+        Node *mem = reset_memory();
+
+        method_node->init_req( TypeFunc::Control, control() );
+        method_node->init_req( TypeFunc::Memory , mem );
+        method_node->init_req( TypeFunc::I_O    , top() );   // does no i/o
+        method_node->init_req( TypeFunc::FramePtr, frameptr() );
+        method_node->init_req( TypeFunc::ReturnAdr, top() );
+
+        Node* thread = _gvn.transform(new ThreadLocalNode());
+
+        const TypePtr* method_type = TypeMetadataPtr::make(method());
+        Node *m = _gvn.transform(ConNode::make(method_type));
+
+        method_node->init_req(TypeFunc::Parms + 0, thread);
+        method_node->init_req(TypeFunc::Parms + 1, m);
+        // bci at which this method was called
+        method_node->init_req(TypeFunc::Parms + 2, _gvn.intcon(InvocationEntryBci));
+
+        method_node = _gvn.transform(method_node)->as_MaTSaMethod();
+        set_predefined_output_for_runtime_call(method_node, mem, TypeRawPtr::BOTTOM);
+
+        record_for_igvn(method_node);
+     );
+
+
       if (_replaced_nodes_for_exceptions) {
         kit.map()->apply_replaced_nodes(_new_idx);
       }
@@ -1198,6 +1228,34 @@ void Parse::do_method_entry() {
   if (C->env()->dtrace_method_probes()) {
     make_dtrace_method_entry(method());
   }
+
+  MATSA_ONLY(
+    MaTSaMethodNode *method_node = new MaTSaMethodNode(C, true);
+    Node *mem = reset_memory();
+
+    method_node->init_req( TypeFunc::Control, control() );
+    method_node->init_req( TypeFunc::Memory , mem );
+    method_node->init_req( TypeFunc::I_O    , top() );   // does no i/o
+    method_node->init_req( TypeFunc::FramePtr, frameptr() );
+    method_node->init_req( TypeFunc::ReturnAdr, top() );
+
+    Node* thread = _gvn.transform(new ThreadLocalNode());
+
+    const TypePtr* method_type = TypeMetadataPtr::make(method());
+    Node *m = _gvn.transform(ConNode::make(method_type));
+
+    method_node->init_req(TypeFunc::Parms + 0, thread);
+    method_node->init_req(TypeFunc::Parms + 1, m);
+
+    JVMState* caller_jvms = is_osr_parse() ? caller()->caller() : caller();
+    int caller_bci = caller_jvms->bci();
+    method_node->init_req(TypeFunc::Parms + 2, intcon(caller_bci));
+
+    method_node = _gvn.transform(method_node)->as_MaTSaMethod();
+    set_predefined_output_for_runtime_call(method_node, mem, TypeRawPtr::BOTTOM);
+
+    record_for_igvn(method_node);
+  );
 
   // MATSA_ONLY(
   //   make_matsa_method_enter_exit(method(), true);
@@ -2222,6 +2280,31 @@ void Parse::return_current(Node* value) {
   if (C->env()->dtrace_method_probes()) {
     make_dtrace_method_exit(method());
   }
+
+  MATSA_ONLY(
+    MaTSaMethodNode *method_node = new MaTSaMethodNode(C, false);
+    Node *mem = reset_memory();
+
+    method_node->init_req( TypeFunc::Control, control() );
+    method_node->init_req( TypeFunc::Memory , mem );
+    method_node->init_req( TypeFunc::I_O    , top() );   // does no i/o
+    method_node->init_req( TypeFunc::FramePtr, frameptr() );
+    method_node->init_req( TypeFunc::ReturnAdr, top() );
+
+    Node* thread = _gvn.transform(new ThreadLocalNode());
+
+    const TypePtr* method_type = TypeMetadataPtr::make(method());
+    Node *m = _gvn.transform(ConNode::make(method_type));
+
+    method_node->init_req(TypeFunc::Parms + 0, thread);
+    method_node->init_req(TypeFunc::Parms + 1, m);
+    method_node->init_req(TypeFunc::Parms + 2, intcon(0));
+
+    method_node = _gvn.transform(method_node)->as_MaTSaMethod();
+    set_predefined_output_for_runtime_call(method_node, mem, TypeRawPtr::BOTTOM);
+
+    record_for_igvn(method_node);
+  );
 
   // MATSA_ONLY(
   //   make_matsa_method_enter_exit(method(), false);

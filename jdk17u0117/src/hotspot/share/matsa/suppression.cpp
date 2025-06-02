@@ -114,12 +114,18 @@ bool MaTSaSuppression::is_suppressed(JavaThread *thread) {
         return true;
     }
 
+    Method *prev_method = mp;
+
     int stack_size = stack->size();
     // now check the rest of the frames
     for (int i = stack_size - 1; i >= 0; i--) {
         raw_frame = stack->get(i);
         mp = (Method*)((uint64_t)(raw_frame.method));
 
+        if (mp == prev_method) {
+            // recursion?
+            continue;
+        }
         // should not be possible
         // if (mp == 0) {
         //     continue;

@@ -52,6 +52,8 @@
 #include "utilities/powerOfTwo.hpp"
 #include "utilities/growableArray.hpp"
 
+#include "opto/matsanode.hpp"
+
 //----------------------------GraphKit-----------------------------------------
 // Main utility constructor.
 GraphKit::GraphKit(JVMState* jvms)
@@ -3579,6 +3581,29 @@ FastLockNode* GraphKit::shared_lock(Node* obj) {
   // Add this to the worklist so that the lock can be eliminated
   record_for_igvn(lock);
 
+  MATSA_ONLY(
+    MaTSaLockUnlockNode *lock_node = new MaTSaLockUnlockNode(C, true);
+    Node *mem = reset_memory();
+
+    lock_node->init_req( TypeFunc::Control, control() );
+    lock_node->init_req( TypeFunc::Memory , mem );
+    lock_node->init_req( TypeFunc::I_O    , top() );   // does no i/o
+    lock_node->init_req( TypeFunc::FramePtr, frameptr() );
+    lock_node->init_req( TypeFunc::ReturnAdr, top() );
+
+    Node* thread = _gvn.transform(new ThreadLocalNode());
+
+    lock_node->init_req(TypeFunc::Parms + 0, thread);
+    lock_node->init_req(TypeFunc::Parms + 1, obj);
+
+    lock_node = _gvn.transform(lock_node)->as_MaTSaLockUnlock();
+    set_predefined_output_for_runtime_call(lock_node, mem, TypeRawPtr::BOTTOM);
+
+    record_for_igvn(lock_node);
+  );
+
+
+
   // MATSA_ONLY(
   //   make_matsa_lock_unlock(obj, true);
   // );
@@ -3609,6 +3634,27 @@ void GraphKit::shared_unlock(Node* box, Node* obj) {
     map()->pop_monitor();        // Kill monitor from debug info
     return;
   }
+
+  MATSA_ONLY(
+    MaTSaLockUnlockNode *unlock_node = new MaTSaLockUnlockNode(C, false);
+    Node *mem = reset_memory();
+
+    unlock_node->init_req( TypeFunc::Control, control() );
+    unlock_node->init_req( TypeFunc::Memory , mem );
+    unlock_node->init_req( TypeFunc::I_O    , top() );   // does no i/o
+    unlock_node->init_req( TypeFunc::FramePtr, frameptr() );
+    unlock_node->init_req( TypeFunc::ReturnAdr, top() );
+
+    Node* thread = _gvn.transform(new ThreadLocalNode());
+
+    unlock_node->init_req(TypeFunc::Parms + 0, thread);
+    unlock_node->init_req(TypeFunc::Parms + 1, obj);
+
+    unlock_node = _gvn.transform(unlock_node)->as_MaTSaLockUnlock();
+    set_predefined_output_for_runtime_call(unlock_node, mem, TypeRawPtr::BOTTOM);
+
+    record_for_igvn(unlock_node);
+  );
 
   // MATSA_ONLY(
   //   make_matsa_lock_unlock(obj, false);

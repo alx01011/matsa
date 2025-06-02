@@ -175,6 +175,8 @@ class VectorMaskCmpNode;
 class VectorSet;
 
 class MaTSaLoadStoreNode;
+class MaTSaMethodNode;
+class MaTSaLockUnlockNode;
 
 // The type of all node counts and indexes.
 // It must hold at least 16 bits, but must also be fast to load and store.
@@ -654,6 +656,8 @@ public:
           DEFINE_CLASS_ID(ArrayCopy,        Call, 4)
           DEFINE_CLASS_ID(CallNative,       Call, 5)
           DEFINE_CLASS_ID(MaTSaLoadStore, Call, 6)
+          DEFINE_CLASS_ID(MaTSaMethod, Call, 7)
+          DEFINE_CLASS_ID(MaTSaLockUnlock, Call, 8)
       DEFINE_CLASS_ID(MultiBranch, Multi, 1)
         DEFINE_CLASS_ID(PCTable,     MultiBranch, 0)
           DEFINE_CLASS_ID(Catch,       PCTable, 0)
@@ -914,6 +918,8 @@ public:
   DEFINE_CLASS_QUERY(MachMemBar)
   DEFINE_CLASS_QUERY(MachMerge)
   DEFINE_CLASS_QUERY(MaTSaLoadStore)
+  DEFINE_CLASS_QUERY(MaTSaMethod)
+  DEFINE_CLASS_QUERY(MaTSaLockUnlock)
   DEFINE_CLASS_QUERY(Mem)
   DEFINE_CLASS_QUERY(MemBar)
   DEFINE_CLASS_QUERY(MemBarStoreStore)
