@@ -1090,35 +1090,9 @@ void Parse::do_exits() {
         kit.make_dtrace_method_exit(method());
       }
       // Should matsa be notified here too?
-      // MATSA_ONLY(
-      //   make_matsa_method_enter_exit(method(), false);
-      // );
-
       MATSA_ONLY(
-        MaTSaMethodNode *method_node = new MaTSaMethodNode(C, false);
-        Node *mem = reset_memory();
-
-        method_node->init_req( TypeFunc::Control, control() );
-        method_node->init_req( TypeFunc::Memory , mem );
-        method_node->init_req( TypeFunc::I_O    , top() );   // does no i/o
-        method_node->init_req( TypeFunc::FramePtr, frameptr() );
-        method_node->init_req( TypeFunc::ReturnAdr, top() );
-
-        Node* thread = _gvn.transform(new ThreadLocalNode());
-
-        const TypePtr* method_type = TypeMetadataPtr::make(method());
-        Node *m = _gvn.transform(ConNode::make(method_type));
-
-        method_node->init_req(TypeFunc::Parms + 0, thread);
-        method_node->init_req(TypeFunc::Parms + 1, m);
-        // bci at which this method was called
-        method_node->init_req(TypeFunc::Parms + 2, _gvn.intcon(InvocationEntryBci));
-
-        method_node = _gvn.transform(method_node)->as_MaTSaMethod();
-        set_predefined_output_for_runtime_call(method_node, mem, TypeRawPtr::BOTTOM);
-
-        record_for_igvn(method_node);
-     );
+        kit.make_matsa_method_enter_exit(method(), false);
+      );
 
 
       if (_replaced_nodes_for_exceptions) {
@@ -1230,36 +1204,8 @@ void Parse::do_method_entry() {
   }
 
   MATSA_ONLY(
-    MaTSaMethodNode *method_node = new MaTSaMethodNode(C, true);
-    Node *mem = reset_memory();
-
-    method_node->init_req( TypeFunc::Control, control() );
-    method_node->init_req( TypeFunc::Memory , mem );
-    method_node->init_req( TypeFunc::I_O    , top() );   // does no i/o
-    method_node->init_req( TypeFunc::FramePtr, frameptr() );
-    method_node->init_req( TypeFunc::ReturnAdr, top() );
-
-    Node* thread = _gvn.transform(new ThreadLocalNode());
-
-    const TypePtr* method_type = TypeMetadataPtr::make(method());
-    Node *m = _gvn.transform(ConNode::make(method_type));
-
-    method_node->init_req(TypeFunc::Parms + 0, thread);
-    method_node->init_req(TypeFunc::Parms + 1, m);
-
-    JVMState* caller_jvms = is_osr_parse() ? caller()->caller() : caller();
-    int caller_bci = caller_jvms->bci();
-    method_node->init_req(TypeFunc::Parms + 2, intcon(caller_bci));
-
-    method_node = _gvn.transform(method_node)->as_MaTSaMethod();
-    set_predefined_output_for_runtime_call(method_node, mem, TypeRawPtr::BOTTOM);
-
-    record_for_igvn(method_node);
+    make_matsa_method_enter_exit(method(), true);
   );
-
-  // MATSA_ONLY(
-  //   make_matsa_method_enter_exit(method(), true);
-  // );
 
 #ifdef ASSERT
   // Narrow receiver type when it is too broad for the method being parsed.
@@ -2282,33 +2228,8 @@ void Parse::return_current(Node* value) {
   }
 
   MATSA_ONLY(
-    MaTSaMethodNode *method_node = new MaTSaMethodNode(C, false);
-    Node *mem = reset_memory();
-
-    method_node->init_req( TypeFunc::Control, control() );
-    method_node->init_req( TypeFunc::Memory , mem );
-    method_node->init_req( TypeFunc::I_O    , top() );   // does no i/o
-    method_node->init_req( TypeFunc::FramePtr, frameptr() );
-    method_node->init_req( TypeFunc::ReturnAdr, top() );
-
-    Node* thread = _gvn.transform(new ThreadLocalNode());
-
-    const TypePtr* method_type = TypeMetadataPtr::make(method());
-    Node *m = _gvn.transform(ConNode::make(method_type));
-
-    method_node->init_req(TypeFunc::Parms + 0, thread);
-    method_node->init_req(TypeFunc::Parms + 1, m);
-    method_node->init_req(TypeFunc::Parms + 2, intcon(0));
-
-    method_node = _gvn.transform(method_node)->as_MaTSaMethod();
-    set_predefined_output_for_runtime_call(method_node, mem, TypeRawPtr::BOTTOM);
-
-    record_for_igvn(method_node);
+    make_matsa_method_enter_exit(method(), false);
   );
-
-  // MATSA_ONLY(
-  //   make_matsa_method_enter_exit(method(), false);
-  // );
 
   SafePointNode* exit_return = _exits.map();
   exit_return->in( TypeFunc::Control  )->add_req( control() );

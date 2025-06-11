@@ -518,34 +518,6 @@ void Parse::do_call() {
   ciInstanceKlass* klass = ciEnv::get_instance_klass_for_declared_method_holder(holder);
   assert(declared_signature != nullptr, "cannot be null");
 
-  // MATSA_ONLY(
-  //   // if (failing()) continue;
-
-  //   MaTSaMethodNode *method_node = new MaTSaMethodNode(C, true);
-  //   Node *mem = reset_memory();
-
-  //   method_node->init_req( TypeFunc::Control, control() );
-  //   method_node->init_req( TypeFunc::Memory , mem );
-  //   method_node->init_req( TypeFunc::I_O    , top() );   // does no i/o
-  //   method_node->init_req( TypeFunc::FramePtr, frameptr() );
-  //   method_node->init_req( TypeFunc::ReturnAdr, top() );
-
-  //   Node* thread = _gvn.transform(new ThreadLocalNode());
-
-  //   const TypePtr* method_type = TypeMetadataPtr::make(orig_callee);
-  //   Node *m = _gvn.transform(ConNode::make(method_type));
-
-  //   method_node->init_req(TypeFunc::Parms + 0, thread);
-  //   method_node->init_req(TypeFunc::Parms + 1, m);
-
-  //   method_node->init_req(TypeFunc::Parms + 2, intcon(bci()));
-
-  //   method_node = _gvn.transform(method_node)->as_MaTSaMethod();
-  //   set_predefined_output_for_runtime_call(method_node, mem, TypeRawPtr::BOTTOM);
-
-  //   record_for_igvn(method_node);
-  // );
-
   // Bump max node limit for JSR292 users
   if (bc() == Bytecodes::_invokedynamic || orig_callee->is_method_handle_intrinsic()) {
     C->set_max_node_limit(3*MaxNodeLimit);

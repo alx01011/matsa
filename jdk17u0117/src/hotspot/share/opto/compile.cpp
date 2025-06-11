@@ -81,9 +81,6 @@
 #include "utilities/macros.hpp"
 #include "utilities/resourceHash.hpp"
 
-#include "opto/matsanode.hpp"
-
-
 // -------------------- Compile::mach_constant_base_node -----------------------
 // Constant table base node singleton.
 MachConstantBaseNode* Compile::mach_constant_base_node() {
@@ -2935,6 +2932,7 @@ void Compile::final_graph_reshaping_impl(Node *n, Final_Reshape_Counts& frc, Uni
     }
   }
 #endif
+
   // Count FPU ops and common calls, implements item (3)
   bool gc_handled = BarrierSet::barrier_set()->barrier_set_c2()->final_graph_reshaping(this, n, nop, dead_nodes);
   if (!gc_handled) {
@@ -3595,11 +3593,6 @@ void Compile::final_graph_reshaping_main_switch(Node* n, Final_Reshape_Counts& f
     }
     break;
   }
-  case Op_MaTSaLoadStore:
-    fprintf(stderr, "MaTSaLoadStore node %p\n", (void*)n);
-    // add it to dead nodes
-    dead_nodes.push(n);
-    break;
   default:
     assert(!n->is_Call(), "");
     assert(!n->is_Mem(), "");

@@ -34,8 +34,6 @@ class  SubTypeCheckNode;
 class  Node;
 class  PhaseIterGVN;
 
-class MaTSaLoadStoreNode;
-
 class PhaseMacroExpand : public Phase {
 private:
   PhaseIterGVN &_igvn;
@@ -112,9 +110,6 @@ private:
   bool eliminate_locking_node(AbstractLockNode *alock);
   void expand_lock_node(LockNode *lock);
   void expand_unlock_node(UnlockNode *unlock);
-
-  // // MaTSa
-  // void expand_matsa_load_store(MaTSaLoadStoreNode *load_store);
 
   // More helper methods modeled after GraphKit for array copy
   void insert_mem_bar(Node** ctrl, Node** mem, int opcode, Node* precedent = nullptr);

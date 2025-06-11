@@ -58,10 +58,6 @@
 #include "gc/g1/g1ThreadLocalData.hpp"
 #endif // INCLUDE_G1GC
 
-#include "matsa/matsaRTL.hpp"
-#include "matsa/matsa_interface_c2.hpp"
-#include "opto/matsanode.hpp"
-
 //
 // Replace any references to "oldref" in inputs to "use" with "newref".
 // Returns the number of replacements made.
@@ -2552,10 +2548,6 @@ void PhaseMacroExpand::eliminate_macro_nodes() {
       bool success = false;
       DEBUG_ONLY(int old_macro_count = C->macro_count();)
       switch (n->class_id()) {
-      case Node::Class_MaTSaLockUnlock:
-      case Node::Class_MaTSaMethod:
-      case Node::Class_MaTSaLoadStore:
-        break;
       case Node::Class_Allocate:
       case Node::Class_AllocateArray:
         success = eliminate_allocate_node(n->as_Allocate());
@@ -2605,74 +2597,6 @@ bool PhaseMacroExpand::expand_macro_nodes() {
       Node* n = C->macro_node(i-1);
       bool success = false;
       DEBUG_ONLY(int old_macro_count = C->macro_count();)
-
-      if (n->Opcode() == Op_MaTSaLoadStore) {
-        C->remove_macro_node(n);
-
-        const TypeFunc* slow_call_type = OptoRuntime::matsa_load_store_Type();
-        address matsa_rtl_adr = CAST_FROM_FN_PTR(address, MaTSaRTL::C2MemoryAccess);
-        CallNode *call = (CallNode*)new CallLeafNode(slow_call_type, matsa_rtl_adr, "matsa_load_store_C2", TypeRawPtr::BOTTOM);
-
-        copy_predefined_input_for_runtime_call(n->in(TypeFunc::Control), (CallNode*)n, call);
-
-        call->init_req(TypeFunc::Parms + 0, n->in(TypeFunc::Parms + 0)); // adr
-        call->init_req(TypeFunc::Parms + 1, n->in(TypeFunc::Parms + 1)); // method_node
-        call->init_req(TypeFunc::Parms + 2, n->in(TypeFunc::Parms + 2)); // bci
-        call->init_req(TypeFunc::Parms + 3, n->in(TypeFunc::Parms + 3)); // field size
-        call->init_req(TypeFunc::Parms + 4, n->in(TypeFunc::Parms + 4)); // is_write
-
-        call->copy_call_debug_info(&_igvn, (CallNode*)n);
-        _igvn.replace_node(n, call);
-        transform_later(call);
-
-        success = true;
-      }
-
-      if (n->Opcode() == Op_MaTSaMethod) {
-        C->remove_macro_node(n);
-
-        bool is_entry = n->as_MaTSaMethod()->is_entry;
-        const char *name = is_entry ? "matsa_method_entry_C2" : "matsa_method_exit_C2";
-
-        const TypeFunc* slow_call_type = OptoRuntime::matsa_method_enter_exit_Type();
-        address matsa_rtl_adr = CAST_FROM_FN_PTR(address, is_entry ? MaTSaC2::method_enter : MaTSaC2::method_exit);
-        CallNode *call = (CallNode*)new CallLeafNode(slow_call_type, matsa_rtl_adr, name, TypeRawPtr::BOTTOM);
-
-        copy_predefined_input_for_runtime_call(n->in(TypeFunc::Control), (CallNode*)n, call);
-
-        call->init_req(TypeFunc::Parms + 0, n->in(TypeFunc::Parms + 0)); // thread
-        call->init_req(TypeFunc::Parms + 1, n->in(TypeFunc::Parms + 1)); // method
-        call->init_req(TypeFunc::Parms + 2, n->in(TypeFunc::Parms + 2)); // bci
-
-        call->copy_call_debug_info(&_igvn, (CallNode*)n);
-        _igvn.replace_node(n, call);
-        transform_later(call);
-
-        success = true;
-      }
-
-      if (n->Opcode() == Op_MaTSaLockUnlock) {
-        C->remove_macro_node(n);
-
-        bool is_lock = n->as_MaTSaLockUnlock()->is_lock;
-        const char *name = is_lock ? "matsa_sync_enter_C2" : "matsa_sync_exit_C2";
-
-        const TypeFunc* slow_call_type = OptoRuntime::matsa_lock_unlock_Type();
-        address matsa_rtl_adr = CAST_FROM_FN_PTR(address, is_lock ? MaTSaC2::sync_enter : MaTSaC2::sync_exit);
-        CallNode *call = (CallNode*)new CallLeafNode(slow_call_type, matsa_rtl_adr, name, TypeRawPtr::BOTTOM);
-
-        copy_predefined_input_for_runtime_call(n->in(TypeFunc::Control), (CallNode*)n, call);
-
-        call->init_req(TypeFunc::Parms + 0, n->in(TypeFunc::Parms + 0)); // thread
-        call->init_req(TypeFunc::Parms + 1, n->in(TypeFunc::Parms + 1)); // obj (this)
-
-        call->copy_call_debug_info(&_igvn, (CallNode*)n);
-        _igvn.replace_node(n, call);
-        transform_later(call);
-
-        success = true;
-      }
-      
       if (n->Opcode() == Op_LoopLimit) {
         // Remove it from macro list and put on IGVN worklist to optimize.
         C->remove_macro_node(n);
@@ -2757,9 +2681,6 @@ bool PhaseMacroExpand::expand_macro_nodes() {
     Node * n = C->macro_node(macro_count-1);
     assert(n->is_macro(), "only macro nodes expected here");
     if (_igvn.type(n) == Type::TOP || (n->in(0) != nullptr && n->in(0)->is_top())) {
-      if (n->class_id() == Node::Class_MaTSaLoadStore) {
-        puts("matso macro getting deleted:(");
-      }
       // node is unreachable, so don't try to expand it
       C->remove_macro_node(n);
       continue;
@@ -2771,7 +2692,6 @@ bool PhaseMacroExpand::expand_macro_nodes() {
     // Worst case is a macro node gets expanded into about 200 nodes.
     // Allow 50% more for optimization.
     if (C->check_node_count(300, "out of nodes before macro expansion")) {
-      puts("matsa is messing me up!");
       return true;
     }
 
