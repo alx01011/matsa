@@ -42,8 +42,6 @@
 #include "prims/methodHandles.hpp"
 #include "runtime/sharedRuntime.hpp"
 
-#include "opto/matsanode.hpp"
-
 void trace_type_profile(Compile* C, ciMethod *method, int depth, int bci, ciMethod *prof_method, ciKlass *prof_klass, int site_count, int receiver_count) {
   if (TraceTypeProfile || C->print_inlining()) {
     outputStream* out = tty;
