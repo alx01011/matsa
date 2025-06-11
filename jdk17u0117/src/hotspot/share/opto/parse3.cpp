@@ -37,8 +37,6 @@
 #include "runtime/deoptimization.hpp"
 #include "runtime/handles.inline.hpp"
 
-#include "opto/matsanode.hpp"
-
 //=============================================================================
 // Helper methods for _get* and _put* bytecodes
 //=============================================================================

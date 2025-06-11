@@ -52,8 +52,6 @@
 #include "utilities/powerOfTwo.hpp"
 #include "utilities/growableArray.hpp"
 
-#include "opto/matsanode.hpp"
-
 //----------------------------GraphKit-----------------------------------------
 // Main utility constructor.
 GraphKit::GraphKit(JVMState* jvms)
@@ -3580,7 +3578,7 @@ FastLockNode* GraphKit::shared_lock(Node* obj) {
 
   // Add this to the worklist so that the lock can be eliminated
   record_for_igvn(lock);
-  
+
   // MATSA_ONLY(
   //   make_matsa_lock_unlock(obj, true);
   // );

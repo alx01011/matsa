@@ -45,8 +45,6 @@
 #include "runtime/deoptimization.hpp"
 #include "runtime/sharedRuntime.hpp"
 
-#include "opto/matsanode.hpp"
-
 #ifndef PRODUCT
 extern int explicit_null_checks_inserted,
            explicit_null_checks_elided;

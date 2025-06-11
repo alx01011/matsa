@@ -44,8 +44,6 @@
 #include "utilities/bitMap.inline.hpp"
 #include "utilities/copy.hpp"
 
-#include "opto/matsanode.hpp"
-
 // Static array so we can figure out which bytecodes stop us from compiling
 // the most. Some of the non-static variables are needed in bytecodeInfo.cpp
 // and eventually should be encapsulated in a proper class (gri 8/18/98).

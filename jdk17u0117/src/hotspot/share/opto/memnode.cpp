@@ -3300,7 +3300,6 @@ MemBarNode* MemBarNode::make(Compile* C, int opcode, int atp, Node* pn) {
   case Op_MemBarCPUOrder:    return new MemBarCPUOrderNode(C, atp, pn);
   case Op_OnSpinWait:        return new OnSpinWaitNode(C, atp, pn);
   case Op_Initialize:        return new InitializeNode(C, atp, pn);
-  case Op_MaTSaMemBar:       return new MaTSaMemBarNode(C, atp, pn);
   default: ShouldNotReachHere(); return nullptr;
   }
 }

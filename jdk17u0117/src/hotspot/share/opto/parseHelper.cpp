@@ -123,13 +123,17 @@ void GraphKit:: make_matsa_method_enter_exit(ciMethod* method, bool is_entry) {
   const TypePtr* method_type = TypeMetadataPtr::make(method);
   Node *method_node = _gvn.transform(ConNode::make(method_type));
 
+  // TODO:
+  // Get bci
+  Node *bci_node = intcon(0);
+
   // kill_dead_locals();
 
   const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
   make_runtime_call(RC_NO_FP,
                     call_type, call_address,
                     call_name, raw_adr_type,
-                    thread, method_node);
+                    thread, method_node, bci_node);
 }
 
 void GraphKit::make_matsa_pre_method_enter(int bci) {
