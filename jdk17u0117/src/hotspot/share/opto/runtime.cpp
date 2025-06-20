@@ -1565,14 +1565,11 @@ const TypeFunc *OptoRuntime::dtrace_object_alloc_Type() {
 
 const TypeFunc *OptoRuntime::matsa_load_store_Type() {
   // void *addr, Method *m, int bci, uint8_t access_size, bool is_write
-  const Type **fields = TypeTuple::fields(5);
+  const Type **fields = TypeTuple::fields(2);
   fields[TypeFunc::Parms+0] = TypeRawPtr::BOTTOM; // addr
-  fields[TypeFunc::Parms+1] = TypeMetadataPtr::BOTTOM; // method we are in
-  fields[TypeFunc::Parms+2] = TypeInt::INT; // bci
-  fields[TypeFunc::Parms+3] = TypeInt::INT; // access_size
-  fields[TypeFunc::Parms+4] = TypeInt::BOOL; // is_write
+  fields[TypeFunc::Parms+1] = TypeRawPtr::BOTTOM;
 
-  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+5, fields);
+  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+2, fields);
 
   // create result type (range)
   fields = TypeTuple::fields(0);
@@ -1600,12 +1597,11 @@ const TypeFunc *OptoRuntime::matsa_cl_init_Type() {
 
 const TypeFunc *OptoRuntime::matsa_method_enter_exit_Type() {
   // JavaThread *thread, void *method
-  const Type **fields = TypeTuple::fields(3);
+  const Type **fields = TypeTuple::fields(2);
   fields[TypeFunc::Parms+0] = TypeRawPtr::NOTNULL; // thread
-  fields[TypeFunc::Parms+1] = TypeMetadataPtr::BOTTOM; // method
-  fields[TypeFunc::Parms+2] = TypeInt::INT; // bci
+  fields[TypeFunc::Parms+1] = TypeRawPtr::BOTTOM; // method and bci pack
 
-  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+3, fields);
+  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+2, fields);
 
   // create result type (range)
   fields = TypeTuple::fields(0);

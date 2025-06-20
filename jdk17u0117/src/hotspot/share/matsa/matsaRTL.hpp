@@ -16,6 +16,7 @@ namespace MaTSaRTL {
     void C1MemoryAccess(void *addr, Method *m, int bci, uint8_t access_size, bool is_write);
     void C2MemoryAccess(void *addr, Method *m, int bci, uint8_t access_size, bool is_write);
     bool CheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &prev, HistoryCell &prev_history);
+    bool FastCheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &prev, HistoryCell &prev_history);
 };
 
 #endif

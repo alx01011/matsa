@@ -166,22 +166,15 @@ void Parse::do_get_xxx(Node* obj, ciField* field, bool is_field) {
 
   Node* ld = access_load_at(obj, adr, adr_type, type, bt, decorators);
 
-  // MATSA_ONLY(
-  //   AccessFlags flags(field->flags().as_int());
-  //   bool skip = is_vol || (flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class());
-  //   if (!skip) {
-  //     if (field->is_static()) {
-  //       //make_matsa_cl_init_acq(obj);
-  //     }
-
-  //     make_matsa_load_store(adr, method(), bci(), field->size_in_bytes(), false);
-  //   }
-  // );
-
   MATSA_ONLY(
-    if (ld->is_Load()) {
-      LoadNode *load_node = ld->as_Load();
-      load_node->set_matsa_load(true);
+    AccessFlags flags(field->flags().as_int());
+    bool skip = is_vol || (flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class());
+    if (!skip) {
+      if (field->is_static()) {
+        //make_matsa_cl_init_acq(obj);
+      }
+
+      make_matsa_load_store(adr, method(), bci(), field->size_in_bytes(), false);
     }
   );
 
@@ -246,16 +239,16 @@ void Parse::do_put_xxx(Node* obj, ciField* field, bool is_field) {
   }
   access_store_at(obj, adr, adr_type, val, field_type, bt, decorators);
 
-  // MATSA_ONLY(
-  //   AccessFlags flags(field->flags().as_int());
-  //   bool skip = is_vol || (flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class());
-  //   if (!skip) {
-  //     if (field->is_static()) {
-  //       //make_matsa_cl_init_acq(obj);
-  //     }
-  //     make_matsa_load_store(adr, method(), bci(), field->size_in_bytes(), true);
-  //   }
-  // );
+  MATSA_ONLY(
+    AccessFlags flags(field->flags().as_int());
+    bool skip = is_vol || (flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class());
+    if (!skip) {
+      if (field->is_static()) {
+        //make_matsa_cl_init_acq(obj);
+      }
+      make_matsa_load_store(adr, method(), bci(), field->size_in_bytes(), true);
+    }
+  );
 
   if (is_field) {
     // Remember we wrote a volatile field.

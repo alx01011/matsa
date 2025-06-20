@@ -681,7 +681,7 @@ class GraphKit : public Phase {
   // MaTSa support
 void make_matsa_load_store(Node *addr, ciMethod *m, int bci, uint8_t access_size, bool is_write);
 void make_matsa_cl_init_acq(Node *oop);
-void make_matsa_method_enter_exit(ciMethod *m, bool is_enter);
+void make_matsa_method_enter_exit(ciMethod *m, int caller_bci, bool is_enter);
 void make_matsa_pre_method_enter(int bci);
 void make_matsa_lock_unlock(Node *obj, bool is_locking);
 
@@ -817,6 +817,15 @@ void make_matsa_lock_unlock(Node *obj, bool is_locking);
                           Node* parm2 = nullptr, Node* parm3 = nullptr,
                           Node* parm4 = nullptr, Node* parm5 = nullptr,
                           Node* parm6 = nullptr, Node* parm7 = nullptr);
+
+  Node* make_matsa_runtime_call(const TypeFunc* call_type, address call_addr,
+                          const char* call_name,
+                          const TypePtr* adr_type, // null if no memory effects
+                          Node* parm0 = nullptr, Node* parm1 = nullptr,
+                          Node* parm2 = nullptr, Node* parm3 = nullptr,
+                          Node* parm4 = nullptr, Node* parm5 = nullptr,
+                          Node* parm6 = nullptr, Node* parm7 = nullptr);
+
 
   Node* sign_extend_byte(Node* in);
   Node* sign_extend_short(Node* in);

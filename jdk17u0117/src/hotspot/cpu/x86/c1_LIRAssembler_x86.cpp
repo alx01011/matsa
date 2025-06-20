@@ -423,7 +423,6 @@ int LIR_Assembler::emit_exception_handler() {
 
   // check that there is really an exception
   __ verify_not_null_oop(rax);
-
   // search an exception handler (rax: exception oop, rdx: throwing pc)
   __ call(RuntimeAddress(Runtime1::entry_for(Runtime1::handle_exception_from_callee_id)));
   __ should_not_reach_here();
@@ -454,7 +453,7 @@ int LIR_Assembler::emit_unwind_handler() {
 
   __ bind(_unwind_handler_entry);
   __ verify_not_null_oop(rax);
-  if (method()->is_synchronized() || compilation()->env()->dtrace_method_probes()) {
+  if (method()->is_synchronized() || compilation()->env()->dtrace_method_probes() || MaTSa) {
     __ mov(rbx, rax);  // Preserve the exception (rbx is always callee-saved)
   }
 
@@ -486,7 +485,7 @@ int LIR_Assembler::emit_unwind_handler() {
     __ popa();
   );
 
-  if (method()->is_synchronized() || compilation()->env()->dtrace_method_probes()) {
+  if (method()->is_synchronized() || compilation()->env()->dtrace_method_probes() || MaTSa) {
     __ mov(rax, rbx);  // Restore the exception
   }
 

@@ -2589,6 +2589,52 @@ Node* GraphKit::make_runtime_call(int flags,
 
 }
 
+Node* GraphKit::make_matsa_runtime_call(const TypeFunc* call_type, address call_addr,
+                                        const char* call_name,
+                                        const TypePtr* adr_type,
+                                        // The following parms are all optional.
+                                        // The first null ends the list.
+                                        Node* parm0, Node* parm1,
+                                        Node* parm2, Node* parm3,
+                                        Node* parm4, Node* parm5,
+                                        Node* parm6, Node* parm7) {
+  assert(call_addr != nullptr, "must not call null targets");
+
+  CallNode* call;
+
+  // leaf call
+  call = new CallLeafNode(call_type, call_addr, call_name, adr_type);
+
+  // Hook each parm in order.  Stop looking at the first null.
+  if (parm0 != nullptr) { call->init_req(TypeFunc::Parms+0, parm0);
+  if (parm1 != nullptr) { call->init_req(TypeFunc::Parms+1, parm1);
+  if (parm2 != nullptr) { call->init_req(TypeFunc::Parms+2, parm2);
+  if (parm3 != nullptr) { call->init_req(TypeFunc::Parms+3, parm3);
+  if (parm4 != nullptr) { call->init_req(TypeFunc::Parms+4, parm4);
+  if (parm5 != nullptr) { call->init_req(TypeFunc::Parms+5, parm5);
+  if (parm6 != nullptr) { call->init_req(TypeFunc::Parms+6, parm6);
+  if (parm7 != nullptr) { call->init_req(TypeFunc::Parms+7, parm7);
+    /* close each nested if ===> */  } } } } } } } }
+  assert(call->in(call->req()-1) != nullptr, "must initialize all parms");
+
+
+  call->init_req(TypeFunc::Control,   control());
+  call->init_req(TypeFunc::I_O,       top()); // no i/o
+  call->init_req(TypeFunc::Memory,    memory(adr_type));
+  call->init_req(TypeFunc::ReturnAdr, top()); // no return address (its a leaf)
+  call->init_req(TypeFunc::FramePtr,  frameptr());
+
+  Node *c = _gvn.transform(call);
+
+  Node* new_ctrl = gvn().transform(new ProjNode(c, TypeFunc::Control));
+  Node* new_mem  = gvn().transform(new ProjNode(c, TypeFunc::Memory));
+
+  set_control(new_ctrl);
+  set_memory(new_mem, adr_type);
+
+  return call;
+}
+
 // i2b
 Node* GraphKit::sign_extend_byte(Node* in) {
   Node* tmp = _gvn.transform(new LShiftINode(in, _gvn.intcon(24)));
@@ -3579,9 +3625,9 @@ FastLockNode* GraphKit::shared_lock(Node* obj) {
   // Add this to the worklist so that the lock can be eliminated
   record_for_igvn(lock);
 
-  // MATSA_ONLY(
-  //   make_matsa_lock_unlock(obj, true);
-  // );
+  MATSA_ONLY(
+    make_matsa_lock_unlock(obj, true);
+  );
 
 #ifndef PRODUCT
   if (PrintLockStatistics) {
@@ -3610,9 +3656,9 @@ void GraphKit::shared_unlock(Node* box, Node* obj) {
     return;
   }
 
-  // MATSA_ONLY(
-  //   make_matsa_lock_unlock(obj, false);
-  // );
+  MATSA_ONLY(
+    make_matsa_lock_unlock(obj, false);
+  );
 
   // Memory barrier to avoid floating things down past the locked region
   insert_mem_bar(Op_MemBarReleaseLock);

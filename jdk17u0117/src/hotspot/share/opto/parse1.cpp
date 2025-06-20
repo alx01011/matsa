@@ -1088,9 +1088,9 @@ void Parse::do_exits() {
         kit.make_dtrace_method_exit(method());
       }
       // Should matsa be notified here too?
-      MATSA_ONLY(
-        kit.make_matsa_method_enter_exit(method(), false);
-      );
+      // MATSA_ONLY(
+      //   kit.make_matsa_method_enter_exit(method(), 0, false);
+      // );
 
 
       if (_replaced_nodes_for_exceptions) {
@@ -1202,7 +1202,8 @@ void Parse::do_method_entry() {
   }
 
   MATSA_ONLY(
-    make_matsa_method_enter_exit(method(), true);
+    int caller_bci = _caller->bci();
+    make_matsa_method_enter_exit(method(), caller_bci, true);
   );
 
 #ifdef ASSERT
@@ -2226,7 +2227,7 @@ void Parse::return_current(Node* value) {
   }
 
   MATSA_ONLY(
-    make_matsa_method_enter_exit(method(), false);
+    make_matsa_method_enter_exit(method(), 0, false);
   );
 
   SafePointNode* exit_return = _exits.map();

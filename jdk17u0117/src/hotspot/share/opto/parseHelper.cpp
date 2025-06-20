@@ -65,32 +65,45 @@ void GraphKit::make_dtrace_method_entry_exit(ciMethod* method, bool is_entry) {
 // MaTSa support
 void GraphKit::make_matsa_load_store(Node *addr, ciMethod *m, int bci, uint8_t access_size, bool is_write) {
   const TypeFunc *call_type = OptoRuntime::matsa_load_store_Type();
-  address         call_address = CAST_FROM_FN_PTR(address, MaTSaRTL::C2MemoryAccess);
+  address         call_address = CAST_FROM_FN_PTR(address, MaTSaC2::matsa_memory_access[is_write][access_size]);
   const char     *call_name = is_write ? "matsa_rt_store" : "matsa_rt_load";
   
   // // Get base of thread-local storage area
   // Node* thread = _gvn.transform( new ThreadLocalNode() );
   // Get method
-  const TypePtr* method_type = TypeMetadataPtr::make(m);
-  Node *method_node = _gvn.transform(ConNode::make(method_type));
-  // Get bci
-  // const TypeInt* bci_type = TypeInt::make(bci);
-  Node* bci_node = intcon(bci);
+  // const TypePtr* method_type = TypeMetadataPtr::make(m);
+  // Node *method_node = _gvn.transform(ConNode::make(method_type));
+
+  Method *mptr = m->get_Method();
+  uint64_t bci_shifted = (uint64_t)bci << 48;
+
+  uint64_t mbci_pack = (uint64_t)mptr | bci_shifted;
+
+  Node *mbci_pack_node = _gvn.transform(makecon(TypeLong::make(mbci_pack)));
+
+  // // Get bci
+  // // const TypeInt* bci_type = TypeInt::make(bci);
+  // Node* bci_node = intcon(bci);
   // Get access size
   // const TypeInt* access_size_type = TypeInt::make(access_size);
-  Node* access_size_node = intcon(access_size);
-  // Get is_write
-  // const TypeInt* is_write_type = TypeInt::make(is_write);
-  Node* is_write_node = intcon(is_write);
+  // Node* access_size_node = intcon(access_size);
+  // // Get is_write
+  // // const TypeInt* is_write_type = TypeInt::make(is_write);
+  // Node* is_write_node = intcon(is_write);
 
   // kill dead locals necessary?
   // kill_dead_locals();
 
   const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
+
   make_runtime_call(RC_NO_FP,
-                    call_type, call_address,
-                    call_name, raw_adr_type,
-                    addr, method_node, bci_node, access_size_node, is_write_node);
+                           call_type, call_address,
+                           call_name, raw_adr_type,
+                           addr, mbci_pack_node);
+
+  // make_matsa_runtime_call(call_type, call_address,
+  //                          call_name, raw_adr_type,
+  //                          addr, mbci_pack_node);
 }
 
 void GraphKit::make_matsa_cl_init_acq(Node *oop) {
@@ -110,7 +123,7 @@ void GraphKit::make_matsa_cl_init_acq(Node *oop) {
                     thread, oop);
 }
 
-void GraphKit:: make_matsa_method_enter_exit(ciMethod* method, bool is_entry) {
+void GraphKit:: make_matsa_method_enter_exit(ciMethod* method, int caller_bci, bool is_entry) {
   const TypeFunc *call_type    = OptoRuntime::matsa_method_enter_exit_Type();
   address         call_address = is_entry ? CAST_FROM_FN_PTR(address, MaTSaC2::method_enter) :
                                             CAST_FROM_FN_PTR(address, MaTSaC2::method_exit);
@@ -120,20 +133,29 @@ void GraphKit:: make_matsa_method_enter_exit(ciMethod* method, bool is_entry) {
   Node* thread = _gvn.transform( new ThreadLocalNode() );
 
   // Get method
-  const TypePtr* method_type = TypeMetadataPtr::make(method);
-  Node *method_node = _gvn.transform(ConNode::make(method_type));
+  // const TypePtr* method_type = TypeMetadataPtr::make(method);
+  // Node *method_node = _gvn.transform(ConNode::make(method_type));
 
   // TODO:
   // Get bci
-  Node *bci_node = intcon(0);
+  // Node *bci_node = intcon(0);
 
   // kill_dead_locals();
+  // Get method and bci packed into one 64-bit value
+  Method *mptr = method->get_Method();
+  uint64_t bci_shifted = (uint64_t)caller_bci << 48;
+  uint64_t mbci_pack = (uint64_t)mptr | bci_shifted;
+
+  Node *mbci_pack_node = _gvn.transform(makecon(TypeLong::make(mbci_pack)));
 
   const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
   make_runtime_call(RC_NO_FP,
                     call_type, call_address,
                     call_name, raw_adr_type,
-                    thread, method_node, bci_node);
+                    thread, mbci_pack_node);
+  // make_matsa_runtime_call( call_type, call_address,
+  //                          call_name, raw_adr_type,
+  //                          thread, mbci_pack_node);                    
 }
 
 void GraphKit::make_matsa_pre_method_enter(int bci) {
@@ -172,6 +194,9 @@ void GraphKit::make_matsa_lock_unlock(Node *obj, bool is_locking) {
                     call_type, call_address,
                     call_name, raw_adr_type,
                     thread, obj);
+  // make_matsa_runtime_call(call_type, call_address,
+  //                         call_name, raw_adr_type,
+  //                         thread, obj);
 }
 
 

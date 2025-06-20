@@ -201,8 +201,6 @@ private:
 
   AllocateNode* is_new_object_mark_load(PhaseGVN *phase) const;
 
-  bool _matsa_load = false;
-
 protected:
   virtual bool cmp(const Node &n) const;
   virtual uint size_of() const; // Size is bigger
@@ -225,14 +223,6 @@ public:
   inline bool is_unsigned() const {
     int lop = Opcode();
     return (lop == Op_LoadUB) || (lop == Op_LoadUS);
-  }
-
-  inline bool is_matsa_load() const {
-    return _matsa_load;
-  }
-
-  inline void set_matsa_load(bool matsa_load) {
-    _matsa_load = matsa_load;
   }
 
   // Polymorphic factory method:

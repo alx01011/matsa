@@ -142,7 +142,7 @@ void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
     int bci = 0;
 
     // encode the current bci
-    MaTSaStackElem prev_frame = {0, 0};
+    MaTSaStackElem prev_frame = {0, (uint64_t)cur_bci};
     MaTSaStackElem raw_frame;
 
     for (int i = stack_size - 1, count = 0; i >= 0 && count < MAX_FRAMES; i--, prev_frame = raw_frame, count++) {

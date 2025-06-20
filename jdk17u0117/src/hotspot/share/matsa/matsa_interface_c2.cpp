@@ -13,18 +13,47 @@
 
 #include <cstdint>
 
+#define MATSA_MEMORY_ACCESS_C2(addr, mbci_pack, size, type, is_write)\
+JRT_LEAF(void, MaTSaC2::matsa_##type##_##size(void *addr, uint64_t mbci_pack))\
+        Method *m = (Method*)(mbci_pack & (1ULL << 48) - 1); \
+        uint16_t bci = (uint16_t)((mbci_pack >> 48));\
+        MaTSaRTL::C2MemoryAccess(addr, m, (int)bci, size, is_write);\
+JRT_END
 
-void MaTSaC2::method_enter(JavaThread *thread, Method *method, int bci) {
+MATSA_MEMORY_ACCESS_C2(addr, mbci_pack, 1, read, false);
+MATSA_MEMORY_ACCESS_C2(addr, mbci_pack, 2, read, false);
+MATSA_MEMORY_ACCESS_C2(addr, mbci_pack, 4, read, false);
+MATSA_MEMORY_ACCESS_C2(addr, mbci_pack, 8, read, false);
+
+MATSA_MEMORY_ACCESS_C2(addr, mbci_pack, 1, write, true);
+MATSA_MEMORY_ACCESS_C2(addr, mbci_pack, 2, write, true);
+MATSA_MEMORY_ACCESS_C2(addr, mbci_pack, 4, write, true);
+MATSA_MEMORY_ACCESS_C2(addr, mbci_pack, 8, write, true);
+
+#undef MATSA_MEMORY_ACCESS_C2
+
+void (*MaTSaC2::matsa_memory_access[2][9])(void *addr, uint64_t mbci_pack) = {
+    {0, matsa_read_1, matsa_read_2, 0, matsa_read_4, 0, 0, 0, matsa_read_8},
+    {0, matsa_write_1, matsa_write_2, 0, matsa_write_4, 0, 0, 0, matsa_write_8}
+};
+
+
+void MaTSaC2::method_enter(JavaThread *thread, uint64_t mbci_pack) {
     int tid = JavaThread::get_matsa_tid(thread);
 
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
 
+    uint64_t mptr = mbci_pack & ((1ULL << 48) - 1);
+    uint16_t bci = (uint16_t)(mbci_pack >> 48);
+
+    Method *method = (Method*)mptr;
+
     // Symbolizer::Symbolize(FUNC, method, bci, tid);
-    stack->push(method, (uint16_t)bci);
+    stack->push(method, bci);
     History::add_event(thread, method, (uint16_t)bci);
 }
 
-void MaTSaC2::method_exit(JavaThread *thread, Method *method, int bci) {
+void MaTSaC2::method_exit(JavaThread *thread, uint64_t mbci_pack) {
     int tid = JavaThread::get_matsa_tid(thread);
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
     (void)stack->pop();

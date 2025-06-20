@@ -1544,12 +1544,6 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
     }
 
     assert(!method()->is_synchronized() || InlineSynchronizedMethods, "can not inline synchronized methods yet");
-    
-    MATSA_ONLY(
-      // exit from inline method 
-      Values* args = new Values(0);
-      append(new RuntimeCall(voidType, "method_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args));
-    );
 
     if (compilation()->env()->dtrace_method_probes()) {
       // Report exit from inline methods
@@ -1557,6 +1551,12 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
       args->push(append(new Constant(new MethodConstant(method()))));
       append(new RuntimeCall(voidType, "dtrace_method_exit", CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit), args));
     }
+
+    MATSA_ONLY(
+      // exit from inline method 
+      Values* args = new Values(0);
+      append(new RuntimeCall(voidType, "method_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args));
+    );
 
     // If the inlined method is synchronized, the monitor must be
     // released before we jump to the continuation block.
@@ -1594,6 +1594,7 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
     // The current bci() is in the wrong scope, so use the bci() of
     // the continuation point.
     append_with_bci(goto_callee, scope_data()->continuation()->bci());
+
     incr_num_returns();
     return;
   }
@@ -3739,11 +3740,10 @@ void GraphBuilder::fill_sync_handler(Value lock, BlockBegin* sync_handler, bool 
     append_with_bci(new RuntimeCall(voidType, "dtrace_method_exit", CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit), args), bci);
   }
 
-  // MATSA_ONLY(
-  //   // exit from inline method if exception is thrown
-  //   Values* args = new Values(0);
-  //   append_with_bci(new RuntimeCall(voidType, "method_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args), bci);
-  // );
+  MATSA_ONLY(
+    Values *args = new Values(0);
+    append_with_bci(new RuntimeCall(voidType, "method_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args), bci);
+  );
 
   if (lock) {
     assert(state()->locks_size() > 0 && state()->lock_at(state()->locks_size() - 1) == lock, "lock is missing");
@@ -3780,9 +3780,19 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
   if (CompilationPolicy::should_not_inline(compilation()->env(), callee)) {
     INLINE_BAILOUT("inlining prohibited by policy");
   }
+
+  MATSA_ONLY(
+    /*
+      FIXME: enabling inling produces huge stack traces in some reports.
+      I am suspecting that it has to do with exception handling.
+      For now, it is not worth it to investigate more, the slowdown is minimal.
+    */
+    INLINE_BAILOUT("inlining not supported in MaTSaC1");
+  );
+
   // first perform tests of things it's not possible to inline
   if (callee->has_exception_handlers() &&
-      !InlineMethodsWithExceptionHandlers) INLINE_BAILOUT("callee has exception handlers");
+      (!InlineMethodsWithExceptionHandlers)) INLINE_BAILOUT("callee has exception handlers");
   if (callee->is_synchronized() &&
       !InlineSynchronizedMethods         ) INLINE_BAILOUT("callee is synchronized");
   if (!callee->holder()->is_linked())      INLINE_BAILOUT("callee's klass not linked yet");
@@ -3969,7 +3979,7 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
 
   MATSA_ONLY(
     Values* args = new Values(1);
-    args->push(append(new Constant(new MethodConstant(method()))));
+    args->push(append(new Constant(new MethodConstant(callee))));
     append(new RuntimeCall(voidType, "method_enter", CAST_FROM_FN_PTR(address, MaTSaC1::method_enter), args));
   );
 
@@ -4014,6 +4024,8 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
   // If we bailed out during parsing, return immediately (this is bad news)
   if (bailed_out())
       return false;
+    
+  
 
   // iterate_all_blocks theoretically traverses in random order; in
   // practice, we have only traversed the continuation if we are

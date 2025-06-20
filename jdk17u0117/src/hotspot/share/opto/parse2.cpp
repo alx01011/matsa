@@ -68,9 +68,9 @@ void Parse::array_load(BasicType bt) {
   Node* ld = access_load_at(array, adr, adr_type, elemtype, bt,
                             IN_HEAP | IS_ARRAY | C2_CONTROL_DEPENDENT_LOAD);
 
-  // MATSA_ONLY(
-  //   make_matsa_load_store(adr, method(), bci(), type2aelembytes(bt), false);
-  // );
+  MATSA_ONLY(
+    make_matsa_load_store(adr, method(), bci(), type2aelembytes(bt), false);
+  );
                             
   if (big_val) {
     push_pair(ld);
@@ -109,9 +109,9 @@ void Parse::array_store(BasicType bt) {
 
   access_store_at(array, adr, adr_type, val, elemtype, bt, MO_UNORDERED | IN_HEAP | IS_ARRAY);
 
-  // MATSA_ONLY(
-  //   make_matsa_load_store(adr, method(), bci(), type2aelembytes(bt), true);
-  // );
+  MATSA_ONLY(
+    make_matsa_load_store(adr, method(), bci(), type2aelembytes(bt), true);
+  );
 }
 
 

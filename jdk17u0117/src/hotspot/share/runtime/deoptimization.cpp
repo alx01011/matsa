@@ -90,6 +90,8 @@
 #include "jfr/metadata/jfrSerializer.hpp"
 #endif
 
+#include "matsa/matsa_interface_c1.hpp"
+
 bool DeoptimizationMarker::_is_active = false;
 
 Deoptimization::UnrollBlock::UnrollBlock(int  size_of_deoptimized_frame,

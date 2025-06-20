@@ -63,28 +63,23 @@ void (*MaTSaC1::matsa_array_access[2][9])(void *addr, int idx, BasicType array_t
     {0, matsa_array_write_1, matsa_array_write_2, 0, matsa_array_write_4, 0, 0, 0, matsa_array_write_8}
 };
 
-// JRT_LEAF(void, MaTSaC1::method_enter(JavaThread *thread, Method *method))
-void MaTSaC1::method_enter(JavaThread *thread, Method *method) {
+JRT_LEAF(void, MaTSaC1::method_enter(JavaThread *thread, Method *method))
     int tid = JavaThread::get_matsa_tid(thread);
 
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
     uint16_t bci = stack->get_caller_bci();
 
-    // Symbolizer::Symbolize(FUNC, method, bci, tid);
     stack->push(method, bci);
     History::add_event(thread, method, bci);
-}
-// JRT_END
+JRT_END
 
-// JRT_LEAF(void, MaTSaC1::method_exit(JavaThread *thread))
-void MaTSaC1::method_exit(JavaThread *thread) {
+JRT_LEAF(void, MaTSaC1::method_exit(JavaThread *thread))
     int tid = JavaThread::get_matsa_tid(thread);
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
     (void)stack->pop();
   
     History::add_event(thread, 0, 0);
-}
-// JRT_END
+JRT_END
 
 JRT_LEAF(void, MaTSaC1::pre_method_enter(JavaThread *thread, Method *method, int bci))
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
