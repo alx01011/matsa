@@ -1088,9 +1088,9 @@ void Parse::do_exits() {
         kit.make_dtrace_method_exit(method());
       }
       // Should matsa be notified here too?
-      // MATSA_ONLY(
-      //   kit.make_matsa_method_enter_exit(method(), 0, false);
-      // );
+      MATSA_ONLY(
+        kit.make_matsa_method_enter_exit(method(), 0, false);
+      );
 
 
       if (_replaced_nodes_for_exceptions) {
