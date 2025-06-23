@@ -88,11 +88,11 @@ def main():
         elif arg in ('-fd', '--fast-debug'):
             print("Building with fast debug configuration...")
             level = '--with-debug-level=fastdebug'
-            configuration = 'linux-x86_64-server-fast-debug'
+            configuration = 'linux-x86_64-server-fastdebug'
         elif arg in ('-sd', '--slow-debug'):
             print("Building with slow debug configuration...")
             level = '--with-debug-level=slowdebug'
-            configuration = 'linux-x86_64-server-slow-debug'
+            configuration = 'linux-x86_64-server-slowdebug'
         elif arg.startswith('--with-boot-jdk='):
             boot_jdk = arg.split('=')[1]
             if not boot_jdk:
