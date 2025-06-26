@@ -11,18 +11,22 @@
 
 #include "memory/resourceArea.hpp"
 
-
 #include <cstdint>
 
-#define MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, size, type, is_write)\
+#define MATSA_MEMORY_ACCESS_C1(size, type, is_write)\
 JRT_LEAF(void, MaTSaC1::matsa_##type##_##size(void *addr, int offset, int bci, Method *method))\
         void *true_addr = (void*)((uintptr_t)addr + offset);\
         MaTSaRTL::C1MemoryAccess(true_addr, method, bci, size, is_write);\
 JRT_END
-        
 
+#define MATSA_STATIC_MEMORY_ACCESS_C1(size, type, is_write)\
+JRT_LEAF(void, MaTSaC1::matsa_static_##type##_##size(void *obj, void *addr, int offset, int bci, Method *method))\
+        MaTSaC1::cl_init_acquire(JavaThread::current(), obj);\
+        void *true_addr = (void*)((uintptr_t)addr + offset);\
+        MaTSaRTL::C1MemoryAccess(true_addr, method, bci, size, is_write);\
+JRT_END
 
-#define MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, size, type, is_write)\
+#define MATSA_ARRAY_ACCESS_C1(size, type, is_write)\
 JRT_LEAF(void, MaTSaC1::matsa_array_##type##_##size(void *addr, int idx, BasicType array_type, int bci, Method *method))\
         int offset_in_bytes = arrayOopDesc::base_offset_in_bytes(array_type);\
         int elem_size = type2aelembytes(array_type);\
@@ -31,27 +35,41 @@ JRT_LEAF(void, MaTSaC1::matsa_array_##type##_##size(void *addr, int idx, BasicTy
         MaTSaRTL::C1MemoryAccess(true_addr, method, bci, size, is_write);\
 JRT_END
 
-MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 1, read, false);
-MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 2, read, false);
-MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 4, read, false);
-MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 8, read, false);
+MATSA_MEMORY_ACCESS_C1(1, read, false);
+MATSA_MEMORY_ACCESS_C1(2, read, false);
+MATSA_MEMORY_ACCESS_C1(4, read, false);
+MATSA_MEMORY_ACCESS_C1(8, read, false);
+MATSA_MEMORY_ACCESS_C1(1, write, true);
+MATSA_MEMORY_ACCESS_C1(2, write, true);
+MATSA_MEMORY_ACCESS_C1(4, write, true);
+MATSA_MEMORY_ACCESS_C1(8, write, true);
 
-MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 1, write, true);
-MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 2, write, true);
-MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 4, write, true);
-MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 8, write, true);
+MATSA_STATIC_MEMORY_ACCESS_C1(1, read, false);
+MATSA_STATIC_MEMORY_ACCESS_C1(2, read, false);
+MATSA_STATIC_MEMORY_ACCESS_C1(4, read, false);
+MATSA_STATIC_MEMORY_ACCESS_C1(8, read, false);
+MATSA_STATIC_MEMORY_ACCESS_C1(1, write, true);
+MATSA_STATIC_MEMORY_ACCESS_C1(2, write, true);
+MATSA_STATIC_MEMORY_ACCESS_C1(4, write, true);
+MATSA_STATIC_MEMORY_ACCESS_C1(8, write, true);
 
+MATSA_ARRAY_ACCESS_C1(1, read, false);
+MATSA_ARRAY_ACCESS_C1(2, read, false);
+MATSA_ARRAY_ACCESS_C1(4, read, false);
+MATSA_ARRAY_ACCESS_C1(8, read, false);
+MATSA_ARRAY_ACCESS_C1(1, write, true);
+MATSA_ARRAY_ACCESS_C1(2, write, true);
+MATSA_ARRAY_ACCESS_C1(4, write, true);
+MATSA_ARRAY_ACCESS_C1(8, write, true);
 
-MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 1, read, false);
-MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 2, read, false);
-MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 4, read, false);
-MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, read, false);
+#undef MATSA_STATIC_MEMORY_ACCESS_C1
+#undef MATSA_MEMORY_ACCESS_C1
+#undef MATSA_ARRAY_ACCESS_C1
 
-MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 1, write, true);
-MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 2, write, true);
-MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 4, write, true);
-MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, write, true);
-
+void (*MaTSaC1::matsa_static_memory_access[2][9])(void *obj, void *addr, int offset, int bci, Method *method) = {
+    {0, matsa_static_read_1, matsa_static_read_2, 0, matsa_static_read_4, 0, 0, 0, matsa_static_read_8},
+    {0, matsa_static_write_1, matsa_static_write_2, 0, matsa_static_write_4, 0, 0, 0, matsa_static_write_8}
+};
 
 void (*MaTSaC1::matsa_memory_access[2][9])(void *addr, int offset, int bci, Method *method) = {
     {0, matsa_read_1, matsa_read_2, 0, matsa_read_4, 0, 0, 0, matsa_read_8},
@@ -64,8 +82,6 @@ void (*MaTSaC1::matsa_array_access[2][9])(void *addr, int idx, BasicType array_t
 };
 
 JRT_LEAF(void, MaTSaC1::method_enter(JavaThread *thread, Method *method))
-    int tid = JavaThread::get_matsa_tid(thread);
-
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
     uint16_t bci = stack->get_caller_bci();
 
@@ -74,7 +90,6 @@ JRT_LEAF(void, MaTSaC1::method_enter(JavaThread *thread, Method *method))
 JRT_END
 
 JRT_LEAF(void, MaTSaC1::method_exit(JavaThread *thread))
-    int tid = JavaThread::get_matsa_tid(thread);
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
     (void)stack->pop();
   
@@ -143,6 +158,3 @@ JRT_LEAF(void, MaTSaC1::cl_init_acquire(JavaThread *thread, void *holder))
 
     *cur = *ts;
 JRT_END
-
-#undef MATSA_MEMORY_ACCESS_C1
-#undef MATSA_ARRAY_ACCESS_C1

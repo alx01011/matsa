@@ -680,7 +680,7 @@ class GraphKit : public Phase {
 
   // MaTSa support
 void make_matsa_load_store(Node *addr, ciMethod *m, int bci, uint8_t access_size, bool is_write);
-void make_matsa_cl_init_acq(Node *oop);
+void make_matsa_load_store_static(Node *obj, Node *addr, ciMethod *m, int bci, uint8_t access_size, bool is_write);
 void make_matsa_method_enter_exit(ciMethod *m, int caller_bci, bool is_enter);
 void make_matsa_lock_unlock(Node *obj, bool is_locking);
 

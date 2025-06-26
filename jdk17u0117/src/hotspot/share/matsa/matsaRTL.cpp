@@ -102,6 +102,7 @@ bool MaTSaRTL::CheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &
     return isRace;
 }
 
+#if MATSA_VECTORIZE
 bool MaTSaRTL::FastCheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &prev, HistoryCell &prev_history) {
     bool stored   = false;
     bool isRace   = false;
@@ -110,36 +111,36 @@ bool MaTSaRTL::FastCheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCe
                                  History::get_event_idx(cur.tid), History::get_cur_epoch(cur.tid)};
 
  
-    __m256i s_cells = _mm256_loadu_si256((__m256i*)ShadowMemory::MemToShadow((uptr)addr)); // Load 4 shadow cells into a 256-bit register
+    m256 s_cells = _mm256_loadu_si256((m256*)ShadowMemory::MemToShadow((uptr)addr)); // Load 4 shadow cells into a 256-bit register
 
     // bit masks to extract fields (matching struct layout)
-    const __m256i mask_tid        = _mm256_set1_epi64x((1ULL << 17) - 1);                // bits 0-16
-    const __m256i mask_epoch      = _mm256_set1_epi64x(((1ULL << 42) - 1) << 17);        // bits 17-58 (0b000001111111111111111111111111111111111111111110000000000000000)
-    const __m256i mask_offset     = _mm256_set1_epi64x(7ULL << 59);                      // bits 59-61 (0b111 shifted left by 59 places leaves bits 59-61 set)
-    const __m256i mask_is_write   = _mm256_set1_epi64x(1ULL << 62);                      // bit 62
-    const __m256i mask_is_ignored = _mm256_set1_epi64x(1ULL << 63);                      // bit 63
+    const m256 mask_tid        = _mm256_set1_epi64x((1ULL << 17) - 1);                // bits 0-16
+    const m256 mask_epoch      = _mm256_set1_epi64x(((1ULL << 42) - 1) << 17);        // bits 17-58 (0b000001111111111111111111111111111111111111111110000000000000000)
+    const m256 mask_offset     = _mm256_set1_epi64x(7ULL << 59);                      // bits 59-61 (0b111 shifted left by 59 places leaves bits 59-61 set)
+    const m256 mask_is_write   = _mm256_set1_epi64x(1ULL << 62);                      // bit 62
+    const m256 mask_is_ignored = _mm256_set1_epi64x(1ULL << 63);                      // bit 63
 
     // vectors of each field
-    const __m256i tids       = _mm256_and_si256(s_cells, mask_tid);
-    const __m256i epochs     = _mm256_and_si256(s_cells, mask_epoch);
-    const __m256i offsets    = _mm256_and_si256(s_cells, mask_offset);
-    const __m256i is_writes  = _mm256_and_si256(s_cells, mask_is_write);
-    const __m256i is_ignored = _mm256_and_si256(s_cells, mask_is_ignored);
+    const m256 tids       = _mm256_and_si256(s_cells, mask_tid);
+    const m256 epochs     = _mm256_and_si256(s_cells, mask_epoch);
+    const m256 offsets    = _mm256_and_si256(s_cells, mask_offset);
+    const m256 is_writes  = _mm256_and_si256(s_cells, mask_is_write);
+    const m256 is_ignored = _mm256_and_si256(s_cells, mask_is_ignored);
 
     // a vector for current cell
-    const __m256i cur_v = _mm256_set1_epi64x(*(uint64_t*)&cur);
+    const m256 cur_v = _mm256_set1_epi64x(*(uint64_t*)&cur);
 
-    const __m256i cur_tid       = _mm256_and_si256(cur_v, mask_tid);
-    const __m256i cur_offset    = _mm256_and_si256(cur_v, mask_offset);
-    const __m256i cur_is_write  = _mm256_and_si256(cur_v, mask_is_write);
+    const m256 cur_tid       = _mm256_and_si256(cur_v, mask_tid);
+    const m256 cur_offset    = _mm256_and_si256(cur_v, mask_offset);
+    const m256 cur_is_write  = _mm256_and_si256(cur_v, mask_is_write);
 
     
-    const __m256i zeros = _mm256_setzero_si256();
-    const __m256i ones  = _mm256_set1_epi64x(~0ULL); // all bits set to 1
+    const m256 zeros = _mm256_setzero_si256();
+    const m256 ones  = _mm256_set1_epi64x(~0ULL); // all bits set to 1
 
     // before running any checks, see if there is a cell with the same offset and ignored bit set
-    __m256i same_offset   = _mm256_cmpeq_epi64(offsets, cur_offset);
-    __m256i ignored_cells = _mm256_and_si256(same_offset, is_ignored);
+    m256 same_offset   = _mm256_cmpeq_epi64(offsets, cur_offset);
+    m256 ignored_cells = _mm256_and_si256(same_offset, is_ignored);
 
     if (_mm256_movemask_epi8(ignored_cells)) {
         // if there is a cell with the same offset and ignored bit set, we can skip the rest
@@ -147,7 +148,7 @@ bool MaTSaRTL::FastCheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCe
     }
 
     // first get rid of empty cells (epoch == 0)
-    __m256i empty_cells = _mm256_cmpeq_epi64(epochs, zeros);
+    m256 empty_cells = _mm256_cmpeq_epi64(epochs, zeros);
     int empty_mask = _mm256_movemask_epi8(empty_cells);
 
     // we can store in an empty cell
@@ -159,18 +160,18 @@ bool MaTSaRTL::FastCheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCe
 
     // different offsets
     // xor with ones (all bits set) to flip all bits (aka NOT operation)
-    __m256i different_offsets = _mm256_xor_si256(_mm256_cmpeq_epi64(offsets, cur_offset), ones);
+    m256 different_offsets = _mm256_xor_si256(_mm256_cmpeq_epi64(offsets, cur_offset), ones);
     // ignore same tid
-    __m256i same_tid = _mm256_cmpeq_epi64(tids, cur_tid);
+    m256 same_tid = _mm256_cmpeq_epi64(tids, cur_tid);
     // ignore both reads
-    __m256i cur_read   = _mm256_cmpeq_epi64(cur_is_write, zeros);
-    __m256i cell_reads = _mm256_cmpeq_epi64(is_writes, zeros);
-    __m256i both_reads = _mm256_and_si256(cur_read, cell_reads);
+    m256 cur_read   = _mm256_cmpeq_epi64(cur_is_write, zeros);
+    m256 cell_reads = _mm256_cmpeq_epi64(is_writes, zeros);
+    m256 both_reads = _mm256_and_si256(cur_read, cell_reads);
 
     // if the tid and offset is the same we can replace weaker accesses (if current is write and previous is read)
-    // __m256i weaker_access = _mm256_andnot_si256(cur_read, 
+    // m256 weaker_access = _mm256_andnot_si256(cur_read, 
     //             _mm256_and_si256(same_offset, _mm256_and_si256(cell_reads, same_tid)));
-    __m256i weaker_access = _mm256_and_si256(same_offset, _mm256_and_si256(cell_reads, same_tid));
+    m256 weaker_access = _mm256_and_si256(same_offset, _mm256_and_si256(cell_reads, same_tid));
     
     int weaker_mask = _mm256_movemask_epi8(weaker_access);
     if (weaker_mask && cur.is_write) {
@@ -179,11 +180,11 @@ bool MaTSaRTL::FastCheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCe
         stored = true;
     }
 
-    __m256i skip = _mm256_or_si256(different_offsets, _mm256_or_si256(same_tid, both_reads));
+    m256 skip = _mm256_or_si256(different_offsets, _mm256_or_si256(same_tid, both_reads));
 
     // candidates : !empty && !skip
     // _mm256_andnot_si256(empty_cells, ones) -> this is the NOT of empty_cells, (~empty_cells & 1 == ~empty_cells)
-    __m256i candidates = _mm256_andnot_si256(skip, _mm256_andnot_si256(empty_cells, ones));
+    m256 candidates = _mm256_andnot_si256(skip, _mm256_andnot_si256(empty_cells, ones));
 
     /*
         * this pretty much splits the candidates into 8 byte chunks
@@ -193,7 +194,7 @@ bool MaTSaRTL::FastCheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCe
     int candidate_mask = _mm256_movemask_epi8(candidates);
 
     if (candidate_mask) {
-        __m256i thread_epochs = _mm256_set1_epi64x(0);
+        m256 thread_epochs = _mm256_set1_epi64x(0);
 // idea taken from llvm's tsan
 #define LOAD_EPOCH(i) \
         if ((candidate_mask >> (i * 8)) & 0xFF) {\
@@ -215,7 +216,7 @@ bool MaTSaRTL::FastCheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCe
             * No need to shift epochs (cells) as thread_epochs is shifted to mimic
             * how the epoch is stored in the shadow_t struct.
         */
-        __m256i racy = _mm256_cmpgt_epi64(epochs, thread_epochs); 
+        m256 racy = _mm256_cmpgt_epi64(epochs, thread_epochs); 
         racy = _mm256_and_si256(racy, candidates); // only keep candidates that are racy
         
         int racy_mask = _mm256_movemask_epi8(racy);
@@ -242,11 +243,17 @@ bool MaTSaRTL::FastCheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCe
 
     return isRace;
 }
+#else 
+bool MaTSaRTL::FastCheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &prev, HistoryCell &prev_history) {
+    // do nothing
+    return false;
+}
+#endif // MATSA_VECTORIZE
 
 
 void MaTSaRTL::InterpreterMemoryAccess(void *addr, Method *m, address bcp, uint8_t access_size, bool is_write) {
-    JavaThread *thread = JavaThread::current();
-    uint16_t tid       = JavaThread::get_matsa_tid(thread);
+    JavaThread *thread  = JavaThread::current();
+    uint16_t tid        = JavaThread::get_matsa_tid(thread);
     
     int32_t  bci   = m->bci_from(bcp);
     uint32_t epoch = MaTSaThreadState::getEpoch(tid, tid);
@@ -256,9 +263,11 @@ void MaTSaRTL::InterpreterMemoryAccess(void *addr, Method *m, address bcp, uint8
     // race
     ShadowCell prev;
     HistoryCell prev_history;
-    // bool is_race = CheckRaces(addr, bci, cur, prev, prev_history);
+#if MATSA_VECTORIZE
     bool is_race = MaTSaRTL::FastCheckRaces(addr, bci, cur, prev, prev_history);
-
+#else
+    bool is_race = CheckRaces(addr, bci, cur, prev, prev_history);
+#endif
     if (is_race && !MaTSaSilent) {
         MaTSaReport::do_report_race(thread, addr, access_size, bci, m, cur, prev, prev_history);
     }
@@ -275,8 +284,11 @@ JRT_LEAF(void, MaTSaRTL::C1MemoryAccess(void *addr, Method *m, int bci, uint8_t 
     // race
     ShadowCell prev;
     HistoryCell prev_history;
-    // bool is_race = CheckRaces(addr, bci, cur, prev, prev_history);
+#if MATSA_VECTORIZE
     bool is_race = MaTSaRTL::FastCheckRaces(addr, bci, cur, prev, prev_history);
+#else
+    bool is_race = CheckRaces(addr, bci, cur, prev, prev_history);
+#endif
 
     if (is_race && !MaTSaSilent) {
         MaTSaReport::do_report_race(thread, addr, access_size, bci, m, cur, prev, prev_history);
@@ -294,7 +306,11 @@ JRT_LEAF(void, MaTSaRTL::C2MemoryAccess(void *addr, Method *m, int bci, uint8_t 
     // race
     ShadowCell prev;
     HistoryCell prev_history;
+#if MATSA_VECTORIZE
     bool is_race = MaTSaRTL::FastCheckRaces(addr, bci, cur, prev, prev_history);
+#else
+    bool is_race = CheckRaces(addr, bci, cur, prev, prev_history);
+#endif
 
     if (is_race && !MaTSaSilent) {
         MaTSaReport::do_report_race(thread, addr, access_size, bci, m, cur, prev, prev_history);

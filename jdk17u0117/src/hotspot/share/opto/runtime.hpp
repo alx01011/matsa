@@ -313,7 +313,7 @@ private:
 
   // matsa support
   static const TypeFunc* matsa_load_store_Type();
-  static const TypeFunc* matsa_cl_init_Type();
+  static const TypeFunc* matsa_load_store_static_Type();
   static const TypeFunc* matsa_method_enter_exit_Type();
   static const TypeFunc* matsa_pre_method_enter_Type();
   static const TypeFunc* matsa_lock_unlock_Type();

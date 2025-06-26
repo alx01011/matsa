@@ -1696,40 +1696,38 @@
      bool is_matsa_ignored = flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class();
  
      if (!is_volatile && !is_matsa_ignored) {
-       if (x->is_static()) {
-         BasicTypeList signature;
-         signature.append(T_LONG);
-         signature.append(T_OBJECT);
-       
-         LIR_OprList* args = new LIR_OprList();
-         LIR_Opr thread = getThreadPointer();
-         LIR_Opr klass = object.result(); // this
-         args->append(thread);
-         args->append(klass);
-         
-         call_runtime(&signature, args, CAST_FROM_FN_PTR(address, MaTSaC1::cl_init_acquire), voidType, NULL);
-       }
- 
-       int size = x->field()->size_in_bytes();
- 
-       BasicTypeList signature;
-       signature.append(T_OBJECT);
-       signature.append(T_INT);
-       signature.append(T_INT);
-       signature.append(T_METADATA);
- 
-       LIR_OprList* args = new LIR_OprList();
-       LIR_Opr addr = object.result();
-       LIR_Opr offset = LIR_OprFact::intConst(x->offset());
-       LIR_Opr bci = LIR_OprFact::intConst(x->printable_bci());
-       LIR_Opr method = new_register(T_METADATA);
-       __ metadata2reg(compilation()->method()->constant_encoding(), method);
- 
-       args->append(addr);
-       args->append(offset);
-       args->append(bci);
-       args->append(method);
-       call_runtime(&signature, args, CAST_FROM_FN_PTR(address, MaTSaC1::matsa_memory_access[1][size]), voidType, NULL);
+      int size = x->field()->size_in_bytes();
+
+      LIR_Opr addr   = object.result();
+      LIR_Opr offset = LIR_OprFact::intConst(x->offset());
+      LIR_Opr bci    = LIR_OprFact::intConst(x->printable_bci());
+      LIR_Opr method = new_register(T_METADATA);
+      __ metadata2reg(compilation()->method()->constant_encoding(), method);
+
+      LIR_OprList* args = new LIR_OprList();
+      BasicTypeList signature;
+      address call_adr = CAST_FROM_FN_PTR(address, MaTSaC1::matsa_memory_access[1][size]);
+
+      if (x->is_static()) {
+        signature.append(T_OBJECT);
+
+        LIR_Opr klass = object.result(); // this
+        args->append(klass);
+
+        call_adr = CAST_FROM_FN_PTR(address, MaTSaC1::matsa_static_memory_access[1][size]);
+      }
+
+      signature.append(T_OBJECT); // addr
+      signature.append(T_INT); // offset
+      signature.append(T_INT); // bci
+      signature.append(T_METADATA); // method
+
+      args->append(addr);
+      args->append(offset);
+      args->append(bci);
+      args->append(method);
+
+      call_runtime(&signature, args, call_adr, voidType, NULL);
      }
    );                
  }
@@ -1960,45 +1958,43 @@
    access_load_at(decorators, field_type,
                   object, LIR_OprFact::intConst(x->offset()), result,
                   info ? new CodeEmitInfo(info) : NULL, info);
-   MATSA_ONLY(
+    MATSA_ONLY(
      AccessFlags flags(x->field()->flags().as_int());
      bool is_matsa_ignored = flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class();
  
      if (!is_volatile && !is_matsa_ignored) {
-       if (x->is_static()) {
-         BasicTypeList signature;
-         signature.append(T_LONG);
-         signature.append(T_OBJECT);
-       
-         LIR_OprList* args = new LIR_OprList();
-         LIR_Opr thread = getThreadPointer();
-         LIR_Opr klass = object.result(); // this
-         args->append(thread);
-         args->append(klass);
-         
-         call_runtime(&signature, args, CAST_FROM_FN_PTR(address, MaTSaC1::cl_init_acquire), voidType, NULL);
-       }
- 
-       int size = x->field()->size_in_bytes();
- 
-       BasicTypeList signature;
-       signature.append(T_OBJECT);
-       signature.append(T_INT);
-       signature.append(T_INT);
-       signature.append(T_METADATA);
- 
-       LIR_OprList* args = new LIR_OprList();
-       LIR_Opr addr = object.result();
-       LIR_Opr offset = LIR_OprFact::intConst(x->offset());
-       LIR_Opr bci = LIR_OprFact::intConst(x->printable_bci());
-       LIR_Opr method = new_register(T_METADATA);
-       __ metadata2reg(compilation()->method()->constant_encoding(), method);
- 
-       args->append(addr);
-       args->append(offset);
-       args->append(bci);
-       args->append(method);
-       call_runtime(&signature, args, CAST_FROM_FN_PTR(address, MaTSaC1::matsa_memory_access[0][size]), voidType, NULL);
+      int size = x->field()->size_in_bytes();
+
+      LIR_Opr addr   = object.result();
+      LIR_Opr offset = LIR_OprFact::intConst(x->offset());
+      LIR_Opr bci    = LIR_OprFact::intConst(x->printable_bci());
+      LIR_Opr method = new_register(T_METADATA);
+      __ metadata2reg(compilation()->method()->constant_encoding(), method);
+
+      LIR_OprList* args = new LIR_OprList();
+      BasicTypeList signature;
+      address call_adr = CAST_FROM_FN_PTR(address, MaTSaC1::matsa_memory_access[0][size]);
+
+      if (x->is_static()) {
+        signature.append(T_OBJECT);
+
+        LIR_Opr klass = object.result(); // this
+        args->append(klass);
+        
+        call_adr = CAST_FROM_FN_PTR(address, MaTSaC1::matsa_static_memory_access[0][size]);
+      }
+
+      signature.append(T_OBJECT); // addr
+      signature.append(T_INT); // offset
+      signature.append(T_INT); // bci
+      signature.append(T_METADATA); // method
+
+      args->append(addr);
+      args->append(offset);
+      args->append(bci);
+      args->append(method);
+
+      call_runtime(&signature, args, call_adr, voidType, NULL);
      }
    );
  }

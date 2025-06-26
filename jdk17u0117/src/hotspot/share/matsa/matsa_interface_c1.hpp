@@ -5,39 +5,56 @@
 #include "runtime/thread.hpp"
 #include "utilities/globalDefinitions.hpp"
 
-#define MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, size, type)   \
+#define MATSA_MEMORY_ACCESS_C1(size, type)   \
     void matsa_##type##_##size(void *addr, int offset, int bci, Method *method)
 
-#define MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, size, type) \
+#define MATSA_STATIC_MEMORY_ACCESS_C1(size, type)   \
+    void matsa_static_##type##_##size(void *obj, void *addr, int offset, int bci, Method *method)
+
+#define MATSA_ARRAY_ACCESS_C1(size, type) \
     void matsa_array_##type##_##size(void *addr, int idx, BasicType array_type, int bci, Method *method)
 
 
 namespace MaTSaC1 {
-    MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 1, read);
-    MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 1, write);
+    MATSA_MEMORY_ACCESS_C1(1, read);
+    MATSA_MEMORY_ACCESS_C1(1, write);
 
-    MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 2, read);
-    MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 2, write);
+    MATSA_MEMORY_ACCESS_C1(2, read);
+    MATSA_MEMORY_ACCESS_C1(2, write);
 
-    MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 4, read);
-    MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 4, write);
+    MATSA_MEMORY_ACCESS_C1(4, read);
+    MATSA_MEMORY_ACCESS_C1(4, write);
 
-    MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 8, read);
-    MATSA_MEMORY_ACCESS_C1(addr, offset, method, bci, 8, write);
+    MATSA_MEMORY_ACCESS_C1(8, read);
+    MATSA_MEMORY_ACCESS_C1(8, write);
 
     extern void (*matsa_memory_access[2][9])(void *addr, int offset, int bci, Method *method);
 
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 1, read);
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 1, write);
+    MATSA_STATIC_MEMORY_ACCESS_C1(1, read);
+    MATSA_STATIC_MEMORY_ACCESS_C1(1, write);
 
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 2, read);
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 2, write);
+    MATSA_STATIC_MEMORY_ACCESS_C1(2, read);
+    MATSA_STATIC_MEMORY_ACCESS_C1(2, write);
 
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 4, read);
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 4, write);
+    MATSA_STATIC_MEMORY_ACCESS_C1(4, read);
+    MATSA_STATIC_MEMORY_ACCESS_C1(4, write);
 
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, read);
-    MATSA_ARRAY_ACCESS_C1(addr, idx, method, bci, 8, write);
+    MATSA_STATIC_MEMORY_ACCESS_C1(8, read);
+    MATSA_STATIC_MEMORY_ACCESS_C1(8, write);
+
+    extern void (*matsa_static_memory_access[2][9])(void *obj, void *addr, int offset, int bci, Method *method);    
+
+    MATSA_ARRAY_ACCESS_C1(1, read);
+    MATSA_ARRAY_ACCESS_C1(1, write);
+
+    MATSA_ARRAY_ACCESS_C1(2, read);
+    MATSA_ARRAY_ACCESS_C1(2, write);
+
+    MATSA_ARRAY_ACCESS_C1(4, read);
+    MATSA_ARRAY_ACCESS_C1(4, write);
+
+    MATSA_ARRAY_ACCESS_C1(8, read);
+    MATSA_ARRAY_ACCESS_C1(8, write);
 
     extern void (*matsa_array_access[2][9])(void *addr, int idx, BasicType array_type, int bci, Method *method);
 
@@ -53,6 +70,7 @@ namespace MaTSaC1 {
 }
 
 #undef MATSA_MEMORY_ACCESS_C1
+#undef MATSA_STATIC_MEMORY_ACCESS_C1
 #undef MATSA_ARRAY_ACCESS_C1
 
 #endif

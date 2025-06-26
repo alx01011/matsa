@@ -82,19 +82,23 @@ void GraphKit::make_matsa_load_store(Node *addr, ciMethod *m, int bci, uint8_t a
                            addr, mbci_pack_node);
 }
 
-void GraphKit::make_matsa_cl_init_acq(Node *oop) {
-  const TypeFunc *call_type = OptoRuntime::matsa_cl_init_Type();
-  address         call_address = CAST_FROM_FN_PTR(address, MaTSaC2::cl_init_acquire);
-  const char     *call_name = "matsa_rt_cl_init_acq";
+void GraphKit::make_matsa_load_store_static(Node *obj, Node *addr, ciMethod *m, int bci, uint8_t access_size, bool is_write) {
+  const TypeFunc *call_type = OptoRuntime::matsa_load_store_static_Type();
+  address         call_address = CAST_FROM_FN_PTR(address, MaTSaC2::matsa_static_memory_access[is_write][access_size]);
+  const char     *call_name = is_write ? "matsa_rt_static_store" : "matsa_rt_static_load";
 
-  // Get base of thread-local storage area
-  Node* thread = _gvn.transform( new ThreadLocalNode() );
+  Method *mptr = m->get_Method();
+  uint64_t bci_shifted = (uint64_t)bci << 48;
+
+  uint64_t mbci_pack = (uint64_t)mptr | bci_shifted;
+
+  Node *mbci_pack_node = _gvn.transform(makecon(TypeLong::make(mbci_pack)));
 
   const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
   make_runtime_call(RC_NO_FP | RC_NARROW_MEM | RC_NO_IO,
-                    call_type, call_address,
-                    call_name, raw_adr_type,
-                    thread, oop);
+                           call_type, call_address,
+                           call_name, raw_adr_type,
+                           obj, addr, mbci_pack_node);
 }
 
 void GraphKit:: make_matsa_method_enter_exit(ciMethod* method, int caller_bci, bool is_entry) {
@@ -375,4 +379,3 @@ void Parse::dump_map_adr_mem() const {
 }
 
 #endif
-

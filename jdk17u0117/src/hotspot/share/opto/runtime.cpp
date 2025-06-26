@@ -1579,20 +1579,21 @@ const TypeFunc *OptoRuntime::matsa_load_store_Type() {
   return TypeFunc::make(domain,range);
 }
 
-const TypeFunc *OptoRuntime::matsa_cl_init_Type() {
-  // JavaThread *thread, void *oop
-  const Type **fields = TypeTuple::fields(2);
-  fields[TypeFunc::Parms+0] = TypeRawPtr::NOTNULL; // thread
-  fields[TypeFunc::Parms+1] = TypeRawPtr::NOTNULL; // oop
+const TypeFunc *OptoRuntime::matsa_load_store_static_Type() {
+  // void *addr, Method *m, int bci, uint8_t access_size, bool is_write
+  const Type **fields = TypeTuple::fields(3);
+  fields[TypeFunc::Parms+0] = TypeRawPtr::BOTTOM; // oop
+  fields[TypeFunc::Parms+1] = TypeRawPtr::BOTTOM; // addr
+  fields[TypeFunc::Parms+2] = TypeRawPtr::BOTTOM; // mbci
 
-  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+2, fields);
+  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+3, fields);
 
   // create result type (range)
   fields = TypeTuple::fields(0);
 
-  const TypeTuple *range = TypeTuple::make(TypeFunc::Parms+0, fields);
+  const TypeTuple *range = TypeTuple::make(TypeFunc::Parms+0,fields);
 
-  return TypeFunc::make(domain, range);
+  return TypeFunc::make(domain,range);
 }
 
 const TypeFunc *OptoRuntime::matsa_method_enter_exit_Type() {

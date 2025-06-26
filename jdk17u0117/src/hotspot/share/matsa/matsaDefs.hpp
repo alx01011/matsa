@@ -1,7 +1,7 @@
 #ifndef MATSA_DEFS_HPP
 #define MATSA_DEFS_HPP
 
-// 256 threads
+// FIXME: We should support 2^17 threads
 #define MAX_THREADS (1 << 8)
 
 
@@ -10,11 +10,9 @@
 #define MAX_STACK_BITS   (18)
 
 
-// TODO: this has to be done at compile time
-// because we have to check if avx is supported
-#ifdef MATSA_VECTORIZE
-#undef MATSA_VECTORIZE
-#define MATSA_VECTORIZE 0
+// check for avx2 support
+#if defined(__AVX2__)
+#define MATSA_VECTORIZE 1
 #else
 #define MATSA_VECTORIZE 0
 #endif
@@ -33,7 +31,6 @@
 #include <smmintrin.h>
 #include <immintrin.h>
 
-typedef __m128i m128;
 typedef __m256i m256;
 
 #endif

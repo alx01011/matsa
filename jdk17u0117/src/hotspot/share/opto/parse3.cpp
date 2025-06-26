@@ -171,10 +171,10 @@ void Parse::do_get_xxx(Node* obj, ciField* field, bool is_field) {
     bool skip = is_vol || (flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class());
     if (!skip) {
       if (field->is_static()) {
-        //make_matsa_cl_init_acq(obj);
+        make_matsa_load_store_static(obj, adr, method(), bci(), field->size_in_bytes(), false);
+      } else {
+        make_matsa_load_store(adr, method(), bci(), field->size_in_bytes(), false);
       }
-
-      make_matsa_load_store(adr, method(), bci(), field->size_in_bytes(), false);
     }
   );
 
@@ -244,9 +244,10 @@ void Parse::do_put_xxx(Node* obj, ciField* field, bool is_field) {
     bool skip = is_vol || (flags.is_matsa_ignore_field() || flags.is_matsa_ignore_class());
     if (!skip) {
       if (field->is_static()) {
-        //make_matsa_cl_init_acq(obj);
+        make_matsa_load_store_static(obj, adr, method(), bci(), field->size_in_bytes(), true);
+      } else {
+        make_matsa_load_store(adr, method(), bci(), field->size_in_bytes(), true);
       }
-      make_matsa_load_store(adr, method(), bci(), field->size_in_bytes(), true);
     }
   );
 
