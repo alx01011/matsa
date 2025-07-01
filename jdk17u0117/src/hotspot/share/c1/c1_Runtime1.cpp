@@ -346,13 +346,13 @@ const char* Runtime1::name_for_address(address entry) {
 
   // MATSA
 
-  #define MATSA_MEMORY_ACCESS_C1(size, type)\
+#define MATSA_MEMORY_ACCESS_C1(size, type)\
   MaTSaC1::matsa_##type##_##size
 
 #define MATSA_STATIC_MEMORY_ACCESS_C1(size, type)\
   MaTSaC1::matsa_static_##type##_##size
 
-  #define MATSA_ARRAY_ACCESS_C1(size, type)\
+#define MATSA_ARRAY_ACCESS_C1(size, type)\
   MaTSaC1::matsa_array_##type##_##size
 
   FUNCTION_CASE(entry, MaTSaC1::pre_method_enter);
@@ -384,6 +384,7 @@ const char* Runtime1::name_for_address(address entry) {
   FUNCTION_CASE(entry, MATSA_STATIC_MEMORY_ACCESS_C1(4, read));
   FUNCTION_CASE(entry, MATSA_STATIC_MEMORY_ACCESS_C1(4, write));
   FUNCTION_CASE(entry, MATSA_STATIC_MEMORY_ACCESS_C1(8, read));
+  FUNCTION_CASE(entry, MATSA_STATIC_MEMORY_ACCESS_C1(8, write));
 
   #undef MATSA_STATIC_MEMORY_ACCESS_C1
   #undef MATSA_MEMORY_ACCESS_C1

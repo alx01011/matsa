@@ -72,7 +72,7 @@ bool MaTSaRTL::CheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCell &
         }
 
         // at least one of the accesses is a write
-        uint32_t thr = MaTSaThreadState::getEpoch(cur.tid, cell.tid);
+        uint64_t thr = MaTSaThreadState::getEpoch(cur.tid, cell.tid);
 
         // if the current thread has a higher epoch then we can skip
         if (LIKELY(thr >= cell.epoch)) {
@@ -198,7 +198,7 @@ bool MaTSaRTL::FastCheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCe
 // idea taken from llvm's tsan
 #define LOAD_EPOCH(i) \
         if ((candidate_mask >> (i * 8)) & 0xFF) {\
-            uint32_t tid   = _mm256_extract_epi64(tids, i); \
+            uint64_t tid   = _mm256_extract_epi64(tids, i); \
             uint64_t epoch = ((uint64_t)MaTSaThreadState::getEpoch(cur.tid, tid)) << 17; \
             thread_epochs = _mm256_insert_epi64(thread_epochs, epoch, i); \
         }
@@ -253,7 +253,7 @@ bool MaTSaRTL::FastCheckRaces(void *addr, int32_t bci, ShadowCell &cur, ShadowCe
 
 void MaTSaRTL::InterpreterMemoryAccess(void *addr, Method *m, address bcp, uint8_t access_size, bool is_write) {
     JavaThread *thread  = JavaThread::current();
-    uint16_t tid        = JavaThread::get_matsa_tid(thread);
+    uint64_t tid        = JavaThread::get_matsa_tid(thread);
     
     int32_t  bci   = m->bci_from(bcp);
     uint32_t epoch = MaTSaThreadState::getEpoch(tid, tid);
@@ -275,9 +275,9 @@ void MaTSaRTL::InterpreterMemoryAccess(void *addr, Method *m, address bcp, uint8
 
 JRT_LEAF(void, MaTSaRTL::C1MemoryAccess(void *addr, Method *m, int bci, uint8_t access_size, bool is_write))
     JavaThread *thread = JavaThread::current();
-    uint16_t tid       = JavaThread::get_matsa_tid(thread);
+    uint64_t tid       = JavaThread::get_matsa_tid(thread);
 
-    uint32_t epoch = MaTSaThreadState::getEpoch(tid, tid);
+    uint64_t epoch = MaTSaThreadState::getEpoch(tid, tid);
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), is_write, 0};
 
@@ -297,9 +297,9 @@ JRT_END
 
 JRT_LEAF(void, MaTSaRTL::C2MemoryAccess(void *addr, Method *m, int bci, uint8_t access_size, bool is_write))
     JavaThread *thread = JavaThread::current();
-    uint16_t tid       = JavaThread::get_matsa_tid(thread);
+    uint64_t tid       = JavaThread::get_matsa_tid(thread);
 
-    uint32_t epoch = MaTSaThreadState::getEpoch(tid, tid);
+    uint64_t epoch = MaTSaThreadState::getEpoch(tid, tid);
     // create a new shadow cell
     ShadowCell cur = {tid, epoch, (uint8_t)((uptr)addr & (8 - 1)), is_write, 0};
 

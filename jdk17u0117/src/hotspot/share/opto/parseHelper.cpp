@@ -76,7 +76,7 @@ void GraphKit::make_matsa_load_store(Node *addr, ciMethod *m, int bci, uint8_t a
   Node *mbci_pack_node = _gvn.transform(makecon(TypeLong::make(mbci_pack)));
 
   const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
-  make_runtime_call(RC_NO_FP | RC_NARROW_MEM | RC_NO_IO,
+  make_runtime_call(RC_NO_FP | RC_NO_IO,
                            call_type, call_address,
                            call_name, raw_adr_type,
                            addr, mbci_pack_node);
@@ -95,7 +95,7 @@ void GraphKit::make_matsa_load_store_static(Node *obj, Node *addr, ciMethod *m, 
   Node *mbci_pack_node = _gvn.transform(makecon(TypeLong::make(mbci_pack)));
 
   const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
-  make_runtime_call(RC_NO_FP | RC_NARROW_MEM | RC_NO_IO,
+  make_runtime_call(RC_NO_FP | RC_NO_IO,
                            call_type, call_address,
                            call_name, raw_adr_type,
                            obj, addr, mbci_pack_node);
@@ -117,7 +117,7 @@ void GraphKit:: make_matsa_method_enter_exit(ciMethod* method, int caller_bci, b
   Node *mbci_pack_node = _gvn.transform(makecon(TypeLong::make(mbci_pack)));
 
   const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
-  make_runtime_call(RC_NO_FP | RC_NARROW_MEM | RC_NO_IO,
+  make_runtime_call(RC_NO_FP | RC_NO_IO,
                     call_type, call_address,
                     call_name, raw_adr_type,
                     thread, mbci_pack_node);                
@@ -133,7 +133,7 @@ void GraphKit::make_matsa_lock_unlock(Node *obj, bool is_locking) {
   Node* thread = _gvn.transform( new ThreadLocalNode() );
 
   const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
-  make_runtime_call(RC_NO_FP | RC_NARROW_MEM | RC_NO_IO,
+  make_runtime_call(RC_NO_FP | RC_NO_IO,
                     call_type, call_address,
                     call_name, raw_adr_type,
                     thread, obj);

@@ -10,19 +10,20 @@
 // a circular queue
 class ThreadQueue : public CHeapObj<mtInternal> {
     private:
-        uint8_t _queue[MAX_THREADS];
-        uint16_t _front;
-        uint16_t _rear;
+        uint64_t *_queue;
+        uint64_t _front;
+        uint64_t _rear;
         uint8_t _lock;
     public:
         ThreadQueue(void);
+        ~ThreadQueue(void);
 
-        uint8_t enqueue(uint8_t tid);
+        uint64_t enqueue(uint64_t tid);
         int     dequeue(void);
         int     front(void);
         bool    empty(void);
 
-        uint8_t enqueue_unsafe(uint8_t tid);
+        uint64_t enqueue_unsafe(uint64_t tid);
 };
 
 

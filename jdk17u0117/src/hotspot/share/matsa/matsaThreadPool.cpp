@@ -1,13 +1,29 @@
 #include "matsaThreadPool.hpp"
 #include "matsaGlobals.hpp"
 
+#include "memory/allocation.hpp"
+
 ThreadQueue::ThreadQueue(void) {
+    _queue = NEW_C_HEAP_ARRAY(uint64_t, MAX_THREADS, mtInternal);
+
+    assert(_queue != nullptr, "MATSA: Failed to allocate thread queue memory");
+
     _front = 0;
     _rear  = 0;
     _lock  = 0;
 }
 
-uint8_t ThreadQueue::enqueue(uint8_t tid) {
+ThreadQueue::~ThreadQueue(void) {
+    assert(_queue != nullptr, "MATSA: Thread queue memory not allocated");
+
+    FREE_C_HEAP_ARRAY(uint64_t, _queue);
+    _queue = nullptr;
+
+    _front = 0;
+    _rear  = 0;
+}
+
+uint64_t ThreadQueue::enqueue(uint64_t tid) {
     // we are using a spinlock since Thread::current can return null on vm exit
     // spinlock won't be a problem since we are not going to have a lot of contention anyway
     MaTSaSpinLock lock(&_lock);
@@ -29,7 +45,7 @@ int ThreadQueue::dequeue(void) {
         return -1;
     }
 
-    uint8_t tid = _queue[_front];
+    uint64_t tid = _queue[_front];
     _front = (_front + 1) % MAX_THREADS;
 
     return tid;
@@ -47,7 +63,7 @@ bool ThreadQueue::empty(void) {
     return _front == _rear;
 }
 
-uint8_t ThreadQueue::enqueue_unsafe(uint8_t tid) {
+uint64_t ThreadQueue::enqueue_unsafe(uint64_t tid) {
     if ((_rear + 1) % MAX_THREADS == _front) {
         return 1;
     }
@@ -64,7 +80,7 @@ MaTSaThreadPool* MaTSaThreadPool::instance = nullptr;
 MaTSaThreadPool::MaTSaThreadPool(void) {
     _queue = new ThreadQueue();
 
-    // init the thread stack with all the available tids 0 - 255
+    // init the thread stack with all the available tids 0 - MAX_THREADS
     for (int i = 0; i < MAX_THREADS; i++) {
        _queue->enqueue_unsafe(i); 
     }

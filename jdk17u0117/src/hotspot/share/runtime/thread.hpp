@@ -724,9 +724,8 @@ class JavaThread: public Thread {
   bool           _on_thread_list;                 // Is set when this JavaThread is added to the Threads list
   OopHandle      _threadObj;                     // The Java level thread object
 #if INCLUDE_MATSA
-  int            _matsa_tid          = -1;            // MaTSa thread id
+  uint64_t       _matsa_tid          = 0;   // MaTSa thread id
   MaTSaStack*    _matsa_stack        = nullptr;       // MaTSa stack
-
 #endif
 
 #ifdef ASSERT
@@ -811,8 +810,8 @@ class JavaThread: public Thread {
 
   // aantonak - MaTSa
   static int get_thread_obj_id(JavaThread *thread);
-  static int get_matsa_tid(JavaThread *thread);
-  static void set_matsa_tid(JavaThread *thread, int tid);
+  static uint64_t get_matsa_tid(JavaThread *thread);
+  static void set_matsa_tid(JavaThread *thread, uint64_t tid);
 
   static void init_matsa_stack(JavaThread *thread);
   static MaTSaStack *get_matsa_stack(JavaThread *thread);

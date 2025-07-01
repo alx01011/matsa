@@ -2,7 +2,7 @@
 #define MATSA_DEFS_HPP
 
 // FIXME: We should support 2^17 threads
-#define MAX_THREADS (1 << 8)
+#define MAX_THREADS (1 << 17)
 
 
 #define MAX_ADDRESS_BITS (48)

@@ -1,17 +1,49 @@
 #include "vectorclock.hpp"
 
+#include "runtime/os.hpp"
+
 #include <stdio.h>
 #include <cstring>
 
+
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
-uint64_t& Vectorclock::operator[](size_t index) {
+Vectorclock::Vectorclock(void) {
+    this->_clock = (uint64_t*)os::reserve_memory(MAX_THREADS * sizeof(uint64_t));
+    this->_slot  = (uint64_t*)os::reserve_memory(MAX_THREADS * sizeof(uint64_t));
+    this->_map   = (uint8_t*)os::reserve_memory(MAX_THREADS * sizeof(uint8_t));
+
+    assert(this->_clock != nullptr, "MATSA: Failed to allocate vector clock memory");
+    assert(this->_slot  != nullptr, "MATSA: Failed to allocate vector clock slot memory");
+    assert(this->_map   != nullptr, "MATSA: Failed to allocate vector clock map memory");
+
+    bool protect = true;
+    protect &= os::protect_memory((char*)this->_clock, MAX_THREADS * sizeof(uint64_t), os::MEM_PROT_RW);
+    protect &= os::protect_memory((char*)this->_slot,  MAX_THREADS * sizeof(uint64_t), os::MEM_PROT_RW);
+    protect &= os::protect_memory((char*)this->_map,   MAX_THREADS * sizeof(uint8_t), os::MEM_PROT_RW);
+
+    assert(protect, "MATSA: Failed to protect vector clock memory");
+
+    this->_slot_size = 0;
+}
+
+Vectorclock::~Vectorclock(void) {
+    assert(this->_clock != nullptr, "MATSA: Vector clock memory not allocated");
+    assert(this->_slot  != nullptr, "MATSA: Vector clock slot memory not allocated");
+    assert(this->_map   != nullptr, "MATSA: Vector clock map memory not allocated");
+
+    os::release_memory((char*)this->_clock, MAX_THREADS * sizeof(uint64_t));
+    os::release_memory((char*)this->_slot,  MAX_THREADS * sizeof(uint64_t));
+    os::release_memory((char*)this->_map,   MAX_THREADS * sizeof(uint8_t));
+}
+
+uint64_t& Vectorclock::operator[](uint64_t index) {
     return this->_clock[index];
 } 
 
 Vectorclock& Vectorclock::operator=(const Vectorclock& other) {
-    for (size_t i = 0; i < other._slot_size; i++) {
-        size_t index = other._slot[i];
+    for (uint64_t i = 0; i < other._slot_size; i++) {
+        uint64_t index = other._slot[i];
 
         this->set(index, other._clock[index]);
     }
@@ -19,11 +51,11 @@ Vectorclock& Vectorclock::operator=(const Vectorclock& other) {
     return *this;
 }
 
-uint64_t Vectorclock::get(size_t index) {
+uint64_t Vectorclock::get(uint64_t index) {
     return this->_clock[index];
 }
 
-void Vectorclock::set(size_t index, uint64_t value) {
+void Vectorclock::set(uint64_t index, uint64_t value) {
     // only apply if the value is greater
     if (this->_clock[index] < value) {
         this->_clock[index] = value;
@@ -36,25 +68,23 @@ void Vectorclock::set(size_t index, uint64_t value) {
 }
 
 void Vectorclock::clear(void) {
-    if (this->_slot_size == 0) {
-        return;
-    }
-
     // clear every array
     // this only happens when a thread is created to clear previous values
     // this is because threads are reused from a pool
-    // not a common operation due to the use of a queue
-    memset(this->_clock, 0, sizeof(this->_clock));
-    memset(this->_slot,  0, sizeof(this->_slot));
-    memset(this->_map,   0, sizeof(this->_map));
+
+    for (uint64_t i = 0; i < _slot_size; i++) {
+        uint64_t index = this->_slot[i];
+        this->_clock[index] = 0;
+        this->_map[index] = 0;
+    }
 
     this->_slot_size = 0;
 }
 
 // unsafe, for debugging purposes only
 void Vectorclock::print(void) {
-    for (size_t i = 0; i < this->_slot_size; i++) {
-        size_t index = this->_slot[i];
+    for (uint64_t i = 0; i < this->_slot_size; i++) {
+        uint64_t index = this->_slot[i];
         uint64_t value = this->_clock[index];
 
         if (value == 0) {
@@ -67,8 +97,8 @@ void Vectorclock::print(void) {
 }
 
 void Vectorclock::release_acquire(Vectorclock* other) {
-    for (size_t i = 0; i < other->_slot_size; i++) {
-        size_t index = other->_slot[i];
+    for (uint64_t i = 0; i < other->_slot_size; i++) {
+        uint64_t index = other->_slot[i];
 
         other->_clock[index] = max(other->_clock[index], this->_clock[index]);
         this->_clock[index]  = other->_clock[index];
@@ -76,8 +106,8 @@ void Vectorclock::release_acquire(Vectorclock* other) {
 }
 
 void Vectorclock::acquire(Vectorclock* other) {
-    for (size_t i = 0; i < other->_slot_size; i++) {
-        size_t index = other->_slot[i];
+    for (uint64_t i = 0; i < other->_slot_size; i++) {
+        uint64_t index = other->_slot[i];
 
         this->set(index, other->_clock[index]);
     }

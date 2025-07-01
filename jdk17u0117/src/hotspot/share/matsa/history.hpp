@@ -51,7 +51,7 @@ class History : public CHeapObj<mtInternal> {
         static Part *get_part(uint64_t tid, uint64_t idx);
 
         static History *get_history(uint64_t tid);
-        static void     clear_history(uint64_t tid);
+        static void     reset(uint64_t tid);
 
         static uint64_t get_part_idx(uint64_t tid);
         static uint64_t get_event_idx(uint64_t tid);

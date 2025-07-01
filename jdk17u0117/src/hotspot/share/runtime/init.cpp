@@ -170,8 +170,11 @@ jint init_globals() {
     JavaThread::set_matsa_tid(JavaThread::current(), tid);
     // increment epoch
     MaTSaThreadState::incrementEpoch(0);
-
+    
     JavaThread::init_matsa_stack(JavaThread::current());
+    // initialize the tid of thread zero (its the main thread and it doesnt pass through thread start)
+    History::reset(0);
+
   );
 
   MATSA_ONLY(MaTSaSuppression::init());

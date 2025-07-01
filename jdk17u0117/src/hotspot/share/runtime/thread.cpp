@@ -586,7 +586,7 @@ void Thread::start(Thread* thread) {
         // increment epoch of the current thread
         MaTSaThreadState::incrementEpoch(cur_tid);
 
-        History::clear_history(new_tid);
+        History::reset(new_tid);
       }
   );
 
@@ -869,14 +869,14 @@ int JavaThread::get_thread_obj_id(JavaThread *thread) {
   return java_lang_Thread::thread_id(threadObj);
 }
 
-int JavaThread::get_matsa_tid(JavaThread *thread) {
+uint64_t JavaThread::get_matsa_tid(JavaThread *thread) {
   assert(thread != NULL, "null thread in MaTSa get id");
   assert(thread->is_Java_thread(), "thread not java thread in MaTSa get id");
   
   return thread->_matsa_tid;
 }
 
-void JavaThread::set_matsa_tid(JavaThread *thread, int tid) {
+void JavaThread::set_matsa_tid(JavaThread *thread, uint64_t tid) {
   assert(thread != NULL, "null thread in MaTSa set id");
   assert(thread->is_Java_thread(), "thread not java thread in MaTSa set id");
   
@@ -1216,6 +1216,8 @@ JavaThread::JavaThread(bool is_attaching_via_jni) : JavaThread() {
       MaTSaThreadState::incrementEpoch(tid);
 
       _matsa_stack = new MaTSaStack(DEFAULT_STACK_SIZE);
+
+      History::reset(tid);
     );
   }
 }
