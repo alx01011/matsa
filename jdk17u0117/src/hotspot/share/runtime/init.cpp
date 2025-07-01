@@ -137,8 +137,7 @@ jint init_globals() {
   if (status != JNI_OK)
     return status;
 
-  // MaTSa initialization must be done after gc initialization
-  MATSA_ONLY(set_matsa_initialized(false));
+
   MATSA_ONLY(ShadowMemory::init(MaxHeapSize));
   MATSA_ONLY(
     // before initializing the thread state we have to fetch the MATSA_HISTORY size
@@ -166,14 +165,14 @@ jint init_globals() {
   MATSA_ONLY(MaTSaThreadPool::matsa_threadpool_init());
   // init the main thread
   MATSA_ONLY(
-    int tid = MaTSaThreadPool::get_queue()->dequeue();
+    uint64_t tid = MaTSaThreadPool::get_queue()->dequeue();
     JavaThread::set_matsa_tid(JavaThread::current(), tid);
     // increment epoch
-    MaTSaThreadState::incrementEpoch(0);
+    MaTSaThreadState::incrementEpoch(tid);
     
     JavaThread::init_matsa_stack(JavaThread::current());
     // initialize the tid of thread zero (its the main thread and it doesnt pass through thread start)
-    History::reset(0);
+    History::reset(tid);
 
   );
 
@@ -183,7 +182,12 @@ jint init_globals() {
        Mutex::SafepointCheckRequired::_safepoint_check_never);
     MaTSaReportMap::init()
   );
-  MATSA_ONLY(set_matsa_initialized(true));
+
+  MATSA_ONLY(
+    atexit(matsa_at_exit_handler);
+  );
+
+
 
   AsyncLogWriter::initialize();
   gc_barrier_stubs_init();  // depends on universe_init, must be before interpreter_init
@@ -236,10 +240,6 @@ void exit_globals() {
   static bool destructorsCalled = false;
   if (!destructorsCalled) {
     destructorsCalled = true;
-
-  MATSA_ONLY(
-    fprintf(stderr, "MaTSa: reported %lu warnings\n", COUNTER_GET(race));
-  );
 
     perfMemory_exit();
     SafepointTracing::statistics_exit_log();

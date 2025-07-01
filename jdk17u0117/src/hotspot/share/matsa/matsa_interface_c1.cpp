@@ -103,7 +103,7 @@ JRT_LEAF(void, MaTSaC1::pre_method_enter(JavaThread *thread, Method *method, int
 JRT_END
 
 JRT_LEAF(void, MaTSaC1::sync_enter(JavaThread *thread, BasicObjectLock *lock))
-    int tid = JavaThread::get_matsa_tid(thread);  
+    uint64_t tid = JavaThread::get_matsa_tid(thread);  
 
     oop obj = lock->obj();
     
@@ -124,7 +124,7 @@ JRT_LEAF(void, MaTSaC1::sync_enter(JavaThread *thread, BasicObjectLock *lock))
 JRT_END
 
 JRT_LEAF(void, MaTSaC1::sync_exit(JavaThread *thread, BasicObjectLock *lock))
-    int tid = JavaThread::get_matsa_tid(thread);  
+    uint64_t tid = JavaThread::get_matsa_tid(thread);  
 
     oop obj = lock->obj();
     
@@ -146,7 +146,7 @@ JRT_LEAF(void, MaTSaC1::sync_exit(JavaThread *thread, BasicObjectLock *lock))
 JRT_END
 
 JRT_LEAF(void, MaTSaC1::cl_init_acquire(JavaThread *thread, void *holder))
-    int tid = JavaThread::get_matsa_tid(thread);
+    uint64_t tid = JavaThread::get_matsa_tid(thread);
 
     oop lock_obj = (oopDesc*)holder;
     assert(oopDesc::is_oop(lock_obj), "must be a valid oop");

@@ -72,7 +72,6 @@ void MaTSaC2::method_enter(JavaThread *thread, uint64_t mbci_pack) {
 
     Method *method = (Method*)mptr;
 
-    // Symbolizer::Symbolize(FUNC, method, bci, tid);
     stack->push(method, bci);
     History::add_event(thread, method, (uint16_t)bci);
 }
@@ -91,7 +90,7 @@ void MaTSaC2::pre_method_enter(JavaThread *thread, int bci) {
 }
 
 JRT_LEAF(void, MaTSaC2::sync_enter(JavaThread *thread, oopDesc *obj))
-    int tid = JavaThread::get_matsa_tid(thread);
+    uint64_t tid = JavaThread::get_matsa_tid(thread);
     
     assert(oopDesc::is_oop(obj), "must be a valid oop");
 
@@ -109,7 +108,7 @@ JRT_LEAF(void, MaTSaC2::sync_enter(JavaThread *thread, oopDesc *obj))
 JRT_END
 
 JRT_LEAF(void, MaTSaC2::sync_exit(JavaThread *thread, oopDesc *obj))
-    int tid = JavaThread::get_matsa_tid(thread);
+    uint64_t tid = JavaThread::get_matsa_tid(thread);
     
     assert(oopDesc::is_oop(obj), "must be a valid oop");
 
@@ -129,7 +128,7 @@ JRT_LEAF(void, MaTSaC2::sync_exit(JavaThread *thread, oopDesc *obj))
 JRT_END
 
 JRT_LEAF(void, MaTSaC2::cl_init_acquire(JavaThread *thread, void *holder))
-    int tid = JavaThread::get_matsa_tid(thread);
+    uint64_t tid = JavaThread::get_matsa_tid(thread);
 
     oop lock_obj = (oopDesc*)holder;
     assert(oopDesc::is_oop(lock_obj), "must be a valid oop");

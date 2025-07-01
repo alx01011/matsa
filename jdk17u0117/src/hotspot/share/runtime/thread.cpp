@@ -2882,9 +2882,6 @@ void Threads::initialize_jsr292_core_classes(TRAPS) {
 jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   extern void JDK_Version_init();
 
-  // MaTSa initialization must be done after gc initialization
-  MATSA_ONLY(set_matsa_initialized(false));
-
   // Preinitialize version info.
   VM_Version::early_initialize();
 
