@@ -1,8 +1,9 @@
 #ifndef MATSA_DEFS_HPP
 #define MATSA_DEFS_HPP
 
-// FIXME: We should support 2^17 threads
 #define MAX_THREADS (1 << 17)
+// keep a small quarantine so threads can be reused quickly
+#define MAX_QUARANTINE_THREADS (1 << 5)
 
 
 #define MAX_ADDRESS_BITS (48)

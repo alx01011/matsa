@@ -3,8 +3,8 @@
 
 #include "memory/allocation.hpp"
 
-ThreadQueue::ThreadQueue(void) {
-    _queue = NEW_C_HEAP_ARRAY(uint64_t, MAX_THREADS, mtInternal);
+ThreadQueue::ThreadQueue(uint64_t size) {
+    _queue = NEW_C_HEAP_ARRAY(uint64_t, size, mtInternal);
 
     assert(_queue != nullptr, "MATSA: Failed to allocate thread queue memory");
 
@@ -23,26 +23,26 @@ ThreadQueue::~ThreadQueue(void) {
     _rear  = 0;
 }
 
-uint64_t ThreadQueue::enqueue(uint64_t tid) {
+bool ThreadQueue::enqueue(uint64_t tid) {
     // we are using a spinlock since Thread::current can return null on vm exit
     // spinlock won't be a problem since we are not going to have a lot of contention anyway
     MaTSaSpinLock lock(&_lock);
 
     if ((_rear + 1) % MAX_THREADS == _front) {
-        return 1;
+        return false;
     }
 
     _queue[_rear] = tid;
     _rear = (_rear + 1) % MAX_THREADS;
 
-    return 0;
+    return true;
 }
 
-int ThreadQueue::dequeue(void) {
+uint64_t ThreadQueue::dequeue(void) {
     MaTSaSpinLock lock(&_lock);
 
     if (_front == _rear) {
-        return -1;
+        fatal("ThreadQueue: dequeue from empty queue");
     }
 
     uint64_t tid = _queue[_front];
@@ -51,7 +51,20 @@ int ThreadQueue::dequeue(void) {
     return tid;
 }
 
-int ThreadQueue::front(void) {
+bool ThreadQueue::dequeue_if_not_empty(uint64_t &tid) {
+    MaTSaSpinLock lock(&_lock);
+
+    if (_front == _rear) {
+        return false; // queue is empty
+    }
+
+    tid     = _queue[_front];
+    _front = (_front + 1) % MAX_THREADS;
+
+    return true;
+}
+
+uint64_t ThreadQueue::front(void) {
     MaTSaSpinLock lock(&_lock);
 
     return _queue[_front];
@@ -74,11 +87,63 @@ uint64_t ThreadQueue::enqueue_unsafe(uint64_t tid) {
     return 0;
 }
 
+Quarantine::Quarantine(uint64_t size) {
+    _queue = NEW_C_HEAP_ARRAY(uint64_t, size, mtInternal);
+
+    assert(_queue != nullptr, "MATSA: Failed to allocate quarantine memory");
+
+    _front = 0;
+    _rear  = 0;
+    _size  = size;
+    _idx   = 0;
+    _lock  = 0;
+}
+
+Quarantine::~Quarantine(void) {
+    assert(_queue != nullptr, "MATSA: Quarantine memory not allocated");
+
+    FREE_C_HEAP_ARRAY(uint64_t, _queue);
+    _queue = nullptr;
+
+    _front = 0;
+    _rear  = 0;
+    _size  = 0;
+}
+
+bool Quarantine::push_back(uint64_t tid) {
+    MaTSaSpinLock lock(&_lock);
+
+    if ((_rear + 1) % _size == _front) {
+        return false; // quarantine is full
+    }
+
+    _queue[_rear] = tid;
+    _rear = (_rear + 1) % _size;
+    _idx++;
+
+    return true;
+}
+
+bool Quarantine::pop_front(uint64_t &tid) {
+    MaTSaSpinLock lock(&_lock);
+
+    if ((_rear + 1) % _size != _front) {
+        return false; // Return false because the queue is not full.
+    }
+
+    tid    = _queue[_front];
+    _front = (_front + 1) % _size;
+    _idx--;
+
+    return true;
+}
+
 
 MaTSaThreadPool* MaTSaThreadPool::instance = nullptr;
 
 MaTSaThreadPool::MaTSaThreadPool(void) {
-    _queue = new ThreadQueue();
+    _queue      = new ThreadQueue();
+    _quarantine = new Quarantine();
 
     // init the thread stack with all the available tids 0 - MAX_THREADS
     for (int i = 0; i < MAX_THREADS; i++) {
@@ -88,6 +153,11 @@ MaTSaThreadPool::MaTSaThreadPool(void) {
 
 MaTSaThreadPool::~MaTSaThreadPool(void) {
     delete _queue;
+    delete _quarantine;
+}
+
+Quarantine* MaTSaThreadPool::get_quarantine(void) {
+    return instance->_quarantine;
 }
 
 ThreadQueue* MaTSaThreadPool::get_queue(void) {

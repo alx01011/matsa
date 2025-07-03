@@ -268,6 +268,23 @@ void MaTSaRTL::InterpreterMemoryAccess(void *addr, Method *m, address bcp, uint8
 #else
     bool is_race = CheckRaces(addr, bci, cur, prev, prev_history);
 #endif
+
+    // if (m->line_number_from_bci(bci) == 28 && access_size == 4 && !is_race) {
+    //     fprintf(stderr, "not a race because: "
+    //             "tid: %lu, epoch: %lu, addr: %p, bci: %d, is_write: %d, "
+    //             "cur_tid: %lu, cur_epoch: %lu, cur_offset: %u, cur_is_write: %d\n",
+    //             tid, epoch, addr, bci, is_write,
+    //             cur.tid, cur.epoch, cur.offset, cur.is_write);
+        
+
+    //     for (int i = 0; i < SHADOW_CELLS; i++) {
+    //         ShadowCell cell = ShadowBlock::load_cell((uptr)addr, i);
+    //         fprintf(stderr, "cell[%d]: tid: %lu, epoch: %lu, offset: %u, is_write: %d, is_ignored: %d\n",
+    //                 i, cell.tid, cell.epoch, cell.offset, cell.is_write, cell.is_ignored);
+    //     }
+
+    // }
+
     if (is_race && !MaTSaSilent) {
         MaTSaReport::do_report_race(thread, addr, access_size, bci, m, cur, prev, prev_history);
     }
