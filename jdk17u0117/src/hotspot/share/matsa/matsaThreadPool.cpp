@@ -95,7 +95,6 @@ Quarantine::Quarantine(uint64_t size) {
     _front = 0;
     _rear  = 0;
     _size  = size;
-    _idx   = 0;
     _lock  = 0;
 }
 
@@ -119,7 +118,6 @@ bool Quarantine::push_back(uint64_t tid) {
 
     _queue[_rear] = tid;
     _rear = (_rear + 1) % _size;
-    _idx++;
 
     return true;
 }
@@ -133,7 +131,6 @@ bool Quarantine::pop_front(uint64_t &tid) {
 
     tid    = _queue[_front];
     _front = (_front + 1) % _size;
-    _idx--;
 
     return true;
 }
