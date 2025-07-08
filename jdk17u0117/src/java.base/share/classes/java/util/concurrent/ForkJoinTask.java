@@ -300,6 +300,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      * @return status on exit
      */
     private int setDone() {
+        System.MaTSaUnlock(this);
         int s = getAndBitwiseOrStatus(DONE) | DONE;
         signalWaiters();
         return s;
@@ -313,6 +314,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     private int trySetCancelled() {
         int s;
         do {} while ((s = status) >= 0 && !casStatus(s, s |= (DONE | ABNORMAL)));
+        System.MaTSaUnlock(this);
         signalWaiters();
         return s;
     }
@@ -337,6 +339,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             if (installed && casStatus(s, s |= (DONE | ABNORMAL | THROWN)))
                 break;
         }
+        System.MaTSaUnlock(this);
         for (; p != null; p = p.next)
             LockSupport.unpark(p.thread);
         return s;
@@ -670,6 +673,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             s = awaitDone(null, false, false, false, 0L);
         if ((s & ABNORMAL) != 0)
             reportException(s);
+        System.MaTSaLock(this);
         return getRawResult();
     }
 
@@ -979,6 +983,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
         int s = awaitDone(null, false, true, false, 0L);
         if ((s & ABNORMAL) != 0)
             reportExecutionException(s);
+        System.MaTSaLock(this);
         return getRawResult();
     }
 
@@ -1013,7 +1018,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
      */
     public final void quietlyJoin() {
         if (status >= 0)
-            awaitDone(null, false, false, false, 0L);
+            awaitDone(null, false, false, false, 0L);      
+        System.MaTSaLock(this);      
     }
 
 
