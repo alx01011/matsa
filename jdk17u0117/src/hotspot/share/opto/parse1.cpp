@@ -1202,7 +1202,7 @@ void Parse::do_method_entry() {
   }
 
   MATSA_ONLY(
-    int caller_bci = _caller->bci();
+    int caller_bci = is_osr_parse() ? osr_bci() : InvocationEntryBci; 
     make_matsa_method_enter_exit(method(), caller_bci, true);
   );
 
