@@ -8,7 +8,10 @@
 #include "memory/allocation.hpp"
 
 const char *def_top_frame_suppressions =
-    "java.util.concurrent.*\n"; // top frames are ok since there are races within the library itself
+    "java.util.concurrent.*\n" // top frames are ok since there are races within the library itself
+    "java.lang.invoke.VarHandle*\n"
+    "java.lang.Class.getSimpleName*\n" // benign
+    "java.lang.ref.SoftReference.*\n"; // intentional benign race
 const char *def_frame_suppressions = 
     "java.lang.invoke.*\n";
     /*
@@ -47,7 +50,7 @@ bool Trie::search(const char *name) {
     }
 
     const char *str = name;
-    for (char c = *str; c != '\0'; c = *(++str)) {
+    for (char c = *str; c != '\0' && c != '('; c = *(++str)) {
         //not a children of the current node
         if (current->children.find(c) == current->children.end()) {
             if (current->has_wildcard) {
