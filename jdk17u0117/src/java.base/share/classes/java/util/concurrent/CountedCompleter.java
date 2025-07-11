@@ -595,6 +595,11 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
         for (int c;;) {
             if ((c = a.pending) == 0) {
                 a.onCompletion(s);
+
+                if (a.completer != null) {
+                    System.MaTSaUnlock(this);
+                }
+
                 if ((a = (s = a).completer) == null) {
                     s.quietlyComplete();
                     return;
@@ -618,6 +623,10 @@ public abstract class CountedCompleter<T> extends ForkJoinTask<T> {
         CountedCompleter<?> a = this, s;
         for (int c;;) {
             if ((c = a.pending) == 0) {
+                if (a.completer != null) {
+                    System.MaTSaUnlock(this);
+                }
+
                 if ((a = (s = a).completer) == null) {
                     s.quietlyComplete();
                     return;
