@@ -11,20 +11,15 @@ size_t         MaTSaThreadState::size                 = 0;
 
 void MaTSaThreadState::init(void) {
     MaTSaThreadState::size = MAX_THREADS * sizeof(Vectorclock);
-    // mmap it
-    MaTSaThreadState::epoch = (Vectorclock*)os::reserve_memory(MaTSaThreadState::size);
-    bool protect = os::protect_memory((char*)MaTSaThreadState::epoch, MaTSaThreadState::size, os::MEM_PROT_RW);
+    MaTSaThreadState::epoch = new Vectorclock[MAX_THREADS];
 
-    assert(MaTSaThreadState::epoch != nullptr && protect, "MATSA: Failed to allocate thread state memory");
+    assert(MaTSaThreadState::epoch != nullptr, "MATSA: Failed to allocate thread state memory");
 }
 
 void MaTSaThreadState::destroy(void) {
     assert(MaTSaThreadState::epoch != nullptr, "MATSA: Thread state memory not allocated");
 
-    // delete[] MaTSaThreadState::epoch;
-    bool res = os::unmap_memory((char*)MaTSaThreadState::epoch, MaTSaThreadState::size);
-    assert(res, "MATSA: Failed to unmap thread state memory");
-
+    delete[] MaTSaThreadState::epoch;
     MaTSaThreadState::epoch = nullptr;
     MaTSaThreadState::size = 0;
 }
