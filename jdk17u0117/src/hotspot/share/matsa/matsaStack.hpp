@@ -1,9 +1,9 @@
 #ifndef MATSA_STACK_HPP
 #define MATSA_STACK_HPP
 
-// 260k stack size by default
+// 65k stack size by default
 // should be enough for most cases
-#define DEFAULT_STACK_SIZE (1 << 18)
+#define DEFAULT_STACK_SIZE (1 << 16)
 
 #include <cstdint>
 
