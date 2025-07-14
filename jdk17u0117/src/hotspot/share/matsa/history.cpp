@@ -45,7 +45,7 @@ History::History() {
 History::~History() {
     for (int i = 0; i < MAX_PARTS; i++) {
         os::unmap_memory((char*)parts[i].events, MAX_EVENTS * sizeof(Event));
-        os::unmap_memory((char*)parts[i].real_stack, DEFAULT_STACK_SIZE * sizeof(uint64_t));
+        os::unmap_memory((char*)((uint64_t)parts[i].real_stack), DEFAULT_STACK_SIZE * sizeof(uint64_t));
     }
     FREE_C_HEAP_ARRAY(Part, parts);
 }
