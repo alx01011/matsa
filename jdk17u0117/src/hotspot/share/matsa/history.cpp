@@ -21,30 +21,21 @@ void History::init_history(void) {
 }
 
 History::History() {
-    // parts = (Part*)os::reserve_memory(MAX_PARTS * sizeof(Part));
-    // bool protect = os::protect_memory((char*)parts, MAX_PARTS * sizeof(Part), os::MEM_PROT_RW);
     parts = NEW_C_HEAP_ARRAY(Part, MAX_PARTS, mtInternal);
 
     assert(parts != nullptr, "MATSA: Failed to allocate history buffer\n");
 
     for (int i = 0; i < MAX_PARTS; i++) {
-        // parts[i].events = (Event*)os::reserve_memory(MAX_EVENTS * sizeof(Event));
-        // protect = os::protect_memory((char*)parts[i].events, MAX_EVENTS * sizeof(Event), os::MEM_PROT_RW);
+        parts[i].events = (Event*)os::reserve_memory(MAX_EVENTS * sizeof(Event));
+        bool protect = os::protect_memory((char*)parts[i].events, MAX_EVENTS * sizeof(Event), os::MEM_PROT_RW);
 
-        // assert(parts[i].events != nullptr && protect, "MATSA: Failed to allocate history buffer\n");
-
-        parts[i].events = NEW_C_HEAP_ARRAY(Event, MAX_EVENTS, mtInternal);
-        assert(parts[i].events != nullptr, "MATSA: Failed to allocate history buffer events\n");
+        assert(parts[i].events != nullptr && protect, "MATSA: Failed to allocate history buffer\n");
 
         // allocate the real stack
-        // parts[i].real_stack = (uint64_t)os::reserve_memory(DEFAULT_STACK_SIZE * sizeof(uint64_t));
-        // parts[i].real_stack_size = 0;
-        // protect = os::protect_memory((char*)((uint64_t)parts[i].real_stack), DEFAULT_STACK_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
-        // assert(protect, "MATSA: Failed to allocate history buffer real stack\n");
-
-        parts[i].real_stack = (uint64_t)NEW_C_HEAP_ARRAY(uint64_t, DEFAULT_STACK_SIZE, mtInternal);
-        assert(parts[i].real_stack != 0, "MATSA: Failed to allocate history buffer real stack\n"); 
+        parts[i].real_stack = (uint64_t)os::reserve_memory(DEFAULT_STACK_SIZE * sizeof(uint64_t));
         parts[i].real_stack_size = 0;
+        protect = os::protect_memory((char*)((uint64_t)parts[i].real_stack), DEFAULT_STACK_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
+        assert(protect, "MATSA: Failed to allocate history buffer real stack\n");
     }
 
     event_idx  = 0;
@@ -53,11 +44,9 @@ History::History() {
 
 History::~History() {
     for (int i = 0; i < MAX_PARTS; i++) {
-        // os::release_memory((char*)parts[i].events, MAX_EVENTS * sizeof(Event));
-        FREE_C_HEAP_ARRAY(Event, parts[i].events);
+        os::unmap_memory((char*)parts[i].events, MAX_EVENTS * sizeof(Event));
+        os::unmap_memory((char*)parts[i].real_stack, DEFAULT_STACK_SIZE * sizeof(uint64_t));
     }
-
-    // os::release_memory((char*)parts, MAX_PARTS * sizeof(Part));
     FREE_C_HEAP_ARRAY(Part, parts);
 }
 
