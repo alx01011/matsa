@@ -5,36 +5,42 @@
 #include <stdio.h>
 #include <cstring>
 
+#include <sys/mman.h>
+#include <unistd.h>
+
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
 Vectorclock::Vectorclock(void) {
-    this->_clock = (uint64_t*)os::reserve_memory(MAX_THREADS * sizeof(uint64_t));
-    this->_slot  = (uint64_t*)os::reserve_memory(MAX_THREADS * sizeof(uint64_t));
-    this->_map   = (uint8_t*)os::reserve_memory(MAX_THREADS * sizeof(uint8_t));
+    /*
+        TODO:
+        Because vectorclocks can be created quite often, protect_memory fails.
+        In linux there is a limit close to around 30k invocations.
+        I will use raw mmap here and in the future, use mmap across all allocation.
+        Preferably, create a custom allocator that calls mmap. 
+    */
+    this->_clock = (uint64_t*)mmap(NULL, MAX_THREADS * sizeof(uint64_t), PROT_READ | PROT_WRITE,
+                                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    this->_slot  = (uint64_t*)mmap(NULL, MAX_THREADS * sizeof(uint64_t), PROT_READ | PROT_WRITE,
+                                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    this->_map   = (uint8_t*)mmap(NULL, MAX_THREADS * sizeof(uint8_t), PROT_READ | PROT_WRITE,
+                                    MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
-    assert(this->_clock != nullptr, "MATSA: Failed to allocate vector clock memory");
-    assert(this->_slot  != nullptr, "MATSA: Failed to allocate vector clock slot memory");
-    assert(this->_map   != nullptr, "MATSA: Failed to allocate vector clock map memory");
-
-    bool protect = true;
-    protect &= os::protect_memory((char*)this->_clock, MAX_THREADS * sizeof(uint64_t), os::MEM_PROT_RW);
-    protect &= os::protect_memory((char*)this->_slot,  MAX_THREADS * sizeof(uint64_t), os::MEM_PROT_RW);
-    protect &= os::protect_memory((char*)this->_map,   MAX_THREADS * sizeof(uint8_t), os::MEM_PROT_RW);
-
-    assert(protect, "MATSA: Failed to protect vector clock memory");
+    assert((void*)this->_clock != MAP_FAILED, "MATSA: Failed to allocate vector clock memory");
+    assert((void*)this->_slot  != MAP_FAILED, "MATSA: Failed to allocate vector clock slot memory");
+    assert((void*)this->_map   != MAP_FAILED, "MATSA: Failed to allocate vector clock map memory");
 
     this->_slot_size = 0;
 }
 
 Vectorclock::~Vectorclock(void) {
-    assert(this->_clock != nullptr, "MATSA: Vector clock memory not allocated");
-    assert(this->_slot  != nullptr, "MATSA: Vector clock slot memory not allocated");
-    assert(this->_map   != nullptr, "MATSA: Vector clock map memory not allocated");
+    assert((void*)this->_clock != MAP_FAILED, "MATSA: Vector clock memory not allocated");
+    assert((void*)this->_slot  != MAP_FAILED, "MATSA: Vector clock slot memory not allocated");
+    assert((void*)this->_map   != MAP_FAILED, "MATSA: Vector clock map memory not allocated");
 
-    os::release_memory((char*)this->_clock, MAX_THREADS * sizeof(uint64_t));
-    os::release_memory((char*)this->_slot,  MAX_THREADS * sizeof(uint64_t));
-    os::release_memory((char*)this->_map,   MAX_THREADS * sizeof(uint8_t));
+    munmap(this->_clock, MAX_THREADS * sizeof(uint64_t));
+    munmap(this->_slot,  MAX_THREADS * sizeof(uint64_t));
+    munmap(this->_map,   MAX_THREADS * sizeof(uint8_t));
 }
 
 uint64_t& Vectorclock::operator[](uint64_t index) {
