@@ -17,10 +17,6 @@ Running programs with the tool only requires the MaTSa flag.
 
 e.g `$MATSA_HOME/java -XX:+MaTSa program.java`
 
-If you wish to enable C1 instrumentation you need additionally pass the experimental flag.
-
-e.g `$MATSA_HOME/java -XX:+MaTSa -XX:+MaTSaExperimental program.java`
-
 In some rare cases MaTSa might failed to produce a complete report, due to previous stacks being recycled.
 In those cases, you may increase the history size by setting the flag `MaTSaHistorySize`. The range is **1 to 16**, the higher the value the higher the memory consumption.
 
