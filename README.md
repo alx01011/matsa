@@ -3,7 +3,7 @@ This is the repository of MaTSa (aka Managed Thread Sanitizer) (formerly JTSan).
 
 To build, use the build script (you will need an existing java 17+ build):
 
-`./build_matsa.sh --build-jvm <path to java 17 home>`
+`./build_matsa.py (add -h to see options)`
 
 Note: You need to have all the requirements to build OpenJDK, as mentioned [here](https://htmlpreview.github.io/?https://raw.githubusercontent.com/openjdk/jdk/master/doc/building.html#boot-jdk-requirements).
 
