@@ -105,6 +105,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
     private Object outcome; // non-volatile, protected by state reads/writes
     /** The thread running the callable; CASed during run() */
     private volatile Thread runner;
+    private volatile Thread prev_runner;
     /** Treiber stack of waiting threads */
     private volatile WaitNode waiters;
 
@@ -189,6 +190,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
         int s = state;
         if (s <= COMPLETING)
             s = awaitDone(false, 0L);
+        System.MaTSaLock(this);
         return report(s);
     }
 
@@ -203,6 +205,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
         if (s <= COMPLETING &&
             (s = awaitDone(true, unit.toNanos(timeout))) <= COMPLETING)
             throw new TimeoutException();
+        System.MaTSaLock(this);
         return report(s);
     }
 
@@ -360,6 +363,7 @@ public class FutureTask<V> implements RunnableFuture<V> {
      * nulls out callable.
      */
     private void finishCompletion() {
+        System.MaTSaUnlock(this);
         // assert state > COMPLETING;
         for (WaitNode q; (q = waiters) != null;) {
             if (WAITERS.weakCompareAndSet(this, q, null)) {

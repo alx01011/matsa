@@ -737,19 +737,19 @@ void InterpreterRuntime::resolve_get_put(JavaThread* current, Bytecodes::Code by
 // MaTSa instrumentation
 
 void InterpreterRuntime::matsa_load1(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 1, false);
+  MaTSaRTL::InterpreterMemoryAccess(addr, m, bcp, 1, false);
 }
 
 void InterpreterRuntime::matsa_load2(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 2, false);
+  MaTSaRTL::InterpreterMemoryAccess(addr, m, bcp, 2, false);
 }
 
 void InterpreterRuntime::matsa_load4(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 4, false);
+  MaTSaRTL::InterpreterMemoryAccess(addr, m, bcp, 4, false);
 }
 
 void InterpreterRuntime::matsa_load8(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 8, false);
+  MaTSaRTL::InterpreterMemoryAccess(addr, m, bcp, 8, false);
 }
 
 void matsa_vtos(void *addr, Method *m, address bcp) {
@@ -776,19 +776,19 @@ void (*InterpreterRuntime::matsa_load[]) (void *addr, Method *m, address bcp) = 
 
 // Store instrumentation
 void InterpreterRuntime::matsa_store1(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 1, true);
+  MaTSaRTL::InterpreterMemoryAccess(addr, m, bcp, 1, true);
 }
 
 void InterpreterRuntime::matsa_store2(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 2, true);
+  MaTSaRTL::InterpreterMemoryAccess(addr, m, bcp, 2, true);
 }
 
 void InterpreterRuntime::matsa_store4(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 4, true);
+  MaTSaRTL::InterpreterMemoryAccess(addr, m, bcp, 4, true);
 }
 
 void InterpreterRuntime::matsa_store8(void *addr, Method *m, address bcp) {
-  MaTSaRTL::MemoryAccess(addr, m, bcp, 8, true);
+  MaTSaRTL::InterpreterMemoryAccess(addr, m, bcp, 8, true);
 }
 
 
@@ -807,7 +807,7 @@ void (*InterpreterRuntime::matsa_store[]) (void *addr, Method *m, address bcp) =
 
 // for object locks
 void InterpreterRuntime::matsa_lock(JavaThread *thread, void *lock_obj)  {
-  int tid = JavaThread::get_matsa_tid(thread);
+  uint64_t tid = JavaThread::get_matsa_tid(thread);
 
   oop p = (oopDesc*)lock_obj;
 
@@ -825,7 +825,7 @@ void InterpreterRuntime::matsa_lock(JavaThread *thread, void *lock_obj)  {
 }
 
 void InterpreterRuntime::matsa_unlock(JavaThread *thread, void *lock_obj) {
-  int tid = JavaThread::get_matsa_tid(thread);
+  uint64_t tid = JavaThread::get_matsa_tid(thread);
 
   oop p = (oopDesc*)lock_obj;
 
@@ -847,7 +847,7 @@ void InterpreterRuntime::matsa_unlock(JavaThread *thread, void *lock_obj) {
 
 // for static class initializers
 void InterpreterRuntime::matsa_cl_lock(JavaThread *thread, void *lock_obj)  {
-  int tid = JavaThread::get_matsa_tid(thread);
+  uint64_t tid = JavaThread::get_matsa_tid(thread);
 
   oop p = (oopDesc*)lock_obj;
 
@@ -865,7 +865,7 @@ void InterpreterRuntime::matsa_cl_lock(JavaThread *thread, void *lock_obj)  {
 }
 
 void InterpreterRuntime::matsa_cl_unlock(JavaThread *thread, void *lock_obj) {
-  int tid = JavaThread::get_matsa_tid(thread);
+  uint64_t tid = JavaThread::get_matsa_tid(thread);
 
   oop p = (oopDesc*)lock_obj;
 
@@ -886,7 +886,7 @@ void InterpreterRuntime::matsa_cl_unlock(JavaThread *thread, void *lock_obj) {
 }
 
 void InterpreterRuntime::matsa_sync_enter(JavaThread *thread, BasicObjectLock *lock) {
-  int tid = JavaThread::get_matsa_tid(thread);
+  uint64_t tid = JavaThread::get_matsa_tid(thread);
 
   oop p = lock->obj();
 
@@ -906,7 +906,7 @@ void InterpreterRuntime::matsa_sync_enter(JavaThread *thread, BasicObjectLock *l
 }
 
 void InterpreterRuntime::matsa_sync_exit(JavaThread *thread, BasicObjectLock *lock) {
-  int tid = JavaThread::get_matsa_tid(thread);
+  uint64_t tid = JavaThread::get_matsa_tid(thread);
 
   oop p = lock->obj();
 
@@ -934,21 +934,18 @@ void InterpreterRuntime::matsa_prepare_method_enter(JavaThread *current, Method 
 }
 
 void InterpreterRuntime::matsa_method_enter(JavaThread *current, Method *method) {
-  int tid = JavaThread::get_matsa_tid(current);
+  uint64_t tid = JavaThread::get_matsa_tid(current);
 
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);
   uint16_t bci = stack->get_caller_bci();
-  // first 48 bits are the method id, last 16 bits are the bci
-  uint64_t packed_frame = ((uint64_t)method << 16) | (uint64_t)bci;
 
   // Symbolizer::Symbolize(FUNC, method, bci, tid);
-  stack->push(packed_frame);
+  stack->push(method, bci);
   History::add_event(current, method, bci);
-
 }
 
 void InterpreterRuntime::matsa_method_exit(JavaThread *current) {
-  int tid = JavaThread::get_matsa_tid(current);
+  uint64_t tid = JavaThread::get_matsa_tid(current);
   // assume 0,0 means method exit
   // Symbolizer::Symbolize(FUNC, 0, 0, tid);
   MaTSaStack *stack = JavaThread::get_matsa_stack(current);

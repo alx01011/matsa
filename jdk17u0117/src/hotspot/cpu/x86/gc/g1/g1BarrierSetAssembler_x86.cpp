@@ -40,6 +40,8 @@
 #include "gc/g1/c1/g1BarrierSetC1.hpp"
 #endif
 
+#include "matsa/matsaRTL.hpp"
+
 #define __ masm->
 
 void G1BarrierSetAssembler::gen_write_ref_array_pre_barrier(MacroAssembler* masm, DecoratorSet decorators,
@@ -138,6 +140,8 @@ void G1BarrierSetAssembler::load_at(MacroAssembler* masm, DecoratorSet decorator
                          true /* tosca_live */,
                          true /* expand_call */);
   }
+
+  // __ call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_should_be_called), 1);
 }
 
 void G1BarrierSetAssembler::g1_write_barrier_pre(MacroAssembler* masm,
@@ -349,6 +353,8 @@ void G1BarrierSetAssembler::oop_store_at(MacroAssembler* masm, DecoratorSet deco
 
   bool needs_pre_barrier = as_normal;
   bool needs_post_barrier = val != noreg && in_heap;
+
+  // __ call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaRTL::matsa_should_be_called), 1);
 
   Register tmp3 = LP64_ONLY(r8) NOT_LP64(rsi);
   Register rthread = LP64_ONLY(r15_thread) NOT_LP64(rcx);

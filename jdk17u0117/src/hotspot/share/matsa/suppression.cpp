@@ -8,7 +8,10 @@
 #include "memory/allocation.hpp"
 
 const char *def_top_frame_suppressions =
-    "java.util.concurrent.*\n"; // top frames are ok since there are races within the library itself
+    "java.util.concurrent.*\n" // top frames are ok since there are races within the library itself
+    "java.lang.invoke.VarHandle*\n"
+    "java.lang.Class.getSimpleName*\n" // benign
+    "java.lang.ref.SoftReference.*\n"; // intentional benign race
 const char *def_frame_suppressions = 
     "java.lang.invoke.*\n";
     /*
@@ -47,7 +50,7 @@ bool Trie::search(const char *name) {
     }
 
     const char *str = name;
-    for (char c = *str; c != '\0'; c = *(++str)) {
+    for (char c = *str; c != '\0' && c != '('; c = *(++str)) {
         //not a children of the current node
         if (current->children.find(c) == current->children.end()) {
             if (current->has_wildcard) {
@@ -99,35 +102,40 @@ void MaTSaSuppression::init(void) {
 }
 
 bool MaTSaSuppression::is_suppressed(JavaThread *thread) {
-    ResourceMark rm;
+    // ResourceMark rm;
 
     MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
 
     // first check the top frame
-    Method *mp = NULL;
-    uint64_t raw_frame = stack->top();
+    MaTSaStackElem raw_frame = stack->top();
+    Method *mp = (Method*)((uint64_t)(raw_frame.method));
 
-    // first 48bits are the method pointer
-    mp = (Method*)((uintptr_t)(raw_frame >> 16));
-    const char *fname = mp->external_name_as_fully_qualified();
+    char methodname_buf[256] = {"??"};
 
-    if (top_frame_suppressions->search(fname)) {
+    mp->name_and_sig_as_C_string(methodname_buf, sizeof(methodname_buf));
+    if (top_frame_suppressions->search(methodname_buf)) {
         return true;
     }
+
+    Method *prev_method = mp;
 
     int stack_size = stack->size();
     // now check the rest of the frames
     for (int i = stack_size - 1; i >= 0; i--) {
         raw_frame = stack->get(i);
-        mp = (Method*)((uintptr_t)(raw_frame >> 16));
+        mp = (Method*)((uint64_t)(raw_frame.method));
 
-        // its possible on non interpreted frame senders
-        if (mp == 0) {
+        if (mp == prev_method) {
+            // recursion?
             continue;
         }
+        // should not be possible
+        // if (mp == 0) {
+        //     continue;
+        // }
 
-        fname = mp->external_name_as_fully_qualified();
-        if (frame_suppressions->search(fname)) {
+        mp->name_and_sig_as_C_string(methodname_buf, sizeof(methodname_buf));
+        if (frame_suppressions->search(methodname_buf)) {
             return true;
         }
     }

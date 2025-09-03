@@ -1578,6 +1578,7 @@ public abstract class AbstractQueuedSynchronizer
          */
         public final void awaitUninterruptibly() {
             ConditionNode node = new ConditionNode();
+            System.MaTSaUnlock(parentSync);
             int savedState = enableWait(node);
             LockSupport.setCurrentBlocker(this); // for back-compatibility
             boolean interrupted = false, rejected = false;
@@ -1601,6 +1602,7 @@ public abstract class AbstractQueuedSynchronizer
             LockSupport.setCurrentBlocker(null);
             node.clearStatus();
             acquire(node, savedState, false, false, false, 0L);
+            System.MaTSaLock(parentSync);
             if (interrupted)
                 Thread.currentThread().interrupt();
         }
@@ -1622,6 +1624,7 @@ public abstract class AbstractQueuedSynchronizer
             if (Thread.interrupted())
                 throw new InterruptedException();
             ConditionNode node = new ConditionNode();
+            System.MaTSaUnlock(parentSync);
             int savedState = enableWait(node);
             LockSupport.setCurrentBlocker(this); // for back-compatibility
             boolean interrupted = false, cancelled = false, rejected = false;
@@ -1643,7 +1646,6 @@ public abstract class AbstractQueuedSynchronizer
                 } else
                     Thread.onSpinWait();    // awoke while enqueuing
             }
-            System.MaTSaUnlock(parentSync);
             LockSupport.setCurrentBlocker(null);
             node.clearStatus();
             acquire(node, savedState, false, false, false, 0L);
@@ -1675,6 +1677,7 @@ public abstract class AbstractQueuedSynchronizer
             if (Thread.interrupted())
                 throw new InterruptedException();
             ConditionNode node = new ConditionNode();
+            System.MaTSaUnlock(parentSync);
             int savedState = enableWait(node);
             long nanos = (nanosTimeout < 0L) ? 0L : nanosTimeout;
             long deadline = System.nanoTime() + nanos;
@@ -1689,6 +1692,7 @@ public abstract class AbstractQueuedSynchronizer
             }
             node.clearStatus();
             acquire(node, savedState, false, false, false, 0L);
+            System.MaTSaLock(parentSync);
             if (cancelled) {
                 unlinkCancelledWaiters(node);
                 if (interrupted)
@@ -1719,6 +1723,7 @@ public abstract class AbstractQueuedSynchronizer
             if (Thread.interrupted())
                 throw new InterruptedException();
             ConditionNode node = new ConditionNode();
+            System.MaTSaUnlock(parentSync);
             int savedState = enableWait(node);
             boolean cancelled = false, interrupted = false;
             while (!canReacquire(node)) {
@@ -1731,6 +1736,7 @@ public abstract class AbstractQueuedSynchronizer
             }
             node.clearStatus();
             acquire(node, savedState, false, false, false, 0L);
+            System.MaTSaLock(parentSync);
             if (cancelled) {
                 unlinkCancelledWaiters(node);
                 if (interrupted)
@@ -1760,6 +1766,7 @@ public abstract class AbstractQueuedSynchronizer
             if (Thread.interrupted())
                 throw new InterruptedException();
             ConditionNode node = new ConditionNode();
+            System.MaTSaUnlock(parentSync);
             int savedState = enableWait(node);
             long nanos = (nanosTimeout < 0L) ? 0L : nanosTimeout;
             long deadline = System.nanoTime() + nanos;
@@ -1774,6 +1781,7 @@ public abstract class AbstractQueuedSynchronizer
             }
             node.clearStatus();
             acquire(node, savedState, false, false, false, 0L);
+            System.MaTSaLock(parentSync);
             if (cancelled) {
                 unlinkCancelledWaiters(node);
                 if (interrupted)

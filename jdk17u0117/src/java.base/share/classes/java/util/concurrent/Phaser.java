@@ -671,20 +671,28 @@ public class Phaser {
     public int arriveAndAwaitAdvance() {
         // Specialization of doArrive+awaitAdvance eliminating some reads/paths
         final Phaser root = this.root;
+        System.MaTSaUnlock(root);
+        int ret;
         for (;;) {
             long s = (root == this) ? state : reconcileState();
             int phase = (int)(s >>> PHASE_SHIFT);
-            if (phase < 0)
-                return phase;
+            if (phase < 0) {
+                ret = phase;
+                break;
+            }
             int counts = (int)s;
             int unarrived = (counts == EMPTY) ? 0 : (counts & UNARRIVED_MASK);
             if (unarrived <= 0)
                 throw new IllegalStateException(badArrive(s));
             if (STATE.compareAndSet(this, s, s -= ONE_ARRIVAL)) {
-                if (unarrived > 1)
-                    return root.internalAwaitAdvance(phase, null);
-                if (root != this)
-                    return parent.arriveAndAwaitAdvance();
+                if (unarrived > 1) {
+                    ret = root.internalAwaitAdvance(phase, null);
+                    break;
+                }
+                if (root != this) {
+                    ret = parent.arriveAndAwaitAdvance();
+                    break;
+                }
                 long n = s & PARTIES_MASK;  // base of next state
                 int nextUnarrived = (int)n >>> PARTIES_SHIFT;
                 if (onAdvance(phase, nextUnarrived))
@@ -695,12 +703,17 @@ public class Phaser {
                     n |= nextUnarrived;
                 int nextPhase = (phase + 1) & MAX_PHASE;
                 n |= (long)nextPhase << PHASE_SHIFT;
-                if (!STATE.compareAndSet(this, s, n))
-                    return (int)(state >>> PHASE_SHIFT); // terminated
+                if (!STATE.compareAndSet(this, s, n)) {
+                    ret = (int)(state >>> PHASE_SHIFT); // terminated
+                    break;
+                }
                 releaseWaiters(phase);
-                return nextPhase;
+                ret = nextPhase;
+                break;
             }
         }
+        System.MaTSaLock(root);
+        return ret;
     }
 
     /**

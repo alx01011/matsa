@@ -1,0 +1,76 @@
+#ifndef MATSA_INTERFACE_C1_HPP
+#define MATSA_INTERFACE_C1_HPP
+
+#include "oops/method.hpp"
+#include "runtime/thread.hpp"
+#include "utilities/globalDefinitions.hpp"
+
+#define MATSA_MEMORY_ACCESS_C1(size, type)   \
+    void matsa_##type##_##size(void *addr, int offset, int bci, Method *method)
+
+#define MATSA_STATIC_MEMORY_ACCESS_C1(size, type)   \
+    void matsa_static_##type##_##size(void *obj, void *addr, int offset, int bci, Method *method)
+
+#define MATSA_ARRAY_ACCESS_C1(size, type) \
+    void matsa_array_##type##_##size(void *addr, int idx, BasicType array_type, int bci, Method *method)
+
+
+namespace MaTSaC1 {
+    MATSA_MEMORY_ACCESS_C1(1, read);
+    MATSA_MEMORY_ACCESS_C1(1, write);
+
+    MATSA_MEMORY_ACCESS_C1(2, read);
+    MATSA_MEMORY_ACCESS_C1(2, write);
+
+    MATSA_MEMORY_ACCESS_C1(4, read);
+    MATSA_MEMORY_ACCESS_C1(4, write);
+
+    MATSA_MEMORY_ACCESS_C1(8, read);
+    MATSA_MEMORY_ACCESS_C1(8, write);
+
+    extern void (*matsa_memory_access[2][9])(void *addr, int offset, int bci, Method *method);
+
+    MATSA_STATIC_MEMORY_ACCESS_C1(1, read);
+    MATSA_STATIC_MEMORY_ACCESS_C1(1, write);
+
+    MATSA_STATIC_MEMORY_ACCESS_C1(2, read);
+    MATSA_STATIC_MEMORY_ACCESS_C1(2, write);
+
+    MATSA_STATIC_MEMORY_ACCESS_C1(4, read);
+    MATSA_STATIC_MEMORY_ACCESS_C1(4, write);
+
+    MATSA_STATIC_MEMORY_ACCESS_C1(8, read);
+    MATSA_STATIC_MEMORY_ACCESS_C1(8, write);
+
+    extern void (*matsa_static_memory_access[2][9])(void *obj, void *addr, int offset, int bci, Method *method);    
+
+    MATSA_ARRAY_ACCESS_C1(1, read);
+    MATSA_ARRAY_ACCESS_C1(1, write);
+
+    MATSA_ARRAY_ACCESS_C1(2, read);
+    MATSA_ARRAY_ACCESS_C1(2, write);
+
+    MATSA_ARRAY_ACCESS_C1(4, read);
+    MATSA_ARRAY_ACCESS_C1(4, write);
+
+    MATSA_ARRAY_ACCESS_C1(8, read);
+    MATSA_ARRAY_ACCESS_C1(8, write);
+
+    extern void (*matsa_array_access[2][9])(void *addr, int idx, BasicType array_type, int bci, Method *method);
+
+    void method_enter(JavaThread *thread, Method *method);
+    void method_exit(JavaThread *thread);
+
+    void pre_method_enter(JavaThread *current, Method *method, int bci);
+
+    void sync_enter(JavaThread *thread, BasicObjectLock *lock);
+    void sync_exit(JavaThread *thread, BasicObjectLock *lock);
+
+    void cl_init_acquire(JavaThread *thread, void *holder);
+}
+
+#undef MATSA_MEMORY_ACCESS_C1
+#undef MATSA_STATIC_MEMORY_ACCESS_C1
+#undef MATSA_ARRAY_ACCESS_C1
+
+#endif

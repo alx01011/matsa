@@ -45,6 +45,8 @@
 #include "utilities/powerOfTwo.hpp"
 #include "vmreg_x86.inline.hpp"
 
+#include "matsa/matsa_interface_c1.hpp"
+
 
 // These masks are used to provide 128-bit aligned bitmasks to the XMM
 // instructions, to allow sign-masking or sign-bit flipping.  They allow
@@ -421,7 +423,6 @@ int LIR_Assembler::emit_exception_handler() {
 
   // check that there is really an exception
   __ verify_not_null_oop(rax);
-
   // search an exception handler (rax: exception oop, rdx: throwing pc)
   __ call(RuntimeAddress(Runtime1::entry_for(Runtime1::handle_exception_from_callee_id)));
   __ should_not_reach_here();
@@ -452,7 +453,7 @@ int LIR_Assembler::emit_unwind_handler() {
 
   __ bind(_unwind_handler_entry);
   __ verify_not_null_oop(rax);
-  if (method()->is_synchronized() || compilation()->env()->dtrace_method_probes()) {
+  if (method()->is_synchronized() || compilation()->env()->dtrace_method_probes() || MaTSa) {
     __ mov(rbx, rax);  // Preserve the exception (rbx is always callee-saved)
   }
 
@@ -477,7 +478,14 @@ int LIR_Assembler::emit_unwind_handler() {
     __ call(RuntimeAddress(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit)));
   }
 
-  if (method()->is_synchronized() || compilation()->env()->dtrace_method_probes()) {
+  MATSA_ONLY(
+    __ pusha();
+    __ get_thread(c_rarg0);
+    __ call_VM_leaf(CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), c_rarg0);
+    __ popa();
+  );
+
+  if (method()->is_synchronized() || compilation()->env()->dtrace_method_probes() || MaTSa) {
     __ mov(rax, rbx);  // Restore the exception
   }
 

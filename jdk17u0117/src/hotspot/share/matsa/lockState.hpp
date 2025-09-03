@@ -10,8 +10,8 @@
 
 class LockShadow : public CHeapObj<mtInternal>{
     private:
-        void    *addr; // starting address
-        void    *cl_init_addr;
+        Vectorclock    *addr; // starting address
+        Vectorclock    *cl_init_addr;
         size_t   size; // size in bytes
 
     public:

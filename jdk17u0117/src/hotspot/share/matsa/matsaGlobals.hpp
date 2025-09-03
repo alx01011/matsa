@@ -4,25 +4,10 @@
 #include <cstdint>
 
 #include "runtime/mutex.hpp"
-#include "runtime/atomic.hpp"
 
 // this gets set up on init and is fetched from MATSA_HISTORY env var
 extern uint64_t env_event_buffer_size;
 extern uint64_t matsa_history_size;
-
-bool is_matsa_initialized(void);
-void set_matsa_initialized(bool value);
-
-void          increment_gc_epoch(void);
-uint32_t      get_gc_epoch(void);
-
-void clear_klass_init(void);
-void set_klass_init(void);
-bool is_klass_init(void);
-
-uint16_t get_tid(void);
-void     increment_tid(void);
-void     decrement_tid(void);
 
 #define COUNTER(x)\
     static uint64_t x##_counter;\
@@ -43,6 +28,8 @@ class MaTSaStats {
     public:
         COUNTER(race);
 };
+
+void matsa_at_exit_handler(void);
 
 class MaTSaScopedLock {
     public:

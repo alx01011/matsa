@@ -1,10 +1,31 @@
 # MaTSa
 This is the repository of MaTSa (aka Managed Thread Sanitizer) (formerly JTSan).
 
-You can build the tool by running `./build_matsa.sh --boot-jvm <JDK17>`
+To build, use the build script (you will need an existing java 17+ build):
 
-To run any app with the tool you only need to specify the `-XX:+MaTSa` switch. e.g `<path_to_build>/java -XX:+MaTSa Main.java`.
-Warnings will be generated at runtime and are printed on `stderr`.
+`./build_matsa.sh --build-jvm <path to java 17 home>`
 
+Note: You need to have all the requirements to build OpenJDK, as mentioned [here](https://htmlpreview.github.io/?https://raw.githubusercontent.com/openjdk/jdk/master/doc/building.html#boot-jdk-requirements).
 
-The tool is currently implemented only for the interpreter so expect big performance drops.
+By the default, the build will be at the following directory: build/linux-x86_64-server-release/jdk/bin 
+
+You can either run your programs from within this directory or create a symbolic link to the java executable or a variable pointing to that location.
+
+For a variable, you need something similar to this `export MATSA_HOME=build/linux-x86_64-server-release/jdk/bin`
+
+Running programs with the tool only requires the MaTSa flag.
+
+e.g `$MATSA_HOME/java -XX:+MaTSa program.java`
+
+If you wish to enable C1 instrumentation you need additionally pass the experimental flag.
+
+e.g `$MATSA_HOME/java -XX:+MaTSa -XX:+MaTSaExperimental program.java`
+
+In some rare cases MaTSa might failed to produce a complete report, due to previous stacks being recycled.
+In those cases, you may increase the history size by setting the flag `MaTSaHistorySize`. The range is **1 to 16**, the higher the value the higher the memory consumption.
+
+Default value is **4**.
+
+e.g `$MATSA_HOME/java -XX:+MaTSa -XX:+MaTSaExperimental -XX:+MaTSaHistorySize=10 program.java`
+
+**MaTSa currently only works for x86 and linux.**

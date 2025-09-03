@@ -16,6 +16,9 @@
 #define BLUE  "\033[1;34m"
 #define RESET "\033[0m"
 
+// print up to 64 frames
+#define MAX_FRAMES (64)
+
 
 MaTSaReportMap *MaTSaReportMap::_instance = nullptr;
 
@@ -29,15 +32,15 @@ MaTSaReportMap::~MaTSaReportMap() {
 }
 
 // we will use simple fnv1a hash
-uint64_t MaTSaReportMap::hash(uintptr_t bcp) {
-    assert(sizeof(bcp) == 8, "MaTSa Hash: bcp must be 64 bits");
-    assert(bcp, "MaTSa Hash: bcp must be non-zero");
+uint64_t MaTSaReportMap::hash(uint64_t method) {
+    assert(sizeof(method) == 8, "MaTSa Hash: method pointer must be 64 bits");
+    assert(method, "MaTSa Hash: method pointer must be non-zero");
 
     uint64_t hash  = 0xcbf29ce484222325ull; // offset basis
     uint64_t prime = 0x00000100000001B3ull; // prime 
-    uint8_t *ptr = (uint8_t*)&bcp;
+    uint8_t *ptr = (uint8_t*)&method;
 
-    for (size_t i = 0; i < sizeof(bcp); i++) {
+    for (size_t i = 0; i < sizeof(method); i++) {
         hash ^= ptr[i];
         hash *= prime;
     }
@@ -63,13 +66,13 @@ void MaTSaReportMap::destroy() {
     _instance = nullptr;
 }
 
-bool MaTSaReportMap::contains(uintptr_t bcp) {
-    uint64_t hash_val = hash(bcp);
+bool MaTSaReportMap::contains(uint64_t method, uint64_t bci) {
+    uint64_t hash_val = hash(method);
     uint64_t bucket   = hash_val % BUCKETS;
 
     ReportEntry *entry = _table[bucket];
     while (entry != nullptr) {
-        if (entry->bcp == bcp) {
+        if (entry->bci == bci) {
             return true;
         }
 
@@ -79,14 +82,14 @@ bool MaTSaReportMap::contains(uintptr_t bcp) {
     return false;
 }
 
-void MaTSaReportMap::insert(uintptr_t bcp) {
-    uint64_t hash_val = hash(bcp);
+void MaTSaReportMap::insert(uint64_t method, uint64_t bci) {
+    uint64_t hash_val = hash(method);
     uint64_t bucket   = hash_val % BUCKETS;
 
     ReportEntry *entry = _table[bucket];
 
     ReportEntry *new_entry = NEW_C_HEAP_OBJ(ReportEntry, mtInternal);
-    new_entry->bcp  = bcp;
+    new_entry->bci  = bci;
     new_entry->next = entry;
 
     _table[bucket] = new_entry;
@@ -109,24 +112,25 @@ void MaTSaReportMap::clear() {
 Mutex *MaTSaReport::_report_lock;
 
 void print_method_info(Method *m, int bci, int index) {
-    const char *file_name = "??";
+    char methodname_buf[256] = {"??"};
+    char filename_buf[128] = {"??"};
     InstanceKlass *holder = m->method_holder();
     Symbol *source_file   = nullptr;
 
     if (holder != nullptr && (source_file = holder->source_file_name()) != nullptr) {
-        file_name = source_file->as_C_string();
+        source_file->as_C_string(filename_buf, sizeof(filename_buf));
     }
 
-    const char *method_name = m->external_name_as_fully_qualified();
-    const int  lineno       = m->line_number_from_bci(bci);
+    m->name_and_sig_as_C_string(methodname_buf, sizeof(methodname_buf));
 
+    int lineno = m->line_number_from_bci(bci);
 
     if (lineno == -1) {
-        fprintf(stderr, "  #%d %s() %s:??\n", index, method_name, file_name);
+        fprintf(stderr, "  #%d %s %s:??\n", index, methodname_buf, filename_buf);
         return;
     }
 
-    fprintf(stderr, "  #%d %s() %s:%d\n", index, method_name, file_name, lineno);
+    fprintf(stderr, "  #%d %s %s:%d\n", index, methodname_buf, filename_buf, lineno);
 }
 
 // must hold lock else the output will be garbled
@@ -138,13 +142,14 @@ void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
     int bci = 0;
 
     // encode the current bci
-    uint64_t prev_frame = 0 | cur_bci;
-    uint64_t raw_frame  = 0;
+    MaTSaStackElem prev_frame = {0, (uint64_t)cur_bci};
+    MaTSaStackElem raw_frame;
 
-    for (int i = stack_size - 1; i >= 0; i--, prev_frame = raw_frame) {
+    for (int i = stack_size - 1, count = 0; i >= 0 && count < MAX_FRAMES; i--, prev_frame = raw_frame, count++) {
+        assert(i >= 0, "MaTSaReport: stack underflow");
         raw_frame = stack->get(i);
 
-        mp  = (Method*)(raw_frame >> 16);
+        mp  = (Method*)((uint64_t)raw_frame.method);
 
         /*  
             bci handling is a bit tricky:
@@ -155,9 +160,12 @@ void MaTSaReport::print_current_stack(JavaThread *thread, int cur_bci) {
                 - that is because the sender is the method that called the current method
                 - we want to know the line number the sender called the current method
         */
-        bci = prev_frame & 0xFFFF;
-
+        bci = prev_frame.bci;
         print_method_info(mp, bci, (stack_size - 1) - i);
+    }
+
+    if (stack_size > MAX_FRAMES) {
+        fprintf(stderr, "  <truncated>\n");
     }
 
 }
@@ -178,22 +186,23 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
     Part *part = h->get_part(tid, prev_history.ring_idx);
 
     if (prev_history.history_epoch != part->epoch) {
+        FREE_C_HEAP_ARRAY(EventTrace, trace);
         return false;
     }
 
-    uint64_t *real_stack = (uint64_t*)((uint64_t)part->real_stack);
+    MaTSaStackElem *real_stack = (MaTSaStackElem*)((uint64_t)part->real_stack);
 
     for (uint64_t i = 0; i < part->real_stack_size; i++) {
-        Method *m = (Method*)(real_stack[i] >> 16);
+        Method *m = (Method*)((uint64_t)real_stack[i].method);
 
         trace[trace_idx].m   = m;
-        trace[trace_idx].bci = real_stack[i] & 0xFFFF;
+        trace[trace_idx].bci = real_stack[i].bci;
         trace_idx++;
     }
 
     for (uint64_t i = 0; i < prev_history.history_idx; i++) {
-        if (part->events[i].method == 0 && trace_idx > 0) {
-            trace_idx--;
+        if (part->events[i].method == 0) {
+            trace_idx -= trace_idx > 0;
             continue;
         }
 
@@ -203,33 +212,37 @@ bool try_print_event_trace(void *addr, int tid, ShadowCell &cell, HistoryCell &p
     }
 
     int prev_bci = prev_history.bci;
-    for (int64_t i = trace_idx - 1; i >= 0; i--) {
+    for (int64_t i = trace_idx - 1, count = 0; i >= 0 && count < MAX_FRAMES; i--, count++) {
         print_method_info(trace[i].m, prev_bci, (trace_idx - 1) - i);
         prev_bci = trace[i].bci;
     }
 
+    if (trace_idx > MAX_FRAMES) {
+        fprintf(stderr, "  <truncated>\n");
+    }
+
+    FREE_C_HEAP_ARRAY(EventTrace, trace);
     return trace_idx != 0;
 }
 
-void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
-                            ShadowCell &cur, ShadowCell &prev, HistoryCell &prev_history) {
+void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, int cur_bci, Method *m, ShadowCell &cur, 
+                                ShadowCell &prev, HistoryCell &prev_history) {
     MutexLocker ml(MaTSaReport::_report_lock, Mutex::_no_safepoint_check_flag);
 
     // already reported
-    if (MaTSaReportMap::instance()->contains((uintptr_t)bcp)) {
+    if (MaTSaReportMap::instance()->contains((uint64_t)m, (uint64_t)cur_bci)) {
         return;
     }
 
     // is suppressed?
     if (LIKELY(MaTSaSuppression::is_suppressed(thread))) {
-        MaTSaReportMap::instance()->insert((uintptr_t)bcp);
+        MaTSaReportMap::instance()->insert((uint64_t)m, (uint64_t)cur_bci);
         return;
     }
 
     
     int pid = os::current_process_id();
-    int cur_bci = m->bci_from(bcp);
-    ResourceMark rm;
+    // ResourceMark rm;
 
     fprintf(stderr, "==================\n");
 
@@ -245,21 +258,26 @@ void MaTSaReport::do_report_race(JavaThread *thread, void *addr, uint8_t size, a
         fprintf(stderr, "  <no stack trace available>\n");
     }
 
-    const char *file_name   = "<null>";
-    const char *method_name = m->external_name_as_fully_qualified();
+    
+
+    char methodname_buf[256] = {"??"};
+    char filename_buf[128] = {"??"};
+
     const int lineno        = m->line_number_from_bci(cur_bci);
 
     InstanceKlass *holder = m->method_holder();
     Symbol *source_file   = nullptr;
     if (holder != nullptr && (source_file = holder->source_file_name()) != nullptr) {
-        file_name = source_file->as_C_string();
+        source_file->as_C_string(filename_buf, sizeof(filename_buf));
     }
 
-    fprintf(stderr, "\nSUMMARY: ThreadSanitizer: data race %s:%d in %s()\n", file_name, lineno, method_name);
+    m->name_and_sig_as_C_string(methodname_buf, sizeof(methodname_buf));
+
+    fprintf(stderr, "\nSUMMARY: ThreadSanitizer: data race %s:%d in %s\n", filename_buf, lineno, methodname_buf);
     fprintf(stderr, "==================\n");
 
     // store it in the report map
-    MaTSaReportMap::instance()->insert((uintptr_t)bcp);
+    MaTSaReportMap::instance()->insert((uint64_t)m, (uint64_t)cur_bci);
 
     COUNTER_INC(race);
 }

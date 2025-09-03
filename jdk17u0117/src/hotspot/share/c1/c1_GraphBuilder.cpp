@@ -46,6 +46,8 @@
 #include "utilities/bitMap.inline.hpp"
 #include "utilities/powerOfTwo.hpp"
 
+#include "matsa/matsa_interface_c1.hpp"
+
 class BlockListBuilder {
  private:
   Compilation* _compilation;
@@ -1550,10 +1552,17 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
       append(new RuntimeCall(voidType, "dtrace_method_exit", CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit), args));
     }
 
+    MATSA_ONLY(
+      // exit from inline method 
+      Values* args = new Values(0);
+      append(new RuntimeCall(voidType, "method_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args));
+    );
+
     // If the inlined method is synchronized, the monitor must be
     // released before we jump to the continuation block.
     if (method()->is_synchronized()) {
       assert(state()->locks_size() == 1, "receiver must be locked here");
+
       monitorexit(state()->lock_at(0), SynchronizationEntryBCI);
     }
 
@@ -1585,6 +1594,7 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
     // The current bci() is in the wrong scope, so use the bci() of
     // the continuation point.
     append_with_bci(goto_callee, scope_data()->continuation()->bci());
+
     incr_num_returns();
     return;
   }
@@ -3683,6 +3693,7 @@ void GraphBuilder::inline_sync_entry(Value lock, BlockBegin* sync_handler) {
   assert(lock != NULL && sync_handler != NULL, "lock or handler missing");
 
   monitorenter(lock, SynchronizationEntryBCI);
+
   assert(_last->as_MonitorEnter() != NULL, "monitor enter expected");
   _last->set_needs_null_check(false);
 
@@ -3729,6 +3740,11 @@ void GraphBuilder::fill_sync_handler(Value lock, BlockBegin* sync_handler, bool 
     append_with_bci(new RuntimeCall(voidType, "dtrace_method_exit", CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit), args), bci);
   }
 
+  MATSA_ONLY(
+    Values *args = new Values(0);
+    append_with_bci(new RuntimeCall(voidType, "method_exit", CAST_FROM_FN_PTR(address, MaTSaC1::method_exit), args), bci);
+  );
+
   if (lock) {
     assert(state()->locks_size() > 0 && state()->lock_at(state()->locks_size() - 1) == lock, "lock is missing");
     if (!lock->is_linked()) {
@@ -3764,9 +3780,19 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
   if (CompilationPolicy::should_not_inline(compilation()->env(), callee)) {
     INLINE_BAILOUT("inlining prohibited by policy");
   }
+
+  MATSA_ONLY(
+    /*
+      FIXME: enabling inling produces huge stack traces in some reports.
+      I am suspecting that it has to do with exception handling.
+      For now, it is not worth it to investigate more, the slowdown is minimal.
+    */
+    INLINE_BAILOUT("inlining not supported in MaTSaC1");
+  );
+
   // first perform tests of things it's not possible to inline
   if (callee->has_exception_handlers() &&
-      !InlineMethodsWithExceptionHandlers) INLINE_BAILOUT("callee has exception handlers");
+      (!InlineMethodsWithExceptionHandlers)) INLINE_BAILOUT("callee has exception handlers");
   if (callee->is_synchronized() &&
       !InlineSynchronizedMethods         ) INLINE_BAILOUT("callee is synchronized");
   if (!callee->holder()->is_linked())      INLINE_BAILOUT("callee's klass not linked yet");
@@ -3940,6 +3966,23 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
     inline_sync_entry(lock, sync_handler);
   }
 
+  MATSA_ONLY(
+    // pre method enter
+    int caller_bci = caller_state->bci();
+
+    Values *args = new Values(2);
+    args->push(append(new Constant(new MethodConstant(scope()->caller()->method()))));
+    args->push(append(new Constant(new IntConstant(caller_bci))));
+
+    append(new RuntimeCall(voidType, "pre_method_enter", CAST_FROM_FN_PTR(address, MaTSaC1::pre_method_enter), args));
+  );
+
+  MATSA_ONLY(
+    Values* args = new Values(1);
+    args->push(append(new Constant(new MethodConstant(callee))));
+    append(new RuntimeCall(voidType, "method_enter", CAST_FROM_FN_PTR(address, MaTSaC1::method_enter), args));
+  );
+
   if (compilation()->env()->dtrace_method_probes()) {
     Values* args = new Values(1);
     args->push(append(new Constant(new MethodConstant(method()))));
@@ -3981,6 +4024,8 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
   // If we bailed out during parsing, return immediately (this is bad news)
   if (bailed_out())
       return false;
+    
+  
 
   // iterate_all_blocks theoretically traverses in random order; in
   // practice, we have only traversed the continuation if we are

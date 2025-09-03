@@ -75,6 +75,10 @@
 #include "utilities/copy.hpp"
 #include "utilities/events.hpp"
 
+#include "matsa/matsa_interface_c1.hpp"
+#include "matsa/matsaRTL.hpp"
+
+
 
 // Implementation of StubAssembler
 
@@ -339,6 +343,53 @@ const char* Runtime1::name_for_address(address entry) {
   FUNCTION_CASE(entry, StubRoutines::dsin());
   FUNCTION_CASE(entry, StubRoutines::dcos());
   FUNCTION_CASE(entry, StubRoutines::dtan());
+
+  // MATSA
+
+#define MATSA_MEMORY_ACCESS_C1(size, type)\
+  MaTSaC1::matsa_##type##_##size
+
+#define MATSA_STATIC_MEMORY_ACCESS_C1(size, type)\
+  MaTSaC1::matsa_static_##type##_##size
+
+#define MATSA_ARRAY_ACCESS_C1(size, type)\
+  MaTSaC1::matsa_array_##type##_##size
+
+  FUNCTION_CASE(entry, MaTSaC1::pre_method_enter);
+  FUNCTION_CASE(entry, MaTSaC1::method_enter);
+  FUNCTION_CASE(entry, MaTSaC1::method_exit);
+  FUNCTION_CASE(entry, MaTSaC1::sync_enter);
+  FUNCTION_CASE(entry, MaTSaC1::sync_exit);
+  FUNCTION_CASE(entry, MaTSaC1::cl_init_acquire);
+  FUNCTION_CASE(entry, MATSA_MEMORY_ACCESS_C1(1, read));
+  FUNCTION_CASE(entry, MATSA_MEMORY_ACCESS_C1(1, write));
+  FUNCTION_CASE(entry, MATSA_MEMORY_ACCESS_C1(2, read));
+  FUNCTION_CASE(entry, MATSA_MEMORY_ACCESS_C1(2, write));
+  FUNCTION_CASE(entry, MATSA_MEMORY_ACCESS_C1(4, read));
+  FUNCTION_CASE(entry, MATSA_MEMORY_ACCESS_C1(4, write));
+  FUNCTION_CASE(entry, MATSA_MEMORY_ACCESS_C1(8, read));
+  FUNCTION_CASE(entry, MATSA_MEMORY_ACCESS_C1(8, write));
+  FUNCTION_CASE(entry, MATSA_ARRAY_ACCESS_C1(1, read));
+  FUNCTION_CASE(entry, MATSA_ARRAY_ACCESS_C1(1, write));
+  FUNCTION_CASE(entry, MATSA_ARRAY_ACCESS_C1(2, read));
+  FUNCTION_CASE(entry, MATSA_ARRAY_ACCESS_C1(2, write));
+  FUNCTION_CASE(entry, MATSA_ARRAY_ACCESS_C1(4, read));
+  FUNCTION_CASE(entry, MATSA_ARRAY_ACCESS_C1(4, write));
+  FUNCTION_CASE(entry, MATSA_ARRAY_ACCESS_C1(8, read));
+  FUNCTION_CASE(entry, MATSA_ARRAY_ACCESS_C1(8, write));
+  FUNCTION_CASE(entry, MATSA_STATIC_MEMORY_ACCESS_C1(1, read));
+  FUNCTION_CASE(entry, MATSA_STATIC_MEMORY_ACCESS_C1(1, write));
+  FUNCTION_CASE(entry, MATSA_STATIC_MEMORY_ACCESS_C1(2, read));
+  FUNCTION_CASE(entry, MATSA_STATIC_MEMORY_ACCESS_C1(2, write));
+  FUNCTION_CASE(entry, MATSA_STATIC_MEMORY_ACCESS_C1(4, read));
+  FUNCTION_CASE(entry, MATSA_STATIC_MEMORY_ACCESS_C1(4, write));
+  FUNCTION_CASE(entry, MATSA_STATIC_MEMORY_ACCESS_C1(8, read));
+  FUNCTION_CASE(entry, MATSA_STATIC_MEMORY_ACCESS_C1(8, write));
+
+  #undef MATSA_STATIC_MEMORY_ACCESS_C1
+  #undef MATSA_MEMORY_ACCESS_C1
+  #undef MATSA_ARRAY_ACCESS_C1
+
 
 #undef FUNCTION_CASE
 
@@ -704,12 +755,25 @@ JRT_BLOCK_ENTRY(void, Runtime1::monitorenter(JavaThread* current, oopDesc* obj, 
   }
   assert(obj == lock->obj(), "must match");
   SharedRuntime::monitor_enter_helper(obj, lock->lock(), current);
+  
+  MATSA_ONLY(
+    MaTSaC1::sync_enter(current, lock);
+  );
 JRT_END
 
 
 JRT_LEAF(void, Runtime1::monitorexit(JavaThread* current, BasicObjectLock* lock))
   NOT_PRODUCT(_monitorexit_slowcase_cnt++;)
   assert(current->last_Java_sp(), "last_Java_sp must be set");
+
+  MATSA_ONLY(
+    /* 
+      * We dont really have to do anything here
+      * slowcase is handled in macroassembler's unlock_object.
+      * That is because unlock by matsa must be performed before the actual unlock
+    */
+  );
+
   oop obj = lock->obj();
   assert(oopDesc::is_oop(obj), "must be NULL or an object");
   SharedRuntime::monitor_exit_helper(obj, lock->lock(), current);

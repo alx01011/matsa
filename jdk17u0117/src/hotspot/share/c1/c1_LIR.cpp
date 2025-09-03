@@ -33,6 +33,8 @@
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/vm_version.hpp"
 
+#include "matsa/matsaRTL.hpp"
+
 Register LIR_OprDesc::as_register() const {
   return FrameMap::cpu_rnr2reg(cpu_regnr());
 }

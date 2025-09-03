@@ -34,6 +34,9 @@
 #include "opto/runtime.hpp"
 #include "runtime/sharedRuntime.hpp"
 
+#include "matsa/matsaRTL.hpp"
+#include "matsa/matsa_interface_c2.hpp"
+
 //------------------------------make_dtrace_method_entry_exit ----------------
 // Dtrace -- record entry or exit of a method if compiled with dtrace support
 void GraphKit::make_dtrace_method_entry_exit(ciMethod* method, bool is_entry) {
@@ -58,6 +61,84 @@ void GraphKit::make_dtrace_method_entry_exit(ciMethod* method, bool is_entry) {
                     call_name, raw_adr_type,
                     thread, method_node);
 }
+
+// MaTSa support
+void GraphKit::make_matsa_load_store(Node *addr, ciMethod *m, int bci, uint8_t access_size, bool is_write) {
+  const TypeFunc *call_type = OptoRuntime::matsa_load_store_Type();
+  address         call_address = CAST_FROM_FN_PTR(address, MaTSaC2::matsa_memory_access[is_write][access_size]);
+  const char     *call_name = is_write ? "matsa_rt_store" : "matsa_rt_load";
+
+  Method *mptr = m->get_Method();
+  uint64_t bci_shifted = (uint64_t)bci << 48;
+
+  uint64_t mbci_pack = (uint64_t)mptr | bci_shifted;
+
+  Node *mbci_pack_node = _gvn.transform(makecon(TypeLong::make(mbci_pack)));
+
+  const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
+  make_runtime_call(RC_NO_FP | RC_NO_IO,
+                           call_type, call_address,
+                           call_name, raw_adr_type,
+                           addr, mbci_pack_node);
+}
+
+void GraphKit::make_matsa_load_store_static(Node *obj, Node *addr, ciMethod *m, int bci, uint8_t access_size, bool is_write) {
+  const TypeFunc *call_type = OptoRuntime::matsa_load_store_static_Type();
+  address         call_address = CAST_FROM_FN_PTR(address, MaTSaC2::matsa_static_memory_access[is_write][access_size]);
+  const char     *call_name = is_write ? "matsa_rt_static_store" : "matsa_rt_static_load";
+
+  Method *mptr = m->get_Method();
+  uint64_t bci_shifted = (uint64_t)bci << 48;
+
+  uint64_t mbci_pack = (uint64_t)mptr | bci_shifted;
+
+  Node *mbci_pack_node = _gvn.transform(makecon(TypeLong::make(mbci_pack)));
+
+  const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
+  make_runtime_call(RC_NO_FP | RC_NO_IO,
+                           call_type, call_address,
+                           call_name, raw_adr_type,
+                           obj, addr, mbci_pack_node);
+}
+
+void GraphKit:: make_matsa_method_enter_exit(ciMethod* method, int caller_bci, bool is_entry) {
+  const TypeFunc *call_type    = OptoRuntime::matsa_method_enter_exit_Type();
+  address         call_address = is_entry ? CAST_FROM_FN_PTR(address, MaTSaC2::method_enter) :
+                                            CAST_FROM_FN_PTR(address, MaTSaC2::method_exit);
+  const char     *call_name    = is_entry ? "matsa_rt_method_enter" : "matsa_rt_method_exit";
+
+  // Get base of thread-local storage area
+  Node* thread = _gvn.transform( new ThreadLocalNode() );
+
+  Method *mptr = method->get_Method();
+  uint64_t bci_shifted = (uint64_t)caller_bci << 48;
+  uint64_t mbci_pack = (uint64_t)mptr | bci_shifted;
+
+  Node *mbci_pack_node = _gvn.transform(makecon(TypeLong::make(mbci_pack)));
+
+  const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
+  make_runtime_call(RC_NO_FP | RC_NO_IO,
+                    call_type, call_address,
+                    call_name, raw_adr_type,
+                    thread, mbci_pack_node);                
+}
+
+void GraphKit::make_matsa_lock_unlock(Node *obj, bool is_locking) {
+  const TypeFunc *call_type = OptoRuntime::matsa_lock_unlock_Type();
+  address         call_address = is_locking ? CAST_FROM_FN_PTR(address, MaTSaC2::sync_enter) :
+                                                CAST_FROM_FN_PTR(address, MaTSaC2::sync_exit);
+  const char     *call_name = is_locking ? "matsa_rt_sync_enter" : "matsa_rt_sync_exit";
+
+  // Get base of thread-local storage area
+  Node* thread = _gvn.transform( new ThreadLocalNode() );
+
+  const TypePtr* raw_adr_type = TypeRawPtr::BOTTOM;
+  make_runtime_call(RC_NO_FP | RC_NO_IO,
+                    call_type, call_address,
+                    call_name, raw_adr_type,
+                    thread, obj);
+}
+
 
 
 //=============================================================================
@@ -298,4 +379,3 @@ void Parse::dump_map_adr_mem() const {
 }
 
 #endif
-

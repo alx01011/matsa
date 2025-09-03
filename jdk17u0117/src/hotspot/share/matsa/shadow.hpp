@@ -74,6 +74,11 @@ class ShadowBlock : AllStatic {
         static HistoryCell load_history(uptr mem, uint8_t index);
         static void        store_cell(uptr mem, ShadowCell* cell, HistoryCell* history); 
         static void        store_cell_at(uptr mem, ShadowCell* cell, HistoryCell* history, uint8_t index);
+
+        static inline void print_cell(const ShadowCell &cell) {
+            fprintf(stderr, "tid: %u, epoch: %lu, offset: %u, is_write: %u, is_ignored: %u",
+                                   cell.tid, (uint64_t)cell.epoch, cell.offset, cell.is_write, cell.is_ignored);
+        }
 };
 
 #endif

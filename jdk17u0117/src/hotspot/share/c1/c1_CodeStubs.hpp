@@ -365,11 +365,16 @@ class MonitorExitStub: public MonitorAccessStub {
  private:
   bool _compute_lock;
   int  _monitor_ix;
+  // MATSA: we need the code emit info to be able to make the runtime call
+  Compilation* _compilation;
 
  public:
   MonitorExitStub(LIR_Opr lock_reg, bool compute_lock, int monitor_ix)
     : MonitorAccessStub(LIR_OprFact::illegalOpr, lock_reg),
       _compute_lock(compute_lock), _monitor_ix(monitor_ix) { }
+
+  void set_compilation(Compilation* compilation) { _compilation = compilation; }
+  Compilation* compilation() const { return _compilation; }
   virtual void emit_code(LIR_Assembler* e);
   virtual void visit(LIR_OpVisitState* visitor) {
     assert(_obj_reg->is_illegal(), "unused");

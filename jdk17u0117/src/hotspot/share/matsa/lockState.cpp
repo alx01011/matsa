@@ -13,30 +13,33 @@
 */
 LockShadow::LockShadow(void) {
     this->size          = sizeof(Vectorclock);
-    this->addr          = os::reserve_memory(this->size);
-    this->cl_init_addr  = os::reserve_memory(this->size);
-    bool protect = os::protect_memory((char*)this->addr, this->size, os::MEM_PROT_RW) &&
-                   os::protect_memory((char*)this->cl_init_addr, this->size, os::MEM_PROT_RW);
+    this->addr          = new Vectorclock();
+    this->cl_init_addr  = new Vectorclock();
+    // this->cl_init_addr  = os::reserve_memory(this->size);
+    // bool protect = os::protect_memory((char*)this->addr, this->size, os::MEM_PROT_RW) &&
+    //                os::protect_memory((char*)this->cl_init_addr, this->size, os::MEM_PROT_RW);
 
-    if (this->addr == nullptr || this->cl_init_addr == nullptr || !protect) {
-        fprintf(stderr, "Failed to allocate lock shadow memory\n");
-        exit(1);
-    }
+    // if (this->addr == nullptr || this->cl_init_addr == nullptr || !protect) {
+    //     fprintf(stderr, "Failed to allocate lock shadow memory\n");
+    //     exit(1);
+    // }
 }
 
 LockShadow::~LockShadow(void) {
-    if (this->addr != nullptr && this->cl_init_addr != nullptr) {
-        os::release_memory((char*)this->addr, this->size);
-        os::release_memory((char*)this->cl_init_addr, this->size);
-    }
+    delete this->addr;
+    delete this->cl_init_addr;
+    // if (this->addr != nullptr && this->cl_init_addr != nullptr) {
+    //     os::release_memory((char*)this->addr, this->size);
+    //     os::release_memory((char*)this->cl_init_addr, this->size);
+    // }
 }
 
 Vectorclock* LockShadow::get_vectorclock(void) {
-    return (Vectorclock*)this->addr;
+    return this->addr;
 }
 
 Vectorclock* LockShadow::get_cl_init_vectorclock(void) {
-    return (Vectorclock*)this->cl_init_addr;
+    return this->cl_init_addr;
 }
 
 void LockShadow::transfer_vc(size_t tid) {

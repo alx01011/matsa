@@ -562,16 +562,16 @@ void Thread::start(Thread* thread) {
         JavaThread *cur_thread = JavaThread::current();
         JavaThread *new_thread = thread->as_Java_thread();
 
-        int new_tid = MaTSaThreadPool::get_instance()->get_queue()->dequeue();
-          
-        if (new_tid == -1) {
-          // out of available threads
-          fatal("No more threads available for MaTSa");
+        uint64_t new_tid;
+        // prioritize the quarantine first, then the queue
+        if (!MaTSaThreadPool::get_quarantine()->pop_front(new_tid)) {
+          new_tid = MaTSaThreadPool::get_queue()->dequeue();
         }
+        
         JavaThread::set_matsa_tid(new_thread, new_tid);
         JavaThread::init_matsa_stack(new_thread);
 
-        int cur_tid = JavaThread::get_matsa_tid(cur_thread);
+        uint64_t cur_tid = JavaThread::get_matsa_tid(cur_thread);
 
         MaTSaThreadState::transferEpoch(cur_tid, new_tid);
 
@@ -586,7 +586,7 @@ void Thread::start(Thread* thread) {
         // increment epoch of the current thread
         MaTSaThreadState::incrementEpoch(cur_tid);
 
-        History::clear_history(new_tid);
+        History::reset(new_tid);
       }
   );
 
@@ -869,14 +869,14 @@ int JavaThread::get_thread_obj_id(JavaThread *thread) {
   return java_lang_Thread::thread_id(threadObj);
 }
 
-int JavaThread::get_matsa_tid(JavaThread *thread) {
+uint64_t JavaThread::get_matsa_tid(JavaThread *thread) {
   assert(thread != NULL, "null thread in MaTSa get id");
   assert(thread->is_Java_thread(), "thread not java thread in MaTSa get id");
   
   return thread->_matsa_tid;
 }
 
-void JavaThread::set_matsa_tid(JavaThread *thread, int tid) {
+void JavaThread::set_matsa_tid(JavaThread *thread, uint64_t tid) {
   assert(thread != NULL, "null thread in MaTSa set id");
   assert(thread->is_Java_thread(), "thread not java thread in MaTSa set id");
   
@@ -1207,15 +1207,17 @@ JavaThread::JavaThread(bool is_attaching_via_jni) : JavaThread() {
 
     // in case we don't pass through start, we still need a valid tid for the symbolizer
     MATSA_ONLY(
-      int tid = MaTSaThreadPool::get_queue()->dequeue();
-      if (tid == -1) {
-      // out of available threads
-        fatal("No more threads available for MaTSa");
+      uint64_t tid;
+        // prioritize the quarantine first, then the queue
+      if (!MaTSaThreadPool::get_quarantine()->pop_front(tid)) {
+        tid = MaTSaThreadPool::get_queue()->dequeue();
       }
       JavaThread::set_matsa_tid(this, tid);
       MaTSaThreadState::incrementEpoch(tid);
 
       _matsa_stack = new MaTSaStack(DEFAULT_STACK_SIZE);
+
+      History::reset(tid);
     );
   }
 }
@@ -1353,6 +1355,13 @@ JavaThread::~JavaThread() {
 #endif // INCLUDE_JVMCI
 
   MATSA_ONLY(
+    uint64_t cur_tid = JavaThread::get_matsa_tid(this);
+
+    // push it in the quarantine queue so it can eventually be reused
+    if (!MaTSaThreadPool::get_quarantine()->push_back(cur_tid)) {
+      // quarantine full, enqueue it in the main queue
+      MaTSaThreadPool::get_queue()->enqueue(cur_tid);
+    }
     // clear the stack here
     // if we clear it on exit we will miss the thread.exit frame
     delete _matsa_stack;
@@ -1471,7 +1480,7 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
   }
 
   MATSA_ONLY(
-    int cur_tid         = JavaThread::get_matsa_tid(this);
+    uint64_t cur_tid    = JavaThread::get_matsa_tid(this);
     oop thread_object   = this->threadObj();
     LockShadow *ls      = thread_object->lock_state();
 
@@ -1483,12 +1492,15 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
     // to be reused by another thread
     // but preserve the last epoch
     // it is crucial incase the thread is reused and there are older sync objects holding older epochs
-    int thread_epoch = MaTSaThreadState::getEpoch(cur_tid, cur_tid);
+    uint64_t thread_epoch = MaTSaThreadState::getEpoch(cur_tid, cur_tid);
     MaTSaThreadState::getThreadState(cur_tid)->clear();
     MaTSaThreadState::setEpoch(cur_tid, cur_tid, thread_epoch);
-    // pop the thread from the stack (make it available to be reused)
-    // cast is always safe because on start of the thread we have set the thread id
-    MaTSaThreadPool::get_queue()->enqueue(cur_tid);
+
+    // push it in the quarantine queue so it can eventually be reused
+    if (!MaTSaThreadPool::get_quarantine()->push_back(cur_tid)) {
+      // quarantine full, enqueue it in the main queue
+      MaTSaThreadPool::get_queue()->enqueue(cur_tid);
+    }
   );
 
   HandleMark hm(this);
@@ -2879,9 +2891,6 @@ void Threads::initialize_jsr292_core_classes(TRAPS) {
 
 jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   extern void JDK_Version_init();
-
-  // MaTSa initialization must be done after gc initialization
-  MATSA_ONLY(set_matsa_initialized(false));
 
   // Preinitialize version info.
   VM_Version::early_initialize();

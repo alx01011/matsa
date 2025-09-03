@@ -311,6 +311,13 @@ private:
   static const TypeFunc* dtrace_method_entry_exit_Type();
   static const TypeFunc* dtrace_object_alloc_Type();
 
+  // matsa support
+  static const TypeFunc* matsa_load_store_Type();
+  static const TypeFunc* matsa_load_store_static_Type();
+  static const TypeFunc* matsa_method_enter_exit_Type();
+  static const TypeFunc* matsa_pre_method_enter_Type();
+  static const TypeFunc* matsa_lock_unlock_Type();
+
  private:
  static NamedCounter * volatile _named_counters;
 

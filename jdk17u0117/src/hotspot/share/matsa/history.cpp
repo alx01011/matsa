@@ -3,6 +3,8 @@
 #include "matsaDefs.hpp"
 
 #include <cstring>
+#include <cstdint>
+
 #include "runtime/os.hpp"
 
 History** History::history = nullptr;
@@ -13,20 +15,19 @@ void History::init_history(void) {
     bool protect = os::protect_memory((char*)history, MAX_THREADS * sizeof(History*), os::MEM_PROT_RW);
     assert(history != nullptr && protect, "MATSA: Failed to allocate history buffer\n");
 
-    for (int i = 0; i < MAX_THREADS; i++) {
-        history[i] = new History();
-    }
+    // for (int i = 0; i < MAX_THREADS; i++) {
+    //     history[i] = new History();
+    // }
 }
 
 History::History() {
-    parts = (Part*)os::reserve_memory(MAX_PARTS * sizeof(Part));
-    bool protect = os::protect_memory((char*)parts, MAX_PARTS * sizeof(Part), os::MEM_PROT_RW);
+    parts = NEW_C_HEAP_ARRAY(Part, MAX_PARTS, mtInternal);
 
-    assert(parts != nullptr && protect, "MATSA: Failed to allocate history buffer\n");
+    assert(parts != nullptr, "MATSA: Failed to allocate history buffer\n");
 
     for (int i = 0; i < MAX_PARTS; i++) {
         parts[i].events = (Event*)os::reserve_memory(MAX_EVENTS * sizeof(Event));
-        protect = os::protect_memory((char*)parts[i].events, MAX_EVENTS * sizeof(Event), os::MEM_PROT_RW);
+        bool protect = os::protect_memory((char*)parts[i].events, MAX_EVENTS * sizeof(Event), os::MEM_PROT_RW);
 
         assert(parts[i].events != nullptr && protect, "MATSA: Failed to allocate history buffer\n");
 
@@ -34,8 +35,7 @@ History::History() {
         parts[i].real_stack = (uint64_t)os::reserve_memory(DEFAULT_STACK_SIZE * sizeof(uint64_t));
         parts[i].real_stack_size = 0;
         protect = os::protect_memory((char*)((uint64_t)parts[i].real_stack), DEFAULT_STACK_SIZE * sizeof(uint64_t), os::MEM_PROT_RW);
-
-        assert(buffer[i].real_stack != nullptr && protect, "MATSA: Failed to allocate history buffer real stack\n");
+        assert(protect, "MATSA: Failed to allocate history buffer real stack\n");
     }
 
     event_idx  = 0;
@@ -44,10 +44,10 @@ History::History() {
 
 History::~History() {
     for (int i = 0; i < MAX_PARTS; i++) {
-        os::release_memory((char*)parts[i].events, MAX_EVENTS * sizeof(Event));
+        os::unmap_memory((char*)parts[i].events, MAX_EVENTS * sizeof(Event));
+        os::unmap_memory((char*)((uint64_t)parts[i].real_stack), DEFAULT_STACK_SIZE * sizeof(uint64_t));
     }
-
-    os::release_memory((char*)parts, MAX_PARTS * sizeof(Part));
+    FREE_C_HEAP_ARRAY(Part, parts);
 }
 
 void History::add_event(JavaThread *thread, Method *m, uint16_t bci) {
@@ -61,6 +61,7 @@ void History::add_event(JavaThread *thread, Method *m, uint16_t bci) {
         h->parts[h->part_idx].epoch++;
 
         MaTSaStack *stack = JavaThread::get_matsa_stack(thread);
+        // this memcpy is ok as the matsastackelem itself is 64bits
         memcpy((uint64_t*)((uint64_t)h->parts[h->part_idx].real_stack), stack->get(), stack->size() * sizeof(uint64_t));
         h->parts[h->part_idx].real_stack_size = stack->size();
     }
@@ -75,7 +76,6 @@ void History::add_event(JavaThread *thread, Method *m, uint16_t bci) {
 }
 
 Part *History::get_part(uint64_t tid, uint64_t idx) {
-    assert(idx < MAX_BUFFERS, "MATSA: Invalid buffer index\n");
     return &history[tid]->parts[idx];
 }
 
@@ -95,8 +95,13 @@ History *History::get_history(uint64_t tid) {
     return history[tid];
 }
 
-void History::clear_history(uint64_t tid) {
+void History::reset(uint64_t tid) {
     History *h = history[tid];
+
+    if (h == nullptr) {
+        history[tid] = new History();
+        return;
+    }
 
     for (int i = 0; i < h->part_idx; i++) {
         h->parts[i].epoch = 0;

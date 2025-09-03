@@ -23,16 +23,16 @@ class MaTSaThreadState : AllStatic {
         static void destroy(void);
 
         // returns the thread state of thread threadId
-        static Vectorclock* getThreadState(size_t threadId);
+        static Vectorclock* getThreadState(uint64_t threadId);
 
-        static void     setEpoch(size_t threadId, size_t otherThreadId, uint32_t epoch);
+        static void     setEpoch(uint64_t threadId, uint64_t otherThreadId, uint64_t epoch);
 
         // increments the epoch of the thread with id threadId
-        static void     incrementEpoch(size_t threadId);
+        static void     incrementEpoch(uint64_t threadId);
         // gets the epoch of the thread with id otherThreadId from the thread with id threadId epoch[threadId][otherThreadId]
-        static uint32_t getEpoch(size_t threadId, size_t otherThreadId);
+        static uint64_t getEpoch(uint64_t threadId, uint64_t otherThreadId);
 
-        static void     transferEpoch(size_t from_tid, size_t to_tid);
+        static void     transferEpoch(uint64_t from_tid, uint64_t to_tid);
 };
 
 #endif

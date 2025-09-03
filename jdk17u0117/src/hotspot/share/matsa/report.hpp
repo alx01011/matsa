@@ -15,12 +15,12 @@
 class MaTSaReportMap : public CHeapObj<mtInternal> {
     private:
         struct ReportEntry {
-            uintptr_t bcp;
+            uint64_t bci : 16;
             ReportEntry *next;
         }* _table[BUCKETS];
         uint64_t _size;
 
-        uint64_t hash(uintptr_t bcp);
+        uint64_t hash(uint64_t method);
 
         static MaTSaReportMap *_instance;
 
@@ -33,8 +33,8 @@ class MaTSaReportMap : public CHeapObj<mtInternal> {
         static void init();
         static void destroy();
 
-        bool contains(uintptr_t bcp);
-        void insert(uintptr_t bcp);
+        bool contains(uint64_t method, uint64_t bci);
+        void insert(uint64_t method, uint64_t bci);
         void clear();
 };
 
@@ -42,7 +42,7 @@ namespace MaTSaReport {
     extern Mutex *_report_lock;
     //extern uint8_t _report_lock;
 
-    void do_report_race   (JavaThread *thread, void *addr, uint8_t size, address bcp, Method *m, 
+    void do_report_race   (JavaThread *thread, void *addr, uint8_t size, int cur_bci, Method *m, 
                             ShadowCell &cur, ShadowCell &prev, HistoryCell &prev_history);
     void print_current_stack(JavaThread *thread, int cur_bci);
 }
